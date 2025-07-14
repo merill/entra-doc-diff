@@ -498,6 +498,8 @@ class EntraDocsMonitor {
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
         .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
         .header p { margin: 10px 0 0 0; opacity: 0.9; }
         .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
@@ -554,7 +556,7 @@ class EntraDocsMonitor {
     </head>
     <body>
       <div class="header">
-        <h1>📋 Microsoft Entra Documentation Changes</h1>
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
         <p>Daily summary for changes since ${targetDate}</p>
         <p>Report generated on ${reportDate}</p>
       </div>
