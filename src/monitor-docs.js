@@ -41,8 +41,9 @@ class EntraDocsMonitor {
   async ensureReportsDir() {
     try {
       await fs.mkdir('reports', { recursive: true });
+      await fs.mkdir('website', { recursive: true });
     } catch (error) {
-      console.log('Reports directory already exists or created');
+      console.log('Reports and website directories already exist or created');
     }
   }
 
@@ -715,17 +716,334 @@ class EntraDocsMonitor {
 
   async saveReport(html, analysis) {
     const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
+    const dateForUrl = moment().format('YYYY-MM-DD');
+    
+    // Save to reports folder (backup)
     const htmlFilePath = path.join('reports', `entra-docs-report-${timestamp}.html`);
     const jsonFilePath = path.join('reports', `entra-docs-data-${timestamp}.json`);
+    
+    // Save to website folder for publishing
+    const websiteHtmlPath = path.join('website', `${dateForUrl}.html`);
+    const websiteJsonPath = path.join('website', `${dateForUrl}.json`);
 
     await fs.writeFile(htmlFilePath, html);
     await fs.writeFile(jsonFilePath, JSON.stringify(analysis, null, 2));
+    await fs.writeFile(websiteHtmlPath, html);
+    await fs.writeFile(websiteJsonPath, JSON.stringify(analysis, null, 2));
 
     console.log(`💾 Report saved: ${htmlFilePath}`);
-    return htmlFilePath;
+    console.log(`🌐 Website report saved: ${websiteHtmlPath}`);
+    
+    // Generate/update index page
+    await this.generateIndexPage();
+    
+    return {
+      reportPath: htmlFilePath,
+      websitePath: websiteHtmlPath,
+      dateForUrl: dateForUrl
+    };
   }
 
-  async sendEmail(html, analysis) {
+  async generateIndexPage() {
+    try {
+      const websiteDir = 'website';
+      const files = await fs.readdir(websiteDir);
+      
+      // Filter for HTML files (exclude index.html) and sort by date descending
+      const htmlFiles = files
+        .filter(file => file.endsWith('.html') && file !== 'index.html')
+        .sort((a, b) => b.localeCompare(a)); // Descending order
+      
+      const reports = [];
+      
+      // Read summary data for each report
+      for (const htmlFile of htmlFiles.slice(0, 30)) { // Limit to last 30 days
+        const dateStr = htmlFile.replace('.html', '');
+        const jsonFile = `${dateStr}.json`;
+        const jsonPath = path.join(websiteDir, jsonFile);
+        
+        try {
+          const data = await fs.readFile(jsonPath, 'utf-8');
+          const analysis = JSON.parse(data);
+          reports.push({
+            date: dateStr,
+            htmlFile: htmlFile,
+            analysis: analysis
+          });
+        } catch (error) {
+          // If JSON file doesn't exist, create basic entry
+          reports.push({
+            date: dateStr,
+            htmlFile: htmlFile,
+            analysis: { newFiles: [], modifiedFiles: [], deletedFiles: [] }
+          });
+        }
+      }
+      
+      // Generate index HTML
+      const indexHtml = this.generateIndexHtml(reports);
+      const indexPath = path.join(websiteDir, 'index.html');
+      
+      await fs.writeFile(indexPath, indexHtml);
+      console.log(`📄 Index page generated: ${indexPath}`);
+      
+    } catch (error) {
+      console.error('❌ Error generating index page:', error.message);
+    }
+  }
+
+  generateIndexHtml(reports) {
+    const now = moment();
+    
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Microsoft Entra Documentation Changes</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 32px; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 18px; }
+        .report-grid { display: grid; gap: 20px; margin-bottom: 40px; }
+        .report-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #0078d4; transition: transform 0.2s; }
+        .report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .report-date { font-size: 20px; font-weight: bold; color: #0078d4; margin-bottom: 10px; }
+        .report-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .summary-item { text-align: center; }
+        .summary-number { font-size: 24px; font-weight: bold; color: #0078d4; }
+        .summary-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        .new-files { color: #28a745; }
+        .modified-files { color: #ffc107; }
+        .deleted-files { color: #dc3545; }
+        .view-link { display: inline-block; background: #0078d4; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; transition: background 0.2s; }
+        .view-link:hover { background: #106ebe; }
+        .footer { text-align: center; color: #666; margin-top: 40px; padding: 20px; background: white; border-radius: 8px; }
+        .no-reports { text-align: center; color: #666; font-style: italic; padding: 40px; background: white; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>📋 Microsoft Entra Documentation Changes</h1>
+        <p>Daily monitoring of documentation updates</p>
+        <p>Last updated: ${now.format('MMMM Do YYYY, h:mm A')}</p>
+      </div>
+    `;
+    
+    if (reports.length === 0) {
+      html += `
+        <div class="no-reports">
+          <h2>No reports available yet</h2>
+          <p>Daily reports will appear here once the monitoring starts.</p>
+        </div>
+      `;
+    } else {
+      html += `<div class="report-grid">`;
+      
+      for (const report of reports) {
+        const reportDate = moment(report.date).format('MMMM Do, YYYY');
+        const analysis = report.analysis;
+        
+        html += `
+          <div class="report-card">
+            <div class="report-date">${reportDate}</div>
+            <div class="report-summary">
+              <div class="summary-item">
+                <div class="summary-number new-files">${analysis.newFiles.length}</div>
+                <div class="summary-label">New Files</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-number modified-files">${analysis.modifiedFiles.length}</div>
+                <div class="summary-label">Modified Files</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-number deleted-files">${analysis.deletedFiles.length}</div>
+                <div class="summary-label">Deleted Files</div>
+              </div>
+            </div>
+            <div>
+              <a href="${report.htmlFile}" class="view-link">View Full Report</a>
+            </div>
+          </div>
+        `;
+      }
+      
+      html += `</div>`;
+    }
+    
+    html += `
+      <div class="footer">
+        <p>Generated by <strong>Microsoft Entra Documentation Monitor</strong></p>
+        <p>Monitoring repository: <a href="https://github.com/MicrosoftDocs/entra-docs">MicrosoftDocs/entra-docs</a></p>
+      </div>
+    </body>
+    </html>
+    `;
+    
+    return html;
+  }
+
+  generateEmailHtml(analysis, websiteLink) {
+    const reportDate = moment().tz('America/Los_Angeles').format('MMMM Do YYYY, h:mm A z');
+    const targetDate = moment().subtract(24, 'hours').tz('America/Los_Angeles').format('MMMM Do YYYY, h:mm A z');
+    
+    let emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #333;">
+        <div style="background: #0078d4; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">📋 Microsoft Entra Documentation Changes</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Daily summary for changes since ${targetDate}</p>
+          <p style="margin: 5px 0 0 0; opacity: 0.9;">Report generated on ${reportDate}</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 0 0 8px 8px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <a href="${websiteLink}" style="display: inline-block; background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">🌐 View Online Report</a>
+          </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 20px; margin-top: 20px; border-radius: 8px; border-left: 4px solid #0078d4;">
+          <h3 style="margin-top: 0; color: #0078d4;">📊 Summary</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="text-align: center; padding: 10px;"><strong style="font-size: 24px; color: #0078d4;">${analysis.summary.totalCommits}</strong><br><small>Total Commits</small></td>
+              <td style="text-align: center; padding: 10px;"><strong style="font-size: 24px; color: #28a745;">${analysis.newFiles.length}</strong><br><small>New Files</small></td>
+              <td style="text-align: center; padding: 10px;"><strong style="font-size: 24px; color: #ffc107;">${analysis.modifiedFiles.length}</strong><br><small>Modified Files</small></td>
+              <td style="text-align: center; padding: 10px;"><strong style="font-size: 24px; color: #dc3545;">${analysis.deletedFiles.length}</strong><br><small>Deleted Files</small></td>
+              <td style="text-align: center; padding: 10px;"><strong style="font-size: 24px; color: #0078d4;">${analysis.summary.authors.size}</strong><br><small>Contributors</small></td>
+            </tr>
+          </table>
+        </div>
+    `;
+
+    // New Files Section
+    if (analysis.newFiles.length > 0) {
+      emailHtml += `
+        <div style="margin-top: 30px;">
+          <h2 style="color: #0078d4; border-bottom: 2px solid #e1e5e9; padding-bottom: 10px;">🆕 New Documentation Files</h2>
+      `;
+      
+      for (const file of analysis.newFiles.slice(0, 10)) {
+        emailHtml += `
+          <div style="background: white; border: 1px solid #e1e5e9; border-radius: 6px; margin-bottom: 15px; overflow: hidden;">
+            <div style="background: #f6f8fa; padding: 15px; border-bottom: 1px solid #e1e5e9;">
+              <div style="font-weight: bold; color: #0078d4; margin-bottom: 5px;">
+                <span style="background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-right: 8px;">NEW</span>
+                <a href="${file.githubUrl}" style="color: #0078d4; text-decoration: none;">${file.filename}</a>
+              </div>
+              <div style="font-size: 12px; color: #666;">
+                Added by ${file.commitAuthor} on ${moment(file.commitDate, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMM D, YYYY h:mm A')}
+                ${file.publicDocsUrl ? `<br><a href="${file.publicDocsUrl}" style="color: #0078d4;">📖 View on learn.microsoft.com</a>` : ''}
+              </div>
+            </div>
+            <div style="padding: 15px;">
+              <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px;">
+                <span style="color: #28a745;">+${file.additions} lines added</span>
+              </div>
+              <div><strong>Commit:</strong> ${file.commitMessage}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      emailHtml += `</div>`;
+    }
+
+    // Modified Files Section
+    if (analysis.modifiedFiles.length > 0) {
+      emailHtml += `
+        <div style="margin-top: 30px;">
+          <h2 style="color: #0078d4; border-bottom: 2px solid #e1e5e9; padding-bottom: 10px;">📝 Modified Documentation Files</h2>
+      `;
+      
+      for (const file of analysis.modifiedFiles.slice(0, 15)) {
+        const changesSummary = this.extractChangesSummary(file.patch, file.filename);
+        
+        emailHtml += `
+          <div style="background: white; border: 1px solid #e1e5e9; border-radius: 6px; margin-bottom: 15px; overflow: hidden;">
+            <div style="background: #f6f8fa; padding: 15px; border-bottom: 1px solid #e1e5e9;">
+              <div style="font-weight: bold; color: #0078d4; margin-bottom: 5px;">
+                <span style="background: #ffc107; color: #212529; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-right: 8px;">MODIFIED</span>
+                <a href="${file.githubUrl}" style="color: #0078d4; text-decoration: none;">${file.filename}</a>
+              </div>
+              <div style="font-size: 12px; color: #666;">
+                Modified by ${file.commitAuthor} on ${moment(file.commitDate, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMM D, YYYY h:mm A')}
+                ${file.publicDocsUrl ? `<br><a href="${file.publicDocsUrl}" style="color: #0078d4;">📖 View on learn.microsoft.com</a>` : ''}
+              </div>
+            </div>
+            <div style="padding: 15px;">
+              <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px;">
+                <span style="color: #28a745;">+${file.additions}</span> / 
+                <span style="color: #dc3545;">-${file.deletions}</span> lines changed
+              </div>
+              <div style="margin-bottom: 10px;"><strong>Commit:</strong> ${file.commitMessage}</div>
+              <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+              <div style="background: #f6f8fa; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${this.escapeHtml(changesSummary)}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      emailHtml += `</div>`;
+    }
+
+    // Deleted Files Section
+    if (analysis.deletedFiles.length > 0) {
+      emailHtml += `
+        <div style="margin-top: 30px;">
+          <h2 style="color: #0078d4; border-bottom: 2px solid #e1e5e9; padding-bottom: 10px;">🗑️ Deleted Documentation Files</h2>
+      `;
+      
+      for (const file of analysis.deletedFiles.slice(0, 10)) {
+        emailHtml += `
+          <div style="background: white; border: 1px solid #e1e5e9; border-radius: 6px; margin-bottom: 15px; overflow: hidden;">
+            <div style="background: #f6f8fa; padding: 15px; border-bottom: 1px solid #e1e5e9;">
+              <div style="font-weight: bold; color: #0078d4; margin-bottom: 5px;">
+                <span style="background: #dc3545; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-right: 8px;">DELETED</span>
+                ${file.filename}
+              </div>
+              <div style="font-size: 12px; color: #666;">
+                Deleted by ${file.commitAuthor} on ${moment(file.commitDate, 'YYYY-MM-DD HH:mm:ss ZZ').format('MMM D, YYYY h:mm A')}
+                ${file.publicDocsUrl ? `<br><span style="color: #888;">📖 Was available at: ${file.publicDocsUrl}</span>` : ''}
+              </div>
+            </div>
+            <div style="padding: 15px;">
+              <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px;">
+                <span style="color: #dc3545;">-${file.deletions} lines removed</span>
+              </div>
+              <div><strong>Commit:</strong> ${file.commitMessage}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      emailHtml += `</div>`;
+    }
+
+    // No changes message
+    if (analysis.summary.totalFiles === 0) {
+      emailHtml += `
+        <div style="text-align: center; color: #666; font-style: italic; padding: 40px; background: white; border-radius: 8px; margin-top: 20px;">
+          <h3 style="color: #0078d4;">🎉 No documentation changes found in the last 24 hours</h3>
+          <p>The Microsoft Entra documentation repository has been stable with no new commits affecting documentation files.</p>
+        </div>
+      `;
+    }
+
+    emailHtml += `
+        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; font-size: 14px; color: #666;">
+          <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+          <p>📧 Delivered to ${this.recipientEmail}</p>
+          <p>🔗 <a href="https://github.com/${this.targetRepo.owner}/${this.targetRepo.repo}" style="color: #0078d4;">Visit Repository</a> | <a href="${websiteLink}" style="color: #0078d4;">View Online Report</a></p>
+        </div>
+      </div>
+    `;
+
+    return emailHtml;
+  }
+
+  async sendEmail(html, analysis, saveResult) {
     // Check for dry run mode
     if (process.env.DRY_RUN === 'true') {
       console.log('🧪 DRY RUN: Email would be sent with subject:');
@@ -743,11 +1061,19 @@ class EntraDocsMonitor {
 
     const subject = `📋 Microsoft Entra Docs Daily Update - ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified files`;
 
+    // Add website link to the email content
+    const websiteLink = saveResult && saveResult.dateForUrl ? 
+      `https://entradiff.merill.net/${saveResult.dateForUrl}.html` : 
+      'https://entradiff.merill.net';
+    
+    // Generate email-specific HTML with full report content optimized for email clients
+    const emailHtml = this.generateEmailHtml(analysis, websiteLink);
+
     const message = {
       subject: subject,
       body: {
         contentType: 'HTML',
-        content: html
+        content: emailHtml
       },
       toRecipients: [
         {
@@ -851,16 +1177,16 @@ class EntraDocsMonitor {
         };
         
         const html = this.generateHtmlReport(emptyAnalysis);
-        await this.saveReport(html, emptyAnalysis);
-        await this.sendEmail(html, emptyAnalysis);
+        const saveResult = await this.saveReport(html, emptyAnalysis);
+        await this.sendEmail(html, emptyAnalysis, saveResult);
         return;
       }
 
       const analysis = await this.analyzeChanges(commits);
       const html = this.generateHtmlReport(analysis);
       
-      await this.saveReport(html, analysis);
-      await this.sendEmail(html, analysis);
+      const saveResult = await this.saveReport(html, analysis);
+      await this.sendEmail(html, analysis, saveResult);
       
       console.log('✅ Monitoring completed successfully');
       
