@@ -379,6 +379,111 @@ class EntraDocsMonitor {
     }).join('\n');
   }
 
+  // Generate side-by-side diff view for HTML
+  generateSideBySideDiff(patch) {
+    if (!patch) return '<div class="no-diff">No detailed changes available</div>';
+
+    const lines = patch.split('\n');
+    const beforeLines = [];
+    const afterLines = [];
+    const contextLines = [];
+    
+    let currentLineNumber = 0;
+    
+    for (const line of lines) {
+      if (line.startsWith('@@')) {
+        // Extract line numbers from hunk header
+        const match = line.match(/@@ -(\d+),?\d* \+(\d+),?\d* @@/);
+        if (match) {
+          currentLineNumber = parseInt(match[1]);
+        }
+        continue;
+      }
+      
+      if (line.startsWith('+++') || line.startsWith('---')) {
+        continue;
+      }
+      
+      const content = line.substring(1); // Remove the first character (+, -, or space)
+      
+      if (line.startsWith(' ')) {
+        // Context line (unchanged)
+        beforeLines.push({ type: 'context', content, lineNum: currentLineNumber });
+        afterLines.push({ type: 'context', content, lineNum: currentLineNumber });
+        currentLineNumber++;
+      } else if (line.startsWith('-')) {
+        // Deleted line
+        beforeLines.push({ type: 'deleted', content, lineNum: currentLineNumber });
+        currentLineNumber++;
+      } else if (line.startsWith('+')) {
+        // Added line
+        afterLines.push({ type: 'added', content });
+      }
+    }
+    
+    // Ensure both sides have the same number of lines for alignment
+    const maxLines = Math.max(beforeLines.length, afterLines.length);
+    while (beforeLines.length < maxLines) {
+      beforeLines.push({ type: 'empty', content: '', lineNum: '' });
+    }
+    while (afterLines.length < maxLines) {
+      afterLines.push({ type: 'empty', content: '', lineNum: '' });
+    }
+    
+    let diffHtml = `
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    `;
+    
+    // Generate before pane
+    for (const line of beforeLines.slice(0, 20)) { // Limit to 20 lines for readability
+      const cssClass = line.type === 'deleted' ? 'diff-deleted' : 
+                      line.type === 'context' ? 'diff-context' : 'diff-empty';
+      const escapedContent = this.escapeHtml(line.content);
+      diffHtml += `<div class="diff-line ${cssClass}">${escapedContent || '&nbsp;'}</div>`;
+    }
+    
+    diffHtml += `
+          </div>
+          <div class="diff-pane after-pane">
+    `;
+    
+    // Generate after pane
+    for (const line of afterLines.slice(0, 20)) { // Limit to 20 lines for readability
+      const cssClass = line.type === 'added' ? 'diff-added' : 
+                      line.type === 'context' ? 'diff-context' : 'diff-empty';
+      const escapedContent = this.escapeHtml(line.content);
+      diffHtml += `<div class="diff-line ${cssClass}">${escapedContent || '&nbsp;'}</div>`;
+    }
+    
+    diffHtml += `
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return diffHtml;
+  }
+
+  // Helper function to escape HTML
+  escapeHtml(text) {
+    const div = { innerHTML: '' };
+    if (typeof text === 'string') {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    return text;
+  }
+
   generateHtmlReport(analysis) {
     const reportDate = moment().tz('America/Los_Angeles').format('MMMM Do YYYY, h:mm A z');
     const targetDate = moment().subtract(24, 'hours').tz('America/Los_Angeles').format('MMMM Do YYYY, h:mm A z');
@@ -416,6 +521,29 @@ class EntraDocsMonitor {
         .deleted-badge { background: #dc3545; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
         .no-changes { text-align: center; color: #666; font-style: italic; padding: 40px; }
         .footer { margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; font-size: 14px; color: #666; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #e1e5e9; border-radius: 6px; overflow: hidden; background: white; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #f6f8fa; border-bottom: 1px solid #e1e5e9; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #d73a49; border-right: 1px solid #e1e5e9; }
+        .after-label { color: #28a745; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #e1e5e9; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #ffffff; }
+        .diff-deleted { background: #ffeef0; color: #24292e; border-left: 3px solid #d73a49; }
+        .diff-added { background: #f0fff4; color: #24292e; border-left: 3px solid #28a745; }
+        .diff-empty { background: #f8f9fa; }
+        .no-diff { padding: 15px; text-align: center; color: #666; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #e1e5e9; }
+          .before-label { border-right: none; border-bottom: 1px solid #e1e5e9; }
+        }
         @media (max-width: 600px) {
           body { padding: 10px; }
           .header { padding: 20px; }
@@ -499,6 +627,7 @@ class EntraDocsMonitor {
       
       for (const file of analysis.modifiedFiles.slice(0, 15)) {
         const changesSummary = this.extractChangesSummary(file.patch, file.filename);
+        const sideBySideDiff = this.generateSideBySideDiff(file.patch);
         
         html += `
         <div class="file-item">
@@ -518,8 +647,8 @@ class EntraDocsMonitor {
               <span class="deletions">-${file.deletions}</span> lines changed
             </div>
             <div><strong>Commit:</strong> ${file.commitMessage}</div>
-            <div style="margin-top: 10px;"><strong>Key Changes:</strong></div>
-            <div class="changes-detail">${changesSummary}</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            ${sideBySideDiff}
           </div>
         </div>
         `;
