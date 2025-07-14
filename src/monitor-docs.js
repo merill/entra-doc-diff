@@ -263,6 +263,13 @@ class EntraDocsMonitor {
       for (const file of commitDetails.files) {
         // Get file diff for change analysis
         const fileDiff = await this.getFileDiff(file.filename, commit.hash);
+        
+        // Skip files that only have front matter changes
+        if (this.isOnlyFrontMatterChanges(fileDiff, file.filename)) {
+          console.log(`⏭️ Skipping ${file.filename} - only front matter changes`);
+          continue;
+        }
+        
         const { additions, deletions } = this.countChanges(fileDiff);
 
         const fileInfo = {
@@ -304,6 +311,57 @@ class EntraDocsMonitor {
     console.log(`📈 Analysis complete: ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified, ${analysis.deletedFiles.length} deleted`);
     
     return analysis;
+  }
+
+  // Check if changes are only in the front matter section of a markdown file
+  isOnlyFrontMatterChanges(patch, filename) {
+    // Only check markdown files
+    if (!filename.endsWith('.md')) {
+      return false;
+    }
+
+    if (!patch) return false;
+
+    const lines = patch.split('\n');
+    let hasContentChanges = false;
+    let inFrontMatter = false;
+    let frontMatterEnded = false;
+    let frontMatterDelimiterCount = 0;
+
+    for (const line of lines) {
+      // Skip diff headers
+      if (line.startsWith('@@') || line.startsWith('+++') || line.startsWith('---')) {
+        continue;
+      }
+
+      // Get the actual line content (remove +/- prefix)
+      const lineContent = line.startsWith('+') || line.startsWith('-') ? line.substring(1) : line;
+
+      // Check for front matter delimiters (---)
+      if (lineContent.trim() === '---') {
+        frontMatterDelimiterCount++;
+        if (frontMatterDelimiterCount === 1) {
+          inFrontMatter = true;
+        } else if (frontMatterDelimiterCount === 2) {
+          inFrontMatter = false;
+          frontMatterEnded = true;
+        }
+        continue;
+      }
+
+      // If we're processing a change line (+ or -)
+      if (line.startsWith('+') || line.startsWith('-')) {
+        // If we're past the front matter and there's a content change
+        if (frontMatterEnded || (!inFrontMatter && frontMatterDelimiterCount === 0)) {
+          // This is a content change outside of front matter
+          hasContentChanges = true;
+          break;
+        }
+      }
+    }
+
+    // Return true if there are NO content changes (only front matter changes)
+    return !hasContentChanges && frontMatterDelimiterCount >= 2;
   }
 
   countChanges(diff) {
