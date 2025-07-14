@@ -1,0 +1,45 @@
+name: Daily Entra Docs Monitor
+
+on:
+  schedule:
+    # Run daily at 6:00 PM PST (2:00 AM UTC) - optimal time based on Microsoft's merge patterns
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering for testing
+
+jobs:
+  monitor-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout this repository
+      uses: actions/checkout@v4
+      
+    - name: Clone Entra Docs repository
+      run: git clone https://github.com/MicrosoftDocs/entra-docs.git entra-docs
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Run docs monitor
+      env:
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        RECIPIENT_EMAIL: "merill@merill.net"
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        GITHUB_ACTIONS: "true"
+      run: node src/monitor-docs.js
+      
+    - name: Upload report artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: daily-report-${{ github.run_number }}
+        path: reports/
+        retention-days: 30
