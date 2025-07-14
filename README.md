@@ -97,12 +97,6 @@ Based on analysis of Microsoft's documentation repository patterns:
 
 Test the monitor manually:
 ```bash
-# Set required environment variables
-export GITHUB_TOKEN="your_github_token"
-export SENDGRID_API_KEY="your_sendgrid_key"  
-export RECIPIENT_EMAIL="your_email@domain.com"
-export SENDER_EMAIL="verified_sender@domain.com"
-
 # Run the monitor
 npm start
 ```
@@ -156,12 +150,6 @@ The system uses Microsoft Graph for reliable email delivery:
 - **Mobile Friendly**: Responsive design for mobile viewing
 - **Enterprise Integration**: Uses your organization's email infrastructure
 
-## 🔒 Security
-
-- Uses GitHub's built-in `GITHUB_TOKEN` for API access
-- SendGrid API key stored securely in GitHub Secrets
-- No sensitive data exposed in logs or artifacts
-- All external API calls use official, maintained libraries
 
 ## 📈 Monitoring & Troubleshooting
 
@@ -187,14 +175,6 @@ The system uses Microsoft Graph for reliable email delivery:
 
 MIT License - see LICENSE file for details
 
-## 🎯 Future Enhancements
-
-- [ ] Slack/Teams integration options
-- [ ] Support for multiple repositories
-- [ ] Webhook-based real-time notifications
-- [ ] Dashboard for historical trend analysis
-- [ ] Custom filtering rules via configuration file
-- [ ] Integration with Microsoft Graph for enhanced metadata
 
 ---
 
