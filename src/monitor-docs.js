@@ -495,57 +495,57 @@ class EntraDocsMonitor {
     <head>
       <meta charset="UTF-8">
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
         .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
         .header h1 { margin: 0; font-size: 28px; }
         .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
         .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
         .header p { margin: 10px 0 0 0; opacity: 0.9; }
-        .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
         .summary-item { text-align: center; }
-        .summary-item .number { font-size: 24px; font-weight: bold; color: #0078d4; }
-        .summary-item .label { font-size: 14px; color: #666; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
         .section { margin-bottom: 30px; }
-        .section h2 { color: #0078d4; border-bottom: 2px solid #e1e5e9; padding-bottom: 10px; }
-        .file-item { background: white; border: 1px solid #e1e5e9; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .file-header { background: #f6f8fa; padding: 15px; border-bottom: 1px solid #e1e5e9; }
-        .file-name { font-weight: bold; color: #0078d4; margin-bottom: 5px; }
-        .file-name a { color: #0078d4; text-decoration: none; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
         .file-name a:hover { text-decoration: underline; }
-        .file-meta { font-size: 12px; color: #666; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
         .file-changes { padding: 15px; }
-        .change-stats { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
-        .additions { color: #28a745; }
-        .deletions { color: #dc3545; }
-        .changes-detail { background: #f6f8fa; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
-        .new-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .modified-badge { background: #ffc107; color: #212529; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .deleted-badge { background: #dc3545; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .no-changes { text-align: center; color: #666; font-style: italic; padding: 40px; }
-        .footer { margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; font-size: 14px; color: #666; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
         
         /* Diff view styles */
-        .diff-container { margin-top: 15px; border: 1px solid #e1e5e9; border-radius: 6px; overflow: hidden; background: white; }
-        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #f6f8fa; border-bottom: 1px solid #e1e5e9; }
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
         .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
-        .before-label { color: #d73a49; border-right: 1px solid #e1e5e9; }
-        .after-label { color: #28a745; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
         .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
         .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
-        .before-pane { border-right: 1px solid #e1e5e9; }
+        .before-pane { border-right: 1px solid #404040; }
         .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
-        .diff-context { background: #ffffff; }
-        .diff-deleted { background: #ffeef0; color: #24292e; border-left: 3px solid #d73a49; }
-        .diff-added { background: #f0fff4; color: #24292e; border-left: 3px solid #28a745; }
-        .diff-empty { background: #f8f9fa; }
-        .no-diff { padding: 15px; text-align: center; color: #666; font-style: italic; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
         
         @media (max-width: 768px) {
           .diff-content { grid-template-columns: 1fr; }
           .diff-header { grid-template-columns: 1fr; }
-          .before-pane { border-right: none; border-bottom: 1px solid #e1e5e9; }
-          .before-label { border-right: none; border-bottom: 1px solid #e1e5e9; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
         }
         @media (max-width: 600px) {
           body { padding: 10px; }
@@ -805,25 +805,38 @@ class EntraDocsMonitor {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Microsoft Entra Documentation Changes</title>
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
         .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
         .header h1 { margin: 0; font-size: 32px; }
         .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 18px; }
         .report-grid { display: grid; gap: 20px; margin-bottom: 40px; }
-        .report-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #0078d4; transition: transform 0.2s; }
-        .report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
-        .report-date { font-size: 20px; font-weight: bold; color: #0078d4; margin-bottom: 10px; }
+        .report-card { background: #2a2a2a; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); border-left: 4px solid #0078d4; transition: transform 0.2s; }
+        .report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .report-date { font-size: 20px; font-weight: bold; color: #4da6ff; margin-bottom: 10px; }
         .report-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .summary-item { text-align: center; }
-        .summary-number { font-size: 24px; font-weight: bold; color: #0078d4; }
-        .summary-label { font-size: 12px; color: #666; text-transform: uppercase; }
-        .new-files { color: #28a745; }
-        .modified-files { color: #ffc107; }
-        .deleted-files { color: #dc3545; }
+        .summary-number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-label { font-size: 12px; color: #b0b0b0; text-transform: uppercase; }
+        .new-files { color: #40c463; }
+        .modified-files { color: #ffdf5d; }
+        .deleted-files { color: #f85149; }
         .view-link { display: inline-block; background: #0078d4; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; transition: background 0.2s; }
         .view-link:hover { background: #106ebe; }
-        .footer { text-align: center; color: #666; margin-top: 40px; padding: 20px; background: white; border-radius: 8px; }
-        .no-reports { text-align: center; color: #666; font-style: italic; padding: 40px; background: white; border-radius: 8px; }
+        .changes-preview { margin: 15px 0; padding: 15px; background: #353535; border-radius: 6px; border-left: 3px solid #404040; }
+        .preview-title { font-weight: bold; color: #b0b0b0; margin-bottom: 12px; font-size: 14px; }
+        .folder-groups { }
+        .folder-group { margin-bottom: 12px; }
+        .folder-group:last-child { margin-bottom: 0; }
+        .folder-header { font-weight: bold; color: #e0e0e0; margin-bottom: 6px; font-size: 13px; }
+        .file-count { color: #b0b0b0; font-weight: normal; font-size: 12px; }
+        .folder-files { list-style: none; padding: 0; margin: 0 0 0 15px; }
+        .file-item { margin-bottom: 3px; font-size: 12px; line-height: 1.3; }
+        .file-item:last-child { margin-bottom: 0; }
+        .more-files { font-style: italic; }
+        .more-indicator { color: #888; }
+        .first-folder { color: #4da6ff; font-weight: bold; }
+        .footer { text-align: center; color: #b0b0b0; margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; }
+        .no-reports { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; background: #2a2a2a; border-radius: 8px; }
       </style>
     </head>
     <body>
@@ -848,6 +861,102 @@ class EntraDocsMonitor {
         const reportDate = moment(report.date).format('MMMM Do, YYYY');
         const analysis = report.analysis;
         
+        // Group changes by folder structure
+        const allChanges = [
+          ...analysis.newFiles.map(f => ({ ...f, type: 'new' })),
+          ...analysis.modifiedFiles.map(f => ({ ...f, type: 'modified' })),
+          ...analysis.deletedFiles.map(f => ({ ...f, type: 'deleted' }))
+        ].sort((a, b) => new Date(b.commitDate) - new Date(a.commitDate));
+
+        let changesPreview = '';
+        if (allChanges.length > 0) {
+          // Group files by folder
+          const folderGroups = {};
+          
+          for (const change of allChanges) {
+            const pathParts = change.filename.split('/');
+            
+            // Skip the 'docs' folder if it's the first part
+            const startIndex = pathParts[0] === 'docs' ? 1 : 0;
+            const relevantParts = pathParts.slice(startIndex);
+            
+            // Determine folder key based on structure
+            let folderKey = '';
+            if (relevantParts.length > 1) {
+              if (relevantParts[0] === 'identity' && relevantParts.length > 2) {
+                // For identity, use identity/subcategory
+                folderKey = `${relevantParts[0]}/${relevantParts[1]}`;
+              } else {
+                // For others, use just the first folder
+                folderKey = relevantParts[0];
+              }
+            } else {
+              folderKey = 'root';
+            }
+            
+            if (!folderGroups[folderKey]) {
+              folderGroups[folderKey] = [];
+            }
+            folderGroups[folderKey].push(change);
+          }
+          
+          // Sort folders by number of files (descending) and limit to 10
+          const sortedFolders = Object.entries(folderGroups)
+            .sort(([,a], [,b]) => b.length - a.length)
+            .slice(0, 10);
+          
+          changesPreview = `
+            <div class="changes-preview">
+              <div class="preview-title">Changes by Section:</div>
+              <div class="folder-groups">
+          `;
+          
+          for (const [folderKey, files] of sortedFolders) {
+            const folderDisplay = folderKey === 'root' ? 'Root' : folderKey;
+            const fileCount = files.length;
+            
+            changesPreview += `
+              <div class="folder-group">
+                <div class="folder-header">
+                  <span class="first-folder">${folderDisplay}</span> 
+                  <span class="file-count">(${fileCount} file${fileCount !== 1 ? 's' : ''})</span>
+                </div>
+                <ul class="folder-files">
+            `;
+            
+            // Show up to 5 files per folder
+            for (const change of files.slice(0, 5)) {
+              const fileName = change.filename.split('/').pop();
+              const typeIcon = change.type === 'new' ? '🆕' : change.type === 'modified' ? '📝' : '🗑️';
+              const typeClass = change.type === 'new' ? 'new-files' : change.type === 'modified' ? 'modified-files' : 'deleted-files';
+              
+              changesPreview += `
+                <li class="file-item">
+                  <span class="${typeClass}">${typeIcon} ${fileName}</span>
+                </li>
+              `;
+            }
+            
+            if (files.length > 5) {
+              changesPreview += `
+                <li class="file-item more-files">
+                  <span class="more-indicator">... and ${files.length - 5} more file${files.length - 5 !== 1 ? 's' : ''}</span>
+                </li>
+              `;
+            }
+            
+            changesPreview += `
+                </ul>
+              </div>
+            `;
+          }
+          
+          changesPreview += `
+              </div>
+            </div>
+          `;
+        }
+
         html += `
           <div class="report-card">
             <div class="report-date">${reportDate}</div>
@@ -865,6 +974,7 @@ class EntraDocsMonitor {
                 <div class="summary-label">Deleted Files</div>
               </div>
             </div>
+            ${changesPreview}
             <div>
               <a href="${report.htmlFile}" class="view-link">View Full Report</a>
             </div>
