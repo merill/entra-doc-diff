@@ -1,0 +1,479 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 22nd 2025, 8:43 PM PDT</p>
+        <p>Report generated on July 23rd 2025, 8:43 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-mfa-mfasettings.md" target="_blank">docs/identity/authentication/howto-mfa-mfasettings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jul 23, 2025 8:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-mfa-mfasettings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added numbers</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/19/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">|:---------------------|:----------------|</div><div class="diff-line diff-context">| Austria              | +43 6703062076  |</div><div class="diff-line diff-context">| Bangladesh           | +880 9604606026 |</div><div class="diff-line diff-deleted">| China                | +44 1235619418, +44 1235619536, +44 1235619537, +44 1235619538, +44 1235619539, +44 1235619535, +44 7897087681, +44 7897087690, +44 7897087692, +66 977832930, +86 1052026902, +86 1052026905, +86 1052026907|</div><div class="diff-line diff-context">| Croatia              | +385 15507766   |</div><div class="diff-line diff-context">| Ecuador              | +593 964256042  |</div><div class="diff-line diff-context">| Estonia              | +372 6712726    |</div><div class="diff-line diff-deleted">| France               | +33 744081468   |</div><div class="diff-line diff-context">| Ghana                | +233 308250245  |</div><div class="diff-line diff-context">| Greece               | +30 2119902739  |</div><div class="diff-line diff-context">| Guatemala            | +502 23055056   |</div><div class="diff-line diff-context">| Hong Kong SAR        | +852 25716964   |</div><div class="diff-line diff-deleted">| India                | +91 3371568300, +91 1205089400, +91 4471566601, +91 2271897557, +91 1203524400, +91 3335105700, +91 2235544120, +91 4435279600|</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/23/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">|:---------------------|:----------------|</div><div class="diff-line diff-context">| Austria              | +43 6703062076  |</div><div class="diff-line diff-context">| Bangladesh           | +880 9604606026 |</div><div class="diff-line diff-added">| Belgium              | +32 480298502   |</div><div class="diff-line diff-added">| China                | +44 1235619418, +44 1235619535, +44 1235619536, +44 1235619537, +44 1235619538, +44 1235619539, +44 7897087681, +44 7897087690, +44 7897087692, +66 977832930, +86 1052026902, +86 1052026905, +86 1052026907, +86 2157007919, +86 2157007923, +86 2157007926|</div><div class="diff-line diff-context">| Croatia              | +385 15507766   |</div><div class="diff-line diff-context">| Ecuador              | +593 964256042  |</div><div class="diff-line diff-context">| Estonia              | +372 6712726    |</div><div class="diff-line diff-added">| France               | +33 744081468, +33 939370036 |</div><div class="diff-line diff-context">| Ghana                | +233 308250245  |</div><div class="diff-line diff-context">| Greece               | +30 2119902739  |</div><div class="diff-line diff-context">| Guatemala            | +502 23055056   |</div><div class="diff-line diff-context">| Hong Kong SAR        | +852 25716964   |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/licensing-service-plan-reference.md" target="_blank">docs/identity/users/licensing-service-plan-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nicholak-MS on Jul 23, 2025 1:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update licensing-service-plan-reference.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: users</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 07/14/2025</div><div class="diff-line diff-context">ms.author: nicholak</div><div class="diff-line diff-context">ms.reviewer: Nicholak-MS</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">- **Service plans included (friendly names)**: A list of service plans (friendly names) in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt;This information was last updated on July 14, 2025.&lt;br/&gt;You can also download a CSV version of this table [here](https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv).</div><div class="diff-line diff-context">&gt;&lt;br/&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Product name | String ID | GUID | Service plans included | Service plans included (friendly names) |</div><div class="diff-line diff-context">|Dynamics 365 Enterprise Edition - Additional Portal for Government |	CRM_ONLINE_PORTAL_GCC | cb9bc974-a47b-4123-998d-a383390168cc | CRM_ONLINE_PORTAL_GCC (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) | Microsoft Dynamics CRM Online - Portal Add-On (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-context">| Dynamics 365 Enterprise Edition - Additional Portal for Government |	CRM_ONLINE_PORTAL_NOPREREQ | 67f58b51-af53-4344-9663-9a2beb1d8a8e | CRM_ONLINE_PORTAL_GCC (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) |	Microsoft Dynamics CRM Online - Portal Add-On (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-context">| Dynamics 365 Enterprise Edition - Additional Production Instance for Government | CRMINSTANCE_GCC | 2bd3cb20-1bb6-446b-b4d0-089af3a05c52 | CRMINSTANCE_GCC (483cc331-f4df-4a3b-b8ca-fe1a247569f6)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) | Microsoft Dynamics CRM Online Instance (483cc331-f4df-4a3b-b8ca-fe1a247569f6)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-context">| Dynamics 365 Field Service Viral Trial | Dynamics_365_Field_Service_Enterprise_viral_trial | 29fcd665-d8d1-4f34-8eed-3811e3fca7b3 | CUSTOMER_VOICE_DYN365_VIRAL_TRIAL (dbe07046-af68-4861-a20d-1c8cbda9194f)&lt;br/&gt;DYN365_FS_ENTERPRISE_VIRAL_TRIAL (20d1455b-72b2-4725-8354-a177845ab77d)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;POWER_APPS_DYN365_VIRAL_TRIAL (54b37829-818e-4e3c-a08a-3ea66ab9b45d)&lt;br/&gt;POWER_AUTOMATE_DYN365_VIRAL_TRIAL (81d4ecb8-0481-42fb-8868-51536c5aceeb) | Customer Voice for Dynamics 365 vTrial (dbe07046-af68-4861-a20d-1c8cbda9194f)&lt;br/&gt;Dynamics 365 Field Service Enterprise vTrial (20d1455b-72b2-4725-8354-a177845ab77d)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Power Apps for Dynamics 365 vTrial (54b37829-818e-4e3c-a08a-3ea66ab9b45d)&lt;br/&gt;Power Automate for Dynamics 365 vTrial (81d4ecb8-0481-42fb-8868-51536c5aceeb) |</div><div class="diff-line diff-context">| Dynamics 365 Finance | DYN365_FINANCE | 55c9eb4e-c746-45b4-b255-9ab6b19d5c62 | DYN365_CDS_FINANCE (e95d7060-d4d9-400a-a2bd-a244bf0b609e)&lt;br/&gt;DYN365_REGULATORY_SERVICE (c7657ae3-c0b0-4eed-8c1d-6a7967bd9c65)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;D365_Finance (9f0e1b4e-9b33-4300-b451-b2c662cd4ff7)&lt;br/&gt;POWERAPPS_DYN_APPS (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;FLOW_DYN_APPS (7e6d7d78-73de-46ba-83b1-6d25117334ba) | Common Data Service for Dynamics 365 Finance (e95d7060-d4d9-400a-a2bd-a244bf0b609e)&lt;br/&gt;Dynamics 365 for Finance and Operations, Enterprise edition - Regulatory Service (c7657ae3-c0b0-4eed-8c1d-6a7967bd9c65)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Microsoft Dynamics 365 for Finance (9f0e1b4e-9b33-4300-b451-b2c662cd4ff7)&lt;br/&gt;Power Apps for Dynamics 365 (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;Power Automate for Dynamics 365 (7e6d7d78-73de-46ba-83b1-6d25117334ba) |</div><div class="diff-line diff-context">| Dynamics 365 for Case Management Enterprise Edition | DYN365_ENTERPRISE_CASE_MANAGEMENT | d39fb075-21ae-42d0-af80-22a2599749e0 | DYN365_ENTERPRISE_CASE_MANAGEMENT (2822a3a1-9b8f-4432-8989-e11669a60dc8)&lt;br/&gt;NBENTERPRISE (03acaee3-9492-4f40-aed4-bcb6b32981b6)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;SHAREPOINTWAC (e95bec33-7c88-4a70-8e19-b10bd9d0c014)&lt;br/&gt;PROJECT_ESSENTIALS (1259157c-8581-4875-bca7-2ffb18c51bda)&lt;br/&gt;SHAREPOINTENTERPRISE (5dbe027f-2339-4123-9542-606e4d348a72)&lt;br/&gt;POWERAPPS_DYN_APPS (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;FLOW_DYN_APPS (7e6d7d78-73de-46ba-83b1-6d25117334ba) | Dynamics 365 for Case Management (2822a3a1-9b8f-4432-8989-e11669a60dc8)&lt;br/&gt;Microsoft Social Engagement (03acaee3-9492-4f40-aed4-bcb6b32981b6)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Office for the Web (e95bec33-7c88-4a70-8e19-b10bd9d0c014)&lt;br/&gt;Project Online Essentials (1259157c-8581-4875-bca7-2ffb18c51bda)&lt;br/&gt;SharePoint (Plan 2) (5dbe027f-2339-4123-9542-606e4d348a72)&lt;br/&gt;Power Apps for Dynamics 365 (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;Power Automate for Dynamics 365 (7e6d7d78-73de-46ba-83b1-6d25117334ba) |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: users</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 07/23/2025</div><div class="diff-line diff-context">ms.author: nicholak</div><div class="diff-line diff-context">ms.reviewer: Nicholak-MS</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">- **Service plans included (friendly names)**: A list of service plans (friendly names) in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt;This information was last updated on July 23, 2025.&lt;br/&gt;You can also download a CSV version of this table [here](https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv).</div><div class="diff-line diff-context">&gt;&lt;br/&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Product name | String ID | GUID | Service plans included | Service plans included (friendly names) |</div><div class="diff-line diff-context">|Dynamics 365 Enterprise Edition - Additional Portal for Government |	CRM_ONLINE_PORTAL_GCC | cb9bc974-a47b-4123-998d-a383390168cc | CRM_ONLINE_PORTAL_GCC (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) | Microsoft Dynamics CRM Online - Portal Add-On (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-context">| Dynamics 365 Enterprise Edition - Additional Portal for Government |	CRM_ONLINE_PORTAL_NOPREREQ | 67f58b51-af53-4344-9663-9a2beb1d8a8e | CRM_ONLINE_PORTAL_GCC (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) |	Microsoft Dynamics CRM Online - Portal Add-On (eac6b45b-aa89-429f-a37b-c8ce00e8367e)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-context">| Dynamics 365 Enterprise Edition - Additional Production Instance for Government | CRMINSTANCE_GCC | 2bd3cb20-1bb6-446b-b4d0-089af3a05c52 | CRMINSTANCE_GCC (483cc331-f4df-4a3b-b8ca-fe1a247569f6)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) | Microsoft Dynamics CRM Online Instance (483cc331-f4df-4a3b-b8ca-fe1a247569f6)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div><div class="diff-line diff-added">| Dynamics 365 Field Service Contractor |	D365_FIELD_SERVICE_CONTRACTOR |	23e6e135-e869-4ce4-9ae4-5710cd69ac13 |	CDS_FIELD_SERVICE_CONTRACTOR (f4614a66-d632-443a-bc77-afe92987b322)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;POWERAPPS_DYN_APPS (874fc546-6efe-4d22-90b8-5c4e7aa59f4b) |	Common Data Service Field service Part Time Contractors (f4614a66-d632-443a-bc77-afe92987b322)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Power Apps for Dynamics 365 (874fc546-6efe-4d22-90b8-5c4e7aa59f4b) |</div><div class="diff-line diff-context">| Dynamics 365 Field Service Viral Trial | Dynamics_365_Field_Service_Enterprise_viral_trial | 29fcd665-d8d1-4f34-8eed-3811e3fca7b3 | CUSTOMER_VOICE_DYN365_VIRAL_TRIAL (dbe07046-af68-4861-a20d-1c8cbda9194f)&lt;br/&gt;DYN365_FS_ENTERPRISE_VIRAL_TRIAL (20d1455b-72b2-4725-8354-a177845ab77d)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;POWER_APPS_DYN365_VIRAL_TRIAL (54b37829-818e-4e3c-a08a-3ea66ab9b45d)&lt;br/&gt;POWER_AUTOMATE_DYN365_VIRAL_TRIAL (81d4ecb8-0481-42fb-8868-51536c5aceeb) | Customer Voice for Dynamics 365 vTrial (dbe07046-af68-4861-a20d-1c8cbda9194f)&lt;br/&gt;Dynamics 365 Field Service Enterprise vTrial (20d1455b-72b2-4725-8354-a177845ab77d)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Power Apps for Dynamics 365 vTrial (54b37829-818e-4e3c-a08a-3ea66ab9b45d)&lt;br/&gt;Power Automate for Dynamics 365 vTrial (81d4ecb8-0481-42fb-8868-51536c5aceeb) |</div><div class="diff-line diff-context">| Dynamics 365 Finance | DYN365_FINANCE | 55c9eb4e-c746-45b4-b255-9ab6b19d5c62 | DYN365_CDS_FINANCE (e95d7060-d4d9-400a-a2bd-a244bf0b609e)&lt;br/&gt;DYN365_REGULATORY_SERVICE (c7657ae3-c0b0-4eed-8c1d-6a7967bd9c65)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;D365_Finance (9f0e1b4e-9b33-4300-b451-b2c662cd4ff7)&lt;br/&gt;POWERAPPS_DYN_APPS (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;FLOW_DYN_APPS (7e6d7d78-73de-46ba-83b1-6d25117334ba) | Common Data Service for Dynamics 365 Finance (e95d7060-d4d9-400a-a2bd-a244bf0b609e)&lt;br/&gt;Dynamics 365 for Finance and Operations, Enterprise edition - Regulatory Service (c7657ae3-c0b0-4eed-8c1d-6a7967bd9c65)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318)&lt;br/&gt;Microsoft Dynamics 365 for Finance (9f0e1b4e-9b33-4300-b451-b2c662cd4ff7)&lt;br/&gt;Power Apps for Dynamics 365 (874fc546-6efe-4d22-90b8-5c4e7aa59f4b)&lt;br/&gt;Power Automate for Dynamics 365 (7e6d7d78-73de-46ba-83b1-6d25117334ba) |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-operator.md" target="_blank">docs/identity/role-based-access-control/includes/security-operator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 23, 2025 8:13 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-operator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management and Microsoft Purview compliance portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft 365 Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-deleted">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-deleted">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they are assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-context">| [Microsoft 365 service health](/microsoft-365/enterprise/view-service-health) | View the health of Microsoft 365 services |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft 365 Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-added">| [Microsoft Purview portal](/microsoft-365/compliance/microsoft-365-compliance-center) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-added">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they&#39;re assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-context">| [Microsoft 365 service health](/microsoft-365/enterprise/view-service-health) | View the health of Microsoft 365 services |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-token-protection.md" target="_blank">docs/identity/conditional-access/concept-token-protection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Jul 23, 2025 7:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update concept-token-protection.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [Active Directory P2 license](~/includes/entra-p2-license.md)]</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Token protection enforcement is part of Microsoft Entra ID Protection and requires Microsoft Entra ID P2 licenses at general availability.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following devices and applications support accessing resources on which a token protection Conditional Access policy is applied:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Microsoft Entra ID P1 license](~/includes/entra-p1-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following devices and applications support accessing resources on which a token protection Conditional Access policy is applied:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-reader.md" target="_blank">docs/identity/role-based-access-control/includes/security-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 23, 2025 8:13 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have global read-only access on security-related feature, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, as well as the ability to read Microsoft Entra sign-in reports and audit logs, and in Microsoft Purview compliance portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | View all ID Protection reports and Overview |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | Has read-only access to all information surfaced in Microsoft Entra Privileged Identity Management: Policies and reports for Microsoft Entra role assignments and security reviews.&lt;br&gt;**Cannot** sign up for Microsoft Entra Privileged Identity Management or make any changes to it. In the Privileged Identity Management portal or via PowerShell, someone in this role can activate additional roles (for example, Privileged Role Administrator), if the user is eligible for them. |</div><div class="diff-line diff-context">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | View security policies&lt;br&gt;View and investigate security threats&lt;br&gt;View reports |</div><div class="diff-line diff-deleted">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | View and investigate alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they are assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | Views user, device, enrollment, configuration, and application information. Cannot make changes to Intune. |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read permissions. |</div><div class="diff-line diff-context">| [Microsoft 365 service health](/microsoft-365/enterprise/view-service-health) | View the health of Microsoft 365 services |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have global read-only access on security-related feature, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and the ability to read Microsoft Entra sign-in reports and audit logs, and in Microsoft Purview compliance portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | View all ID Protection reports and Overview |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | Has read-only access to all information surfaced in Microsoft Entra Privileged Identity Management: Policies and reports for Microsoft Entra role assignments and security reviews.&lt;br&gt;**Cannot** sign up for Microsoft Entra Privileged Identity Management or make any changes to it. In the Privileged Identity Management portal or via PowerShell, someone in this role can activate additional roles (for example, Privileged Role Administrator), if the user is eligible for them. |</div><div class="diff-line diff-context">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | View security policies&lt;br&gt;View and investigate security threats&lt;br&gt;View reports |</div><div class="diff-line diff-added">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | View and investigate alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they&#39;re assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | Views user, device, enrollment, configuration, and application information. Cannot make changes to Intune. |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read permissions. |</div><div class="diff-line diff-context">| [Microsoft 365 service health](/microsoft-365/enterprise/view-service-health) | View the health of Microsoft 365 services |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/managed-identities-faq.md" target="_blank">docs/identity/managed-identities-azure-resources/managed-identities-faq.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Rakgurram-MSFT on Jul 23, 2025 1:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identities-faq" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> (AzureCXP) fixes MicrosoftDocs/entra-docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You can find the list of resources that have a system-assigned managed identity by using the following Azure CLI Command: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```azurecli-interactive</div><div class="diff-line diff-deleted">az resource list --query &quot;[?identity.type==&#39;SystemAssigned&#39;].{Name:name,  principalId:identity.principalId}&quot; --output table</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Which Azure role-based access control (RBAC) permissions are required to use a managed identity on a resource?</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You can find the list of resources that have a system-assigned managed identity by using the following Azure CLI Command: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```azurecli-interactive</div><div class="diff-line diff-added">az resource list --query &quot;[?identity.type==&#39;SystemAssigned&#39;].{Name:name, principalId:identity.principalId}&quot; --output table</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Which Azure role-based access control (RBAC) permissions are required to use a managed identity on a resource?</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity.md" target="_blank">docs/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Rakgurram-MSFT on Jul 23, 2025 1:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> (AzureCXP) fixes MicrosoftDocs/entra-docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You can see a sample request to the REST API:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```http</div><div class="diff-line diff-deleted">POST https://management.azure.com/subscriptions/aaaa0a0a-bb1b-cc2c-dd3d-eeeeee4e4e4e/resourceGroups/devrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/devIdentity/listAssociatedResources?$filter={filter}&amp;$orderby={orderby}&amp;$skip={skip}&amp;$top={top}&amp;skipToken={skipToken}&amp;api-version=2021-09-30-preview </div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Notice a sample response from the REST API:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You can see a sample request to the REST API:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```http</div><div class="diff-line diff-added">POST https://management.azure.com/subscriptions/aaaa0a0a-bb1b-cc2c-dd3d-eeeeee4e4e4e/resourceGroups/devrg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/devIdentity/listAssociatedResources?$filter={filter}&amp;$orderby={orderby}&amp;$skip={skip}&amp;$top={top}&amp;skiptoken={skiptoken}&amp;api-version=2021-09-30-preview </div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Notice a sample response from the REST API:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/add-application-portal-setup-sso-rpsts.md" target="_blank">docs/identity/enterprise-apps/add-application-portal-setup-sso-rpsts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kondalarao-MSFT on Jul 23, 2025 4:15 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/add-application-portal-setup-sso-rpsts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> (AzureCXP) fixes MicrosoftDocs/azure-docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A relying party STS, such as Active Directory Federation Services (AD FS) or PingFederate, with HTTPS endpoints</div><div class="diff-line diff-context">   1. You&#39;ll need the entity identifier (entity ID) of the relying party STS. This must be unique across all relying party STS and applications configured in a Microsoft Entra tenant. There cannot be two applications in a single Microsoft Entra tenant with the same entity identifier. For example, if Active Directory Federation Services (AD FS) is the relying party STS, then the identifier may be a URL of the form `http://{hostname.domain}/adfs/services/trust`.</div><div class="diff-line diff-deleted">   1. You&#39;l also need the assertion consumer service URL, or reply URL, of the relying party STS. This URL must be a `HTTPS` URL to securely transfer SAML tokens from Microsoft Entra to the relying party STS as part of single sign-on to an application. For example, if AD FS is the relying party STS, then the URL may be of the form `https://{hostname.domain}/adfs/ls/`.</div><div class="diff-line diff-context">- An application, which has already been integrated with that relying party STS</div><div class="diff-line diff-context">- One of the following roles in Microsoft Entra: Cloud Application Administrator, Application Administrator</div><div class="diff-line diff-context">- A test user in Microsoft Entra who can sign into the application</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A relying party STS, such as Active Directory Federation Services (AD FS) or PingFederate, with HTTPS endpoints</div><div class="diff-line diff-context">   1. You&#39;ll need the entity identifier (entity ID) of the relying party STS. This must be unique across all relying party STS and applications configured in a Microsoft Entra tenant. There cannot be two applications in a single Microsoft Entra tenant with the same entity identifier. For example, if Active Directory Federation Services (AD FS) is the relying party STS, then the identifier may be a URL of the form `http://{hostname.domain}/adfs/services/trust`.</div><div class="diff-line diff-added">   1. You&#39;ll also need the assertion consumer service URL, or reply URL, of the relying party STS. This URL must be a `HTTPS` URL to securely transfer SAML tokens from Microsoft Entra to the relying party STS as part of single sign-on to an application. For example, if AD FS is the relying party STS, then the URL may be of the form `https://{hostname.domain}/adfs/ls/`.</div><div class="diff-line diff-context">- An application, which has already been integrated with that relying party STS</div><div class="diff-line diff-context">- One of the following roles in Microsoft Entra: Cloud Application Administrator, Application Administrator</div><div class="diff-line diff-context">- A test user in Microsoft Entra who can sign into the application</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-reader.md" target="_blank">docs/identity/role-based-access-control/includes/global-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 23, 2025 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Exclude microsoft.directory/bulkJobs/standard/read action for now</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/auditLogs/allProperties/read | Read all properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/authorizationPolicy/standard/read | Read standard properties of authorization policy |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-deleted">&gt; | microsoft.directory/bulkJobs/standard/read | Read all bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/cloudAppSecurity/allProperties/read | Read all properties for Cloud app security |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/allProperties/read | Read all properties of Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/connectorGroups/allProperties/read | Read all properties of application proxy connector groups |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/auditLogs/allProperties/read | Read all properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/authorizationPolicy/standard/read | Read standard properties of authorization policy |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/cloudAppSecurity/allProperties/read | Read all properties for Cloud app security |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/allProperties/read | Read all properties of Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/connectorGroups/allProperties/read | Read all properties of application proxy connector groups |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/security-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 23, 2025 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Exclude microsoft.directory/bulkJobs/standard/read action for now</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/auditLogs/allProperties/read | Read all properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/authorizationPolicy/standard/read | Read standard properties of authorization policy |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-deleted">&gt; | microsoft.directory/bulkJobs/standard/read | Read all bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/basic/update | Update basic properties for Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/create | Create Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/delete | Delete Conditional Access policies |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/auditLogs/allProperties/read | Read all properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/authorizationPolicy/standard/read | Read standard properties of authorization policy |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/basic/update | Update basic properties for Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/create | Create Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/delete | Delete Conditional Access policies |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
