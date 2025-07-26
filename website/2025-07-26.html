@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 24th 2025, 8:39 PM PDT</p>
+        <p>Report generated on July 25th 2025, 8:39 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">19</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-cloud-apps.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-cloud-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Jul 25, 2025 6:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+33</span> / 
+              <span class="deletions">-31</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Freshness Target Resources</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Cloud apps, actions, and authentication context in Conditional Access policy</div><div class="diff-line diff-deleted">description: What are cloud apps, actions, and authentication context in a Microsoft Entra Conditional Access policy</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-deleted">ms.custom: has-azure-ad-ps-ref</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.date: 07/07/2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access: Target resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Target resources (formerly Cloud apps, actions, and authentication context) are key signals in a Conditional Access policy. Conditional Access policies allow administrators to assign controls to specific applications, services, actions, or authentication context.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Administrators can choose from the list of applications or services that include built-in Microsoft applications and any [Microsoft Entra integrated applications](~/identity/enterprise-apps/what-is-application-management.md) including gallery, non-gallery, and applications published through [Application Proxy](~/identity/app-proxy/overview-what-is-app-proxy.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: &#39;Conditional Access: Target Resources Overview&#39;</div><div class="diff-line diff-added">description: Learn how to configure Conditional Access policies to target specific resources, actions, and authentication contexts in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-added">ms.custom:</div><div class="diff-line diff-added">  - has-azure-ad-ps-ref</div><div class="diff-line diff-added">  - ai-gen-docs-bap</div><div class="diff-line diff-added">  - ai-gen-title</div><div class="diff-line diff-added">  - ai-seo-date:07/25/2025</div><div class="diff-line diff-added">  - ai-gen-description</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-added">ms.date: 07/25/2025</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access: Target resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Target resources (formerly cloud apps, actions, and authentication context) are key signals in a Conditional Access policy. Conditional Access policies let administrators assign controls to specific applications, services, actions, or authentication context.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/microsoft-entra-id-governance-licensing-for-guest-users.md" target="_blank">docs/id-governance/microsoft-entra-id-governance-licensing-for-guest-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Jul 25, 2025 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/microsoft-entra-id-governance-licensing-for-guest-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-29</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove August future changes from guest users governance dashboard</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Tailspin creates a second access review for a security group with 300 guest users with the user-to-group affiliation feature enabled. </div><div class="diff-line diff-context">- Billing: For May, Tailspin is billed for 500 users – 200 for the inactive guest access review and 300 for the review with user-to-group affiliation. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Link your tenant to a subscription</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Your tenants must be linked to an Azure subscription for proper billing and access to features. To link your tenant to a subscription, follow these steps.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1.  Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/) with an account that has at least the Contributor role within the subscription or a resource group within the subscription.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">2. Select the directory you want to link: In the Microsoft Entra admin center toolbar, select the **Settings** icon in the portal toolbar. Then on the **Portal settings \| Directories + subscriptions** page, find your workforce tenant in the **Directory name** list, and then select **Switch**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">3.  Browse to **Entra ID** &gt; **ID Governance** &gt; **Dashboard**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">4.  On the governance dashboard, locate the guest governance panel and select **Get Started**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">5.  In the **Link a subscription** pane, select a **Subscription** and a **Resource group**. Then select **Turn on**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">After you complete these steps, your Azure subscription is billed based on your Azure Direct or Enterprise Agreement details, if applicable.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## What if I can&#39;t find a subscription?</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Tailspin creates a second access review for a security group with 300 guest users with the user-to-group affiliation feature enabled. </div><div class="diff-line diff-context">- Billing: For May, Tailspin is billed for 500 users – 200 for the inactive guest access review and 300 for the review with user-to-group affiliation. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Guest user licensing FAQs</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-entitlement-management-lifecycle-policy.md" target="_blank">docs/includes/entra-entitlement-management-lifecycle-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Regan Downer on Jul 25, 2025 9:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-entitlement-management-lifecycle-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update entra-entitlement-management-lifecycle-policy.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    This approval will use the same approval settings that you specified on the **Requests** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. If you want to **Require an access review** for this access package, move the toggle to **Yes**.  Refer to the [detailed article on configuring the access review](/entra/id-governance/entitlement-management-access-reviews-create) and then return  back here to finish setting up the access package.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-deleted">3. If you did not require an access review, or once you have configured it, select **Next** or **Update**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    This approval will use the same approval settings that you specified on the **Requests** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. If you want to **Require an access review** for this access package, move the toggle to **Yes**. Refer to the [detailed article on configuring the access review](/entra/id-governance/entitlement-management-access-reviews-create) and then return back here to finish setting up the access package.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-added">3. If you didn&#39;t require an access review, or once you have configured it, select **Next** or **Update**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/partner-ecosystems-overview.md" target="_blank">docs/global-secure-access/partner-ecosystems-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Jul 25, 2025 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/partner-ecosystems-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> July 25 replaced Netskope automation URL</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 07/23/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">| Partner         | Docs | Description    |</div><div class="diff-line diff-context">|----------------|-------------------|----------------|</div><div class="diff-line diff-context">| Aviatrix       | [Deployment guide](https://resources.aviatrix.com/home/aviatrixentra-gsa-configuration-guide-getting-started-with-aviatrix-secure-connectivity-to-entra-gsa)       | Aviatrix enables secure, instant access to Microsoft&#39;s SASE platform for any application or workload worldwide, offering identity-based zero-trust access to Microsoft 365, the Internet, and public PaaS/SaaS endpoints. Aviatrix Secure Access supports always-on connectivity to Microsoft&#39;s SASE for diverse environments, including containers, without needing agents or host configuration.|</div><div class="diff-line diff-deleted">|  Netskope | [Configuration guide](https://community.netskope.com/discussions-37/microsoft-s-sse-netskope-sd-wan-configuration-guide-7854?tid=7854&amp;fid=37) | Netskope One SD-WAN directs Microsoft traffic to Microsoft&#39;s SASE platform for fast, secure access. With powerful automation for Zero Touch Provisioning, this solution streamlines deployment at scale. Customers and partners can quickly onboard sites and reduce operational costs. |</div><div class="diff-line diff-context">| Teridion       | [Deployment guide (PDF format)](https://www.teridion.com/wp-content/uploads/2024/11/Teridion-Secure-Connect.pdf) | Teridion Secure Connect combines Teridion Connect with Microsoft&#39;s SASE platform to deliver fast, secure internet access. This integration, designed for telecommunications companies and Global System Integrators (GSIs), simplifies operations and enhances service management, benefiting end customers.|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For organizations seeking customization according to their unique network architecture, Microsoft offers templatized integrations with the following partners:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 07/25/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">| Partner         | Docs | Description    |</div><div class="diff-line diff-context">|----------------|-------------------|----------------|</div><div class="diff-line diff-context">| Aviatrix       | [Deployment guide](https://resources.aviatrix.com/home/aviatrixentra-gsa-configuration-guide-getting-started-with-aviatrix-secure-connectivity-to-entra-gsa)       | Aviatrix enables secure, instant access to Microsoft&#39;s SASE platform for any application or workload worldwide, offering identity-based zero-trust access to Microsoft 365, the Internet, and public PaaS/SaaS endpoints. Aviatrix Secure Access supports always-on connectivity to Microsoft&#39;s SASE for diverse environments, including containers, without needing agents or host configuration.|</div><div class="diff-line diff-added">|  Netskope | [Deployment guide](https://community.netskope.com/additional-discussions-9/automating-netskope-one-sd-wan-and-microsoft-entra-sse-integration-7967) | Netskope One SD-WAN directs Microsoft traffic to Microsoft&#39;s SASE platform for fast, secure access. With powerful automation for Zero Touch Provisioning, this solution streamlines deployment at scale. Customers and partners can quickly onboard sites and reduce operational costs. |</div><div class="diff-line diff-context">| Teridion       | [Deployment guide (PDF format)](https://www.teridion.com/wp-content/uploads/2024/11/Teridion-Secure-Connect.pdf) | Teridion Secure Connect combines Teridion Connect with Microsoft&#39;s SASE platform to deliver fast, secure internet access. This integration, designed for telecommunications companies and Global System Integrators (GSIs), simplifies operations and enhances service management, benefiting end customers.|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For organizations seeking customization according to their unique network architecture, Microsoft offers templatized integrations with the following partners:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/permissions-reference.md" target="_blank">docs/identity/role-based-access-control/permissions-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 25, 2025 11:16 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added resource action overrides + refreshed RBAC reference</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 07/09/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 07/25/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/global-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jul 25, 2025 11:16 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added resource action overrides + refreshed RBAC reference</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bulkJobs/basic/update | Update all the bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bulkJobs/create | Create all bulk jobs in a directory |</div><div class="diff-line diff-deleted">&gt; | microsoft.directory/bulkJobs/standard/read | Read all bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/cloudAppSecurity/allProperties/allTasks | Create and delete all resources, and read and update standard properties in Microsoft Defender for Cloud Apps |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/allProperties/allTasks | Manage all properties of Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/connectorGroups/allProperties/read | Read all properties of application proxy connector groups |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; | microsoft.directory/bitlockerKeys/key/read | Read bitlocker metadata and key on devices&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bulkJobs/basic/update | Update all the bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/bulkJobs/create | Create all bulk jobs in a directory |</div><div class="diff-line diff-context">&gt; | microsoft.directory/cloudAppSecurity/allProperties/allTasks | Create and delete all resources, and read and update standard properties in Microsoft Defender for Cloud Apps |</div><div class="diff-line diff-context">&gt; | microsoft.directory/conditionalAccessPolicies/allProperties/allTasks | Manage all properties of Conditional Access policies |</div><div class="diff-line diff-context">&gt; | microsoft.directory/connectorGroups/allProperties/read | Read all properties of application proxy connector groups |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
