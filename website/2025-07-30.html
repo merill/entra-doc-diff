@@ -1,0 +1,516 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 28th 2025, 8:47 PM PDT</p>
+        <p>Report generated on July 29th 2025, 8:47 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">37</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-mandatory-multifactor-authentication.md" target="_blank">docs/identity/authentication/concept-mandatory-multifactor-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jul 29, 2025 3:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added how to prepare for phase 2 and changed Sept 1 to Sept 15</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-deleted">ms.date: 07/07/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">### Enforcement phases </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; The date of enforcement for Phase 2 has changed to September 1, 2025.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The enforcement of MFA for applications rolls out in two phases. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Applications that enforce MFA in phase 2 </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Starting September 1, 2025, MFA enforcement will gradually begin for accounts that sign in to Azure CLI, Azure PowerShell, Azure mobile app, IaC tools, and REST API endpoints to perform any Create, Update, or Delete operation. Read operations won&#39;t require MFA. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some customers may use a user account in Microsoft Entra ID as a service account. It&#39;s recommended to migrate these user-based service accounts to [secure cloud based service accounts](/entra/architecture/secure-service-accounts) with [workload identities](~/workload-id/workload-identities-overview.md). </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">### Enforcement phases </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The date of enforcement for Phase 2 has changed to September 15, 2025.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The enforcement of MFA for applications rolls out in two phases. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Applications that enforce MFA in phase 2 </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Starting September 15, 2025, MFA enforcement will gradually begin for accounts that sign in to Azure CLI, Azure PowerShell, Azure mobile app, IaC tools, and REST API endpoints to perform any Create, Update, or Delete operation. Read operations won&#39;t require MFA. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some customers may use a user account in Microsoft Entra ID as a service account. It&#39;s recommended to migrate these user-based service accounts to [secure cloud based service accounts](/entra/architecture/secure-service-accounts) with [workload identities](~/workload-id/workload-identities-overview.md). </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization-phased-rollout.md" target="_blank">docs/identity/conditional-access/agent-optimization-phased-rollout.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jul 29, 2025 4:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization-phased-rollout" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> images-steps-improvement</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-deleted">ms.date: 07/25/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Administrator reviews and accepts the rollout plan</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Administrators can accept the plan or modify details of the plan, such as the group assignments or the time between phases.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To adjust the groups included in a phase:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Security Administrator](../role-based-access-control/permissions-reference.md#security-administrator).</div><div class="diff-line diff-context">1. Browse to **Conditional Access Optimization Agent** and select the **Review suggestions** button for a policy suggestion that includes a phased rollout.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/agent-optimization-phased-rollout/phased-rollout-suggestions.png&quot; alt-text=&quot;Screenshot of the agent suggestions with a phased rollout type highlighted.&quot; lightbox=&quot;media/agent-optimization-phased-rollout/phased-rollout-suggestions-expanded.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select {SOMETHING} to edit the groups included in the phase.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Administrator reviews and accepts the rollout plan</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Administrators review the details of the plan and can accept it or modify the group assignments or the time between phases.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To adjust the groups included in a phase:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Security Administrator](../role-based-access-control/permissions-reference.md#security-administrator).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Conditional Access Optimization Agent** and select the **Review suggestions** button for a policy suggestion that includes a phased rollout.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/agent-optimization-phased-rollout/phased-rollout-suggestions.png&quot; alt-text=&quot;Screenshot of the agent suggestions with a phased rollout type highlighted.&quot; lightbox=&quot;media/agent-optimization-phased-rollout/phased-rollout-suggestions-expanded.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization.md" target="_blank">docs/identity/conditional-access/agent-optimization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jul 29, 2025 4:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> images-steps-improvement</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-deleted">ms.date: 07/24/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/agent-optimization/trigger-setting.png&quot; alt-text=&quot;Screenshot of the trigger option in the Conditional Access Optimization agent settings.&quot; lightbox=&quot;media/agent-optimization/trigger-setting.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Objects</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Use the checkboxes under **Objects** to specify what the agent should monitor when making policy recommendations. By default the agent looks for both new users and applications in your tenant over the previous 24 hour period.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Identity and permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/agent-optimization/trigger-setting.png&quot; alt-text=&quot;Screenshot of the trigger option in the Conditional Access Optimization agent settings.&quot; lightbox=&quot;media/agent-optimization/trigger-setting.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Microsoft Entra objects to monitor</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use the checkboxes under **Microsoft Entra objects to monitor** to specify what the agent should monitor when making policy recommendations. By default the agent looks for both new users and applications in your tenant over the previous 24 hour period.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Agent capabilities</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">By default, the Conditional Access optimization agent can create new policies in report-only mode. You can change this setting so that an administrator must approve the new policy before it&#39;s created. The policy is still created in report-only mode, but only after admin approval. After reviewing the policy impact, you can turn on the policy directly from the agent experience or from Conditional Access.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Phased rollout (preview)</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21797.md" target="_blank">docs/includes/secure-recommendations/21797.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Jul 29, 2025 8:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21797" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Zero Trust] Doc bug fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 03/05/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># sfipillar: Accelerate response and remediation</div><div class="diff-line diff-context"># category: Access control</div><div class="diff-line diff-context"># userimpact: High</div><div class="diff-line diff-context"># implementationcost: Medium</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Assume any users at high risk are compromised by threat actors. Without investigation and remediation, threat actors can execute scripts, deploy malicious applications, or manipulate API calls to establish persistence, based on the potentially compromised user&#39;s permissions. Threat actors can then exploit misconfigurations or abuse OAuth tokens to move laterally across workloads like documents, SaaS applications, or Azure resources. Threat actors can gain access to sensitive files, customer records, or proprietary code and exfiltrate it to external repositories while maintaining stealth through legitimate cloud services. Finally, threat actors might disrupt operations by modifying configurations, encrypting data for ransom, or using the stolen information for further attacks, resulting in financial, reputational, and regulatory consequences.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Create a Conditional Access policy to [require a secure password change for elevated user risk](/entra/identity/conditional-access/policy-risk-based-user).</div><div class="diff-line diff-deleted">- Use Microsoft Entra ID Protection to [further investigate risk](/entra/id-protection/howto-identity-protection-investigate-risk).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># sfipillar: Accelerate response and remediation</div><div class="diff-line diff-context"># category: Access control</div><div class="diff-line diff-context"># userimpact: High</div><div class="diff-line diff-context"># implementationcost: Medium</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Assume high risk are compromised by threat actors. Without investigation and remediation, threat actors can execute scripts, deploy malicious applications, or manipulate API calls to establish persistence, based on the potentially compromised user&#39;s permissions. Threat actors can then exploit misconfigurations or abuse OAuth tokens to move laterally across workloads like documents, SaaS applications, or Azure resources. Threat actors can gain access to sensitive files, customer records, or proprietary code and exfiltrate it to external repositories while maintaining stealth through legitimate cloud services. Finally, threat actors might disrupt operations by modifying configurations, encrypting data for ransom, or using the stolen information for further attacks, resulting in financial, reputational, and regulatory consequences.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Organizations using passwords can rely on password reset to automatically remediate risky users.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Organizations using passwordless credentials already mitigate most risk events that accrue to user risk levels, thus the volume of risky users should be considerably lower. Risky users in an organization that uses passwordless credentials must be blocked from access until the user risk is investigated and remediated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Create a Conditional Access policy to [require a secure password change for elevated user risk](/entra/identity/conditional-access/policy-risk-based-user).</div><div class="diff-line diff-added">- Use Microsoft Entra ID Protection to [investigate risk further](/entra/id-protection/howto-identity-protection-investigate-risk).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/isv-automatic-provisioning-multi-tenant-apps.md" target="_blank">docs/identity/app-provisioning/isv-automatic-provisioning-multi-tenant-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tracey Torble on Jul 29, 2025 9:45 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/isv-automatic-provisioning-multi-tenant-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update isv-automatic-provisioning-multi-tenant-apps.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Enable automatic user provisioning for multi-tenant applications in Microsoft Entra ID</div><div class="diff-line diff-context">description: A guide for independent software vendors for enabling automated provisioning in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Enable automatic user provisioning for your multi-tenant application in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Automatic user provisioning is the process of automating the creation, maintenance, and removal of user identities in target systems like your software-as-a-service applications.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Enable automatic user provisioning for multitenant applications in Microsoft Entra ID</div><div class="diff-line diff-context">description: A guide for independent software vendors for enabling automated provisioning in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Enable automatic user provisioning for your multitenant application in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Automatic user provisioning is the process of automating the creation, maintenance, and removal of user identities in target systems like your software-as-a-service applications.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-add-enterprise-application.md" target="_blank">docs/external-id/customers/how-to-add-enterprise-application.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tracey Torble on Jul 29, 2025 9:42 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-add-enterprise-application" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestions from code review</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an enterprise application</div><div class="diff-line diff-deleted">description: Learn how to add enterprise applications to to your Microsoft Entra external tenant using the admin center. Discover gallery apps, configuration steps, and deployment tips.</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">author: csmulligan</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">1. Select **New application** &gt; **Create your own application**.</div><div class="diff-line diff-context">1. Start typing the name of the application you want to add. If the application is already in the gallery, it appears in the list. In this article we use **Microsoft Entra SAML Toolkit** as an example.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;media/how-to-add-enterprise-application/add-enterprise-app.png&quot; alt-text=&quot;Add an enterprise application in the external tenant.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the application from the list, and then select **Create**.</div><div class="diff-line diff-context">1. Select **Create**, you&#39;re taken to the application that you registered.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an enterprise application</div><div class="diff-line diff-added">description: Learn how to add enterprise applications to your Microsoft Entra external tenant using the admin center. Discover gallery apps, configuration steps, and deployment tips.</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">author: csmulligan</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">1. Select **New application** &gt; **Create your own application**.</div><div class="diff-line diff-context">1. Start typing the name of the application you want to add. If the application is already in the gallery, it appears in the list. In this article we use **Microsoft Entra SAML Toolkit** as an example.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;media/how-to-add-enterprise-application/add-enterprise-app.png&quot; alt-text=&quot;Screenshot showing how to add an enterprise application in the external tenant.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the application from the list, and then select **Create**.</div><div class="diff-line diff-context">1. Select **Create**, you&#39;re taken to the application that you registered.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/puzzel-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/puzzel-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Jul 29, 2025 9:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/puzzel-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated the test connection and added new image</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Admin Credentials** section, enter the **Tenant Url** and then select Authorize, make sure that you enter your Puzzel account&#39;s Admin credentials. Select **Test Connection** to ensure Microsoft Entra ID can connect to Puzzel. If the connection fails, ensure your Puzzel account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> 	![Screenshot of Token.](media/puzzel-provisioning-tutorial/test-connection.png)</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Notification Email.](common/provisioning-notification-email.png)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Under the **Admin Credentials** section, input your Puzzel Tenant URL, Token Endpoint, Client Identifier and Client Secret. Select **Test Connection** to ensure Microsoft Entra ID can connect to Puzzel. If the connection fails, ensure your Puzzel account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"> 	![Screenshot of Token.](media/puzzel-provisioning-tutorial/test-connection-new.png)</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Notification Email.](common/provisioning-notification-email.png)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-traffic-dashboard.md" target="_blank">docs/global-secure-access/concept-traffic-dashboard.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Jul 29, 2025 5:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-traffic-dashboard" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> July 29 ready for sign-off</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-deleted">ms.date: 07/18/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/overview-application-usage-analytics.md" target="_blank">docs/global-secure-access/overview-application-usage-analytics.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Jul 29, 2025 5:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/overview-application-usage-analytics" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> July 29 ready for sign-off</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 07/18/2025</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: kerenSemel</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 07/29/2025</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: kerenSemel</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-verified-id-settings.md" target="_blank">docs/id-governance/entitlement-management-verified-id-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sri on Jul 29, 2025 5:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-verified-id-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update entitlement-management-verified-id-settings.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Add** to add the verified ID requirement to the access package policy.</div><div class="diff-line diff-context">1. If you want users to complete a Face Check, select **Require Face Check**. This will ask users requesting the access package to perform a real-time, privacy compliant selfie check against the photo that is stored on their Verified ID. Once you select the checkbox, it will ask you to select the claim name that maps to the photo on the ID. For more information on Face Check, see [Use Face Check with Microsoft Entra Verified ID](~/verified-id/using-facecheck.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. If you want users to complete a Face Check, select **Require Face Check**. This will ask users requesting the access package to perform a real-time, privacy compliant selfie check against the photo that is stored on their Verified ID. Once you select the checkbox, it will ask you to select the claim name that maps to the photo on the ID. For more information on Face Check, see [Use Face Check with Microsoft Entra Verified ID](~/verified-id/using-facecheck.md). </div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-verified-id-settings/require-face-check.png&quot; alt-text=&quot;Screenshot of the require face check option.&quot;:::</div><div class="diff-line diff-context">1. Once you finish configuring the rest of the settings, you can review your selections on the **Review + create** tab. You can see all verified ID requirements for this access package policy in the **Verified IDs** section.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-verified-id-settings/verified-ids-list.png&quot; alt-text=&quot;Screenshot of a list of verified IDs.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Add** to add the verified ID requirement to the access package policy.</div><div class="diff-line diff-context">1. If you want users to complete a Face Check, select **Require Face Check**. This will ask users requesting the access package to perform a real-time, privacy compliant selfie check against the photo that is stored on their Verified ID. Once you select the checkbox, it will ask you to select the claim name that maps to the photo on the ID. For more information on Face Check, see [Use Face Check with Microsoft Entra Verified ID](~/verified-id/using-facecheck.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-verified-id-settings/require-face-check.png&quot; alt-text=&quot;Screenshot of the require face check option.&quot;:::</div><div class="diff-line diff-added">   </div><div class="diff-line diff-context">1. Once you finish configuring the rest of the settings, you can review your selections on the **Review + create** tab. You can see all verified ID requirements for this access package policy in the **Verified IDs** section.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-verified-id-settings/verified-ids-list.png&quot; alt-text=&quot;Screenshot of a list of verified IDs.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-supported-features-customers.md" target="_blank">docs/external-id/customers/concept-supported-features-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Jul 29, 2025 5:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-supported-features-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> IDP flow removed.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Feature  |Workforce tenant  | External tenant |</div><div class="diff-line diff-context">|---------|---------|---------|</div><div class="diff-line diff-deleted">| **Application gallery**         | The [application gallery](/entra/identity/enterprise-apps/overview-application-gallery) contains thousands of applications that are preintegrated into Microsoft Entra ID.   | Choose from a range of pre-integrated apps. To find a third-party app, use the search bar. The full application gallery catalog isn’t available yet.    |</div><div class="diff-line diff-context">| **Register a custom enterprise application**         | [Add an enterprise application.](/entra/identity/enterprise-apps/add-application-portal)  |  [Register a SAML app in your external tenant.](/entra/external-id/customers/how-to-register-saml-app)    |</div><div class="diff-line diff-context">| **Self-service application assignment**         | Let users [self-discover apps](/entra/identity/enterprise-apps/manage-self-service-access).  | Self-service application assignment in the [My Apps portal](/entra/identity/enterprise-apps/myapps-overview) is not available.   |</div><div class="diff-line diff-context">| **Application proxy**         | [Microsoft Entra application proxy](/entra/identity/app-proxy/overview-what-is-app-proxy) provides secure remote access to on-premises web applications.  | Not available.    |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Feature  |Workforce tenant  | External tenant |</div><div class="diff-line diff-context">|---------|---------|---------|</div><div class="diff-line diff-added">| **Application gallery**         | The [application gallery](/entra/identity/enterprise-apps/overview-application-gallery) contains thousands of applications that are preintegrated into Microsoft Entra ID.   | Choose from a range of pre-integrated apps. To find a third-party app, use the search bar. The application gallery catalog isn’t available yet.    |</div><div class="diff-line diff-context">| **Register a custom enterprise application**         | [Add an enterprise application.](/entra/identity/enterprise-apps/add-application-portal)  |  [Register a SAML app in your external tenant.](/entra/external-id/customers/how-to-register-saml-app)    |</div><div class="diff-line diff-context">| **Self-service application assignment**         | Let users [self-discover apps](/entra/identity/enterprise-apps/manage-self-service-access).  | Self-service application assignment in the [My Apps portal](/entra/identity/enterprise-apps/myapps-overview) is not available.   |</div><div class="diff-line diff-context">| **Application proxy**         | [Microsoft Entra application proxy](/entra/identity/app-proxy/overview-what-is-app-proxy) provides secure remote access to on-premises web applications.  | Not available.    |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
