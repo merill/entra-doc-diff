@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 4th 2025, 8:49 PM PDT</p>
+        <p>Report generated on August 5th 2025, 8:49 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">25</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/apple-sso-plugin.md" target="_blank">docs/identity-platform/apple-sso-plugin.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Aug 5, 2025 12:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/apple-sso-plugin" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+24</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Token protection image update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; For this flag to take effect, it must be applied to a new registration. It will not impact devices that have already been registered unless they re-register.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Key**: `use_most_secure_storage`</div><div class="diff-line diff-deleted">- **Type**: `Boolean`</div><div class="diff-line diff-deleted">- **Value**: True</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Alternatively:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">- **Key**: `use_most_secure_storage`</div><div class="diff-line diff-deleted">- **Type**: `Integer`</div><div class="diff-line diff-deleted">- **Value**: 1</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The screenshot below shows the configuration page and settings for enabling Secure Enclave in Microsoft Intune. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In cases where you must troubleshoot issues with Secure Enclave, it can be disabled by updating the following key in your Apple device&#39;s MDM configuration:</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">- **Key**:: `use_most_secure_storage`</div><div class="diff-line diff-deleted">- **Type**: `Boolean`</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; For this flag to take effect, it must be applied to a new registration. It will not impact devices that have already been registered unless they re-register.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Key**: `use_most_secure_storage`</div><div class="diff-line diff-added">- **Type**: `Integer`</div><div class="diff-line diff-added">- **Value**: 1</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Alternatively:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Key**: `use_most_secure_storage`</div><div class="diff-line diff-added">- **Type**: `Boolean`</div><div class="diff-line diff-added">- **Value**: True</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The screenshot below shows the configuration page and settings for enabling Secure Enclave in Microsoft Intune. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In cases where you must troubleshoot issues with Secure Enclave, it can be disabled by updating the following key in your Apple device&#39;s MDM configuration:</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">- **Key**: `use_most_secure_storage`</div><div class="diff-line diff-context">- **Type**: `Integer`</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-active-directory-group-cleanup.md" target="_blank">docs/identity/hybrid/how-to-active-directory-group-cleanup.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Aug 5, 2025 4:25 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-active-directory-group-cleanup" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Github copilot fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: Justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 08/01/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">ms.reviewer: justinha</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Clean up unused Active Directory Domain Services groups in a single domain</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">One challenge many organizations face is the proliferation of groups, particularly security groups, in their Active Directory Domain Services (AD DS) domains. An organization might create security groups for projects, but over time, they&#39;re no longer needed. These groups can linger unmaintained in the domain. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There&#39;s no way to confirm if a particular group is needed to access an app or a file. So we need another way to identify and clean up these groups that are no longer needed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article outlines how to use a *scream test* methodology to clean up groups from an AD DS domain. Cleanup reduces administrative burden, and the risk of unmanaged groups in that domain. It also prevents these groups from being synced into Microsoft Entra. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">First you determine whether each group needs to be managed with an AD DS-based management tool like **Active Directory Users and Computers**, or managed in the cloud with Microsoft Entra admin center or Exchange Online, or if it might not be needed. If the group might not be needed, you can run multiple scream tests to determine if it&#39;s active. If it&#39;s no longer active, you can delete it from the AD DS domain.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There are multiple ways to determine whether a group is no longer needed. In some cases, the scream test indicates that a group is still required, and whether to manage it in Microsoft Entra ID or the AD DS domain.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: Justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 08/04/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">ms.reviewer: justinha</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Clean up unused Active Directory Domain Services groups in a single domain</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">One challenge many organizations face is the proliferation of groups in their Active Directory Domain Services (AD DS) domains, particularly security groups. An organization might create security groups for projects, but they&#39;re no longer needed over time. These groups can linger unmaintained in the domain. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Group cleanup reduces administration and risk, and it prevents sync of unused groups into Microsoft Entra. This article outlines how to analyze groups and use a *scream test* methodology to identify and remove unused groups from an AD DS domain. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">First you determine whether each group needs to be managed with an AD DS-based management tool like **Active Directory Users and Computers**, or managed in the cloud with Microsoft Entra admin center or Exchange Online, or if it might not be needed. In some cases, the scream test indicates that a group is still required, and whether to manage it in Microsoft Entra ID or the AD DS domain. If the group might not be needed, you can run multiple scream tests to determine if it&#39;s active. If it&#39;s no longer active, you can delete it from the AD DS domain.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Types of groups in scope for cleanup</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Security and Distribution List (DL) groups in an AD DS topology, with a single forest, single domain. Multiforest or multidomain environments, workgroups, local groups on domain-joined computers, or other environments are outside the scope of this article.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-entra-security-scenarios.md" target="_blank">docs/fundamentals/copilot-entra-security-scenarios.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Chris Werner on Aug 5, 2025 8:47 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-entra-security-scenarios" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+20</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add extra info to CA, adding Devices</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Privileged Identity Management (PIM)](#privileged-identity-management-pim): Manage and monitor privileged access in your organization using natural language queries.</div><div class="diff-line diff-context">- [Microsoft Entra domains](#microsoft-entra-domains): Simplify domain management by accessing domain information, verifying DNS records, and managing domain settings using natural language queries.</div><div class="diff-line diff-context">- [Microsoft Entra tenants](#microsoft-entra-tenants): Get quick access to your Microsoft Entra ID organization information, including tenant ID, display name, active licenses, and contacts.</div><div class="diff-line diff-context">- [Microsoft Entra Role Based Access Control (RBAC)](#microsoft-entra-role-based-access-control-rbac): Investigate roles within a directory, such as which roles a user or group has, who has a specific role, or details about a particular role.</div><div class="diff-line diff-context">- [License Usage](#license-usage): Track licenses purchased and actual usage across your Microsoft Entra tenant using natural language queries.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra Conditional Access applies the capabilities of Microsoft Security Copilot to help admins easily understand and evaluate their Conditional Access policies.  By combining Conditional Access APIs with the power of generative AI, Security Copilot enables analysts to ask natural language questions, such as identifying what policies apply to users or what policies use certain controls, and receive clear insights in seconds. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- List active MFA Conditional Access policies in my tenant.</div><div class="diff-line diff-context">- Which MFA policies are enforced in my tenant?</div><div class="diff-line diff-context">- Which Conditional Access policies are enabled in my tenant?</div><div class="diff-line diff-context">- *Who is the technical contact for my tenant?*</div><div class="diff-line diff-context">- *Who is the security compliance contact for my tenant?*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Microsoft Entra Role Based Access Control (RBAC)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra role-based access control (RBAC) helps you manage who has access to Microsoft Entra resources by assigning roles to users, groups, or applications. You can use built-in roles or create custom roles with specific permissions to meet your organization&#39;s needs. You can now use Microsoft Security Copilot to investigate roles within a directory. For example, you can ask which roles a user or group has, who has a specific role, or get details about a particular role. This makes it easier for administrators and analysts to understand and manage role assignments across your environment.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Privileged Identity Management (PIM)](#privileged-identity-management-pim): Manage and monitor privileged access in your organization using natural language queries.</div><div class="diff-line diff-context">- [Microsoft Entra domains](#microsoft-entra-domains): Simplify domain management by accessing domain information, verifying DNS records, and managing domain settings using natural language queries.</div><div class="diff-line diff-context">- [Microsoft Entra tenants](#microsoft-entra-tenants): Get quick access to your Microsoft Entra ID organization information, including tenant ID, display name, active licenses, and contacts.</div><div class="diff-line diff-added">- [Microsoft Entra devices](#microsoft-entra-devices): Use natural language to investigate your Microsoft Entra ID devices.</div><div class="diff-line diff-context">- [Microsoft Entra Role Based Access Control (RBAC)](#microsoft-entra-role-based-access-control-rbac): Investigate roles within a directory, such as which roles a user or group has, who has a specific role, or details about a particular role.</div><div class="diff-line diff-context">- [License Usage](#license-usage): Track licenses purchased and actual usage across your Microsoft Entra tenant using natural language queries.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra Conditional Access applies the capabilities of Microsoft Security Copilot to help admins easily understand and evaluate their Conditional Access policies.  By combining Conditional Access APIs with the power of generative AI, Security Copilot enables analysts to ask natural language questions, such as identifying what policies apply to users or what policies use certain controls, and receive clear insights in seconds. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Using this feature requires at least the roles of [Security Administrator](/entra/identity/role-based-access-control/permissions-reference#security-administrator), [Global Reader](/entra/identity/role-based-access-control/permissions-reference#global-reader), or [Security Reader](/entra/identity/role-based-access-control/permissions-reference#security-reader). You will also need a [Microsoft Entra ID P1 license](/entra/id-protection/overview-identity-protection#license-requirements) and a tenant with Conditional Access policies configured.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- List active MFA Conditional Access policies in my tenant.</div><div class="diff-line diff-context">- Which MFA policies are enforced in my tenant?</div><div class="diff-line diff-context">- Which Conditional Access policies are enabled in my tenant?</div><div class="diff-line diff-context">- *Who is the technical contact for my tenant?*</div><div class="diff-line diff-context">- *Who is the security compliance contact for my tenant?*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Microsoft Entra devices</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-external-method-manage.md" target="_blank">docs/identity/authentication/how-to-authentication-external-method-manage.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by emakedon23 on Aug 5, 2025 2:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-external-method-manage" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-authentication-external-method-manage.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How users register their EAM by using the registration wizard</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When a user signs in, a registration wizard helps them register the EAMs they&#39;re enabled to use. If they enabled other methods for sign-in, they might need to select **I want to set up a different method** &gt; **External Auth methods** to proceed. They need to authenticate with their EAM provider to register the EAM in Microsoft Entra ID. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the authentication succeeds, a message confirms registration completed and the EAM is registered. </div><div class="diff-line diff-context">The user is redirected to the resource they wanted to access. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How users register their EAM by using the registration wizard</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When a user signs in, a registration wizard helps them register the EAMs they&#39;re enabled to use. If they are enabled for other authentication methods, they might need to select **I want to set up a different method** &gt; **External Auth methods** to proceed. They need to authenticate with their EAM provider to register the EAM in Microsoft Entra ID. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the authentication succeeds, a message confirms registration completed and the EAM is registered. </div><div class="diff-line diff-context">The user is redirected to the resource they wanted to access. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
