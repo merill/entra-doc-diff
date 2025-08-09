@@ -1,0 +1,653 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 7th 2025, 8:25 PM PDT</p>
+        <p>Report generated on August 8th 2025, 8:25 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">30</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/zTLS.md" target="_blank">docs/id-protection/zTLS.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Aug 8, 2025 8:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/zTLS" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> copilot-agents-080825</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-entra-risky-user-summarization.md" target="_blank">docs/fundamentals/copilot-entra-risky-user-summarization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Chris Werner on Aug 8, 2025 9:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-entra-risky-user-summarization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+40</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add prompts to risky users</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Risk summary: summarize in natural language why the user risk level was elevated.</div><div class="diff-line diff-context">- Recommendations: get guidance on how to mitigate and respond to these types of attacks, with quick links to help and documentation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to access the risky user summary capability of Microsoft Entra ID Protection and Copilot in Microsoft Entra.  Using this feature requires [Microsoft Entra ID P2 licenses](/entra/id-protection/overview-identity-protection#license-requirements).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Investigate risky users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Incident Response Playbooks](/security/operations/incident-response-playbooks)</div><div class="diff-line diff-context">- [Risk-based Access Policies](/entra/id-protection/concept-identity-protection-policies)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Learn more about [risky users](/entra/id-protection/howto-identity-protection-investigate-risk#risky-users-report).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Risk summary: summarize in natural language why the user risk level was elevated.</div><div class="diff-line diff-context">- Recommendations: get guidance on how to mitigate and respond to these types of attacks, with quick links to help and documentation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes how to access the risky user summary capability of Microsoft Entra ID Protection and Copilot in Microsoft Entra. Using this feature requires [Microsoft Entra ID P2 licenses](/entra/id-protection/overview-identity-protection#license-requirements).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Investigate risky users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Incident Response Playbooks](/security/operations/incident-response-playbooks)</div><div class="diff-line diff-context">- [Risk-based Access Policies](/entra/id-protection/concept-identity-protection-policies)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Investigate risky users using Copilot</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Launch Security Copilot from the **Copilot** button in the Microsoft Entra admin center. Use natural language questions or prompts to:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- List or identify users based on risk</div><div class="diff-line diff-added">- Extract user-specific risk information</div><div class="diff-line diff-added">- Summarize user risk history</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### List or identify users based on risk</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-security-entra-responsible-ai-faq.md" target="_blank">docs/fundamentals/copilot-security-entra-responsible-ai-faq.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-security-entra-responsible-ai-faq" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-21</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> metadata-toc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date:  10/29/2024</div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.localizationpriority:  high</div><div class="diff-line diff-deleted">ms.collection:</div><div class="diff-line diff-deleted">ms.custom: microsoft-copilot, ignite-2024</div><div class="diff-line diff-deleted">ms.reviewer:</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Responsible AI FAQ: Copilot in Microsoft Entra </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This FAQ provides answers to common questions about Responsible AI as it relates to Security Copilot in Microsoft Entra. Learn how this AI-powered security solution enhances the efficiency and capabilities of IT and security professionals to improve security outcomes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## What is Copilot in Microsoft Entra? </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Security Copilot is a natural language, generative AI-powered security solution that helps increase the efficiency and capabilities of IT and Security professionals to improve security outcomes at machine speed and scale. It draws context from plugins and data to answer prompts so that security professionals and IT admins can help keep their organizations secure.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## What can Copilot in Microsoft Entra do?  </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date:  10/29/2024</div><div class="diff-line diff-added">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.localizationpriority:  high</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Responsible AI FAQ: Security Copilot in Microsoft Entra </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This FAQ provides answers to common questions about Responsible AI as it relates to Security Copilot in Microsoft Entra. Learn how this AI-powered security solution enhances the efficiency and capabilities of IT and security professionals to improve security outcomes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## What is Security Copilot in Microsoft Entra?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Security Copilot is a natural language, generative AI-powered security solution that helps increase the efficiency and capabilities of IT and Security professionals to improve security outcomes at machine speed and scale. It draws context from plugins and data to answer prompts so that security professionals and IT admins can help keep their organizations secure.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## What can Security Copilot in Microsoft Entra do?</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-security-entra.md" target="_blank">docs/fundamentals/copilot-security-entra.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 4:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-security-entra" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-25</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> cleanup</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article introduces you to Security Copilot in Microsoft Entra.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- [What is Microsoft Security Copilot?](/security-copilot/microsoft-security-copilot)</div><div class="diff-line diff-deleted">- [Understand authentication in Microsoft Security Copilot](/security-copilot/authentication)</div><div class="diff-line diff-deleted">- [Prompting in Microsoft Security Copilot](/security-copilot/prompting-security-copilot)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Security Copilot experiences</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Security Copilot in Microsoft Entra includes the standalone Security Copilot experience, embedded experiences in the Microsoft Entra admin center, specialized agents that can perform tasks, and natural language prompts that can be used in several end-to-end scenarios.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get started</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In the Security Copilot platform, Microsoft Entra is a plugin that provides access to identity data and insights. To use Security Copilot in Microsoft Entra, you need to onboard to Security Copilot and turn on the Microsoft Entra plugin.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Onboard to Security Copilot by following the [Get started with Microsoft Security Copilot](/security-copilot/get-started-security-copilot) guide.</div><div class="diff-line diff-context">    - This guide contains guidance around subscription requirements, billing, and capacity.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article introduces you to Security Copilot in Microsoft Entra.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Security Copilot experiences</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Security Copilot in Microsoft Entra includes the standalone Security Copilot experience, embedded experiences in the Microsoft Entra admin center, specialized agents that can perform tasks, and natural language prompts that can be used in several end-to-end scenarios.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get started</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In the Security Copilot platform, Microsoft Entra is a plugin that provides access to your organization&#39;s identity data and insights. To use Security Copilot in Microsoft Entra, you need to onboard to Security Copilot and turn on the Microsoft Entra plugin. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Onboard to Security Copilot by following the [Get started with Microsoft Security Copilot](/security-copilot/get-started-security-copilot) guide.</div><div class="diff-line diff-context">    - This guide contains guidance around subscription requirements, billing, and capacity.</div><div class="diff-line diff-added">    - Take a moment to [understand authentication in Microsoft Security Copilot](/security-copilot/authentication).</div><div class="diff-line diff-added">1. In the Security Copilot standalone experience, select the **Sources** icon from the prompt bar and turn on the Microsoft Entra plugin for Security Copilot, if it&#39;s not already on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Once you&#39;re all set up in Security Copilot, you can start using [natural language prompts](/security-copilot/prompting-security-copilot) to help remediate identity-based incidents. You can always check the **Promptbook library** in the standalone [Security Copilot](https://securitycopilot.microsoft.com/) experience for more examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- *Give me all user details for karita@woodgrovebank.com and extract the user Object ID.*</div><div class="diff-line diff-context">- *Does karita@woodgrovebank.com have any registered devices in Microsoft Entra?*</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/whats-new-docs.md" target="_blank">docs/identity-platform/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Aug 8, 2025 11:33 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-19</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## June 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### New articles</div><div class="diff-line diff-context">- [Single-page application: Add sign-in and sign-out code](scenario-spa-sign-in.md) - The update improved content clarity.</div><div class="diff-line diff-context">- [Microsoft Entra authentication and authorization error codes](reference-error-codes.md) - Partially update error code.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## April 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### New articles</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">* [Add and manage application credentials in Microsoft Entra ID](how-to-add-credentials.md) - Register app refactor</div><div class="diff-line diff-deleted">* [How to add a redirect URI to your application](how-to-add-redirect-uri.md) - Register app refactor</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Updated articles</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">* [Quickstart: Call a web API that is protected by the Microsoft identity platform](quickstart-web-api-dotnet-protect-app.md) - Update ASP.NET Core web API tutorial (from minimal weather forecast API to controller-based Todo list API)</div><div class="diff-line diff-deleted">* [Quickstart: Sign in users in a sample Desktop app](quickstart-desktop-app-sign-in.md) - Register app refactor</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## July 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Updated articles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [What is the Microsoft identity platform?](v2-overview.md) - The update improved content clarity.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## June 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### New articles</div><div class="diff-line diff-context">- [Single-page application: Add sign-in and sign-out code](scenario-spa-sign-in.md) - The update improved content clarity.</div><div class="diff-line diff-context">- [Microsoft Entra authentication and authorization error codes](reference-error-codes.md) - Partially update error code.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization-logs-metrics.md" target="_blank">docs/identity/conditional-access/agent-optimization-logs-metrics.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 8:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization-logs-metrics" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> copilot-agents-080825</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-deleted">ms.date: 07/21/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># View logs and metrics for the Conditional Access optimization agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - For more information on roles for the Conditional Access optimization agent, see [Assign Security Copilot access](/copilot/security/authentication#assign-security-copilot-access)</div><div class="diff-line diff-context">- Review [Privacy and data security in Microsoft Security Copilot](/copilot/security/privacy-data-security)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Limitations</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- Avoid using an account to set up the agent that requires role activation with Privileged Identity Management (PIM). Using an account that doesn&#39;t have standing permissions might cause authentication failures for the agent.</div><div class="diff-line diff-deleted">- Once agents are started, they can&#39;t be stopped or paused. It might take a few minutes to run.</div><div class="diff-line diff-deleted">- For policy consolidation, each agent run only looks at four similar policy pairs.</div><div class="diff-line diff-deleted">- The agent currently runs as the user who enables it.</div><div class="diff-line diff-deleted">- We recommend running the agent from the Microsoft Entra admin center.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-added">ms.date: 08/08/2025</div><div class="diff-line diff-added">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># View logs and metrics for the Conditional Access optimization agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - For more information on roles for the Conditional Access optimization agent, see [Assign Security Copilot access](/copilot/security/authentication#assign-security-copilot-access)</div><div class="diff-line diff-context">- Review [Privacy and data security in Microsoft Security Copilot](/copilot/security/privacy-data-security)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Agent summary</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **Agent summary** at the top of the Conditional Access optimization agent page provides a quick summary of what the agent has discovered in the last 30 days. The total number of [security compute units (SCU)](/copilot/security/manage-usage) consumed by the agent is also provided.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-entra-lifecycle-workflow.md" target="_blank">docs/fundamentals/copilot-entra-lifecycle-workflow.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-entra-lifecycle-workflow" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> metadata-toc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date: 02/19/2025</div><div class="diff-line diff-deleted">ms.topic: article</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-deleted">ms.custom: microsoft-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Manage employee lifecycle using Microsoft Security Copilot</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date: 02/19/2025</div><div class="diff-line diff-added">ms.update-cycle: 180-days</div><div class="diff-line diff-added">ms.topic: how-to</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Manage employee lifecycle using Microsoft Security Copilot</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-entra-security-scenarios.md" target="_blank">docs/fundamentals/copilot-entra-security-scenarios.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Chris Werner on Aug 8, 2025 9:31 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-entra-security-scenarios" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add prompts to risky users</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;./media/copilot-entra-risky-user-summarization/risky-user-details.png&quot; alt-text=&quot;Screenshot that shows the ID Protection risky user summarization details.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Application risk</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Identity administrators and security analysts can use Microsoft Security Copilot to quickly assess the risk level of applications from workload identities. By leveraging natural language queries, you can easily discover the granted permissions, unused apps in your tenant, and the risk level of applications. This allows admins to take appropriate actions to mitigate risks and ensure the security of your organization&#39;s applications.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;./media/copilot-entra-risky-user-summarization/risky-user-details.png&quot; alt-text=&quot;Screenshot that shows the ID Protection risky user summarization details.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also add your own prompts in the Copilot window for the following use cases;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [List or Identify Users Based on Risk](copilot-entra-risky-user-summarization.md#list-or-identify-users-based-on-risk)</div><div class="diff-line diff-added">- [User-Specific Risk Information](copilot-entra-risky-user-summarization.md#user-specific-risk-information)</div><div class="diff-line diff-added">- [User Risk History](copilot-entra-risky-user-summarization.md#user-risk-history)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Application risk</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Identity administrators and security analysts can use Microsoft Security Copilot to quickly assess the risk level of applications from workload identities. By leveraging natural language queries, you can easily discover the granted permissions, unused apps in your tenant, and the risk level of applications. This allows admins to take appropriate actions to mitigate risks and ensure the security of your organization&#39;s applications.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization.md" target="_blank">docs/identity/conditional-access/agent-optimization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 8:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> copilot-agents-080825</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">ms.date: 08/08/2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft Entra Conditional Access optimization agent with Microsoft Security Copilot</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">ms.date: 08/08/2025</div><div class="diff-line diff-added">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft Entra Conditional Access optimization agent with Microsoft Security Copilot</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/quickstart-native-authentication-single-page-app-sdk-sign-in.md" target="_blank">docs/identity-platform/quickstart-native-authentication-single-page-app-sdk-sign-in.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Derdus Kenga on Aug 8, 2025 10:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-native-authentication-single-page-app-sdk-sign-in" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> review comments</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">* A user flow. For more information, see [create self-service sign-up user flows for apps in external tenants](../external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md). Under **Identity providers**, select your preferred method of authentication, that&#39;s, **Email with password** or **Email one-time passcode**. For this code sample, you can include the following user attributes in your user flow as the app submit these attributes:</div><div class="diff-line diff-context">  * **Given Name**</div><div class="diff-line diff-context">  * **Surname**</div><div class="diff-line diff-deleted">  * **Job Tittle**</div><div class="diff-line diff-deleted">  * **Country**</div><div class="diff-line diff-context">* Register a new app in the [Microsoft Entra admin center](https://entra.microsoft.com), configured for *Accounts in this organizational directory only*. Refer to [Register an application](quickstart-register-app.md) for more details. Record the following values from the application **Overview** page for later use:</div><div class="diff-line diff-context">  * Application (client) ID </div><div class="diff-line diff-context">  * Directory (tenant) ID</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">* A user flow. For more information, see [create self-service sign-up user flows for apps in external tenants](../external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md). Under **Identity providers**, select your preferred method of authentication, that&#39;s, **Email with password** or **Email one-time passcode**. For this code sample, you can include the following user attributes in your user flow as the app submit these attributes:</div><div class="diff-line diff-context">  * **Given Name**</div><div class="diff-line diff-context">  * **Surname**</div><div class="diff-line diff-added">  * **Job Title**</div><div class="diff-line diff-added">  * **Country/Region**</div><div class="diff-line diff-context">* Register a new app in the [Microsoft Entra admin center](https://entra.microsoft.com), configured for *Accounts in this organizational directory only*. Refer to [Register an application](quickstart-register-app.md) for more details. Record the following values from the application **Overview** page for later use:</div><div class="diff-line diff-context">  * Application (client) ID </div><div class="diff-line diff-context">  * Directory (tenant) ID</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization-review-suggestions.md" target="_blank">docs/identity/conditional-access/agent-optimization-review-suggestions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 8:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization-review-suggestions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> copilot-agents-080825</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date: 07/24/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to review and apply suggestions from the Conditional Access optimization agent</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.date: 07/24/2025</div><div class="diff-line diff-added">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to review and apply suggestions from the Conditional Access optimization agent</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization-phased-rollout.md" target="_blank">docs/identity/conditional-access/agent-optimization-phased-rollout.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 8, 2025 8:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization-phased-rollout" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> copilot-agents-080825</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access optimization agent phased rollout (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.custom: security-copilot</div><div class="diff-line diff-added">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access optimization agent phased rollout (preview)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-in.md" target="_blank">docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-in.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tracey Torble on Aug 8, 2025 10:33 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-in" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-in.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;nextstepaction&quot;]</div><div class="diff-line diff-deleted">&gt; [Tutorial: Reset password in Angular single-page app by using native authentication JavaScript SDK](tutorial-native-authentication-single-page-app-angular-reset-password.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;nextstepaction&quot;]</div><div class="diff-line diff-added">&gt; [Tutorial: Reset password in Angular single-page app by using native authentication JavaScript SDK](tutorial-native-authentication-single-page-app-angular-reset-password.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Derdus Kenga on Aug 8, 2025 10:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> review comments</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;nextstepaction&quot;]</div><div class="diff-line diff-deleted">&gt; [Tutorial: Sign in users into a React single-page app by using native authentication JavaScript SDK](tutorial-native-authentication-single-page-app-angular-sign-in.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;nextstepaction&quot;]</div><div class="diff-line diff-added">&gt; [Tutorial: Sign in users into a React single-page app by using native authentication JavaScript SDK](tutorial-native-authentication-single-page-app-angular-sign-in.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/fundamentals/copilot-security-entra-responsible-ai-faq.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Aug 8, 2025 6:25 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/fundamentals/copilot-security-entra-responsible-ai-faq</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-59 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> delete-file</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/id-protection/zTLS.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Aug 8, 2025 8:17 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/id-protection/zTLS</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-0 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> delete-extra-file</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
