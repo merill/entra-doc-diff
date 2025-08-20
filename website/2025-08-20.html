@@ -1,0 +1,501 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 18th 2025, 8:13 PM PDT</p>
+        <p>Report generated on August 19th 2025, 8:13 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">34</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">17</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/bulk-operations.md" target="_blank">docs/fundamentals/bulk-operations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Aug 19, 2025 10:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/bulk-operations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-19</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updating alt text</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade) and in the left-hand navigation pane, select the **Groups** tab and then **All groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/groups-management-page.png&quot; alt-text=&quot;Screenshot of the Microsoft Entra ID Groups management page showing the all groups view.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. Select **Download groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/download-groups-button.png&quot; alt-text=&quot;Screenshot of the Download groups button in the Microsoft Entra ID Groups interface.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Enter a filename and select **Start bulk operation**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/download-filename-dialog.png&quot; alt-text=&quot;Screenshot of the download filename dialog box for bulk groups download.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. Select the **Click here to view the status of each operation** link to navigate to the **Bulk operations** blade. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/success-notification.png&quot; alt-text=&quot;Screenshot of the success notification message for bulk groups download operation.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Select the filename to download the CSV file containing all groups with the specified columns.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade) and in the left-hand navigation pane, select the **Groups** tab and then **All groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/groups-management-page.png&quot; alt-text=&quot;Screenshot of the Microsoft Entra admin center Groups blade showing the All groups list with column headers and actions.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. Select **Download groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/download-groups-button.png&quot; alt-text=&quot;Screenshot of the Groups page with the Download groups button highlighted in the toolbar.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Enter a filename and select **Start bulk operation**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/download-filename-dialog.png&quot; alt-text=&quot;Screenshot of the Download groups dialog prompting for a filename before starting the bulk operation.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. Select the **Click here to view the status of each operation** link to navigate to the **Bulk operations** blade. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;Media/bulk-operations/success-notification.png&quot; alt-text=&quot;Screenshot of a success notification confirming the bulk groups download was submitted with a link to view status.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Select the filename to download the CSV file containing all groups with the specified columns.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-pta-quick-start.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-pta-quick-start.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Aug 19, 2025 5:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-pta-quick-start" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> minor Acrolinx edits to improve score</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Microsoft Entra pass-through authentication allows your users to sign in to both on-premises and cloud-based applications by using the same passwords. Pass-through Authentication signs users in by validating their passwords directly against on-premises Active Directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-deleted">&gt;If you are migrating from AD FS (or other federation technologies) to Pass-through Authentication, view [Resources for migrating applications to Microsoft Entra ID](~/identity/enterprise-apps/migration-resources.md).</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt;If you deploying Pass Through Authentication with the Azure Government cloud, view [Hybrid Identity Considerations for Azure Government](./reference-connect-government-cloud.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Follow these instructions to deploy Pass-through Authentication on your tenant:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Ensure that the following prerequisites are in place.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-deleted">&gt;From a security standpoint, administrators should treat the server running the PTA agent as if it were a domain controller.  The PTA agent servers should be hardened along the same lines as outlined in [Securing Domain Controllers Against Attack](/windows-server/identity/ad-ds/plan/security-best-practices/securing-domain-controllers-against-attack)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;in-the-entra-admin-center&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### In your on-premises environment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Identify a server running Windows Server 2016 or later to run Microsoft Entra Connect. If not enabled already, [enable TLS 1.2 on the server](./how-to-connect-install-prerequisites.md#enable-tls-12-for-azure-ad-connect). Add the server to the same Active Directory forest as the users whose passwords you need to validate. It should be noted that installation of Pass-Through Authentication agent on Windows Server Core versions is not supported. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Microsoft Entra pass-through authentication allows your users to sign in to both on-premises and cloud-based applications by using the same passwords. Pass-through Authentication signs users in by validating their passwords directly against on-premises Active Directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-added">&gt;If you&#39;re migrating from AD FS (or other federation technologies) to Pass-through Authentication, view [Resources for migrating applications to Microsoft Entra ID](~/identity/enterprise-apps/migration-resources.md).</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt;If you&#39;re deploying Pass Through Authentication with the Azure Government cloud, view [Hybrid Identity Considerations for Azure Government](./reference-connect-government-cloud.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Follow these instructions to deploy Pass-through Authentication on your tenant:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Ensure that the following prerequisites are in place.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-added">&gt;From a security standpoint, administrators should treat the server running the PTA agent as if it were a domain controller. The PTA agent servers should be hardened along the same lines as outlined in [Securing Domain Controllers Against Attack](/windows-server/identity/ad-ds/plan/security-best-practices/securing-domain-controllers-against-attack)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;in-the-entra-admin-center&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### In your on-premises environment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Identify a server running Windows Server 2016 or later to run Microsoft Entra Connect. If not enabled already, [enable TLS 1.2 on the server](./how-to-connect-install-prerequisites.md#enable-tls-12-for-azure-ad-connect). Add the server to the same Active Directory forest as the users whose passwords you need to validate. It should be noted that installation of Pass-Through Authentication agent on Windows Server Core versions isn&#39;t supported. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-enable-multi-geo.md" target="_blank">docs/global-secure-access/how-to-enable-multi-geo.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sumeet Mittal on Aug 19, 2025 4:25 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-enable-multi-geo" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-enable-multi-geo.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-enable-multi-geo/multi-geo-support-diagram.svg&quot; alt-text=&quot;Diagram that illustrates how Multi-Geo support routes traffic with Microsoft Entra private network connectors.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enable multi-Geo capability</div><div class="diff-line diff-deleted">To enable the multi-Geo capability for Microsoft Entra Private Access, complete the following steps. This procedure involves creating connector groups in different geographic regions, installing connectors, and adding application segments to the connector groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Secure Access Administrator](../identity/role-based-access-control/permissions-reference.md#global-secure-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Applications** &gt; **Enterprise applications** &gt; **Private Network connectors**.    </div><div class="diff-line diff-deleted">1. Create two connector groups, each associated with a different geographic region.   </div><div class="diff-line diff-context">    1. Select **+ New Connector Group**.   </div><div class="diff-line diff-context">    1. In the **New Connector Group** pane, enter a name for the connector group.</div><div class="diff-line diff-deleted">    1. Under Advanced settings, select the optimized **country/region** for the connector group. The region you select determines the backend that the connector group connects to.</div><div class="diff-line diff-deleted">    1. Repeat steps **a** - **c** for the second connector group.</div><div class="diff-line diff-deleted">1. Install a connector in each region. These connector installations require working with an admin in the associated region. For more information, see [How to configure private network connectors for Microsoft Entra Private Access and Microsoft Entra application proxy](how-to-configure-connectors.md).   </div><div class="diff-line diff-deleted">1. Add an application segment to each of the connector groups.   </div><div class="diff-line diff-context">    1. Browse to **Global Secure Access** &gt; **Applications** &gt; **Enterprise applications** &gt; **Network access properties**.   </div><div class="diff-line diff-context">    1. Select **+ Add application segment**.</div><div class="diff-line diff-context">    1. Select the application segment you want to add to the connector group.  </div><div class="diff-line diff-deleted">    1. Select **Save**.  </div><div class="diff-line diff-deleted">    1. Repeat steps **a** - **d** for the second connector group.</div><div class="diff-line diff-context">1. After about 30 minutes, the multi-Geo configuration takes effect and traffic begins flowing. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-enable-multi-geo/multi-geo-support-diagram.svg&quot; alt-text=&quot;Diagram that illustrates how Multi-Geo support routes traffic with Microsoft Entra private network connectors.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enable multi-Geo capability</div><div class="diff-line diff-added">To enable the multi-Geo capability for Microsoft Entra Private Access, complete the following steps. This procedure involves creating connector group in different geographic region, installing connectors, and adding application segments to the connector group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Secure Access Administrator](../identity/role-based-access-control/permissions-reference.md#global-secure-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Applications** &gt; **Enterprise applications** &gt; **Private Network connectors**.    </div><div class="diff-line diff-added">1. Create a connector group, associate it with a geographic region of your choice.   </div><div class="diff-line diff-context">    1. Select **+ New Connector Group**.   </div><div class="diff-line diff-context">    1. In the **New Connector Group** pane, enter a name for the connector group.</div><div class="diff-line diff-added">    1. Under Advanced settings, select the optimized **country/region** for the connector group. The region you select determines the backend that the connector group connects to.    </div><div class="diff-line diff-added">1. Install a connector. The connector installation require working with an admin in the associated region. For more information, see [How to configure private network connectors for Microsoft Entra Private Access and Microsoft Entra application proxy](how-to-configure-connectors.md).   </div><div class="diff-line diff-added">1. Add an application segment to the connector group.   </div><div class="diff-line diff-context">    1. Browse to **Global Secure Access** &gt; **Applications** &gt; **Enterprise applications** &gt; **Network access properties**.   </div><div class="diff-line diff-context">    1. Select **+ Add application segment**.</div><div class="diff-line diff-context">    1. Select the application segment you want to add to the connector group.  </div><div class="diff-line diff-added">    1. Select **Save**.      </div><div class="diff-line diff-context">1. After about 30 minutes, the multi-Geo configuration takes effect and traffic begins flowing. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-approval-policy.md" target="_blank">docs/id-governance/entitlement-management-access-package-approval-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by myra-ramdenbourg on Aug 19, 2025 8:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-approval-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update entitlement-management-access-package-approval-policy.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you configure requestor information in your access package&#39;s policy, can view the requestor&#39;s responses to the questions. For guidance on seeing requestor information, see [View requestor&#39;s answers to questions](entitlement-management-request-approve.md#view-requestors-answers-to-questions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change lifecycle settings for an access package](entitlement-management-access-package-lifecycle-policy.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you configure requestor information in your access package&#39;s policy, can view the requestor&#39;s responses to the questions. For guidance on seeing requestor information, see [View requestor&#39;s answers to questions](entitlement-management-request-approve.md#view-requestors-answers-to-questions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Configure whether requestors can see approver details (preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can control whether requestors see approver details for pending access package requests in the My Access portal. You can set this at the access package level or at the tenant level (default for all packages). The access package setting overrides the tenant setting when explicitly set to Yes or No.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	When creating a new access package or editing a policy for an existing access package, under **Approval** expand **Advanced request settings**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	Set Show approver details on pending access package requests (preview) to one of the following:</div><div class="diff-line diff-added">- Yes – All users in scope of this access package will see the approver’s name and email address on their pending requests in My Access.</div><div class="diff-line diff-added">- No – Users won’t see any approver information for this access package.</div><div class="diff-line diff-added">- Default – Inherit the tenant-level setting.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!IMPORTANT] If the access package setting is set to Yes or No, it overrides the tenant-level setting. If it’s set to Default, it respects the tenant-level setting.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change lifecycle settings for an access package](entitlement-management-access-package-lifecycle-policy.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-request-access.md" target="_blank">docs/id-governance/entitlement-management-request-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by myra-ramdenbourg on Aug 19, 2025 7:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update entitlement-management-request-access.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Request history** to confirm the request was canceled.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Approve or deny access requests](entitlement-management-request-approve.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Request history** to confirm the request was canceled.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## View approver information for pending requests</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">If the access package is configured to display approver details, you can view who your approver is for any pending requests.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Prerequisite role:** Requestor</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. In the My Access portal, select **Request history** to see a list of your requests and the status.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Select the **View** link for the request that is pending approval. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. In the request details pane, select **Details** under pending approval. The approver information will be displayed if the access package policy allows it.   </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Approve or deny access requests](entitlement-management-request-approve.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/managed-identities-glossary.md" target="_blank">docs/identity/managed-identities-azure-resources/managed-identities-glossary.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Aug 19, 2025 10:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identities-glossary" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: managed-identities</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 07/29/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Managed identities glossary</div><div class="diff-line diff-context">**Azure Instance Metadata Service (IMDS)**</div><div class="diff-line diff-context">: A REST endpoint available to all VMs created through Azure Resource Manager. IMDS provides access to managed identity tokens without requiring credentials.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Azure Resource Manager (ARM)**</div><div class="diff-line diff-context">: The deployment and management service for Azure that provides a management layer for creating, updating, and deleting resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## B</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">**Blast Radius**</div><div class="diff-line diff-deleted">: The scope of impact when a security incident or misconfiguration occurs. Regional isolation helps reduce the blast radius by limiting managed identity usage to a single region.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## C</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: managed-identities</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 08/19/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Managed identities glossary</div><div class="diff-line diff-context">**Azure Instance Metadata Service (IMDS)**</div><div class="diff-line diff-context">: A REST endpoint available to all VMs created through Azure Resource Manager. IMDS provides access to managed identity tokens without requiring credentials.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Azure Resource Manager**</div><div class="diff-line diff-context">: The deployment and management service for Azure that provides a management layer for creating, updating, and deleting resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## C</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Conditional Access for Workload Identities**</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-macos-client-release-history.md" target="_blank">docs/global-secure-access/reference-macos-client-release-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Aug 19, 2025 9:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-macos-client-release-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Aug 19 ready to publish</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article tracks the changes in each released version of the Global Secure Access client for macOS.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 08/05/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/reference-macos-client-release-history/macos-client-download-screen.png&quot; alt-text=&quot;Screenshot of the Client download screen with the Download Client button highlighted.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 1.1.25070402</div><div class="diff-line diff-deleted">Released for download on August 14, 2025.</div><div class="diff-line diff-context">### Other changes</div><div class="diff-line diff-context">- Bug fix: Fixes a compatibility issue with macOS 26.</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">- Enhanced telemetry for better supportability and monitoring.</div><div class="diff-line diff-context">- Miscellaneous bug fixes and improvements.</div><div class="diff-line diff-context">### Known issues</div><div class="diff-line diff-deleted">- There&#39;s a known compatibility issue with macOS 26 that causes the device to lose connectivity. A new client version compatible with macOS 26 is set to release in August 2025. You need to deploy that version before upgrading to macOS 26. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 1.1.25060400</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article tracks the changes in each released version of the Global Secure Access client for macOS.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/reference-macos-client-release-history/macos-client-download-screen.png&quot; alt-text=&quot;Screenshot of the Client download screen with the Download Client button highlighted.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 1.1.25070402</div><div class="diff-line diff-added">Released for download on August 19, 2025.</div><div class="diff-line diff-context">### Other changes</div><div class="diff-line diff-context">- Bug fix: Fixes a compatibility issue with macOS 26.</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">- Enhanced telemetry for better supportability and monitoring.</div><div class="diff-line diff-context">- Miscellaneous bug fixes and improvements.</div><div class="diff-line diff-context">### Known issues</div><div class="diff-line diff-added">- Client version **1.1.25070401** has a known compatibility issue with macOS 26 that causes the device to lose connectivity. To maintain compatibility with macOS 26, upgrade to and deploy client version **1.1.25070402** before upgrading to macOS 26. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 1.1.25060400</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/overview.md" target="_blank">docs/identity/managed-identities-azure-resources/overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Aug 19, 2025 10:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: managed-identities</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 07/29/2025</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">ms.reviewer: ryanwi</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a high level, there are two types of identities: human and machine/non-human identities. Machine / non-human identities consist of device and workload identities. In Microsoft Entra, workload identities are applications, service principals, and managed identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">A managed identity is an identity that can be assigned to an Azure compute resource (Virtual Machine (VM), Virtual Machine Scale Set (VMSS), Service Fabric Cluster, Azure Kubernetes cluster) or any App hosting platform supported by Azure. Once a managed identity is assigned on the compute resource, it can be authorized, directly or indirectly, to access downstream dependency resources, such as a storage account, SQL database, CosmosDB, and so on. Managed identity replaces secrets such as access keys or passwords. In addition, managed identities can replace certificates or other forms of authentication for service-to-service dependencies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following video shows how you can use managed identities:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: managed-identities</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">ms.reviewer: ryanwi</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a high level, there are two types of identities: human and machine/non-human identities. Machine / non-human identities consist of device and workload identities. In Microsoft Entra, workload identities are applications, service principals, and managed identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">A managed identity is an identity that can be assigned to an Azure compute resource (Azure Virtual Machine, Azure Virtual Machine Scale Set, Service Fabric Cluster, Azure Kubernetes cluster) or any App hosting platform supported by Azure. Once a managed identity is assigned on the compute resource, it can be authorized, directly or indirectly, to access downstream dependency resources, such as a storage account, SQL database, Cosmos DB, and so on. Managed identity replaces secrets such as access keys or passwords. In addition, managed identities can replace certificates or other forms of authentication for service-to-service dependencies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following video shows how you can use managed identities:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/add-application-portal-assign-users.md" target="_blank">docs/identity/enterprise-apps/add-application-portal-assign-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Aug 19, 2025 5:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/add-application-portal-assign-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> leftnavedits4</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">To assign a user account to an enterprise application:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-deleted">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **All applications**. For example, the application that you created in the previous quickstart named **Microsoft Entra SAML Toolkit 1**.</div><div class="diff-line diff-context">1. In the left pane, select **Users and groups**, and then select **Add user/group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/add-application-portal-assign-users/assign-user.png&quot; alt-text=&quot;Assign user account to an application in your Microsoft Entra tenant.&quot; lightbox=&quot;media/add-application-portal-assign-users/assign-user.png&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">To assign a user account to an enterprise application:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Enterprise apps**. For example, select the application that you created in the previous quickstart named **Microsoft Entra SAML Toolkit 1**.</div><div class="diff-line diff-context">1. In the left pane, select **Users and groups**, and then select **Add user/group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/add-application-portal-assign-users/assign-user.png&quot; alt-text=&quot;Assign user account to an application in your Microsoft Entra tenant.&quot; lightbox=&quot;media/add-application-portal-assign-users/assign-user.png&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/use-scim-to-provision-users-and-groups.md" target="_blank">docs/identity/app-provisioning/use-scim-to-provision-users-and-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kyachi on Aug 19, 2025 6:20 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/use-scim-to-provision-users-and-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update use-scim-to-provision-users-and-groups.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|--|--|--|--|</div><div class="diff-line diff-context">|Username and password (not recommended or supported by Microsoft Entra ID)|Easy to implement|Insecure - [Your Pa$$word doesn&#39;t matter](https://techcommunity.microsoft.com/t5/microsoft-entra-azure-ad-blog/your-pa-word-doesn-t-matter/ba-p/731984)|Not supported for new gallery or non-gallery apps.|</div><div class="diff-line diff-context">|Long-lived bearer token|Long-lived tokens don&#39;t require a user to be present. They&#39;re easy for admins to use when setting up provisioning.|Long-lived tokens can be hard to share with an admin without using insecure methods such as email. |Supported for gallery and non-gallery apps. |</div><div class="diff-line diff-deleted">|OAuth authorization code grant|Access tokens have a shorter life than passwords, and have an automated refresh mechanism that long-lived bearer tokens don&#39;t have.  A real user must be present during initial authorization, adding a level of accountability. |Requires a user to be present. If the user leaves the organization, the token is invalid, and authorization needs to be completed again.|Supported for gallery apps, but not non-gallery apps. However, you can provide an access token in the UI as the secret token for short term testing purposes. Support for OAuth code grant on non-gallery is in our backlog, in addition to support for configurable auth / token URLs on the gallery app.|</div><div class="diff-line diff-context">|OAuth client credentials grant|Access tokens have a shorter life than passwords, and have an automated refresh mechanism that long-lived bearer tokens don&#39;t have. Both the authorization code grant and the client credentials grant create the same type of access token, so moving between these methods is transparent to the API.  Provisioning can be automated, and new tokens can be silently requested without user interaction. ||Supported for gallery apps, but not non-gallery apps. However, you can provide an access token in the UI as the secret token for short term testing purposes. Support for OAuth client credentials grant on non-gallery is in our backlog.|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|--|--|--|--|</div><div class="diff-line diff-context">|Username and password (not recommended or supported by Microsoft Entra ID)|Easy to implement|Insecure - [Your Pa$$word doesn&#39;t matter](https://techcommunity.microsoft.com/t5/microsoft-entra-azure-ad-blog/your-pa-word-doesn-t-matter/ba-p/731984)|Not supported for new gallery or non-gallery apps.|</div><div class="diff-line diff-context">|Long-lived bearer token|Long-lived tokens don&#39;t require a user to be present. They&#39;re easy for admins to use when setting up provisioning.|Long-lived tokens can be hard to share with an admin without using insecure methods such as email. |Supported for gallery and non-gallery apps. |</div><div class="diff-line diff-added">|OAuth authorization code grant|Access tokens have a shorter life than passwords, and have an automated refresh mechanism that long-lived bearer tokens don&#39;t have.  A real user must be present during initial authorization, adding a level of accountability. |Requires a user to be present. If the user leaves the organization, the token is invalid, and authorization needs to be completed again.|Supported for gallery apps and non-gallery apps.|</div><div class="diff-line diff-context">|OAuth client credentials grant|Access tokens have a shorter life than passwords, and have an automated refresh mechanism that long-lived bearer tokens don&#39;t have. Both the authorization code grant and the client credentials grant create the same type of access token, so moving between these methods is transparent to the API.  Provisioning can be automated, and new tokens can be silently requested without user interaction. ||Supported for gallery apps, but not non-gallery apps. However, you can provide an access token in the UI as the secret token for short term testing purposes. Support for OAuth client credentials grant on non-gallery is in our backlog.|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/fundamentals/scenario-azure-first-sap-identity-integration.md
+            </div>
+            <div class="file-meta">
+              Deleted by John Flores on Aug 19, 2025 5:49 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/fundamentals/scenario-azure-first-sap-identity-integration</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-264 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> [SAP] Move article to SAP directory in azure-docs-pr</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
