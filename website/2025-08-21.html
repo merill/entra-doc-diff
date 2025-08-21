@@ -1,0 +1,686 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 19th 2025, 8:12 PM PDT</p>
+        <p>Report generated on August 20th 2025, 8:12 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">30</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-approval-policy.md" target="_blank">docs/id-governance/entitlement-management-access-package-approval-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Aug 20, 2025 7:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-approval-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revert Update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you configure requestor information in your access package&#39;s policy, can view the requestor&#39;s responses to the questions. For guidance on seeing requestor information, see [View requestor&#39;s answers to questions](entitlement-management-request-approve.md#view-requestors-answers-to-questions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Configure whether requestors can see approver details (preview)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">You can control whether requestors see approver details for pending access package requests in the My Access portal. You can set this at the access package level or at the tenant level (default for all packages). The access package setting overrides the tenant setting when explicitly set to Yes or No.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1.	When creating a new access package or editing a policy for an existing access package, under **Approval** expand **Advanced request settings**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1.	Set Show approver details on pending access package requests (preview) to one of the following:</div><div class="diff-line diff-deleted">    - Yes – All users in scope of this access package will see the approver’s name and email address on their pending requests in My Access.</div><div class="diff-line diff-deleted">    - No – Users won’t see any approver information for this access package.</div><div class="diff-line diff-deleted">    - Default – Inherit the tenant-level setting.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!IMPORTANT]</div><div class="diff-line diff-deleted">&gt;If the access package setting is set to Yes or No, it overrides the tenant-level setting. If it’s set to Default, it respects the tenant-level setting.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change lifecycle settings for an access package](entitlement-management-access-package-lifecycle-policy.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you configure requestor information in your access package&#39;s policy, can view the requestor&#39;s responses to the questions. For guidance on seeing requestor information, see [View requestor&#39;s answers to questions](entitlement-management-request-approve.md#view-requestors-answers-to-questions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change lifecycle settings for an access package](entitlement-management-access-package-lifecycle-policy.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/concept-source-of-authority-overview.md" target="_blank">docs/identity/hybrid/concept-source-of-authority-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Aug 20, 2025 4:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/concept-source-of-authority-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added heading title and service fpr metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Embrace cloud-first posture and convert Group Source of Authority (SOA) to the cloud (Preview)</div><div class="diff-line diff-context">description: Learn about Source of Authority (SOA), including prerequisites, supported scenarios, and step-by-step guidance for IT Architects and Administrators.</div><div class="diff-line diff-deleted">author: Justinha</div><div class="diff-line diff-deleted">ms.topic: conceptual</div><div class="diff-line diff-context">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-deleted">ms.reviewer: justinha</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Embrace cloud-first posture: Convert Group Source of Authority to the cloud (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how Group SOA can help IT administrators transition group management from AD DS to the cloud. You can also enable advanced scenarios like access governance with Microsoft Entra ID Governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Video:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Check out our video for an introduction to SOA and how it can help your organization shift to the cloud. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Embrace cloud-first posture and convert Group Source of Authority (SOA) to the cloud (Preview)</div><div class="diff-line diff-context">description: Learn about Source of Authority (SOA), including prerequisites, supported scenarios, and step-by-step guidance for IT Architects and Administrators.</div><div class="diff-line diff-added">author: justinha</div><div class="diff-line diff-context">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-added">ms.reviewer: dhanyahk</div><div class="diff-line diff-added">ms.service: entra-id</div><div class="diff-line diff-added">ms.topic: article</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Embrace cloud-first posture: Convert Group Source of Authority to the cloud (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how Group SOA can help IT administrators transition group management from AD DS to the cloud. You can also enable advanced scenarios like access governance with Microsoft Entra ID Governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Video: Microsoft Entra Group Source of Authority </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Check out our video for an introduction to SOA and how it can help your organization shift to the cloud. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-lifecycle.md" target="_blank">docs/identity/users/groups-lifecycle.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-lifecycle" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Existing groups](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-deleted">- [Manage settings of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">- [Manage members of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">- [Manage memberships of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-naming-policy.md" target="_blank">docs/identity/users/groups-naming-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-naming-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Existing groups](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-context">- [Expiration policy for Microsoft 365 groups](groups-lifecycle.md)</div><div class="diff-line diff-deleted">- [Manage settings of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">- [Manage members of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">- [Manage memberships of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Expiration policy for Microsoft 365 groups](groups-lifecycle.md)</div><div class="diff-line diff-added">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-restore-deleted.md" target="_blank">docs/identity/users/groups-restore-deleted.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-restore-deleted" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* [See existing groups](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-deleted">* [Manage settings of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">* [Manage members of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-deleted">* [Manage memberships of a group](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">* [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on Microsoft Entra groups:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">* [Manage rules for dynamic membership groups](groups-dynamic-membership.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-members-owners-search.md" target="_blank">docs/identity/users/groups-members-owners-search.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-members-owners-search" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">These articles provide additional information on working with groups in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [View your groups and members](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-deleted">- [Manage group memberships](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-create-rule.md)</div><div class="diff-line diff-deleted">- [Edit your group settings](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage access to resources using groups](~/fundamentals/concept-learn-about-groups.md)</div><div class="diff-line diff-context">- [Manage access to SaaS apps using groups](groups-saasapps.md)</div><div class="diff-line diff-context">- [Manage groups using PowerShell commands](~/identity/users/groups-settings-v2-cmdlets.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">These articles provide additional information on working with groups in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups](groups-create-rule.md)</div><div class="diff-line diff-context">- [Manage access to resources using groups](~/fundamentals/concept-learn-about-groups.md)</div><div class="diff-line diff-context">- [Manage access to SaaS apps using groups](groups-saasapps.md)</div><div class="diff-line diff-context">- [Manage groups using PowerShell commands](~/identity/users/groups-settings-v2-cmdlets.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/7-secure-access-conditional-access.md" target="_blank">docs/architecture/7-secure-access-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/7-secure-access-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are scenarios when it&#39;s necessary to allow access for a small, specific group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Before you begin, we recommend you create a security group, which contains external users who access resources. See, [Manage Microsoft Entra groups and group membership](~/fundamentals/how-to-manage-groups.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Conditional Access Administrator](~/identity/role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Conditional Access**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are scenarios when it&#39;s necessary to allow access for a small, specific group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Before you begin, we recommend you create a security group, which contains external users who access resources. See, [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Conditional Access Administrator](~/identity/role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Conditional Access**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/how-to-managed-identity-regional-move.md" target="_blank">docs/identity/managed-identities-azure-resources/how-to-managed-identity-regional-move.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-managed-identity-regional-move" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy user-assigned managed identity assigned permissions. You can list [Azure role assignments](/azure/role-based-access-control/role-assignments-list-powershell) but that may not be enough depending on how permissions were granted to the user-assigned managed identity. You should confirm that your solution doesn&#39;t depend on permissions granted using a service specific option.</div><div class="diff-line diff-context">1. Create a [new user-assigned managed identity](how-manage-user-assigned-managed-identities.md?pivots=identity-mi-methods-powershell#create-a-user-assigned-managed-identity-2) at the target region.</div><div class="diff-line diff-deleted">1. Grant the managed identity the same permissions as the original identity that it&#39;s replacing, including Group membership. You can review [Assign Azure roles to a managed identity](/azure/role-based-access-control/role-assignments-portal-managed-identity), and [Group membership](~/fundamentals/how-to-manage-groups.md).</div><div class="diff-line diff-context">1. Specify the new identity in the properties of the resource instance that uses the newly created user assigned managed identity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy user-assigned managed identity assigned permissions. You can list [Azure role assignments](/azure/role-based-access-control/role-assignments-list-powershell) but that may not be enough depending on how permissions were granted to the user-assigned managed identity. You should confirm that your solution doesn&#39;t depend on permissions granted using a service specific option.</div><div class="diff-line diff-context">1. Create a [new user-assigned managed identity](how-manage-user-assigned-managed-identities.md?pivots=identity-mi-methods-powershell#create-a-user-assigned-managed-identity-2) at the target region.</div><div class="diff-line diff-added">1. Grant the managed identity the same permissions as the original identity that it&#39;s replacing, including Group membership. You can review [Assign Azure roles to a managed identity](/azure/role-based-access-control/role-assignments-portal-managed-identity), and [Group membership](/entra/fundamentals/how-to-manage-groups).</div><div class="diff-line diff-context">1. Specify the new identity in the properties of the resource instance that uses the newly created user assigned managed identity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-change-type.md" target="_blank">docs/identity/users/groups-change-type.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-change-type" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Create a group with members and view all groups and members](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups in Microsoft Entra ID](groups-dynamic-membership.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups in Microsoft Entra ID](groups-dynamic-membership.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-create-rule.md" target="_blank">docs/identity/users/groups-create-rule.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-create-rule" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Create a group with members and view all groups and members](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups in Microsoft Entra ID](groups-dynamic-membership.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Manage rules for dynamic membership groups in Microsoft Entra ID](groups-dynamic-membership.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-membership.md" target="_blank">docs/identity/users/groups-dynamic-membership.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Aug 20, 2025 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-membership" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Create a group with members and view all groups and members](~/fundamentals/groups-view-azure-portal.md)</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Create or update a dynamic membership group in Microsoft Entra ID](groups-create-rule.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- [Manage Microsoft Entra groups and group membership](/entra/fundamentals/how-to-manage-groups)</div><div class="diff-line diff-context">- [Create or update a dynamic membership group in Microsoft Entra ID](groups-create-rule.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-prerequisites.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sander Berkouwer on Aug 20, 2025 12:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-prerequisites.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> |-----|-----|</div><div class="diff-line diff-context"> |`*.msappproxy.us`&lt;/br&gt;`*.servicebus.usgovcloudapi.net`|The agent uses these URLs to communicate with the Microsoft Entra cloud service. |</div><div class="diff-line diff-context"> |`mscrl.microsoft.us:80` &lt;/br&gt;`crl.microsoft.us:80` &lt;/br&gt;`ocsp.msocsp.us:80` &lt;/br&gt;`www.microsoft.us:80`| The agent uses these URLs to verify certificates.|</div><div class="diff-line diff-deleted"> |`login.windows.us` &lt;/br&gt;`secure.aadcdn.microsoftonline-p.com` &lt;/br&gt;`*.microsoftonline.us` &lt;/br&gt;`*.microsoftonline-p.us` &lt;/br&gt;`*.msauth.net` &lt;/br&gt;`*.msauthimages.net` &lt;/br&gt;`*.msecnd.net`&lt;/br&gt;`*.msftauth.net` &lt;/br&gt;`*.msftauthimages.net`&lt;/br&gt;`*.phonefactor.net` &lt;/br&gt;`enterpriseregistration.windows.net`&lt;/br&gt;`management.azure.com` &lt;/br&gt;`policykeyservice.dc.ad.msft.net`&lt;/br&gt;`ctldl.windowsupdate.us:80` &lt;/br&gt;`aadcdn.msftauthimages.us` &lt;/br&gt;`*.microsoft.us` &lt;/br&gt;`msauthimages.us` &lt;/br&gt;`mfstauthimages.us`| The agent uses these URLs during the registration process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> |-----|-----|</div><div class="diff-line diff-context"> |`*.msappproxy.us`&lt;/br&gt;`*.servicebus.usgovcloudapi.net`|The agent uses these URLs to communicate with the Microsoft Entra cloud service. |</div><div class="diff-line diff-context"> |`mscrl.microsoft.us:80` &lt;/br&gt;`crl.microsoft.us:80` &lt;/br&gt;`ocsp.msocsp.us:80` &lt;/br&gt;`www.microsoft.us:80`| The agent uses these URLs to verify certificates.|</div><div class="diff-line diff-added"> |`login.windows.us` &lt;/br&gt;`secure.aadcdn.microsoftonline-p.com` &lt;/br&gt;`*.microsoftonline.us` &lt;/br&gt;`*.microsoftonline-p.us` &lt;/br&gt;`*.msauth.net` &lt;/br&gt;`*.msauthimages.net` &lt;/br&gt;`*.msecnd.net`&lt;/br&gt;`*.msftauth.net` &lt;/br&gt;`*.msftauthimages.net`&lt;/br&gt;`*.phonefactor.net` &lt;/br&gt;`enterpriseregistration.windows.net`&lt;/br&gt;`management.azure.com` &lt;/br&gt;`policykeyservice.dc.ad.msft.net`&lt;/br&gt;`ctldl.windowsupdate.us:80` &lt;/br&gt;`aadcdn.msftauthimages.us` &lt;/br&gt;`*.microsoft.us` &lt;/br&gt;`msauthimages.us` &lt;/br&gt;`msftauthimages.us`| The agent uses these URLs during the registration process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/apple-sso-plugin.md" target="_blank">docs/identity-platform/apple-sso-plugin.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Aug 20, 2025 11:37 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/apple-sso-plugin" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If for any reason Secure Enclave needs to be disabled, follow these recommended steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. **Update the configuration**: Disable `use_most_secure_storage` by setting the flag to `false` for Boolean type or `0` for Integer type in your MDM configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. **Unregister the device**: Remove the device registration using one of these methods:</div><div class="diff-line diff-context">  - **Microsoft Authenticator**: Navigate to the device registration menu and follow the unregistration steps:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If for any reason Secure Enclave needs to be disabled, follow these recommended steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. **Update the configuration**: Disable `use_most_secure_storage` by setting the flag to `0` for Integer type in your MDM configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. **Unregister the device**: Remove the device registration using one of these methods:</div><div class="diff-line diff-context">  - **Microsoft Authenticator**: Navigate to the device registration menu and follow the unregistration steps:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md" target="_blank">docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kiran-MSFT on Aug 20, 2025 11:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-linux" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> (AzureCXP) fixes MicrosoftDocs/entra-docs-pr</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Run `sudo apt remove --purge aadlogin` (Ubuntu/Debian), `sudo yum remove aadlogin` (RHEL), or `sudo zypper remove aadlogin` (openSUSE or SLES).</div><div class="diff-line diff-context">1. If the command fails, try the low-level tools with scripts disabled:</div><div class="diff-line diff-context">   1. For Ubuntu/Debian, run `sudo dpkg --purge aadlogin`. If it&#39;s still failing because of the script, delete the `/var/lib/dpkg/info/aadlogin.prerm` file and try again.</div><div class="diff-line diff-deleted">   1. For everything else, run `rpm -e --noscripts aadogin`.</div><div class="diff-line diff-context">1. Repeat steps 3-4 for package `aadlogin-selinux`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Extension installation errors</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Run `sudo apt remove --purge aadlogin` (Ubuntu/Debian), `sudo yum remove aadlogin` (RHEL), or `sudo zypper remove aadlogin` (openSUSE or SLES).</div><div class="diff-line diff-context">1. If the command fails, try the low-level tools with scripts disabled:</div><div class="diff-line diff-context">   1. For Ubuntu/Debian, run `sudo dpkg --purge aadlogin`. If it&#39;s still failing because of the script, delete the `/var/lib/dpkg/info/aadlogin.prerm` file and try again.</div><div class="diff-line diff-added">   1. For everything else, run `rpm -e --noscripts aadlogin`.</div><div class="diff-line diff-context">1. Repeat steps 3-4 for package `aadlogin-selinux`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Extension installation errors</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-single-page-app-react-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-single-page-app-react-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jaysencpp on Aug 20, 2025 9:23 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-single-page-app-react-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fix: typo</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  npx create-react-app reactspa --template typescript</div><div class="diff-line diff-context">  cd reactspa</div><div class="diff-line diff-context">  npm install ajv</div><div class="diff-line diff-deleted">  npm installreact-router-dom</div><div class="diff-line diff-context">  npm install</div><div class="diff-line diff-context">  ```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  npx create-react-app reactspa --template typescript</div><div class="diff-line diff-context">  cd reactspa</div><div class="diff-line diff-context">  npm install ajv</div><div class="diff-line diff-added">  npm install react-router-dom</div><div class="diff-line diff-context">  npm install</div><div class="diff-line diff-context">  ```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/fundamentals/whatis.md
+            </div>
+            <div class="file-meta">
+              Deleted by John Flores on Aug 20, 2025 8:40 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/fundamentals/whatis</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-91 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] IAM Concepts Curation</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
