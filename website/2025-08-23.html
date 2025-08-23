@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 21st 2025, 8:08 PM PDT</p>
+        <p>Report generated on August 22nd 2025, 8:08 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/id-protection-guide-introduction.md" target="_blank">docs/architecture/id-protection-guide-introduction.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lynne O'Connor on Aug 22, 2025 3:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/id-protection-guide-introduction" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolve Gargi comments.3</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context">ms.service: entra-id-protection</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 08/21/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#CustomerIntent: As an IT admin, I want to learn, deploy, and test Microsoft Entra ID Protection so that I can detect, investigate, and remediate identity-based risks.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Understand the products</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Understanding the products and their core concepts is the first step toward running a successful PoC. Start with the resources in this section:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [What is Microsoft Entra ID Protection?](../id-protection/overview-identity-protection.md) explains how you can feed identity-based risks into tools like Conditional Access (CA) to make access decisions. You can also send them to a security information and event management (SIEM) tool for investigation and correlation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">  - Tables in the [What are risk detections](../id-protection/concept-identity-protection-risks.md) article summarize sign-in and user risk detections, their license requirements, and whether the detection occurs in real-time or offline.</div><div class="diff-line diff-deleted">  - [How to investigate risks](../id-protection/howto-identity-protection-investigate-risk.md) describes how to use Microsoft Entra ID Protection reports to investigate identity risks in your environment.</div><div class="diff-line diff-deleted">  - [Risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md) explains how to use the sign-in risk policy and user risk policy to allow users to self-remediate detected risks.</div><div class="diff-line diff-deleted">  - [Microsoft Graph PowerShell SDK and Microsoft Entra ID Protection](../id-protection/howto-identity-protection-graph-api.md) shows you how to use Microsoft Graph data to manage risky users.</div><div class="diff-line diff-deleted">  - [How to export risk data](../id-protection/howto-export-risk-data.md) describes methods to export risk data from Microsoft Entra ID Protection for long-term storage and analysis.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context">ms.service: entra-id-protection</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 08/22/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#CustomerIntent: As an IT admin, I want to learn, deploy, and test Microsoft Entra ID Protection so that I can detect, investigate, and remediate identity-based risks.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Understand the products</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Understanding the products and their core concepts is the first step toward running a successful PoC. Start with learning about the product features in this section:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Learn how [Microsoft Entra ID Protection](../id-protection/overview-identity-protection.md) helps you feed identity-based risks into tools like Conditional Access (CA) to make access decisions. You can send risks to a security information and event management (SIEM) tool for investigation and correlation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">  - Learn about [sign-in and user risk detections](../id-protection/concept-identity-protection-risks.md) license requirements and whether detections occur in real-time or offline.</div><div class="diff-line diff-added">  - Learn how Microsoft Entra ID Protection reports help you to [investigate risks](../id-protection/howto-identity-protection-investigate-risk.md) in your environment.</div><div class="diff-line diff-added">  - Learn how to allow users to self-remediate detected risks with [sign-in risk and user risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md).</div><div class="diff-line diff-added">  - Learn how to manage risky users with [Microsoft Graph data](../id-protection/howto-identity-protection-graph-api.md).</div><div class="diff-line diff-added">  - Learn how to [export risk data](../id-protection/howto-export-risk-data.md) from Microsoft Entra ID Protection for long-term storage and analysis.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/id-protection-guide-remediate.md" target="_blank">docs/architecture/id-protection-guide-remediate.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lynne O'Connor on Aug 22, 2025 4:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/id-protection-guide-remediate" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolved Gargi comments.5</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Use real-time risk detection to grant access to protected resources](id-protection-guide-detect.md)</div><div class="diff-line diff-context">- [Bring identity risk-related telemetry into security investigations](id-protection-guide-investigate.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article helps administrators to identify and remediate identity risks for users accessing enterprise-managed resources, including Microsoft 361. Use real-time and offline risk detections to evaluate sign-ins and user behavior. Apply automated responses such as multifactor authentication (MFA), password resets, or block access based on risk levels. Risk-based conditional access policies that scale across large environments enforce these protections.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure the following features for user self-remediation of identity risk for enterprise-managed resources with Microsoft Entra ID Protection:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure Conditional Access policies for users with dynamic enforcement based on:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. [Sign-in risk](../id-protection/concept-identity-protection-risks.md) (such as from an unfamiliar location or device)</div><div class="diff-line diff-deleted">1. [User risk](../id-protection/concept-identity-protection-risks.md#user-risk-detections) (such as leaked credentials or suspicious behavior)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Require users to verify their identity or restrict access to sensitive apps until after risk mitigation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure user alerts and notifications for the following scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Suspicious activity on their account</div><div class="diff-line diff-deleted">1. Required actions to maintain access (such as reauthentication or device compliance)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Use real-time risk detection to grant access to protected resources](id-protection-guide-detect.md)</div><div class="diff-line diff-context">- [Bring identity risk-related telemetry into security investigations](id-protection-guide-investigate.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article helps administrators to identify and remediate identity risks for users accessing enterprise-managed resources, including Microsoft 365. Use real-time and offline risk detections to evaluate sign-ins and user behavior. Apply automated responses such as multifactor authentication (MFA), password resets, or block access based on risk levels. Risk-based conditional access policies that scale across large environments enforce these protections.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure the following features for user self-remediation of identity risk for enterprise-managed resources with Microsoft Entra ID Protection:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure Conditional Access policies for users with dynamic enforcement based on:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. [Sign-in risk](../id-protection/concept-identity-protection-risks.md) such as from an unfamiliar location or device.</div><div class="diff-line diff-added">1. [User risk](../id-protection/concept-identity-protection-risks.md#user-risk-detections) such as leaked credentials or suspicious behavior.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Require users to verify their identity or restrict access to sensitive apps until after risk mitigation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Configure user alerts and notifications for the following scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Suspicious activity on their account.</div><div class="diff-line diff-added">1. Required actions to maintain access such as reauthentication or device compliance.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/id-protection-guide-investigate.md" target="_blank">docs/architecture/id-protection-guide-investigate.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lynne O'Connor on Aug 22, 2025 4:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/id-protection-guide-investigate" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolved Gargi comments.5</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Detect and investigate identity threats in the Microsoft Entra admin center or with Microsoft Graph APIs:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. [Risky sign-ins](../id-protection/howto-identity-protection-investigate-risk.md#risky-sign-ins-report) (such as [impossible travel](../id-protection/howto-identity-protection-investigate-risk.md#investigating-atypical-travel-detections), [anonymous IPs, and malware-linked IPs](../id-protection/howto-identity-protection-investigate-risk.md#investigating-malicious-ip-address-detections))</div><div class="diff-line diff-deleted">1. [Risky users](../id-protection/howto-identity-protection-investigate-risk.md#risky-users-report) (such as accounts with [leaked credentials](../id-protection/howto-identity-protection-investigate-risk.md#investigating-leaked-credentials-detections) and [suspicious behavior](../id-protection/howto-identity-protection-investigate-risk.md#investigating-password-spray-detections))</div><div class="diff-line diff-deleted">1. [Risk detections](../id-protection/howto-identity-protection-investigate-risk.md#risk-detections-report) (such as [token replay](../id-protection/howto-identity-protection-investigate-risk.md#investigating-anomalous-token-and-token-issuer-anomaly-detections) and unfamiliar sign-in properties)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Investigate with Microsoft Security Copilot in Microsoft Entra</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review logs in the Microsoft Entra admin center.</div><div class="diff-line diff-context">1. For correlation and storage, export logs to [Azure Monitor Log Analytics](../identity/monitoring-health/howto-analyze-activity-logs-log-analytics.md), [Microsoft Sentinel](/azure/sentinel/overview?tabs=defender-portal), or your dedicated SIEM.</div><div class="diff-line diff-deleted">1. Generate alerts for specific actions (such as policy changes, user unblocks).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure access in multitenant environments</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Detect and investigate identity threats in the Microsoft Entra admin center or with Microsoft Graph APIs:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. [Risky sign-ins](../id-protection/howto-identity-protection-investigate-risk.md#risky-sign-ins-report) such as [impossible travel](../id-protection/howto-identity-protection-investigate-risk.md#investigating-atypical-travel-detections), [anonymous IPs, and malware-linked IPs](../id-protection/howto-identity-protection-investigate-risk.md#investigating-malicious-ip-address-detections).</div><div class="diff-line diff-added">1. [Risky users](../id-protection/howto-identity-protection-investigate-risk.md#risky-users-report) such as accounts with [leaked credentials](../id-protection/howto-identity-protection-investigate-risk.md#investigating-leaked-credentials-detections) and [suspicious behavior](../id-protection/howto-identity-protection-investigate-risk.md#investigating-password-spray-detections).</div><div class="diff-line diff-added">1. [Risk detections](../id-protection/howto-identity-protection-investigate-risk.md#risk-detections-report) such as [token replay](../id-protection/howto-identity-protection-investigate-risk.md#investigating-anomalous-token-and-token-issuer-anomaly-detections) and unfamiliar sign-in properties.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Investigate with Microsoft Security Copilot in Microsoft Entra</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review logs in the Microsoft Entra admin center.</div><div class="diff-line diff-context">1. For correlation and storage, export logs to [Azure Monitor Log Analytics](../identity/monitoring-health/howto-analyze-activity-logs-log-analytics.md), [Microsoft Sentinel](/azure/sentinel/overview?tabs=defender-portal), or your dedicated SIEM.</div><div class="diff-line diff-added">1. Generate alerts for specific actions such as policy changes, user unblocks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure access in multitenant environments</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/id-protection-guide-detect.md" target="_blank">docs/architecture/id-protection-guide-detect.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lynne O'Connor on Aug 22, 2025 4:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/id-protection-guide-detect" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolved Gargi comments.5</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure risk policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To [configure and enable risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md), factor both types of [risk policies](../id-protection/concept-identity-protection-policies.md) in Microsoft Entra Conditional Access. If you enabled legacy risk policies in Microsoft Entra ID Protection, plan to [migrate them to Conditional Access](../id-protection/howto-identity-protection-configure-risk-policies.md#migrate-to-conditional-access).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Set up the following key foundational policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   - [User risk policy](../id-protection/howto-identity-protection-configure-risk-policies.md): Trigger actions (such as require a secure password change for high-risk users).</div><div class="diff-line diff-context">   - [Sign-in risk policy](../id-protection/howto-identity-protection-configure-risk-policies.md#sign-in-risk-policy-in-conditional-access): Evaluate each sign-in attempt and enforce controls such as multifactor authentication (MFA) or block access.</div><div class="diff-line diff-context">   - [MFA registration policy](../id-protection/howto-identity-protection-configure-mfa-policy.md): Ensure user enrollment in MFA before they become risky.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">1. Make decisions based on the [investigation and risk remediation framework](../id-protection/howto-identity-protection-investigate-risk.md#investigation-and-risk-remediation-framework).</div><div class="diff-line diff-context">1. Use [Microsoft Graph PowerShell](../id-protection/howto-identity-protection-graph-api.md) or APIs for bulk actions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For deeper analysis, [export risk data](../id-protection/howto-export-risk-data.md) to security information and event management (SIEM) tools (such as Microsoft Sentinel) or [Log Analytics](../id-protection/howto-export-risk-data.md#log-analytics).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Monitor and tune policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Use the [Impact analysis of risk-based access policies workbook](../id-protection/workbook-risk-based-policy-impact.md) for trend analysis.</div><div class="diff-line diff-context">1. To simulate policy effects, enable [report-only mode in Conditional Access](../identity/conditional-access/concept-conditional-access-report-only.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure risk policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To [configure and enable risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md), factor Sign-in risk and User [risk policies](../id-protection/concept-identity-protection-policies.md) in Microsoft Entra Conditional Access. If you enabled legacy risk policies in Microsoft Entra ID Protection, plan to [migrate them to Conditional Access](../id-protection/howto-identity-protection-configure-risk-policies.md#migrate-to-conditional-access).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Set up the following key foundational policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   - [User risk policy](../id-protection/howto-identity-protection-configure-risk-policies.md): Trigger actions such as require a secure password change for high-risk users.</div><div class="diff-line diff-context">   - [Sign-in risk policy](../id-protection/howto-identity-protection-configure-risk-policies.md#sign-in-risk-policy-in-conditional-access): Evaluate each sign-in attempt and enforce controls such as multifactor authentication (MFA) or block access.</div><div class="diff-line diff-context">   - [MFA registration policy](../id-protection/howto-identity-protection-configure-mfa-policy.md): Ensure user enrollment in MFA before they become risky.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">1. Make decisions based on the [investigation and risk remediation framework](../id-protection/howto-identity-protection-investigate-risk.md#investigation-and-risk-remediation-framework).</div><div class="diff-line diff-context">1. Use [Microsoft Graph PowerShell](../id-protection/howto-identity-protection-graph-api.md) or APIs for bulk actions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For deeper analysis, [export risk data](../id-protection/howto-export-risk-data.md) to security information and event management (SIEM) tools such as Microsoft Sentinel or [Log Analytics](../id-protection/howto-export-risk-data.md#log-analytics).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Monitor and tune policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Use the [Impact analysis of risk-based access policies workbook](../id-protection/workbook-risk-based-policy-impact.md) for trend analysis.</div><div class="diff-line diff-context">1. To simulate policy effects, enable [report-only mode in Conditional Access](../identity/conditional-access/concept-conditional-access-report-only.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/overview-recommendations.md" target="_blank">docs/identity/monitoring-health/overview-recommendations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 22, 2025 4:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/overview-recommendations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> sla-note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-deleted">ms.date: 08/18/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of the Overview page of the tenant with the Recommendations option highlighted.](./media/overview-recommendations/recommendations-overview.png) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Each recommendation contains a description, a summary of the value of addressing the recommendation, and a step-by-step action plan. If applicable, impacted resources associated with the recommendation are listed, so you can resolve each affected area. If a recommendation doesn&#39;t have any associated resources, the impacted resource type is *Tenant level*, so your step-by-step action plan impacts the entire tenant and not just a specific resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Recommendations overview table</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-added">ms.date: 08/22/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of the Overview page of the tenant with the Recommendations option highlighted.](./media/overview-recommendations/recommendations-overview.png) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Each recommendation contains a description, a summary of the value of addressing the recommendation, and a step-by-step action plan. If applicable, impacted resources associated with the recommendation are listed, so you can resolve each affected area. If a recommendation doesn&#39;t have any associated resources, the impacted resource type is *Tenant level*, so your step-by-step action plan impacts the entire tenant and not just a specific resource. The system processes recommendation data daily, reflecting activity from the preceding 24-hour window. Occasionally, data synchronization may extend up to 72 hours.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Recommendations overview table</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/howto-use-recommendations.md" target="_blank">docs/identity/monitoring-health/howto-use-recommendations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Aug 22, 2025 4:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-use-recommendations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> sla-note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-deleted">ms.date: 06/12/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Screenshot of the list of recommendations.](media/howto-use-recommendations/recommendations-list.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Each recommendation provides the same set of details that explain what the recommendation is, why it&#39;s important, and how to fix it. The recommendation service runs every 24-48 hours, depending on the recommendation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of a recommendation&#39;s status, priority, and impacted resource type.](media/howto-use-recommendations/recommendation-status-risk.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-added">ms.date: 08/22/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Screenshot of the list of recommendations.](media/howto-use-recommendations/recommendations-list.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Each recommendation provides the same set of details that explain what the recommendation is, why it&#39;s important, and how to fix it. Recommendation data refreshes every 24 hours with a one-day lag. In rare instances, updates may take up to 72 hours to appear.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of a recommendation&#39;s status, priority, and impacted resource type.](media/howto-use-recommendations/recommendation-status-risk.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
