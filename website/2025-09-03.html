@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 1st 2025, 8:00 PM PDT</p>
+        <p>Report generated on September 2nd 2025, 8:00 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">22</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">844</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/resilience-defaults.md" target="_blank">docs/identity/conditional-access/resilience-defaults.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 6:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/resilience-defaults" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+29</span> / 
+              <span class="deletions">-27</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] August Freshness Quality pass2</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-deleted">ms.reviewer: dawoo</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access: Resilience defaults</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If there was an outage of the primary authentication service, the Microsoft Entra Backup Authentication Service can automatically issue access tokens to applications for existing sessions. This functionality significantly increases Microsoft Entra resilience, because reauthentications for existing sessions account for more than 90% of authentications to Microsoft Entra ID. The Backup Authentication Service doesn&#39;t support new sessions or authentications by guest users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For authentications protected by Conditional Access, policies are reevaluated before access tokens are issued to determine:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Which Conditional Access policies apply?</div><div class="diff-line diff-deleted">1. For policies that do apply, were the required controls are satisfied?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">During an outage, not all conditions can be evaluated in real time by the Backup Authentication Service to determine whether a Conditional Access policy should apply. Conditional Access resilience defaults are a new session control that lets admins decide between:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Whether to block authentications during an outage whenever a policy condition can’t be evaluated in real-time.</div><div class="diff-line diff-context">- Allow policies to be evaluated using data collected at the beginning of the user’s session.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-added">ms.reviewer: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Conditional Access: Resilience defaults</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If there is an outage of the primary authentication service, the Microsoft Entra Backup Authentication Service automatically issues access tokens to applications for existing sessions. This functionality significantly increases Microsoft Entra resilience because reauthentications for existing sessions account for more than 90% of authentications to Microsoft Entra ID. The Backup Authentication Service doesn&#39;t support new sessions or authentications by guest users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For authentications protected by Conditional Access, policies are reevaluated before access tokens are issued to determine:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Which Conditional Access policies apply?</div><div class="diff-line diff-added">1. For policies that do apply, are the required controls satisfied?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">During an outage, the Backup Authentication Service can&#39;t evaluate all conditions in real time to determine whether a Conditional Access policy applies. Conditional Access resilience defaults are a new session control that let admins decide between:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Whether to block authentications during an outage whenever a policy condition can’t be evaluated in real-time.</div><div class="diff-line diff-context">- Allow policies to be evaluated using data collected at the beginning of the user’s session.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-install-android-client.md" target="_blank">docs/global-secure-access/how-to-install-android-client.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 2, 2025 8:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-android-client" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+26</span> / 
+              <span class="deletions">-25</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 02 updates per Review team</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the Android client app.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 08/27/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">1. On the **Basics** tab:</div><div class="diff-line diff-context">    1. Enter a **Name**.</div><div class="diff-line diff-context">    1. Set the **Platform** to **Android Enterprise**.</div><div class="diff-line diff-deleted">1. Set the **Profile type** to **Fully Managed, Dedicated, and Corporate-Owned Work Profile Only**.</div><div class="diff-line diff-context">    1. Set the **Targeted app** to **Microsoft Defender**. </div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/how-to-install-android-client/create-policy-basics.png&quot; alt-text=&quot;Screenshot of the Create app configuration policy on the Basics tab.&quot;:::   </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Settings** tab:</div><div class="diff-line diff-context">    1. Set **Configuration settings format** to **Use configuration designer**.</div><div class="diff-line diff-deleted">1. Use the JSON editor to configure the disabled configuration keys, and then select the **+ Add** button.</div><div class="diff-line diff-deleted">    1. In the search field, type `global` and select these configuration keys:</div><div class="diff-line diff-deleted">        - **Global Secure Access** (this key is required to enable Global Secure Access). </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the Android client app.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">1. On the **Basics** tab:</div><div class="diff-line diff-context">    1. Enter a **Name**.</div><div class="diff-line diff-context">    1. Set the **Platform** to **Android Enterprise**.</div><div class="diff-line diff-added">    1. Set the **Profile type** to **Fully Managed, Dedicated, and Corporate-Owned Work Profile Only**.</div><div class="diff-line diff-context">    1. Set the **Targeted app** to **Microsoft Defender**. </div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/how-to-install-android-client/create-policy-basics.png&quot; alt-text=&quot;Screenshot of the Create app configuration policy on the Basics tab.&quot; lightbox=&quot;media/how-to-install-android-client/create-policy-basics-expanded.png&quot;:::   </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Settings** tab:</div><div class="diff-line diff-context">    1. Set **Configuration settings format** to **Use configuration designer**.</div><div class="diff-line diff-added">    1. Use the JSON editor to configure the disabled configuration keys:</div><div class="diff-line diff-added">        1. Select the **+ Add** button.</div><div class="diff-line diff-added">        1. In the search field, type `global` and select these configuration keys:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/howto-conditional-access-session-lifetime.md" target="_blank">docs/identity/conditional-access/howto-conditional-access-session-lifetime.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 6:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/howto-conditional-access-session-lifetime" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+22</span> / 
+              <span class="deletions">-19</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] August Freshness Quality pass2</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Configure adaptive session lifetime policies</div><div class="diff-line diff-deleted">description: Customize Microsoft Entra authentication session configuration including user sign-in frequency and browser session persistence.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 08/13/2024</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: inbarc</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure adaptive session lifetime policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-deleted">&gt; If you are using the [configurable token lifetime](~/identity-platform/configurable-token-lifetimes.md) feature currently in public preview, please note that we don’t support creating two different policies for the same user or app combination: one with this feature and another one with configurable token lifetime feature. Microsoft retired the configurable token lifetime feature for refresh and session token lifetimes on January 30, 2021 and replaced it with the Conditional Access authentication session management feature.  </div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-deleted">&gt; Before enabling Sign-in Frequency, make sure other reauthentication settings are disabled in your tenant. If &quot;Remember MFA on trusted devices&quot; is enabled, be sure to disable it before using Sign-in frequency, as using these two settings together may lead to prompting users unexpectedly. To learn more about reauthentication prompts and session lifetime, see the article, [Optimize reauthentication prompts and understand session lifetime for Microsoft Entra multifactor authentication](~/identity/authentication/concepts-azure-multi-factor-authentication-prompts-session-lifetime.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Adaptive Session Lifetime Policies for Conditional Access</div><div class="diff-line diff-added">description: Learn how to configure adaptive session lifetime policies in Microsoft Entra to manage sign-in frequency and browser session persistence effectively.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: inbarc</div><div class="diff-line diff-added">ms.custom:</div><div class="diff-line diff-added">  - ai-gen-docs-bap</div><div class="diff-line diff-added">  - ai-gen-title</div><div class="diff-line diff-added">  - ai-seo-date:09/02/2025</div><div class="diff-line diff-added">  - ai-gen-description</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure adaptive session lifetime policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/troubleshoot-policy-changes-audit-log.md" target="_blank">docs/identity/conditional-access/troubleshoot-policy-changes-audit-log.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 6:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/troubleshoot-policy-changes-audit-log" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+20</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] August Freshness Quality pass2</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Troubleshoot Conditional Access policy changes</div><div class="diff-line diff-deleted">description: Diagnose changes to Conditional Access policy with the Microsoft Entra audit logs.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-deleted">ms.date: 08/13/2024</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: calebb, martinco</div><div class="diff-line diff-deleted">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use audit logs to troubleshoot Conditional Access policy changes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra audit log is a valuable source of information when troubleshooting why and how Conditional Access policy changes happened in your environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Audit log data is only kept for 30 days by default, which might not be long enough for every organization. Organizations can store data for longer periods by changing diagnostic settings in Microsoft Entra ID to:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Send data to a Log Analytics workspace</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Troubleshoot Conditional Access policy changes</div><div class="diff-line diff-added">description: Learn how to use Microsoft Entra audit logs to identify and troubleshoot Conditional Access policy modifications in your environment.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: calebb, martinco</div><div class="diff-line diff-added">ms.custom:</div><div class="diff-line diff-added">  - sfi-image-nochange</div><div class="diff-line diff-added">  - ai-gen-docs-bap</div><div class="diff-line diff-added">  - ai-gen-description</div><div class="diff-line diff-added">  - ai-seo-date:09/02/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use audit logs to troubleshoot Conditional Access policy changes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra audit log is a valuable source of information when troubleshooting why and how Conditional Access policy changes happened in your environment.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/policy-admin-phish-resistant-mfa.md" target="_blank">docs/identity/conditional-access/policy-admin-phish-resistant-mfa.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 6:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-admin-phish-resistant-mfa" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] August Freshness Quality pass2</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/30/2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Require phishing-resistant multifactor authentication for administrators</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Accounts that are assigned privileged administrative roles are frequent targets of attackers. Requiring phishing-resistant multifactor authentication (MFA) on those accounts is an easy way to reduce the risk of those accounts being compromised.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-deleted">&gt; Before creating a policy requiring phishing-resistant multifactor authentication, ensure your administrators have the appropriate methods registered. If you enable this policy without completing this step you risk locking yourself out of your tenant. Administrators can [Configure Temporary Access Pass to register passwordless authentication methods](../authentication/howto-authentication-temporary-access-pass.md) or follow the steps in [Register a passkey (FIDO2)](../authentication/how-to-register-passkey-with-security-key.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft recommends you require phishing-resistant multifactor authentication on the following roles at a minimum:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [conditional-access-admin-roles](../../includes/conditional-access-admin-roles.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Organizations might choose to include or exclude roles based on their own requirements.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Require phishing-resistant multifactor authentication for administrators</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Accounts with privileged administrative roles are frequent targets of attackers. Requiring phishing-resistant multifactor authentication (MFA) for these accounts reduces the risk of compromise.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-added">&gt; Before creating a policy requiring phishing-resistant multifactor authentication, make sure your administrators register the appropriate methods. Enabling this policy without completing this step risks locking you out of your tenant. Administrators can [configure Temporary Access Pass to register passwordless authentication methods](../authentication/howto-authentication-temporary-access-pass.md) or follow the steps in [register a passkey (FIDO2)](../authentication/how-to-register-passkey-with-security-key.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft recommends requiring phishing-resistant multifactor authentication for at least the following roles:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [conditional-access-admin-roles](../../includes/conditional-access-admin-roles.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations can include or exclude roles based on their requirements.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/troubleshoot-conditional-access-what-if.md" target="_blank">docs/identity/conditional-access/troubleshoot-conditional-access-what-if.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 6:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/troubleshoot-conditional-access-what-if" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] August Freshness Quality pass2</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The [What If tool](what-if-tool.md) in Conditional Access is powerful when trying to understand why a policy was or wasn&#39;t applied to a user in a specific circumstance or if a policy would apply in a known state.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The What If tool is located in the **Microsoft Entra admin center** &gt; **Entra ID** &gt; **Conditional Access** &gt; **Policies** &gt; **What If**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Conditional Access What If tool at default state](./media/troubleshoot-conditional-access-what-if/conditional-access-what-if-tool.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Gathering information</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The What If tool requires only a **User** or **Workload identity** to get started.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following additional information is optional but helps narrow the scope for specific cases.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Cloud apps, actions, or authentication context</div><div class="diff-line diff-context">* IP address</div><div class="diff-line diff-deleted">* Country/Region</div><div class="diff-line diff-context">* Device platform</div><div class="diff-line diff-context">* Client apps</div><div class="diff-line diff-context">* Device state</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The [What If tool](what-if-tool.md) in Conditional Access is powerful when trying to understand why a policy was or wasn&#39;t applied to a user in a specific circumstance or if a policy would apply in a known state.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Find the What If tool in the **Microsoft Entra admin center** &gt; **Entra ID** &gt; **Conditional Access** &gt; **Policies** &gt; **What If**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Screenshot of the Conditional Access What If tool at its default state.](./media/troubleshoot-conditional-access-what-if/conditional-access-what-if-tool.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Gathering information</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The What If tool needs only a **User** or **Workload identity** to get started.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The following additional information is optional but helps narrow the scope for specific cases:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Cloud apps, actions, or authentication context</div><div class="diff-line diff-context">* IP address</div><div class="diff-line diff-added">* Country/region</div><div class="diff-line diff-context">* Device platform</div><div class="diff-line diff-context">* Client apps</div><div class="diff-line diff-context">* Device state</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-session.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-session.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kyracatwork on Sep 2, 2025 5:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-session" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update concept-conditional-access-session.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Conditional Access application control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Conditional Access App Control uses a reverse proxy architecture and is uniquely integrated with Microsoft Entra Conditional Access. Microsoft Entra Conditional Access allows you to enforce access controls on your organization’s apps based on certain conditions. The conditions define what user or group of users, cloud apps, and locations and networks a Conditional Access policy applies to. After you determine the conditions, you can route users to where access and session controls apply.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Microsoft Defender for Cloud Apps</div><div class="diff-line diff-deleted">[Microsoft Defender for Cloud Apps](/defender-cloud-apps/what-is-defender-for-cloud-apps) is where you can protect data with Conditional Access App Control by applying access and session controls.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Conditional Access App Control enables user app access and sessions to be monitored and controlled in real time based on access and session policies. Access and session policies are used within the Defender for Cloud Apps portal to refine filters and set actions to take. With the access and session policies, you can:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Prevent data exfiltration: You can block the download, cut, copy, and print of sensitive documents on, for example, unmanaged devices.</div><div class="diff-line diff-deleted">- Protect on download: Instead of blocking the download of sensitive documents, you can require documents to be labeled and protected with Azure Information Protection. This action ensures the document is protected and user access is restricted in a potentially risky session.</div><div class="diff-line diff-deleted">- Prevent upload of unlabeled files: Before a sensitive file is uploaded, distributed, and used, it’s important to make sure that the file has the right label and protection. You can ensure that unlabeled files with sensitive content are blocked from being uploaded until the user classifies the content.</div><div class="diff-line diff-deleted">- Monitor user sessions for compliance (Preview): Risky users are monitored when they sign into apps and their actions are logged from within the session. You can investigate and analyze user behavior to understand where, and under what conditions, session policies should be applied in the future.</div><div class="diff-line diff-deleted">- Block access (Preview): You can granularly block access for specific apps and users depending on several risk factors. For example, you can block them if they&#39;re using client certificates as a form of device management.</div><div class="diff-line diff-deleted">- Block custom activities: Some apps have unique scenarios that carry risk, for example, sending messages with sensitive content in apps like Microsoft Teams or Slack. In these kinds of scenarios, you can scan messages for sensitive content and block them in real time.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">For more information, see the article [Deploy Conditional Access App Control for featured apps](/defender-cloud-apps/proxy-deployment-aad).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Microsoft Purview Data Loss Prevention</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Conditional Access application control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Conditional Access App Control uses a reverse proxy architecture and is uniquely integrated with Microsoft Entra Conditional Access. Microsoft Entra Conditional Access allows you to enforce access controls on your organization’s apps based on certain conditions. The conditions define what user or group of users, cloud apps, and locations and networks a Conditional Access policy applies to. After you determine the conditions, you can route users to Microsoft Defender for Cloud Apps where you can protect data with Conditional Access App Control by applying access and session controls.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Conditional Access App Control enables user app access and sessions to be monitored and controlled in real time based on access and session policies. Access and session policies are used within the Defender for Cloud Apps portal to refine filters and set actions to take. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This control can be enforced with [Microsoft Defender for Cloud Apps](/defender-cloud-apps/what-is-defender-for-cloud-apps), where Admins can [Deploy Conditional Access App Control for featured apps](/defender-cloud-apps/proxy-deployment-aad) and [use Microsoft Defender for Cloud Apps session policies](/defender-cloud-apps/session-policy-aad).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For Microsoft Edge for Business, this control can be enforced with [Microsoft Purview Data Loss Prevention](/purview/dlp-browser-dlp-learn), where Admins can [help prevent users from sharing sensitive info with Cloud Apps in Edge for Business](/purview/dlp-create-policy-prevent-cloud-sharing-from-edge-biz). The Conditional Access App Control **Custom** setting is required for apps included in these policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Sign-in frequency</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/timetabling-solutions-tutorial.md" target="_blank">docs/identity/saas-apps/timetabling-solutions-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Sep 2, 2025 10:17 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/timetabling-solutions-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update console name</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/20/2025</div><div class="diff-line diff-context">ms.author: gideonkiratu</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Timetabling Solutions so that I can control who has access to Timetabling Solutions, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Timetabling Solutions SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this section, you populate the relevant SSO values in the Timetabling Solutions Administration Console.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the [Administration Console](https://admin.timetabling.education/), select **5 Settings**, and then select the **SAML SSO** tab.</div><div class="diff-line diff-context">1. Perform the following steps in the **SAML SSO** section:</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">    ![Screenshot for SSO settings.](./media/timetabling-solutions-tutorial/timetabling-configuration.png)</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">    f. **Save** the settings. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: gideonkiratu</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Timetabling Solutions so that I can control who has access to Timetabling Solutions, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Timetabling Solutions SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this section, you populate the relevant SSO values in the Timetabling Solutions Management Portal.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the [Management Portal](https://admin.timetabling.education/), select **5 Settings**, and then select the **SAML SSO** tab.</div><div class="diff-line diff-context">1. Perform the following steps in the **SAML SSO** section:</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">    ![Screenshot for SSO settings.](./media/timetabling-solutions-tutorial/timetabling-configuration.png)</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">    f. **Save** the settings. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create Timetabling Solutions test user</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-policy-exclude-user.md" target="_blank">docs/includes/entra-policy-exclude-user.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-policy-exclude-user" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Includes] Update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 09/17/2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Conditional Access policies are powerful tools, we recommend excluding the following accounts from your policies:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Emergency access** or **break-glass** accounts to prevent lockout due to policy misconfiguration. In the unlikely scenario all administrators are locked out, your emergency-access administrative account can be used to log in and take steps to recover access.</div><div class="diff-line diff-context">   - More information can be found in the article, [Manage emergency access accounts in Microsoft Entra ID](~/identity/role-based-access-control/security-emergency-access.md).</div><div class="diff-line diff-deleted">- **Service accounts** and **Service principals**, such as the Microsoft Entra Connect Sync Account. Service accounts are non-interactive accounts that aren&#39;t tied to any particular user. They&#39;re normally used by back-end services allowing programmatic access to applications, but are also used to sign in to systems for administrative purposes. Calls made by service principals won&#39;t be blocked by Conditional Access policies scoped to users. Use Conditional Access for workload identities to define policies targeting service principals.</div><div class="diff-line diff-deleted">   - If your organization has these accounts in use in scripts or code, consider replacing them with [managed identities](~/identity/managed-identities-azure-resources/overview.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Conditional Access policies are powerful tools. We recommend excluding the following accounts from your policies:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Emergency access** or **break-glass** accounts to prevent lockout due to policy misconfiguration. In the unlikely scenario where all administrators are locked out, your emergency access administrative account can be used to sign in and recover access.</div><div class="diff-line diff-context">   - More information can be found in the article, [Manage emergency access accounts in Microsoft Entra ID](~/identity/role-based-access-control/security-emergency-access.md).</div><div class="diff-line diff-added">- **Service accounts** and **Service principals**, such as the Microsoft Entra Connect Sync Account. Service accounts are noninteractive accounts that aren&#39;t tied to any specific user. They&#39;re typically used by backend services to allow programmatic access to applications, but they&#39;re also used to sign in to systems for administrative purposes. Calls made by service principals aren&#39;t blocked by Conditional Access policies scoped to users. Use Conditional Access for workload identities to define policies that target service principals.</div><div class="diff-line diff-added">   - If your organization uses these accounts in scripts or code, replace them with [managed identities](~/identity/managed-identities-azure-resources/overview.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 2, 2025 4:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove all access packages added to whats new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## August 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Plan for change - New end user homepage in My Account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** New feature      </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## August 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Public preview - Lifecycle Workflows task now supports setting Access Package assignments expiration</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature      </div><div class="diff-line diff-added">**Service category:** Lifecycle Workflows    </div><div class="diff-line diff-added">**Product capability:** Identity Governance  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Customers can now configure the remove all access packages task in Lifecycle Workflows to automatically expire access packages assignments after a specified number of days when employees leave the organization. For more information, see: [Remove all access package assignments for user](../id-governance/lifecycle-workflow-tasks.md#remove-all-access-package-assignments-for-user).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">---</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Plan for change - New end user homepage in My Account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** New feature      </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/conditional-access-report-only-mode.md" target="_blank">docs/includes/conditional-access-report-only-mode.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/conditional-access-report-only-mode" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Includes] Update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">ms.author: joflore</div><div class="diff-line diff-deleted">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 02/03/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">After administrators evaluate the policy settings using [policy impact or report-only mode](../identity/conditional-access/concept-conditional-access-report-only.md#reviewing-results), they can move the **Enable policy** toggle from **Report-only** to **On**.</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-added">ms.author: joflore</div><div class="diff-line diff-added">author: MicrosoftGuyJFlo</div><div class="diff-line diff-added">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">After confirming your settings using [policy impact or report-only mode](../identity/conditional-access/concept-conditional-access-report-only.md#reviewing-results), move the **Enable policy** toggle from **Report-only** to **On**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-install-ios-client.md" target="_blank">docs/global-secure-access/how-to-install-ios-client.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 2, 2025 8:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-ios-client" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 02 updates per Review team</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the iOS client app.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 08/08/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-deleted">ms.reviewer: dhruvinrshah</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an administrator, I want to set up and deploy the Global Secure Access mobile client for iOS devices.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">        |  |0 |Private Access isn&#39;t enabled and the toggle option isn&#39;t visible to user. |</div><div class="diff-line diff-context">        |  |1 |The Private Access toggle is visible and defaults to disabled state. User can enable or disable. |</div><div class="diff-line diff-context">        |  |2 |The Private Access toggle is visible and defaults to enabled state. User can enable or disable. |</div><div class="diff-line diff-deleted">        |  |3 |The Private Access toggle is visible but greyed out, and defaults to enabled state. The user **can&#39;t** disable Private Access. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Continue filling out the VPN form:  </div><div class="diff-line diff-context">    - **Type of Automatic VPN**: On-demand VPN</div><div class="diff-line diff-context">## Troubleshooting</div><div class="diff-line diff-context">- The Global Secure Access tile doesn&#39;t appear in the Defender app after onboarding the tenant:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the iOS client app.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-added">ms.reviewer: cagautham</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an administrator, I want to set up and deploy the Global Secure Access mobile client for iOS devices.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">        |  |0 |Private Access isn&#39;t enabled and the toggle option isn&#39;t visible to user. |</div><div class="diff-line diff-context">        |  |1 |The Private Access toggle is visible and defaults to disabled state. User can enable or disable. |</div><div class="diff-line diff-context">        |  |2 |The Private Access toggle is visible and defaults to enabled state. User can enable or disable. |</div><div class="diff-line diff-added">        |  |3 |The Private Access toggle is visible but grayed out, and defaults to enabled state. The user **can&#39;t** disable Private Access. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Continue filling out the VPN form:  </div><div class="diff-line diff-context">    - **Type of Automatic VPN**: On-demand VPN</div><div class="diff-line diff-context">## Troubleshooting</div><div class="diff-line diff-context">- The Global Secure Access tile doesn&#39;t appear in the Defender app after onboarding the tenant:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-policy-deploy-template.md" target="_blank">docs/includes/entra-policy-deploy-template.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 2, 2025 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-policy-deploy-template" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Includes] Update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: joflore</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 07/18/2023</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">## Template deployment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Organizations can choose to deploy this policy using the steps outlined below or using the [Conditional Access templates](~/identity/conditional-access/concept-conditional-access-policy-common.md).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-added">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 09/02/2025</div><div class="diff-line diff-context">ms.author: joflore</div><div class="diff-line diff-added">author: MicrosoftGuyJFlo</div><div class="diff-line diff-added">manager: dougeby</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">## Template deployment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations can deploy this policy by following the steps outlined below or by using the [Conditional Access templates](~/identity/conditional-access/concept-conditional-access-policy-common.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/acunetix-360-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/acunetix-360-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Sep 2, 2025 11:18 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/acunetix-360-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update ms.author, reviewer and manager alias</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Acunetix 360 for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and de-provision user accounts from Microsoft Entra ID to Acunetix 360.</div><div class="diff-line diff-deleted">author: adimitui</div><div class="diff-line diff-deleted">manager: jeedes</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-deleted">ms.author: addimitu</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Acunetix 360 so that I can streamline the user management process and ensure that users have the appropriate access to Acunetix 360.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Acunetix 360 for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and de-provision user accounts from Microsoft Entra ID to Acunetix 360.</div><div class="diff-line diff-added">author: jeevansd</div><div class="diff-line diff-added">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-added">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Acunetix 360 so that I can streamline the user management process and ensure that users have the appropriate access to Acunetix 360.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/airbase-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/airbase-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Sep 2, 2025 11:18 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/airbase-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update ms.author, reviewer and manager alias</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Airbase for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Airbase.</div><div class="diff-line diff-deleted">author: adimitui</div><div class="diff-line diff-deleted">manager: jeedes</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-deleted">ms.author: addimitu</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Airbase so that I can streamline the user management process and ensure that users have the appropriate access to Airbase.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Airbase for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Airbase.</div><div class="diff-line diff-added">author: jeevansd</div><div class="diff-line diff-added">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-added">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Airbase so that I can streamline the user management process and ensure that users have the appropriate access to Airbase.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
