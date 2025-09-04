@@ -1,0 +1,294 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 2nd 2025, 8:00 PM PDT</p>
+        <p>Report generated on September 3rd 2025, 8:00 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/whats-new-docs.md" target="_blank">docs/identity-platform/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Sep 3, 2025 8:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> What's new - August 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## July 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">- [Security best practices for application properties in Microsoft Entra ID](security-best-practices-for-app-registration.md) - Update security best practices</div><div class="diff-line diff-context">- [Run automated integration tests](test-automate-integration-testing.md) - The update improved content clarity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## May 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### New articles</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- [Email OTP send event reference](custom-extension-email-otp-send-data.md)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Updated articles</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- [Custom claims provider reference](custom-claims-provider-reference.md) - The update improved content clarity.</div><div class="diff-line diff-deleted">- [Application configuration options](msal-client-application-configuration.md) - The update improved content clarity.</div><div class="diff-line diff-deleted">- [Custom authentication extensions overview](custom-extension-overview.md) - The update improved content clarity.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## August 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Updated articles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Microsoft Enterprise SSO plug-in for Apple devices](apple-sso-plugin.md) - We adjusted Apple SSO, updated the token protection image, and troubleshot secure enclave issues.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## July 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">- [Security best practices for application properties in Microsoft Entra ID](security-best-practices-for-app-registration.md) - Update security best practices</div><div class="diff-line diff-context">- [Run automated integration tests](test-automate-integration-testing.md) - The update improved content clarity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/whats-new-docs.md" target="_blank">docs/identity/enterprise-apps/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Sep 3, 2025 11:29 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sept whatsnew updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra application management</div><div class="diff-line diff-context">description: This article shows the new and updated documentation for the Microsoft Entra application management.</div><div class="diff-line diff-deleted">ms.date: 08/06/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: enterprise-apps</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in Microsoft Entra application management documentation. This article lists new docs and those articles that had significant updates in the last three months. To learn what&#39;s new with the application management service, see [What&#39;s new in Microsoft Entra ID](~/fundamentals/whats-new.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## July 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">- [Configure how users consent to applications](configure-user-consent.md) - Added clarity on authorization policies and app consent policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## May 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Updated articles</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra application management</div><div class="diff-line diff-context">description: This article shows the new and updated documentation for the Microsoft Entra application management.</div><div class="diff-line diff-added">ms.date: 09/03/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: enterprise-apps</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in Microsoft Entra application management documentation. This article lists new docs and those articles that had significant updates in the last three months. To learn what&#39;s new with the application management service, see [What&#39;s new in Microsoft Entra ID](~/fundamentals/whats-new.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## August 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Updated articles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Manage app consent policies](manage-app-consent-policies.md) - Revised for technical accuracy</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## July 2025</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/domain-services/reference-domain-services-tls-enforcement.md" target="_blank">docs/identity/domain-services/reference-domain-services-tls-enforcement.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Sep 3, 2025 1:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/domain-services/reference-domain-services-tls-enforcement" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added roles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: domain-services</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 08/15/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">ms.reviewer: bochingwa</div><div class="diff-line diff-context">ms.custom: has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can use the Azure portal or PowerShell to enable **TLS 1.2 Only Mode**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Identify applications that use deprecated TLS versions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before you enable **TLS 1.2 Only Mode**, it&#39;s important to identify applications that still use TLS 1.0 or 1.1, and update them or replace them with alternatives that support TLS 1.2. For more information about apps that are expected to be impacted, see [TLS 1.0 and TLS 1.1 deprecation in Windows](/windows/win32/secauthn/tls-10-11-deprecation-in-windows).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## [**Azure portal**](#tab/portal)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the Azure portal, search for **Domain Services**, and select your Domain Services instance. </div><div class="diff-line diff-context">1. Select **Security Settings**.</div><div class="diff-line diff-context">1. If **TLS 1.2 Only Mode** is set to **Disable**, the instance enables TLS versions 1.0 and 1.1. Set **TLS 1.2 Only Mode** to **Enable**, and then click **Save**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: domain-services</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/03/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">ms.reviewer: bochingwa</div><div class="diff-line diff-context">ms.custom: has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can use the Azure portal or PowerShell to enable **TLS 1.2 Only Mode**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You need the [Application Administrator](../role-based-access-control/permissions-reference.md#application-administrator) and [Groups Administrator](../role-based-access-control/permissions-reference.md#groups-administrator) roles in Microsoft Entra ID to change security settings such as **TLS 1.2 Only Mode**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Identify applications that use deprecated TLS versions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before you enable **TLS 1.2 Only Mode**, it&#39;s important to identify applications that still use TLS 1.0 or 1.1, and update them or replace them with alternatives that support TLS 1.2. For more information about apps that are expected to be impacted, see [TLS 1.0 and TLS 1.1 deprecation in Windows](/windows/win32/secauthn/tls-10-11-deprecation-in-windows).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## [**Azure portal**](#tab/portal)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/check-workflow-execution-scope.md" target="_blank">docs/id-governance/check-workflow-execution-scope.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kristina Smith on Sep 3, 2025 5:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/check-workflow-execution-scope" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update execution user scope description for clarity</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the Execution conditions page, select the **Execution User Scope** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. On this page you&#39;re presented with a list of users who currently meet the scope for execution for the workflow.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/check-workflow-execution-scope/execution-user-scope-list.png&quot; alt-text=&quot;Screenshot of users under scope of workflow execution.&quot; lightbox=&quot;media/check-workflow-execution-scope/execution-user-scope-list.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; The workflow engine routinely evaluates the users that meet the execution conditions. The results will not be up to date if the execution conditions have been changed recently, relevant attributes on the user have been changed recently, or the time based trigger has recently passed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Check execution user scope of a workflow using Microsoft Graph</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the Execution conditions page, select the **Execution User Scope** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On this page you&#39;re presented with a list of users who currently meet the scope for execution for the workflow regardless of whether they have already been processed by the workflow.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/check-workflow-execution-scope/execution-user-scope-list.png&quot; alt-text=&quot;Screenshot of users under scope of workflow execution.&quot; lightbox=&quot;media/check-workflow-execution-scope/execution-user-scope-list.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The workflow engine routinely evaluates the users that meet the execution conditions regardless of whether they have already been processed by the workflow. The results will not be up to date if the execution conditions have been changed recently, relevant attributes on the user have been changed recently, or the time based trigger has recently passed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Check execution user scope of a workflow using Microsoft Graph</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-remote-network-connectivity.md" target="_blank">docs/global-secure-access/concept-remote-network-connectivity.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 3, 2025 3:26 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-remote-network-connectivity" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 02 fixed link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### I have guests on my network who don&#39;t have the client installed.  </div><div class="diff-line diff-context">Guest devices on your network might not have the client installed. To ensure that those devices adhere to your network security policies, you need their traffic routed through the Global Secure Access endpoint. Remote network connectivity solves this problem. No clients need to be installed on guest devices. All outgoing traffic from the remote network is going through security evaluation by default.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### How much bandwidth is allocated per tenant </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The total bandwidth you&#39;re allocated is determined by the number of licenses purchased. Each Microsoft Entra ID P1 license, Microsoft Entra Internet Access license, or Microsoft Entra Suite license contributes to your total bandwidth. Bandwidth for remote networks can be assigned to IPsec tunnels in increments of 250 Mbps, 500 Mbps, 750 Mbps, or 1,000 Mbps. This flexibility allows you to allocate bandwidth to different remote network locations according to your specific needs. For optimal performance, Microsoft recommends configuring at least two IPsec tunnels per location for high availability. The table below details the total bandwidth based on the number of licenses purchased. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### I have guests on my network who don&#39;t have the client installed.  </div><div class="diff-line diff-context">Guest devices on your network might not have the client installed. To ensure that those devices adhere to your network security policies, you need their traffic routed through the Global Secure Access endpoint. Remote network connectivity solves this problem. No clients need to be installed on guest devices. All outgoing traffic from the remote network is going through security evaluation by default.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### How much bandwidth will be allocated per tenant </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The total bandwidth you&#39;re allocated is determined by the number of licenses purchased. Each Microsoft Entra ID P1 license, Microsoft Entra Internet Access license, or Microsoft Entra Suite license contributes to your total bandwidth. Bandwidth for remote networks can be assigned to IPsec tunnels in increments of 250 Mbps, 500 Mbps, 750 Mbps, or 1,000 Mbps. This flexibility allows you to allocate bandwidth to different remote network locations according to your specific needs. For optimal performance, Microsoft recommends configuring at least two IPsec tunnels per location for high availability. The table below details the total bandwidth based on the number of licenses purchased. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
