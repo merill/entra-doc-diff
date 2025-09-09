@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 7th 2025, 8:07 PM PDT</p>
+        <p>Report generated on September 8th 2025, 8:07 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-mandatory-multifactor-authentication.md" target="_blank">docs/identity/authentication/concept-mandatory-multifactor-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Sep 8, 2025 5:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update MFA article with new blog post and date</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-deleted">ms.date: 09/04/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At Microsoft, we&#39;re committed to providing our customers with the highest level of security. One of the most effective security measures available to them is multifactor authentication (MFA). [Research by Microsoft](https://www.microsoft.com/security/blog/2019/08/20/one-simple-action-you-can-take-to-prevent-99-9-percent-of-account-attacks) shows that MFA can block more than 99.2% of account compromise attacks. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">That&#39;s why, starting in 2024, we&#39;ll enforce mandatory MFA for all Azure sign-in attempts. For more background about this requirement, see our [blog post](https://aka.ms/azuremfablogpost). This topic covers which applications and accounts are affected, how enforcement gets rolled out to tenants, and other common questions and answers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There&#39;s no change for users if your organization already enforces MFA for them, or if they sign in with stronger methods like passwordless or passkey (FIDO2). To verify that MFA is enabled, see [How to verify that users are set up for mandatory MFA](how-to-mandatory-multifactor-authentication.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about how to migrate from user-based service accounts to workload identities for authentication with these applications, see: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Sign into Azure with a managed identity using the Azure CLI](/cli/azure/authenticate-azure-cli-managed-identity)</div><div class="diff-line diff-deleted">- [Sign into Azure with a service principal using the Azure CLI](/cli/azure/authenticate-azure-cli-service-principal)</div><div class="diff-line diff-context">- [Sign in to Azure PowerShell non-interactively for automation scenarios](/powershell/azure/authenticate-noninteractive) includes guidance for both managed identity and service principal use cases</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-added">ms.date: 09/08/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At Microsoft, we&#39;re committed to providing our customers with the highest level of security. One of the most effective security measures available to them is multifactor authentication (MFA). [Research by Microsoft](https://www.microsoft.com/security/blog/2019/08/20/one-simple-action-you-can-take-to-prevent-99-9-percent-of-account-attacks) shows that MFA can block more than 99.2% of account compromise attacks. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">That&#39;s why, starting in 2024, we&#39;ll enforce mandatory MFA for all Azure sign-in attempts. For more background about this requirement, see our blog posts [Azure mandatory multifactor authentication: Phase 2 starting in October 2025](https://azure.microsoft.com/blog/azure-mandatory-multifactor-authentication-phase-2-starting-in-october-2025/) and [Announcing mandatory multifactor authentication for Azure sign-in](https://aka.ms/azuremfablogpost). This topic covers which applications and accounts are affected, how enforcement gets rolled out to tenants, and other common questions and answers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There&#39;s no change for users if your organization already enforces MFA for them, or if they sign in with stronger methods like passwordless or passkey (FIDO2). To verify that MFA is enabled, see [How to verify that users are set up for mandatory MFA](how-to-mandatory-multifactor-authentication.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about how to migrate from user-based service accounts to workload identities for authentication with these applications, see: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Sign in to Azure with a managed identity using the Azure CLI](/cli/azure/authenticate-azure-cli-managed-identity)</div><div class="diff-line diff-added">- [Sign in to Azure with a service principal using the Azure CLI](/cli/azure/authenticate-azure-cli-service-principal)</div><div class="diff-line diff-context">- [Sign in to Azure PowerShell non-interactively for automation scenarios](/powershell/azure/authenticate-noninteractive) includes guidance for both managed identity and service principal use cases</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21806.md" target="_blank">docs/includes/secure-recommendations/21806.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21806" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Without Conditional Access policies protecting security information registration, threat actors can exploit unprotected registration flows to compromise authentication methods. When users register multifactor authentication and self-service password reset methods without proper controls, threat actors can intercept these registration sessions through adversary-in-the-middle attacks or exploit unmanaged devices accessing registration from untrusted locations. Once threat actors gain access to an unprotected registration flow, they can register their own authentication methods, effectively hijacking the target&#39;s authentication profile. The threat actors can bypass security controls and potentially escalate privileges throughout the environment because they can maintain persistent access by controlling the MFA methods. The compromised authentication methods then become the foundation for lateral movement as threat actors can authenticate as the legitimate user across multiple services and applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-deleted">- [Create a Conditional Access policy for security info registration](../../identity/conditional-access/policy-all-users-security-info-registration.md)</div><div class="diff-line diff-deleted">- [Configure a Conditional Access policy for network assignment](../../identity/conditional-access/concept-assignment-network.md)</div><div class="diff-line diff-deleted">- [Enable combined security info registration](../../identity/authentication/howto-registration-mfa-sspr-combined.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Without Conditional Access policies protecting security information registration, threat actors can exploit unprotected registration flows to compromise authentication methods. When users register multifactor authentication and self-service password reset methods without proper controls, threat actors can intercept these registration sessions through adversary-in-the-middle attacks or exploit unmanaged devices accessing registration from untrusted locations. Once threat actors gain access to an unprotected registration flow, they can register their own authentication methods, effectively hijacking the target&#39;s authentication profile. The threat actors can bypass security controls and potentially escalate privileges throughout the environment because they can maintain persistent access by controlling the MFA methods. The compromised authentication methods then become the foundation for lateral movement as threat actors can authenticate as the legitimate user across multiple services and applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy for security info registration](../../identity/conditional-access/policy-all-users-security-info-registration.md)</div><div class="diff-line diff-added">- [Configure known network locations](../../identity/conditional-access/concept-assignment-network.md)</div><div class="diff-line diff-added">- [Enable combined security info registration](../../identity/authentication/howto-registration-mfa-sspr-combined.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21786.md" target="_blank">docs/includes/secure-recommendations/21786.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21786" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Token protection, also called token binding, helps prevent token theft by making sure a token is usable only from the intended device. Token protection uses cryptography so that without the client device key, no one can use the token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Remediation action**   </div><div class="diff-line diff-deleted">Create a Conditional Access policy to set up token protection.   </div><div class="diff-line diff-deleted">- [Microsoft Entra Conditional Access: Token protection](../../identity/conditional-access/concept-token-protection.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Token protection, also called token binding, helps prevent token theft by making sure a token is usable only from the intended device. Token protection uses cryptography so that without the client device key, no one can use the token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Remediation action**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to require token protection](../../identity/conditional-access/concept-token-protection.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21796.md" target="_blank">docs/includes/secure-recommendations/21796.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21796" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Deploy the following Conditional Access policy:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- [Block legacy authentication](/entra/identity/conditional-access/policy-block-legacy-authentication)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to Block legacy authentication](/entra/identity/conditional-access/policy-block-legacy-authentication)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21797.md" target="_blank">docs/includes/secure-recommendations/21797.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21797" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># userimpact: High</div><div class="diff-line diff-context"># implementationcost: Medium</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Assume high risk are compromised by threat actors. Without investigation and remediation, threat actors can execute scripts, deploy malicious applications, or manipulate API calls to establish persistence, based on the potentially compromised user&#39;s permissions. Threat actors can then exploit misconfigurations or abuse OAuth tokens to move laterally across workloads like documents, SaaS applications, or Azure resources. Threat actors can gain access to sensitive files, customer records, or proprietary code and exfiltrate it to external repositories while maintaining stealth through legitimate cloud services. Finally, threat actors might disrupt operations by modifying configurations, encrypting data for ransom, or using the stolen information for further attacks, resulting in financial, reputational, and regulatory consequences.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations using passwords can rely on password reset to automatically remediate risky users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Create a Conditional Access policy to [require a secure password change for elevated user risk](/entra/identity/conditional-access/policy-risk-based-user).</div><div class="diff-line diff-context">- Use Microsoft Entra ID Protection to [investigate risk further](/entra/id-protection/howto-identity-protection-investigate-risk).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># userimpact: High</div><div class="diff-line diff-context"># implementationcost: Medium</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Assume high risk users are compromised by threat actors. Without investigation and remediation, threat actors can execute scripts, deploy malicious applications, or manipulate API calls to establish persistence, based on the potentially compromised user&#39;s permissions. Threat actors can then exploit misconfigurations or abuse OAuth tokens to move laterally across workloads like documents, SaaS applications, or Azure resources. Threat actors can gain access to sensitive files, customer records, or proprietary code and exfiltrate it to external repositories while maintaining stealth through legitimate cloud services. Finally, threat actors might disrupt operations by modifying configurations, encrypting data for ransom, or using the stolen information for further attacks, resulting in financial, reputational, and regulatory consequences.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations using passwords can rely on password reset to automatically remediate risky users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to require a secure password change for elevated user risk](/entra/identity/conditional-access/policy-risk-based-user).</div><div class="diff-line diff-context">- Use Microsoft Entra ID Protection to [investigate risk further](/entra/id-protection/howto-identity-protection-investigate-risk).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-sentinel-integration.md" target="_blank">docs/global-secure-access/how-to-sentinel-integration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 8, 2025 5:06 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-sentinel-integration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 08 added description and TOC entry</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Integrate Global Secure Access with Microsoft Sentinel</div><div class="diff-line diff-deleted">description: &quot;[Article description].&quot;</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/05/2025</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: kerenSemel</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Integrate Global Secure Access with Microsoft Sentinel</div><div class="diff-line diff-added">description: Strengthen your organization&#39;s security posture by integrating Global Secure Access with Microsoft Sentinel using preconfigured workbooks and analytics rules.</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/08/2025</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: kerenSemel</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21799.md" target="_blank">docs/includes/secure-recommendations/21799.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21799" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">When high-risk sign-ins are not properly restricted through Conditional Access policies, organizations expose themselves to security vulnerabilities. Threat actors can exploit these gaps for initial access through compromised credentials, credential stuffing attacks, or anomalous sign-in patterns that Microsoft Entra ID Protection identifies as risky behaviors. Without appropriate restrictions, threat actors who successfully authenticate during high-risk scenarios can perform privilege escalation by misusing the authenticated session to access sensitive resources, modify security configurations, or conduct reconnaissance activities within the environment. Once threat actors establish access through uncontrolled high-risk sign-ins, they can achieve persistence by creating additional accounts, installing backdoors, or modifying authentication policies to maintain long-term access to the organization&#39;s resources. The unrestricted access enables threat actors to conduct lateral movement across systems and applications using the authenticated session, potentially accessing sensitive data stores, administrative interfaces, or critical business applications. Finally, threat actors achieve impact through data exfiltration, or compromise business-critical systems while maintaining plausible deniability by exploiting the fact that their risky authentication was not properly challenged or blocked.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-deleted">- [Implement a Conditional Access policy to require MFA for elevated sign-in risk](../../identity/conditional-access/policy-risk-based-sign-in.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">When high-risk sign-ins are not properly restricted through Conditional Access policies, organizations expose themselves to security vulnerabilities. Threat actors can exploit these gaps for initial access through compromised credentials, credential stuffing attacks, or anomalous sign-in patterns that Microsoft Entra ID Protection identifies as risky behaviors. Without appropriate restrictions, threat actors who successfully authenticate during high-risk scenarios can perform privilege escalation by misusing the authenticated session to access sensitive resources, modify security configurations, or conduct reconnaissance activities within the environment. Once threat actors establish access through uncontrolled high-risk sign-ins, they can achieve persistence by creating additional accounts, installing backdoors, or modifying authentication policies to maintain long-term access to the organization&#39;s resources. The unrestricted access enables threat actors to conduct lateral movement across systems and applications using the authenticated session, potentially accessing sensitive data stores, administrative interfaces, or critical business applications. Finally, threat actors achieve impact through data exfiltration, or compromise business-critical systems while maintaining plausible deniability by exploiting the fact that their risky authentication was not properly challenged or blocked.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to require MFA for elevated sign-in risk](../../identity/conditional-access/policy-risk-based-sign-in.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21808.md" target="_blank">docs/includes/secure-recommendations/21808.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21808" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Create a Conditional Access policy to [block device code flow](/entra/identity/conditional-access/policy-block-authentication-flows#device-code-flow-policies).</div><div class="diff-line diff-deleted">- [Learn more about device code flow](/entra/identity/conditional-access/concept-authentication-flows#device-code-flow)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to block device code flow](/entra/identity/conditional-access/policy-block-authentication-flows#device-code-flow-policies).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21828.md" target="_blank">docs/includes/secure-recommendations/21828.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21828" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Blocking authentication transfer in Microsoft Entra ID is a critical security control. It helps protect against token theft and replay attacks by preventing the use of device tokens to silently authenticate on other devices or browsers. When authentication transfer is enabled, a threat actor who gains access to one device can access resources to nonapproved devices, bypassing standard authentication and device compliance checks. When administrators block this flow, organizations can ensure that each authentication request must originate from the original device, maintaining the integrity of the device compliance and user session context.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-deleted">- [Block authentication flows with Conditional Access policy](../../identity/conditional-access/policy-block-authentication-flows.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Blocking authentication transfer in Microsoft Entra ID is a critical security control. It helps protect against token theft and replay attacks by preventing the use of device tokens to silently authenticate on other devices or browsers. When authentication transfer is enabled, a threat actor who gains access to one device can access resources to nonapproved devices, bypassing standard authentication and device compliance checks. When administrators block this flow, organizations can ensure that each authentication request must originate from the original device, maintaining the integrity of the device compliance and user session context.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to block authentication transfer](../../identity/conditional-access/policy-block-authentication-flows.md#authentication-transfer-policies)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/plan-conditional-access.md" target="_blank">docs/identity/conditional-access/plan-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### Build your Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Start with a few core Conditional Access policies like the ones that follow. Many policies are available as [Conditional Access policy templates](concept-conditional-access-policy-common.md). By default, each policy created from a template is in report-only mode. Test and monitor usage, to ensure the intended result, before turning on each policy.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">| Conditional Access policy | License requirement |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Block legacy authentication](/entra/fundamentals/configure-security#block-legacy-authentication) | Microsoft Entra ID P1 |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### Build your Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Start with a few core Conditional Access policies like the ones that follow. Many policies are available as [Conditional Access policy templates](concept-conditional-access-policy-common.md). By default, each policy created from a template is in report-only mode. Test and monitor usage, to ensure the intended result, before turning on each policy.</div><div class="diff-line diff-added"> </div><div class="diff-line diff-context">| Conditional Access policy | License requirement |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Block legacy authentication](/entra/fundamentals/configure-security#block-legacy-authentication) | Microsoft Entra ID P1 |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/policy-block-authentication-flows.md" target="_blank">docs/identity/conditional-access/policy-block-authentication-flows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-block-authentication-flows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Block authentication flows with Conditional Access policy </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following steps help create Conditional Access policies to restrict how device code flow and authentication transfer are used within your organization.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Device code flow policies </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Block authentication flows with Conditional Access policy </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The following steps help create Conditional Access policies to restrict how [device code flow](concept-authentication-flows.md#device-code-flow) and [authentication transfer](concept-authentication-flows.md#authentication-transfer) are used within your organization.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Device code flow policies </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21781.md" target="_blank">docs/includes/secure-recommendations/21781.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21781" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-deleted">- [Deploy Conditional Access policy to target privileged accounts and require phishing resistant credentials using authentication strengths](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to target privileged accounts and require phishing resistant credentials](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21782.md" target="_blank">docs/includes/secure-recommendations/21782.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21782" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-deleted">- [Deploy Conditional Access policy to target privileged accounts and require phishing resistant credentials using authentication strengths](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to target privileged accounts and require phishing resistant credentials](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21783.md" target="_blank">docs/includes/secure-recommendations/21783.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21783" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-deleted">- [Deploy Conditional Access policy to target privileged accounts and require phishing resistant credentials using authentication strengths](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-context">- [Ensure that privileged accounts register and use phishing resistant methods](/entra/identity/authentication/concept-authentication-strengths#authentication-strengths)</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to target privileged accounts and require phishing resistant credentials](/entra/identity/conditional-access/policy-admin-phish-resistant-mfa)</div><div class="diff-line diff-context">- [Monitor authentication method activity](/entra/identity/monitoring-health/concept-usage-insights-report#authentication-methods-activity)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21800.md" target="_blank">docs/includes/secure-recommendations/21800.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Sep 8, 2025 6:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21800" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Deploy multifactor authentication](/entra/identity/authentication/howto-mfa-getstarted)</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-deleted">- [Deploy Conditional Access policies to enforce authentication strength](/entra/identity/conditional-access/policy-all-users-mfa-strength)</div><div class="diff-line diff-context">- [Review authentication methods activity](/entra/identity/monitoring-health/concept-usage-insights-report?tabs=microsoft-entra-admin-center#authentication-methods-activity)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Deploy multifactor authentication](/entra/identity/authentication/howto-mfa-getstarted)</div><div class="diff-line diff-context">- [Get started with a phishing-resistant passwordless authentication deployment](/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication)</div><div class="diff-line diff-added">- [Deploy a Conditional Access policy to require phishing-resistant MFA for all users](/entra/identity/conditional-access/policy-all-users-mfa-strength)</div><div class="diff-line diff-context">- [Review authentication methods activity](/entra/identity/monitoring-health/concept-usage-insights-report?tabs=microsoft-entra-admin-center#authentication-methods-activity)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
