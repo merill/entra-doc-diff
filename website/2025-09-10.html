@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 8th 2025, 8:00 PM PDT</p>
+        <p>Report generated on September 9th 2025, 8:00 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/scripts/powershell-open-secure-sockets-layer.md" target="_blank">docs/global-secure-access/scripts/powershell-open-secure-sockets-layer.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 9, 2025 5:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/scripts/powershell-open-secure-sockets-layer" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+26</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 09 finalized content per PM feedback. Ready to publish.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-deleted">ms.date: 09/08/2025</div><div class="diff-line diff-context">ms.reviewer: teresayao</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an admin, I want to automate the creation of TLS certificates using PowerShell so that I can streamline my testing process.</div><div class="diff-line diff-context">- Install OpenSSL for Windows or Linux.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; While other tools might be available for certificate management, this sample code uses OpenSSL. OpenSSL is bundled with many Linux distributions, such as Ubuntu.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Generate and sign TLS certificates</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#</div><div class="diff-line diff-context"># Before you begin:</div><div class="diff-line diff-context">#    </div><div class="diff-line diff-deleted"># - Make sure you are running PowerShell as an administrator</div><div class="diff-line diff-context"># - Make sure you run: Install-Module Microsoft.Graph.Beta -AllowClobber -Force</div><div class="diff-line diff-context"># Ensure Microsoft.Graph.Beta module is available</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-added">ms.date: 09/09/2025</div><div class="diff-line diff-context">ms.reviewer: teresayao</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an admin, I want to automate the creation of TLS certificates using PowerShell so that I can streamline my testing process.</div><div class="diff-line diff-context">- Install OpenSSL for Windows or Linux.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; While other tools might be available for certificate management, this sample code in this article uses OpenSSL. OpenSSL is bundled with many Linux distributions, such as Ubuntu.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Generate and sign TLS certificates</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#</div><div class="diff-line diff-context"># Before you begin:</div><div class="diff-line diff-context">#    </div><div class="diff-line diff-added"># - Make sure you&#39;re running PowerShell as an administrator</div><div class="diff-line diff-context"># - Make sure you run: Install-Module Microsoft.Graph.Beta -AllowClobber -Force</div><div class="diff-line diff-context"># Ensure Microsoft.Graph.Beta module is available</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-external-users.md" target="_blank">docs/id-governance/entitlement-management-external-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 9, 2025 12:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-external-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How entitlement management can help</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When using the [Microsoft Entra B2B](~/external-id/what-is-b2b.md) invite experience, you must already know the email addresses of the external guest users you want to bring into your resource directory and work with. Directly inviting each user works great when you&#39;re working on a smaller or short-term project and you already know all the participants, but this process is harder to manage if you have lots of users you want to work with, or if the participants change over time. For example, you might be working with another organization and have one point of contact with that organization, but over time more users from that organization will also need access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With entitlement management, you can define a policy that allows users from organizations you specify to be able to self-request an access package. That policy includes whether approval is required, whether access reviews are required, and an expiration date for the access. In most cases, you want to require approval, in order to have appropriate oversight over which users are brought into your directory. If approval is required, then for major external organization partners, you might consider inviting one or more users from the external organization to your directory, designating them as sponsors, and configuring that sponsors are approvers - since they&#39;re likely to know which external users from their organization need access. Once you&#39;ve configured the access package, obtain the access package&#39;s request link so you can send that link to your contact person (sponsor) at the external organization. That contact can share with other users in their external organization, and they can use this link to request the access package. Users from that organization who are already invited into your directory can also use that link.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Make sure to exclude the Entitlement Management app from any Conditional Access policies that impact guest users. Otherwise, a Conditional Access policy could block them from accessing MyAccess or being able to sign in to your directory. For example, guests likely don&#39;t have a registered device, aren&#39;t in a known location, and don&#39;t want to re-register for multifactor authentication (MFA), so adding these requirements in a Conditional Access policy will block guests from using entitlement management. For more information, see [What are conditions in Microsoft Entra Conditional Access?](~/identity/conditional-access/concept-conditional-access-conditions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If the Conditional Access is blocking all cloud applications, in addition to excluding the Entitlement Management App, ensure that the *Request Approvals Read Platform* is also excluded in your Conditional Access policy. Start by confirming that you have the necessary roles: Conditional Access Administrator, Application Administrator, Attribute Assignment Administrator, and Attribute Definition Administrator. Then, create a custom security attribute with a suitable name and values. Locate the service principal for *Request Approvals Read Platform* in Enterprise Applications, and assign the custom attribute with the chosen value to this application. In your Conditional Access policy, apply a filter to exclude selected applications based on the custom attribute name and value assigned to *Request Approvals Read Platform*. For more details on filtering applications in Conditional Access policies, refer to : [Conditional Access: Filter for applications](../identity/conditional-access/concept-filter-for-applications.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-external-users/exclude-app-guests.png&quot; alt-text=&quot;Screenshot of exclude app options.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **ID Governance** &gt; **Entitlement management** &gt; **Control Configurations**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **View settings** on the Lifecycle of external users setting card.</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-external-users/settings-external-users.png&quot; alt-text=&quot;Screenshot of external settings for id governance.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. On the settings page you will see a list of actions to take for external users onboarded via an access package once their last access package assignment expires. This includes options to **Remove external user**, **Block external user from signing in to directory**, and **Number of days before removing external user from directory**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How entitlement management can help</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When using the [Microsoft Entra B2B](~/external-id/what-is-b2b.md) invite experience, you must already know the email addresses of the external guest users you want to bring into your resource directory and work with. Directly inviting each user works great when you&#39;re working on a smaller or short-term project and you already know all the participants. This process is harder to manage if you have lots of users you want to work with, or if the participants change over time. For example, you might be working with another organization and have one point of contact with that organization, but over time more users from that organization will also need access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With entitlement management, you can define a policy that allows users from organizations you specify to be able to self-request an access package. That policy includes whether approval is required, whether access reviews are required, and an expiration date for the access. In most cases, you want to require approval, in order to have appropriate oversight over which users are brought into your directory. If approval is required, then for major external organization partners, you might consider inviting one or more users from the external organization to your directory, designating them as sponsors, and configuring that sponsors are approvers - since they&#39;re likely to know which external users from their organization need access. Once you&#39;ve configured the access package, obtain the access package&#39;s request link so you can send that link to your contact person (sponsor) at the external organization. That contact can share with other users in their external organization, and they can use this link to request the access package. Users from that organization who are already invited into your directory can also use that link.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Make sure to exclude the Entitlement Management app from any Conditional Access policies that impact guest users. Otherwise, a Conditional Access policy could block them from accessing MyAccess or being able to sign in to your directory. For example, guests likely don&#39;t have a registered device, aren&#39;t in a known location, and don&#39;t want to re-register for multifactor authentication (MFA), so adding these requirements in a Conditional Access policy will block guests from using entitlement management. For more information, see [What are conditions in Microsoft Entra Conditional Access?](~/identity/conditional-access/concept-conditional-access-conditions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If the Conditional Access is blocking all cloud applications, in addition to excluding the Entitlement Management App, ensure that the *Request Approvals Read Platform* is also excluded in your Conditional Access policy. Start by confirming that you have the necessary roles: Conditional Access Administrator, Application Administrator, Attribute Assignment Administrator, and Attribute Definition Administrator. Then, create a custom security attribute with a suitable name and values. Locate the service principal for *Request Approvals Read Platform* in Enterprise Applications, and assign the custom attribute with the chosen value to this application. In your Conditional Access policy, apply a filter to exclude selected applications based on the custom attribute name and value assigned to *Request Approvals Read Platform*. For more details on filtering applications in Conditional Access policies, refer to: [Conditional Access: Filter for applications](../identity/conditional-access/concept-filter-for-applications.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-external-users/exclude-app-guests.png&quot; alt-text=&quot;Screenshot of exclude app options.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **ID Governance** &gt; **Entitlement management** &gt; **Control Configurations**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **View settings** on the Lifecycle of external users setting card.</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-external-users/settings-external-users.png&quot; alt-text=&quot;Screenshot of external settings for ID governance.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On the settings page, you&#39;ll see a list of actions to take for external users onboarded via an access package once their last access package assignment expires. This includes options to **Remove external user**, **Block external user from signing in to directory**, and **Number of days before removing external user from directory**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/reply-url.md" target="_blank">docs/identity-platform/reply-url.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Philippe Signoret on Sep 9, 2025 8:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/reply-url" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify that ignoring the port is only for localhost</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. `http` URI schemes are acceptable because the redirect never leaves the device. As such, both of these URIs are acceptable:</div><div class="diff-line diff-context">    - `http://localhost/myApp`</div><div class="diff-line diff-context">    - `https://localhost/myApp`</div><div class="diff-line diff-deleted">1. Due to ephemeral port ranges often required by native applications, the port component (for example, `:5001` or `:443`) is ignored for the purposes of matching a redirect URI. As a result, all of these URIs are considered equivalent:</div><div class="diff-line diff-context">    - `http://localhost/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:1234/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:5000/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:8080/MyApp`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">From a development standpoint, this means a few things:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* Do not register multiple redirect URIs where only the port differs. The login server picks one arbitrarily and uses the behavior associated with that redirect URI (for example, whether it&#39;s a `web`-, `native`-, or `spa`-type redirect).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    This is especially important when you want to use different authentication flows in the same application registration, for example both the authorization code grant and implicit flow. To associate the correct response behavior with each redirect URI, the login server must be able to distinguish between the redirect URIs and can&#39;t do so when only the port differs.</div><div class="diff-line diff-context">* To register multiple redirect URIs on localhost to test different flows during development, differentiate them using the *path* component of the URI. For example, `http://localhost/MyWebApp` doesn&#39;t match `http://localhost/MyNativeApp`.</div><div class="diff-line diff-context">* The IPv6 loopback address (`[::1]`) isn&#39;t currently supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Prefer 127.0.0.1 over localhost</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. `http` URI schemes are acceptable because the redirect never leaves the device. As such, both of these URIs are acceptable:</div><div class="diff-line diff-context">    - `http://localhost/myApp`</div><div class="diff-line diff-context">    - `https://localhost/myApp`</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Due to ephemeral port ranges often required by native applications, the port component (for example, `:5001` or `:443`) is ignored for the purposes of matching a localhost redirect URI. As a result, all of these URIs are considered equivalent:</div><div class="diff-line diff-context">    - `http://localhost/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:1234/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:5000/MyApp`</div><div class="diff-line diff-context">    - `http://localhost:8080/MyApp`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    This is *only* true for localhost redirect URIs. In all other cases, the port component is *not* ignored when matching redirect URIs. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">From a development standpoint, this means a few things:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* Do not register multiple localhost redirect URIs where only the port differs. The login server picks one arbitrarily and uses the behavior associated with that registered redirect URI (for example, whether it&#39;s a `web`-, `native`-, or `spa`-type redirect).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    This is especially important when you want to use different authentication flows in the same application registration, for example both the authorization code grant and implicit flow. To associate the correct response behavior with each redirect URI, the login server must be able to distinguish between the redirect URIs and can&#39;t do so when only the port differs.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">* To register multiple redirect URIs on localhost to test different flows during development, differentiate them using the *path* component of the URI. For example, `http://localhost/MyWebApp` doesn&#39;t match `http://localhost/MyNativeApp`.</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/scripts/powershell-active-directory-certificate-service.md" target="_blank">docs/global-secure-access/scripts/powershell-active-directory-certificate-service.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jayrusso on Sep 9, 2025 5:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/scripts/powershell-active-directory-certificate-service" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Sep 09 finalized content per PM feedback. Ready to publish.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-deleted">ms.date: 09/08/2025</div><div class="diff-line diff-context">ms.reviewer: teresayao</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an admin, I want to automate the creation of TLS certificates using PowerShell so that I can streamline my testing process.</div><div class="diff-line diff-context">#</div><div class="diff-line diff-context"># Before you begin:</div><div class="diff-line diff-context">#    </div><div class="diff-line diff-deleted"># - Make sure you are running PowerShell as an administrator</div><div class="diff-line diff-context"># - Make sure you run: Install-Module Microsoft.Graph.Beta -AllowClobber -Force</div><div class="diff-line diff-context"># - Make sure you have ADCS configured with a SubCA template and you have &quot;&lt;CAHostName&gt;\&lt;CACommonName&gt;&quot;</div><div class="diff-line diff-context"># Ensure Microsoft.Graph.Beta module is available</div><div class="diff-line diff-context">#ADCS settings</div><div class="diff-line diff-context"># Make sure you have ADCS configured with a SubCA template and you have &quot;&lt;CAHostName&gt;\&lt;CACommonName&gt;&quot;</div><div class="diff-line diff-context">$Template = &quot;SubCA&quot;</div><div class="diff-line diff-deleted">$CAConfig=&quot;enter &lt;CACommonName&gt; of your ADCS server&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Check if the External Certificate Authority Certificates already exists</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-added">ms.date: 09/09/2025</div><div class="diff-line diff-context">ms.reviewer: teresayao</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an admin, I want to automate the creation of TLS certificates using PowerShell so that I can streamline my testing process.</div><div class="diff-line diff-context">#</div><div class="diff-line diff-context"># Before you begin:</div><div class="diff-line diff-context">#    </div><div class="diff-line diff-added"># - Make sure you&#39;re running PowerShell as an administrator</div><div class="diff-line diff-context"># - Make sure you run: Install-Module Microsoft.Graph.Beta -AllowClobber -Force</div><div class="diff-line diff-context"># - Make sure you have ADCS configured with a SubCA template and you have &quot;&lt;CAHostName&gt;\&lt;CACommonName&gt;&quot;</div><div class="diff-line diff-context"># Ensure Microsoft.Graph.Beta module is available</div><div class="diff-line diff-context">#ADCS settings</div><div class="diff-line diff-context"># Make sure you have ADCS configured with a SubCA template and you have &quot;&lt;CAHostName&gt;\&lt;CACommonName&gt;&quot;</div><div class="diff-line diff-context">$Template = &quot;SubCA&quot;</div><div class="diff-line diff-added">$CAConfig=&quot;&lt;CACommonName&gt; of your ADCS server&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Check if the External Certificate Authority Certificates already exists</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
