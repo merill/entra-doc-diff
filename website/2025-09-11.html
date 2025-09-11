@@ -1,0 +1,391 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 9th 2025, 8:05 PM PDT</p>
+        <p>Report generated on September 10th 2025, 8:05 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">3</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/deployment-external-operations.md" target="_blank">docs/architecture/deployment-external-operations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Sep 10, 2025 6:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/deployment-external-operations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update links for monitor and insights</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 09/09/2025</div><div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">#customer intent: I need to understand subscriptions and billing, consumer app security, and how to prevent fraud tactics in Microsoft Entra External ID. </div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Microsoft Entra External ID stores sign-in and audit logs for 30 days. For retention and analysis, export this information to an external storage or tool. </div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">Configure [Azure Monitor](/azure/azure-monitor/fundamentals/overview) as a bridge to export logs. See the following diagram of Microsoft Entra External ID log exports with Azure Monitor. </div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   [ ![Diagram of log exports with Azure Monitor.](media/deployment-external/log-export.png)](media/deployment-external/log-export-expanded.png#lightbox)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Dashboards: Operational telemetry and security insights</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">Microsoft Entra External ID has built-in dashboards with useful telemetry from key areas such as authentication trends, MFA usage, and protections related to SMS verification. Use insights to maintain visibility into your identity system health and threat posture. For your deployment and operational strategy, we recommended you incorporate regular metrics monitoring. Detect anomalies, assess risk exposure, and ensure the effectiveness of security controls. Use the following table to see metrics and details.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">|Metric|Details|</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 09/10/2025</div><div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">#customer intent: I need to understand subscriptions and billing, consumer app security, and how to prevent fraud tactics in Microsoft Entra External ID. </div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Microsoft Entra External ID stores sign-in and audit logs for 30 days. For retention and analysis, export this information to an external storage or tool. </div><div class="diff-line diff-context"></div><div class="diff-line diff-added">Configure Azure Monitor as a bridge to export logs. See the following diagram of Microsoft Entra External ID log exports with Azure Monitor. For more information, see [Set up Azure Monitor in external tenants](../external-id/customers/how-to-azure-monitor.md).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   [ ![Diagram of log exports with Azure Monitor.](media/deployment-external/log-export.png)](media/deployment-external/log-export-expanded.png#lightbox)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Dashboards: Operational telemetry and security insights</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">Microsoft Entra External ID has built-in dashboards with useful telemetry from key areas such as authentication trends, MFA usage, and protections related to SMS verification. Use insights to maintain visibility into your identity system health and threat posture. For your deployment and operational strategy, we recommended you incorporate regular metrics monitoring. Detect anomalies, assess risk exposure, and ensure the effectiveness of security controls. Use the following table to see metrics and details. For more information, see [Gain insights into your app users&#39; activity](../external-id/customers/how-to-user-insights.md).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">|Metric|Details|</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/grant-managed-identity-recource-access-powershell.md" target="_blank">docs/identity/managed-identities-azure-resources/grant-managed-identity-recource-access-powershell.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Sep 10, 2025 12:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/grant-managed-identity-recource-access-powershell" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Assign a managed identity access to an Azure resource or another resource</div><div class="diff-line diff-deleted">description: Step-by-step instructions for assigning a managed identity access to an Azure resource or another resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: SHERMANOUKO</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Use Azure portal to grant a managed identity access to a resource</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article shows you how to use PowerShell to give a managed identity access to an Azure resource. In this article, we use the example of an Azure virtual machine (Azure VM) managed identity accessing an Azure storage account. Once you&#39;ve configured an Azure resource with a managed identity, you can then give the managed identity access to another resource, similar to any security principal.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Use PowerShell to grant a managed identity access to a resource</div><div class="diff-line diff-added">description: Step-by-step instructions on using PowerShell to assign a managed identity access to an Azure resource or another resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: SHERMANOUKO</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Use PowerShell to grant a managed identity access to a resource</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article shows you how to use PowerShell to give a managed identity access to an Azure resource. In this article, we use the example of an Azure virtual machine (Azure VM) managed identity accessing an Azure storage account. Once you&#39;ve configured an Azure resource with a managed identity, you can then give the managed identity access to another resource, similar to any security principal.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/grant-managed-identity-resource-access-azure-portal.md" target="_blank">docs/identity/managed-identities-azure-resources/grant-managed-identity-resource-access-azure-portal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Stacy Chambers on Sep 10, 2025 4:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/grant-managed-identity-resource-access-azure-portal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pencil edit</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Use Azure RBAC to assign a managed identity access to another resource using the Azure portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The steps outlined below show is how you grant access to a service using Azure RBAC. Check specific service documentation on how to grant access; for example, check [Azure Data Explorer](/azure/data-explorer/data-explorer-overview) for instructions. Some Azure services are in the process of adopting Azure RBAC on the data plane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Azure portal](https://portal.azure.com) using an account associated with the Azure subscription for which you&#39;ve configured the managed identity.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Use Azure RBAC to assign a managed identity access to another resource using the Azure portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The steps outlined below show how you grant access to a service using Azure RBAC. Check specific service documentation on how to grant access; for example, check [Azure Data Explorer](/azure/data-explorer/data-explorer-overview) for instructions. Some Azure services are in the process of adopting Azure RBAC on the data plane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Azure portal](https://portal.azure.com) using an account associated with the Azure subscription for which you&#39;ve configured the managed identity.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/manage-user-assigned-managed-identities-azure-cli.md" target="_blank">docs/identity/managed-identities-azure-resources/manage-user-assigned-managed-identities-azure-cli.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Stacy Chambers on Sep 10, 2025 4:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/manage-user-assigned-managed-identities-azure-cli" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pencil edit</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Deleting a user-assigned managed identity won&#39;t remove the reference from any resource it was assigned to. Remove those from the resource itself. For example, for a VM or virtual machine scale set, use the `az vm/vmss identity remove` command.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Related conmtent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For a full list of Azure CLI identity commands, see [az identity](/cli/azure/identity).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Deleting a user-assigned managed identity won&#39;t remove the reference from any resource it was assigned to. Remove those from the resource itself. For example, for a VM or virtual machine scale set, use the `az vm/vmss identity remove` command.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For a full list of Azure CLI identity commands, see [az identity](/cli/azure/identity).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/assign-app-role-managed-identity-azure-cli.md" target="_blank">docs/identity/managed-identities-azure-resources/assign-app-role-managed-identity-azure-cli.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Sep 10, 2025 12:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/assign-app-role-managed-identity-azure-cli" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If you&#39;re unfamiliar with managed identities for Azure resources, see [Managed identity for Azure resources overview](../overview.md). </div><div class="diff-line diff-context">- Review the [difference between a system-assigned and user-assigned managed identity](/azure/logic-apps/authenticate-with-managed-identity).</div><div class="diff-line diff-context">- If you don&#39;t already have an Azure account, [sign up for a free account](https://azure.microsoft.com/free/) before continuing.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If you&#39;re unfamiliar with managed identities for Azure resources, see [Managed identity for Azure resources overview](./overview.md). </div><div class="diff-line diff-context">- Review the [difference between a system-assigned and user-assigned managed identity](/azure/logic-apps/authenticate-with-managed-identity).</div><div class="diff-line diff-context">- If you don&#39;t already have an Azure account, [sign up for a free account](https://azure.microsoft.com/free/) before continuing.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/assign-app-role-managed-identity-powershell.md" target="_blank">docs/identity/managed-identities-azure-resources/assign-app-role-managed-identity-powershell.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Sep 10, 2025 12:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/assign-app-role-managed-identity-powershell" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If you&#39;re unfamiliar with managed identities for Azure resources, see [Managed identity for Azure resources overview](../overview.md). </div><div class="diff-line diff-context">- Review the [difference between a system-assigned and user-assigned managed identity](/azure/logic-apps/authenticate-with-managed-identity).</div><div class="diff-line diff-context">- If you don&#39;t already have an Azure account, [sign up for a free account](https://azure.microsoft.com/free/) before continuing.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If you&#39;re unfamiliar with managed identities for Azure resources, see [Managed identity for Azure resources overview](./overview.md). </div><div class="diff-line diff-context">- Review the [difference between a system-assigned and user-assigned managed identity](/azure/logic-apps/authenticate-with-managed-identity).</div><div class="diff-line diff-context">- If you don&#39;t already have an Azure account, [sign up for a free account](https://azure.microsoft.com/free/) before continuing.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/managed-identities-azure-resources/how-manage-user-assigned-managed-identities.md
+            </div>
+            <div class="file-meta">
+              Deleted by Sherman Ouko on Sep 10, 2025 1:06 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-manage-user-assigned-managed-identities</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-401 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/managed-identities-azure-resources/how-to-assign-app-role-managed-identity.md
+            </div>
+            <div class="file-meta">
+              Deleted by Sherman Ouko on Sep 10, 2025 1:06 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-assign-app-role-managed-identity</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-36 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/managed-identities-azure-resources/how-to-assign-access-azure-resource.md
+            </div>
+            <div class="file-meta">
+              Deleted by Sherman Ouko on Sep 10, 2025 1:07 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-assign-access-azure-resource</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-32 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Refactor MSI docs</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
