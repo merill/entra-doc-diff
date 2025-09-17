@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 15th 2025, 8:01 PM PDT</p>
+        <p>Report generated on September 16th 2025, 8:01 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">35</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-use-app-roles-customers.md" target="_blank">docs/external-id/customers/how-to-use-app-roles-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:25 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-use-app-roles-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-use-app-roles-customers.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When Microsoft Entra External ID issues a security token for an authenticated user, it includes the names of the roles you&#39;ve assigned the user or group in the security token&#39;s roles claim. An application that receives that security token in a request can then make authorization decisions based on the values in the roles claim.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=RBAC)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Role-based access control” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Developers can also use security groups to implement RBAC in their applications, where the memberships of the user in specific groups are interpreted as their role memberships. When an organization uses security groups, a groups claim is included in the token. The groups claim specifies the identifiers of all of the groups to which the user is assigned within the current external tenant.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When Microsoft Entra External ID issues a security token for an authenticated user, it includes the names of the roles you&#39;ve assigned the user or group in the security token&#39;s roles claim. An application that receives that security token in a request can then make authorization decisions based on the values in the roles claim.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Developers can also use security groups to implement RBAC in their applications, where the memberships of the user in specific groups are interpreted as their role memberships. When an organization uses security groups, a groups claim is included in the token. The groups claim specifies the identifiers of all of the groups to which the user is assigned within the current external tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## App roles vs. groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Though you can use app roles or groups for authorization, key differences between them can influence which you decide to use for your scenario.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/custom-extension-attribute-collection.md" target="_blank">docs/identity-platform/custom-extension-attribute-collection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:41 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/custom-extension-attribute-collection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update custom-extension-attribute-collection.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart</div><div class="diff-line diff-deleted">ms.date: 04/28/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">titleSuffix: Microsoft identity platform</div><div class="diff-line diff-context">This article describes how to extend the user sign-up experience in Microsoft Entra External ID for customers. In customer sign-up user flows, event listeners can be used to extend the attribute collection process before attribute collection and at the time of attribute submission:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The **OnAttributeCollectionStart** event occurs at the beginning of the attribute collection step, before the attribute collection page renders. You can add actions such as prefilling values and displaying a blocking error.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">    &gt; [!TIP]</div><div class="diff-line diff-deleted">    &gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=PreAttributeCollection)</div><div class="diff-line diff-deleted">    &gt; </div><div class="diff-line diff-deleted">    &gt; To try out this feature, go to the Woodgrove Groceries demo and start the “[Prepopulate sign-up attributes](https://woodgrovedemo.com/#usecase=PreAttributeCollection)” use case.</div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-context">- The **OnAttributeCollectionSubmit** event occurs after the user enters and submits attributes. You can add actions such as validating or modifying the user&#39;s entries.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">    &gt; [!TIP]</div><div class="diff-line diff-deleted">    &gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=PostAttributeCollection)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">titleSuffix: Microsoft identity platform</div><div class="diff-line diff-context">This article describes how to extend the user sign-up experience in Microsoft Entra External ID for customers. In customer sign-up user flows, event listeners can be used to extend the attribute collection process before attribute collection and at the time of attribute submission:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The **OnAttributeCollectionStart** event occurs at the beginning of the attribute collection step, before the attribute collection page renders. You can add actions such as prefilling values and displaying a blocking error.</div><div class="diff-line diff-context">- The **OnAttributeCollectionSubmit** event occurs after the user enters and submits attributes. You can add actions such as validating or modifying the user&#39;s entries.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">In addition to creating a custom authentication extension for the attribute collection start and submit events, you need to create a REST API that defines the workflow actions to take for each event. You can use any programming language, framework, and hosting environment to create and host your REST API. This article demonstrates a quick way to get started using a C# Azure Function. With Azure Functions, you run your code in a serverless environment without having to first create a virtual machine (VM) or publish a web application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/overview-solutions-customers.md" target="_blank">docs/external-id/customers/overview-solutions-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:23 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/overview-solutions-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update overview-solutions-customers.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you enter an email address to create an account, your email is verified through a one-time passcode. Then you can create a new password and provide more details, such as your name, country or region, and other information. Once your account is created, your email becomes your sign-in ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To try out this feature, go to the Woodgrove Groceries demo and start the “[Online retail](https://woodgrovedemo.com/#usecase=OnlineRetail)” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">### Self-service password reset</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Self-service password reset (SSPR) gives users the ability to change or reset their password, with no administrator or help desk involvement. If a user&#39;s account is locked or they forget their password, they can follow prompts to unblock themselves and get back to work.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To set up self-service password reset for your customers see the [Enable self-service password reset](how-to-enable-password-reset-customers.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To try out this feature, go to the Woodgrove Groceries demo and start the “[Self-service password reset](https://woodgrovedemo.com/#usecase=SSPR)” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">### Sign-in with a social account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can offer your customers the ability to sign in with their existing social or enterprise accounts, without having to create a new account. On the sign-in page, select one of the identity providers, such as Google, Facebook or Apple. Then you&#39;re redirected to the selected provider&#39;s to complete the sign-in process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To allow your customers to sign up and sign in using their social accounts, you can navigate to **External Identities** &gt; **All identity providers** in the admin center. You can find the exact steps for adding Facebook, Google and Apple as identity providers in the following links for [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md) and for [Apple](how-to-apple-federation-customers.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To try out this feature, go to the Woodgrove Groceries demo and start the “[Sign-in with social accounts](https://woodgrovedemo.com/#usecase=Social)” use case.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you enter an email address to create an account, your email is verified through a one-time passcode. Then you can create a new password and provide more details, such as your name, country or region, and other information. Once your account is created, your email becomes your sign-in ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Self-service password reset</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Self-service password reset (SSPR) gives users the ability to change or reset their password, with no administrator or help desk involvement. If a user&#39;s account is locked or they forget their password, they can follow prompts to unblock themselves and get back to work.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To set up self-service password reset for your customers see the [Enable self-service password reset](how-to-enable-password-reset-customers.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Sign-in with a social account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can offer your customers the ability to sign in with their existing social or enterprise accounts, without having to create a new account. On the sign-in page, select one of the identity providers, such as Google, Facebook or Apple. Then you&#39;re redirected to the selected provider&#39;s to complete the sign-in process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To allow your customers to sign up and sign in using their social accounts, you can navigate to **External Identities** &gt; **All identity providers** in the admin center. You can find the exact steps for adding Facebook, Google and Apple as identity providers in the following links for [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md) and for [Apple](how-to-apple-federation-customers.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!--Ask PM about custom OIDC.--&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Sign-up with a one-time passcode</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you want to understand how custom extensions work, you can refer to the [Custom extension overview](~/identity-platform/custom-extension-overview.md) article. For information on custom claims providers, you can check out the [Custom claims provider](~/identity-platform/custom-claims-provider-overview.md) article.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-customize-languages-customers.md" target="_blank">docs/external-id/customers/how-to-customize-languages-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:33 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-customize-languages-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update date and remove tip from customization guide</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/14/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to learn about how to add customized browser languages to my app&#39;s authentication experience.</div><div class="diff-line diff-context">- [Create a user flow](how-to-user-flow-sign-up-sign-in-customers.md).</div><div class="diff-line diff-context">- Review the file size requirements for each image you want to add. You might need to use a photo editor to create the right-sized images. The preferred image type for all images is PNG, but JPG is accepted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=Language)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Language customization” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Add browser language under Company branding</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Organizational Branding Administrator](~/identity/role-based-access-control/permissions-reference.md#organizational-branding-administrator).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to learn about how to add customized browser languages to my app&#39;s authentication experience.</div><div class="diff-line diff-context">- [Create a user flow](how-to-user-flow-sign-up-sign-in-customers.md).</div><div class="diff-line diff-context">- Review the file size requirements for each image you want to add. You might need to use a photo editor to create the right-sized images. The preferred image type for all images is PNG, but JPG is accepted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add browser language under Company branding</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Organizational Branding Administrator](~/identity/role-based-access-control/permissions-reference.md#organizational-branding-administrator).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Customize the branding and end-user experience](how-to-customize-branding-customers.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md" target="_blank">docs/external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:31 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-user-flow-sign-up-sign-in-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change article date to 09/16/2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/23/2025</div><div class="diff-line diff-context">ms.reviewer: kengaderdus</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to create and customize a user flow, which determines the sign-up and sign-in experience for my customer users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how to create a sign-in and sign-up user flow. After you create the user flow, the next step is to [add your application to the user flow](how-to-user-flow-add-application.md). You can create multiple user flows if you have multiple applications that you want to offer to customers. Or, you can use the same user flow for many applications. However, an application can have only one user flow. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=OnlineRetail)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Online retail” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **A Microsoft Entra external tenant**: Before you begin, create your Microsoft Entra external tenant. You can set up a &lt;a href=&quot;https://aka.ms/ciam-free-trial?wt.mc_id=ciamcustomertenantfreetrial_linkclick_content_cnl&quot; target=&quot;_blank&quot;&gt;free trial&lt;/a&gt;, or you can create a new external tenant in Microsoft Entra ID.</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.reviewer: kengaderdus</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to create and customize a user flow, which determines the sign-up and sign-in experience for my customer users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how to create a sign-in and sign-up user flow. After you create the user flow, the next step is to [add your application to the user flow](how-to-user-flow-add-application.md). You can create multiple user flows if you have multiple applications that you want to offer to customers. Or, you can use the same user flow for many applications. However, an application can have only one user flow. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **A Microsoft Entra external tenant**: Before you begin, create your Microsoft Entra external tenant. You can set up a &lt;a href=&quot;https://aka.ms/ciam-free-trial?wt.mc_id=ciamcustomertenantfreetrial_linkclick_content_cnl&quot; target=&quot;_blank&quot;&gt;free trial&lt;/a&gt;, or you can create a new external tenant in Microsoft Entra ID.</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Add your application to the user flow](how-to-user-flow-add-application.md)</div><div class="diff-line diff-added">- [Create custom user attributes and customize the order of the attributes on the sign-up page](how-to-define-custom-attributes.md).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-define-custom-attributes.md" target="_blank">docs/external-id/customers/how-to-define-custom-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:30 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-define-custom-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update date and remove redundant tip in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/28/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An attribute with a Boolean data type has a user input type of CheckboxSingleSelect. You can modify the text that displays next to the checkbox and include hyperlinks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=PolicyAgreement)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Add links to terms of use and privacy policies” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">To configure a single-select checkbox, follow these steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Page layouts** page, find the attribute with data type of **Boolean** that you want to configure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Add attributes to the ID token returned to your application](how-to-add-attributes-to-token.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An attribute with a Boolean data type has a user input type of CheckboxSingleSelect. You can modify the text that displays next to the checkbox and include hyperlinks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure a single-select checkbox, follow these steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Page layouts** page, find the attribute with data type of **Boolean** that you want to configure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Add attributes to the ID token returned to your application](how-to-add-attributes-to-token.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[Create a sign-up and sign-in user flow for customers](how-to-user-flow-sign-up-sign-in-customers.md).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-google-federation-customers.md" target="_blank">docs/external-id/customers/how-to-google-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-google-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update date and remove try-it-now tip in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/06/2025</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">By setting up federation with Google, you allow customers to sign in to your applications with their own Google accounts. After you add Google as one of your user flow&#39;s sign-in options, customers can sign up and sign in to your application with a Google account. (Learn more about [authentication methods and identity providers for customers](concept-authentication-methods-customers.md).)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=Social)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Sign-in with a social account” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- An [external tenant](how-to-create-external-tenant-portal.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Add Facebook as an identity provider](how-to-facebook-federation-customers.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">By setting up federation with Google, you allow customers to sign in to your applications with their own Google accounts. After you add Google as one of your user flow&#39;s sign-in options, customers can sign up and sign in to your application with a Google account. (Learn more about [authentication methods and identity providers for customers](concept-authentication-methods-customers.md).)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- An [external tenant](how-to-create-external-tenant-portal.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Add Facebook as an identity provider](how-to-facebook-federation-customers.md)</div><div class="diff-line diff-context">- [Add Apple as an identity provider](how-to-apple-federation-customers.md)</div><div class="diff-line diff-added">- [Add OpenID Connect as an external identity provider](how-to-custom-oidc-federation-customers.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-add-attributes-to-token.md" target="_blank">docs/external-id/customers/how-to-add-attributes-to-token.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:34 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-add-attributes-to-token" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-add-attributes-to-token.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can specify which built-in or custom attributes you want to include as claims in the token that Microsoft Entra ID sends to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=TokenAugmentation)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Add claims to security tokens from a REST API” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Register the application](/entra/identity-platform/quickstart-register-app) with Microsoft Entra ID.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can specify which built-in or custom attributes you want to include as claims in the token that Microsoft Entra ID sends to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Register the application](/entra/identity-platform/quickstart-register-app) with Microsoft Entra ID.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-enable-password-reset-customers.md" target="_blank">docs/external-id/customers/how-to-enable-password-reset-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:28 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-enable-password-reset-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update password reset documentation date and content</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 12/05/2024</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an it admin, I want to enable self-service password reset so my customers can reset their own passwords without admin assistance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-enable-password-reset-customers/sspr-flow.png&quot; alt-text=&quot;Screenshot that shows the self-service password rest flow.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=SSPR)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Self-service password reset” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If you haven&#39;t already created your own external tenant, create one now.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an it admin, I want to enable self-service password reset so my customers can reset their own passwords without admin assistance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-enable-password-reset-customers/sspr-flow.png&quot; alt-text=&quot;Screenshot that shows the self-service password rest flow.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If you haven&#39;t already created your own external tenant, create one now.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/overview-customers-ciam.md" target="_blank">docs/external-id/customers/overview-customers-ciam.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:26 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/overview-customers-ciam" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change date in overview-customers-ciam.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 06/11/2025</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to learn about identity solutions for apps for consumers and business customers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access policies are enforced after the user has completed first-factor authentication. For example, if a user&#39;s sign-in risk level is high, they must perform MFA to gain access. Alternatively, the most restrictive approach is to block access to the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=CA)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Conditional Access and multifactor authentication” use case.</div><div class="diff-line diff-context">### Multifactor authentication (MFA)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra MFA helps safeguard access to data and applications while maintaining simplicity for your users. Microsoft Entra External ID integrates directly with Microsoft Entra MFA so you can add security to your sign-up and sign-in experiences by requiring a second form of authentication. You can fine-tune MFA depending on the extent of security you want to apply to your apps. Consider the following scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- See our [training, live demos, and videos](reference-training-videos.md).</div><div class="diff-line diff-context">- Learn more about [planning for Microsoft Entra External ID](concept-planning-your-solution.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a dev, devops, or it admin, I want to learn about identity solutions for apps for consumers and business customers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access policies are enforced after the user has completed first-factor authentication. For example, if a user&#39;s sign-in risk level is high, they must perform MFA to gain access. Alternatively, the most restrictive approach is to block access to the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Multifactor authentication (MFA)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra MFA helps safeguard access to data and applications while maintaining simplicity for your users. Microsoft Entra External ID integrates directly with Microsoft Entra MFA so you can add security to your sign-up and sign-in experiences by requiring a second form of authentication. You can fine-tune MFA depending on the extent of security you want to apply to your apps. Consider the following scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- See our [training, live demos, and videos](reference-training-videos.md).</div><div class="diff-line diff-context">- Learn more about [planning for Microsoft Entra External ID](concept-planning-your-solution.md).</div><div class="diff-line diff-added">- See also the [Microsoft Entra External ID Developer Center](https://aka.ms/ciam/dev) for the latest developer content and resources.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/reference-training-videos.md" target="_blank">docs/external-id/customers/reference-training-videos.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:14 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/reference-training-videos" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update reference-training-videos.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 06/25/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To start the training, go to [Guided project – Build a sample app to evaluate Microsoft Entra External ID](https://aka.ms/eeid/training-module) and follow the units in order.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Woodgrove Groceries live demo</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">The Woodgrove Groceries live demo app is a fictional grocery store that incorporates Microsoft Entra External ID into its online shopping platform. It illustrates several common authentication experiences that can be configured for your apps. To explore the demo environment, visit [Woodgrove Groceries](https://woodgrovedemo.com/). On the right side of the screen, choose the **Select a use case** button, or use [this link](https://woodgrovedemo.com/#usecase=Default). Then, choose from a list of features and use cases related to authentication experiences.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/overview-solutions-customers/demo-woodgrove.png&quot; alt-text=&quot;Screenshot of the Woodgrove Groceries demo home page.&quot;:::</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Visit our video library</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra External ID videos are incorporated within our documentation and can also be found under the [Microsoft Security Channel](https://www.youtube.com/microsoft-security) and [Microsoft Entra External ID playlist](https://www.youtube.com/playlist?list=PL3ZTgFEc7Lythpts59O9KOVuEDLWJLLmA) on YouTube. These videos range from conceptual explanations and practical &quot;how-to&quot; guides to extensive series designed as courses.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To start the training, go to [Guided project – Build a sample app to evaluate Microsoft Entra External ID](https://aka.ms/eeid/training-module) and follow the units in order.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Visit our video library</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra External ID videos are incorporated within our documentation and can also be found under the [Microsoft Security Channel](https://www.youtube.com/microsoft-security) and [Microsoft Entra External ID playlist](https://www.youtube.com/playlist?list=PL3ZTgFEc7Lythpts59O9KOVuEDLWJLLmA) on YouTube. These videos range from conceptual explanations and practical &quot;how-to&quot; guides to extensive series designed as courses.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/custom-extension-onattributecollectionstart-retrieve-return-data.md" target="_blank">docs/identity-platform/custom-extension-onattributecollectionstart-retrieve-return-data.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:42 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/custom-extension-onattributecollectionstart-retrieve-return-data" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update custom-extension-onattributecollectionstart-retrieve-return-data.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart</div><div class="diff-line diff-deleted">ms.date: 06/26/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">- **showBlockPage** - Show an error message and block the user from signing up.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the REST API schema for the OnAttributeCollectionStart event. (See also the related article [Custom Extension for OnAttributeCollectionSubmit event](custom-extension-OnAttributeCollectionSubmit-reference.md).)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=PreAttributeCollection)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “[Prepopulate sign-up attributes](https://woodgrovedemo.com/#usecase=PreAttributeCollection)” use case.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">## REST API schema</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart</div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">- **showBlockPage** - Show an error message and block the user from signing up.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the REST API schema for the OnAttributeCollectionStart event. (See also the related article [Custom Extension for OnAttributeCollectionSubmit event](custom-extension-OnAttributeCollectionSubmit-reference.md).)</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">## REST API schema</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/custom-extension-onattributecollectionsubmit-retrieve-return-data.md" target="_blank">docs/identity-platform/custom-extension-onattributecollectionsubmit-retrieve-return-data.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/custom-extension-onattributecollectionsubmit-retrieve-return-data" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update custom-extension-onattributecollectionsubmit-retrieve-return-data.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart </div><div class="diff-line diff-deleted">ms.date: 06/26/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">- **showBlockPage** - Show an error message and block the user from signing up.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the REST API schema for the OnAttributeCollectionSubmit event. (See also the related article [Custom Extension for OnAttributeCollectionStart event](custom-extension-OnAttributeCollectionStart-reference.md).)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=PostAttributeCollection)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “[Validate sign-up attributes](https://woodgrovedemo.com/#usecase=PostAttributeCollection)” use case, or the “[Block a user from continuing the sign-up process](https://woodgrovedemo.com/#usecase=BlockSignUp)” use case.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">## REST API schema</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: msmimart</div><div class="diff-line diff-context">manager: CelesteDG</div><div class="diff-line diff-context">ms.author: mimart </div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">- **showBlockPage** - Show an error message and block the user from signing up.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the REST API schema for the OnAttributeCollectionSubmit event. (See also the related article [Custom Extension for OnAttributeCollectionStart event](custom-extension-OnAttributeCollectionStart-reference.md).)</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">## REST API schema</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/pagedna-tutorial.md" target="_blank">docs/identity/saas-apps/pagedna-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran S (HCL Technologies Corporate Services) on Sep 16, 2025 8:26 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/pagedna-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Adding Reply URL pattern</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">        |------|</div><div class="diff-line diff-context">        |`https://stores.pagedna.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-context">        |`https://www.nationsprint.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    1. In the **Sign on URL** box, type a URL by using one of the following patterns:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">        |------|</div><div class="diff-line diff-context">        |`https://stores.pagedna.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-context">        |`https://www.nationsprint.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-added">    </div><div class="diff-line diff-added">    1. In the **Reply URL (Assertion Consumer Service URL)** box, type a URL by using one of the following patterns:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">        | **Reply URL** |</div><div class="diff-line diff-added">        |------|</div><div class="diff-line diff-added">        |`https://stores.pagedna.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-added">        |`https://www.nationsprint.com/&lt;your site&gt;/saml2ep.cgi`|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    1. In the **Sign on URL** box, type a URL by using one of the following patterns:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/custom-claims-provider-overview.md" target="_blank">docs/identity-platform/custom-claims-provider-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Yoel Horvitz on Sep 16, 2025 6:41 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/custom-claims-provider-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update date and remove tip section in overview</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.custom: </div><div class="diff-line diff-deleted">ms.date: 05/04/2025</div><div class="diff-line diff-context">ms.reviewer: jasuri</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To set up a custom claims provider, you&#39;ll need to [create a REST API with a token issuance start event](./custom-extension-tokenissuancestart-setup.md), then [configure a custom claim provider for a token issuance event](./custom-extension-tokenissuancestart-configuration.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; [![Try it now](./media/common/try-it-now.png)](https://woodgrovedemo.com/#usecase=TokenAugmentation)</div><div class="diff-line diff-deleted">&gt; </div><div class="diff-line diff-deleted">&gt; To try out this feature, go to the Woodgrove Groceries demo and start the “Add claims to security tokens from a REST API” use case.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Authentication events trigger for Azure Functions client library for .NET</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!--As an API developer, to be able to handle token issuance start custom extensions, I need to easily interact with the request object and easily build a response object without necessarily needing to know the exact format of the request or response</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.custom: </div><div class="diff-line diff-added">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.reviewer: jasuri</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To set up a custom claims provider, you&#39;ll need to [create a REST API with a token issuance start event](./custom-extension-tokenissuancestart-setup.md), then [configure a custom claim provider for a token issuance event](./custom-extension-tokenissuancestart-configuration.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Authentication events trigger for Azure Functions client library for .NET</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!--As an API developer, to be able to handle token issuance start custom extensions, I need to easily interact with the request object and easily build a response object without necessarily needing to know the exact format of the request or response</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
