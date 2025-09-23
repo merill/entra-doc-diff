@@ -1,0 +1,516 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 21st 2025, 8:04 PM PDT</p>
+        <p>Report generated on September 22nd 2025, 8:04 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">43</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-tasks.md" target="_blank">docs/id-governance/lifecycle-workflow-tasks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 22, 2025 1:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-tasks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx sweep</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|---------|---------|</div><div class="diff-line diff-context">|category     |  A  read-only string that identifies the category or categories of the task. Automatically determined when the taskDefinitionID is chosen.     |</div><div class="diff-line diff-context">|taskDefinitionId     | A string referencing a taskDefinition that determines which task to run.       |</div><div class="diff-line diff-deleted">|isEnabled     | A boolean value that denotes whether the task is set to run or not. If set to “true&quot; then the task runs. Defaults to true.       |</div><div class="diff-line diff-context">|displayName     |  A unique string that identifies the task.       |</div><div class="diff-line diff-context">|description     | A string that describes the purpose of the task for administrative use. (Optional)         |</div><div class="diff-line diff-context">|executionSequence     | A read-only integer that states in what order the task runs in a workflow.      |</div><div class="diff-line diff-context">Microsoft Entra allows you to use a [Temporary Access Pass (TAP)](..//identity/authentication/howto-authentication-temporary-access-pass.md) to set up password-less credentials for users. You can also use [Microsoft Entra self-service password reset](../identity/authentication/concept-sspr-howitworks.md) to set a regular password. With this task, Lifecycle workflows allow you to automatically generate a Temporary Access Pass (TAP), and have it sent to the new user&#39;s manager. You&#39;re also able to customize the email that is sent to the user&#39;s manager.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; The user&#39;s employee hire date is used as the start time for the Temporary Access Pass. Please make sure that the TAP lifetime task setting and the [time portion of your user&#39;s hire date](how-to-lifecycle-workflow-sync-attributes.md#importance-of-time) are set appropriately so that the TAP is still valid when the user starts their first day. If the hire date at the time of workflow execution is already in the past, the current time is used as the start time.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With this task in the Microsoft Entra admin center, you&#39;re able to give the task a name and description. You must also set:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|displayName     | GenerateTAPAndSendEmail (Customizable by user)      |</div><div class="diff-line diff-context">|description     | Generate Temporary Access Pass and send via email to user&#39;s manager (Customizable by user)       |</div><div class="diff-line diff-context">|taskDefinitionId     |   1b555e50-7f65-41d5-b514-5894a026d10d     |</div><div class="diff-line diff-deleted">|arguments     |  Argument contains the name parameter &quot;tapLifetimeInMinutes&quot;, which is the lifetime of the temporaryAccessPass in minutes starting at startDateTime. Minimum 10, Maximum 43200 (equivalent to 30 days). The argument also contains the tapIsUsableOnce parameter, which determines whether the passcode is limited to a one time use. If true, the pass can be used once; if false, the pass can be used multiple times within the temporaryAccessPass lifetime. Additionally, the optional common email task parameters can be specified; if they aren&#39;t included, the default behavior takes effect.    |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Example of usage within the workflow:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|---------|---------|</div><div class="diff-line diff-context">|category     |  A  read-only string that identifies the category or categories of the task. Automatically determined when the taskDefinitionID is chosen.     |</div><div class="diff-line diff-context">|taskDefinitionId     | A string referencing a taskDefinition that determines which task to run.       |</div><div class="diff-line diff-added">|isEnabled     | A boolean value that denotes whether the task is set to run or not. If set to “*true&quot;* then the task runs. Defaults to true.       |</div><div class="diff-line diff-context">|displayName     |  A unique string that identifies the task.       |</div><div class="diff-line diff-context">|description     | A string that describes the purpose of the task for administrative use. (Optional)         |</div><div class="diff-line diff-context">|executionSequence     | A read-only integer that states in what order the task runs in a workflow.      |</div><div class="diff-line diff-context">Microsoft Entra allows you to use a [Temporary Access Pass (TAP)](..//identity/authentication/howto-authentication-temporary-access-pass.md) to set up password-less credentials for users. You can also use [Microsoft Entra self-service password reset](../identity/authentication/concept-sspr-howitworks.md) to set a regular password. With this task, Lifecycle workflows allow you to automatically generate a Temporary Access Pass (TAP), and have it sent to the new user&#39;s manager. You&#39;re also able to customize the email that is sent to the user&#39;s manager.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The user&#39;s employee hire date is used as the start time for the Temporary Access Pass. Make sure that the TAP lifetime task setting and the [time portion of your user&#39;s hire date](how-to-lifecycle-workflow-sync-attributes.md#importance-of-time) are set appropriately so that the TAP is still valid when the user starts their first day. If the hire date at the time of workflow execution is already in the past, the current time is used as the start time.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With this task in the Microsoft Entra admin center, you&#39;re able to give the task a name and description. You must also set:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|displayName     | GenerateTAPAndSendEmail (Customizable by user)      |</div><div class="diff-line diff-context">|description     | Generate Temporary Access Pass and send via email to user&#39;s manager (Customizable by user)       |</div><div class="diff-line diff-context">|taskDefinitionId     |   1b555e50-7f65-41d5-b514-5894a026d10d     |</div><div class="diff-line diff-added">|arguments     |  Argument contains the name parameter &quot;tapLifetimeInMinutes,&quot; which is the lifetime of the temporaryAccessPass in minutes starting at startDateTime. Minimum 10, Maximum 43200 (equivalent to 30 days). The argument also contains the tapIsUsableOnce parameter, which determines whether the passcode is limited to a one time use. If true, the pass can be used once; if false, the pass can be used multiple times within the temporaryAccessPass lifetime. Additionally, the optional common email task parameters can be specified; if they aren&#39;t included, the default behavior takes effect.    |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Example of usage within the workflow:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-cloud-sync-how-to-install.md" target="_blank">docs/includes/entra-cloud-sync-how-to-install.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Sep 22, 2025 8:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-cloud-sync-how-to-install" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> removed last step and screenshot</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Include file</div><div class="diff-line diff-context">description: Include file</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 09/18/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">ms.custom: include file, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/entra-cloud-sync-how-to-install/finish.png&quot; alt-text=&quot;Screenshot that shows the finish screen.&quot; lightbox=&quot;media/entra-cloud-sync-how-to-install/finish.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. After the operation finishes, you see a notification that your agent configuration was successfully verified. Select **Exit**.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/entra-cloud-sync-how-to-install/exit.png&quot; alt-text=&quot;Screenshot that shows how to exit the installation.&quot; lightbox=&quot;media/entra-cloud-sync-how-to-install/exit.png&quot;:::</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1. If you still get the initial screen, select **Close**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Include file</div><div class="diff-line diff-context">description: Include file</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">manager: mwongerapk</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-added">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/22/2025</div><div class="diff-line diff-added">ms.subservice: hybrid-cloud-sync</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.custom: include file, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/entra-cloud-sync-how-to-install/finish.png&quot; alt-text=&quot;Screenshot that shows the finish screen.&quot; lightbox=&quot;media/entra-cloud-sync-how-to-install/finish.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. After the operation finishes, you see a notification that your agent configuration was successfully verified. Select **Exit**. If you still get the initial screen, select **Close**.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/customize-workflow-email.md" target="_blank">docs/id-governance/customize-workflow-email.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 22, 2025 2:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/customize-workflow-email" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Message body</div><div class="diff-line diff-context">- Email language</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When you&#39;re customizing the subject or message body, we recommend that you also enable the custom sender domain and organizational branding. Otherwise, your email will contain an additional security disclaimer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on these customizable parameters, see [Common email task parameters](lifecycle-workflow-tasks.md#common-email-task-parameters).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Enter a custom subject, a message body, and the email language translation option that will be used to translate the message body of the email. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   If you stay with the default templates and don&#39;t customize the subject and body of the email, the text will be automatically translated into the recipient&#39;s preferred language. If you select an email language, the determination based on the recipient&#39;s preferred language will be overridden. If you specify a custom subject or body, it won&#39;t be translated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/customize-workflow-email/customize-workflow-email-example.png&quot; alt-text=&quot;Screenshot of an example of a customized email from a workflow.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Emails sent by workflows can have their text customized to personalize, or stress specific points within, them. Workflow text can currently be customized in the following ways:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Bold**: Text within emails can be bolded by placing the desired text within `&lt;b&gt;&lt;/b&gt;` brackets.</div><div class="diff-line diff-deleted">- **Italics**:Text within emails can be italicized by placing the desired text within `&lt;i&gt;&lt;/i&gt;` brackets.</div><div class="diff-line diff-deleted">- **Underlined**:Text within emails can be italicized by placing the desired text within `&lt;u&gt;&lt;/u&gt;` brackets.</div><div class="diff-line diff-context">- **Links**: Hyperlinks can be added to text by placing the desired link within `&lt;a href=&gt; &lt;/a&gt;` brackets.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Message body</div><div class="diff-line diff-context">- Email language</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you&#39;re customizing the subject or message body, we recommend that you also enable the custom sender domain and organizational branding. Otherwise, your email contains an additional security disclaimer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on these customizable parameters, see [Common email task parameters](lifecycle-workflow-tasks.md#common-email-task-parameters).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Enter a custom subject, a message body, and the email language translation option that will be used to translate the message body of the email. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   If you stay with the default templates and don&#39;t customize the subject and body of the email, the text is automatically translated into the recipient&#39;s preferred language. If you select an email language, the determination based on the recipient&#39;s preferred language is overridden. If you specify a custom subject or body, it won&#39;t be translated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/customize-workflow-email/customize-workflow-email-example.png&quot; alt-text=&quot;Screenshot of an example of a customized email from a workflow.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Emails sent by workflows can have their text customized to personalize, or stress specific points within, them. Workflow text can currently be customized in the following ways:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Bold**: Text within emails can be bolded by placing the desired text within `&lt;b&gt;&lt;/b&gt;` brackets.</div><div class="diff-line diff-added">- **Italics**: Text within emails can be italicized by placing the desired text within `&lt;i&gt;&lt;/i&gt;` brackets.</div><div class="diff-line diff-added">- **Underlined**: Text within emails can be italicized by placing the desired text within `&lt;u&gt;&lt;/u&gt;` brackets.</div><div class="diff-line diff-context">- **Links**: Hyperlinks can be added to text by placing the desired link within `&lt;a href=&gt; &lt;/a&gt;` brackets.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/copilot-entra-security-scenarios.md" target="_blank">docs/fundamentals/copilot-entra-security-scenarios.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Chris Werner on Sep 22, 2025 9:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/copilot-entra-security-scenarios" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refine prompts for network traffic log investigation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- *Show the top 5 users with the highest data consumption in the last day.*</div><div class="diff-line diff-context">- *Show all blocked traffic for user {user principal name} in the last 24 hours.*</div><div class="diff-line diff-deleted">- *List all applications with high-risk scores accessed in the last 24 hours.*</div><div class="diff-line diff-deleted">- *List all applications that user {user principal name} has accessed in the last 24 hours based on network traffic.*</div><div class="diff-line diff-deleted">- *List of the top 10 accessed applications in the last week.*</div><div class="diff-line diff-deleted">- *Show all cross-tenant traffic to tenant {Enter_Tenant_ID_Here} in the last day.* </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## See also</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- *Show the top 5 users with the highest data consumption in the last day.*</div><div class="diff-line diff-context">- *Show all blocked traffic for user {user principal name} in the last 24 hours.*</div><div class="diff-line diff-added">- *List all applications with high-risk scores accessed in the last 24 hours based on network traffic logs.*</div><div class="diff-line diff-added">- *List all applications names that user {user principal name} has accessed in the last 24 hours based on network traffic logs.*</div><div class="diff-line diff-added">- *List the top 10 accessed applications names in the last week based on network traffic logs.*</div><div class="diff-line diff-added">- *Show all cross-tenant traffic to tenant {Enter_Tenant_ID_Here} in the last day based on network.* </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## See also</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/access-tokens.md" target="_blank">docs/identity-platform/access-tokens.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Chris Werner on Sep 22, 2025 9:44 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update access token version setting in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imk2bEdrM0ZaenhSY1ViMkMzbkVRN3N5SEpsWSJ9.eyJhdWQiOiI2ZTc0MTcyYi1iZTU2LTQ4NDMtOWZmNC1lNjZhMzliYjEyZTMiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3L3YyLjAiLCJpYXQiOjE1MzcyMzEwNDgsIm5iZiI6MTUzNzIzMTA0OCwiZXhwIjoxNTM3MjM0OTQ4LCJhaW8iOiJBWFFBaS84SUFBQUF0QWFaTG8zQ2hNaWY2S09udHRSQjdlQnE0L0RjY1F6amNKR3hQWXkvQzNqRGFOR3hYZDZ3TklJVkdSZ2hOUm53SjFsT2NBbk5aY2p2a295ckZ4Q3R0djMzMTQwUmlvT0ZKNGJDQ0dWdW9DYWcxdU9UVDIyMjIyZ0h3TFBZUS91Zjc5UVgrMEtJaWpkcm1wNjlSY3R6bVE9PSIsImF6cCI6IjZlNzQxNzJiLWJlNTYtNDg0My05ZmY0LWU2NmEzOWJiMTJlMyIsImF6cGFjciI6IjAiLCJuYW1lIjoiQWJlIExpbmNvbG4iLCJvaWQiOiI2OTAyMjJiZS1mZjFhLTRkNTYtYWJkMS03ZTRmN2QzOGU0NzQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhYmVsaUBtaWNyb3NvZnQuY29tIiwicmgiOiJJIiwic2NwIjoiYWNjZXNzX2FzX3VzZXIiLCJzdWIiOiJIS1pwZmFIeVdhZGVPb3VZbGl0anJJLUtmZlRtMjIyWDVyclYzeERxZktRIiwidGlkIjoiNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3IiwidXRpIjoiZnFpQnFYTFBqMGVRYTgyUy1JWUZBQSIsInZlciI6IjIuMCJ9.pj4N-w_3Us9DrBLfpCt</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Set the version for applications by providing the appropriate value to the `accessTokenAcceptedVersion` setting in the [app manifest](reference-app-manifest.md#manifest-reference). The values of `null` and `1` result in v1.0 tokens, and the value of `2` results in v2.0 tokens.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Token ownership</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An access token request involves two parties: the client, who requests the token, and the resource (Web API) that accepts the token. The resource that the token is intended for (its *audience*) is defined in the `aud` claim in a token. Clients use the token but shouldn&#39;t understand or attempt to parse it. Resources accept the token.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft identity platform supports issuing any token version from any version endpoint. For example, when the value of `accessTokenAcceptedVersion` is `2`, a client calling the v1.0 endpoint to get a token for that resource receives a v2.0 access token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Resources always own their tokens using the `aud` claim and are the only applications that can change their token details.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imk2bEdrM0ZaenhSY1ViMkMzbkVRN3N5SEpsWSJ9.eyJhdWQiOiI2ZTc0MTcyYi1iZTU2LTQ4NDMtOWZmNC1lNjZhMzliYjEyZTMiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3L3YyLjAiLCJpYXQiOjE1MzcyMzEwNDgsIm5iZiI6MTUzNzIzMTA0OCwiZXhwIjoxNTM3MjM0OTQ4LCJhaW8iOiJBWFFBaS84SUFBQUF0QWFaTG8zQ2hNaWY2S09udHRSQjdlQnE0L0RjY1F6amNKR3hQWXkvQzNqRGFOR3hYZDZ3TklJVkdSZ2hOUm53SjFsT2NBbk5aY2p2a295ckZ4Q3R0djMzMTQwUmlvT0ZKNGJDQ0dWdW9DYWcxdU9UVDIyMjIyZ0h3TFBZUS91Zjc5UVgrMEtJaWpkcm1wNjlSY3R6bVE9PSIsImF6cCI6IjZlNzQxNzJiLWJlNTYtNDg0My05ZmY0LWU2NmEzOWJiMTJlMyIsImF6cGFjciI6IjAiLCJuYW1lIjoiQWJlIExpbmNvbG4iLCJvaWQiOiI2OTAyMjJiZS1mZjFhLTRkNTYtYWJkMS03ZTRmN2QzOGU0NzQiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhYmVsaUBtaWNyb3NvZnQuY29tIiwicmgiOiJJIiwic2NwIjoiYWNjZXNzX2FzX3VzZXIiLCJzdWIiOiJIS1pwZmFIeVdhZGVPb3VZbGl0anJJLUtmZlRtMjIyWDVyclYzeERxZktRIiwidGlkIjoiNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3IiwidXRpIjoiZnFpQnFYTFBqMGVRYTgyUy1JWUZBQSIsInZlciI6IjIuMCJ9.pj4N-w_3Us9DrBLfpCt</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Set the version for applications by providing the appropriate value to the `requestedAccessTokenVersion` setting in the [app manifest](reference-app-manifest.md#manifest-reference). The values of `null` and `1` result in v1.0 tokens, and the value of `2` results in v2.0 tokens.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Token ownership</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An access token request involves two parties: the client, who requests the token, and the resource (Web API) that accepts the token. The resource that the token is intended for (its *audience*) is defined in the `aud` claim in a token. Clients use the token but shouldn&#39;t understand or attempt to parse it. Resources accept the token.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Microsoft identity platform supports issuing any token version from any version endpoint. For example, when the value of `requestedAccessTokenVersion` is `2`, a client calling the v1.0 endpoint to get a token for that resource receives a v2.0 access token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Resources always own their tokens using the `aud` claim and are the only applications that can change their token details.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-membership.md" target="_blank">docs/identity/users/groups-dynamic-membership.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Barclay Neira on Sep 22, 2025 9:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-membership" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Enhance direct reports rule documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can create a group that contains all direct reports of a manager. When the manager&#39;s direct reports change in the future, the group&#39;s membership is adjusted automatically.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You construct the direct reports rule by using the following syntax:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can create a group that contains all direct reports of a manager. When the manager&#39;s direct reports change in the future, the group&#39;s membership is adjusted automatically.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt; The manager is also added to a direct reports dynamic group.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">You construct the direct reports rule by using the following syntax:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-authentication-temporary-access-pass.md" target="_blank">docs/identity/authentication/howto-authentication-temporary-access-pass.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Sep 22, 2025 8:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-temporary-access-pass" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fixing capitalization</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For hybrid-joined devices, users must first authenticate with another method such as a password, smartcard or FIDO2 key, before using TAP to set up Windows Hello for Business. </div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; For federated domains, the **FederatedIdpMfaBehavior** changes the behavior when MFA is required. If set to **enforceMfaByFederatedIdp** the user is redirected to the federated IDP and does not get the chance to use the TAP. However, if set to **acceptIfMfaDoneByFederatedIdp** then the user will see a TAP prompt in Entra ID during MFA for windows hello for business provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; border=&quot;true&quot; source=&quot;./media/how-to-authentication-temporary-access-pass/windows-10-tap.png&quot; alt-text=&quot;Screenshot of how to enter Temporary Access Pass when setting up Windows.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For hybrid-joined devices, users must first authenticate with another method such as a password, smartcard or FIDO2 key, before using TAP to set up Windows Hello for Business. </div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; For federated domains, the **FederatedIdpMfaBehavior** changes the behavior when MFA is required. If set to **enforceMfaByFederatedIdp** the user is redirected to the federated IDP and does not get the chance to use the TAP. However, if set to **acceptIfMfaDoneByFederatedIdp** then the user will see a TAP prompt in Entra ID during MFA for Windows Hello for Business provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; border=&quot;true&quot; source=&quot;./media/how-to-authentication-temporary-access-pass/windows-10-tap.png&quot; alt-text=&quot;Screenshot of how to enter Temporary Access Pass when setting up Windows.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-private-name-resolution.md" target="_blank">docs/global-secure-access/concept-private-name-resolution.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Teresa Yao on Sep 22, 2025 5:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-private-name-resolution" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> DNS</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. User requests a DNS query for `app.contoso.com`. If not cached locally, the DNS query is sent to the DNS proxy at the GSA edge. </div><div class="diff-line diff-context">1. DNS proxy either responds from its cache or forwards the query to the Connector Group defined in Quick Access.  </div><div class="diff-line diff-deleted">1.The connector server sends the DNS query to the DNS servers configured at operating system level. </div><div class="diff-line diff-context">1. DNS proxy responds back to the client with the internal IP. The client stores the internal IP address and returns a synthetic IP to the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. User requests a DNS query for `app.contoso.com`. If not cached locally, the DNS query is sent to the DNS proxy at the GSA edge. </div><div class="diff-line diff-context">1. DNS proxy either responds from its cache or forwards the query to the Connector Group defined in Quick Access.  </div><div class="diff-line diff-added">1. The connector server sends the DNS query to the DNS servers configured at operating system level. </div><div class="diff-line diff-context">1. DNS proxy responds back to the client with the internal IP. The client stores the internal IP address and returns a synthetic IP to the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization-review-suggestions.md" target="_blank">docs/identity/conditional-access/agent-optimization-review-suggestions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sammak on Sep 22, 2025 2:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization-review-suggestions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove preview tag</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Policy details are provided as both a list of all the details that are changing and a JSON view of the entire policy, with the changes highlighted.</div><div class="diff-line diff-context">- For policy changes that affect users or applications, you can download a JSON file of the users and applications affected by the policy change.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Deep analysis (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Deep analysis performs an in-depth review of Conditional Access policies for scenarios such as blocking legacy authentication, blocking device control flow, and policies that require device or MFA controls. It evaluates the targeted users, groups, and roles to identify coverage gaps, overlapping or redundant policies, and consolidation opportunities. It also analyzes exclusions—flagging policies that exclude a large portion of users and recommending explicit exclusion of break‑glass accounts to reduce the risk of accidental lockout.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Policy details are provided as both a list of all the details that are changing and a JSON view of the entire policy, with the changes highlighted.</div><div class="diff-line diff-context">- For policy changes that affect users or applications, you can download a JSON file of the users and applications affected by the policy change.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Deep analysis</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Deep analysis performs an in-depth review of Conditional Access policies for scenarios such as blocking legacy authentication, blocking device control flow, and policies that require device or MFA controls. It evaluates the targeted users, groups, and roles to identify coverage gaps, overlapping or redundant policies, and consolidation opportunities. It also analyzes exclusions—flagging policies that exclude a large portion of users and recommending explicit exclusion of break‑glass accounts to reduce the risk of accidental lockout.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-templates.md" target="_blank">docs/id-governance/lifecycle-workflow-templates.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 22, 2025 1:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-templates" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> alt description typo fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The **Pre-Offboard inactive users** template is designed to configure tasks that must be completed before offboarding inactive users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-templates/begin-off-board-inactive-users-template.png&quot; alt-text=&quot;Screenshot of the pre-offboard inaxctive users template.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The default specific parameters for the **Pre-Offboard inactive users** template are as follows:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The **Pre-Offboard inactive users** template is designed to configure tasks that must be completed before offboarding inactive users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-templates/begin-off-board-inactive-users-template.png&quot; alt-text=&quot;Screenshot of the pre-offboard inactive users template.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The default specific parameters for the **Pre-Offboard inactive users** template are as follows:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-inactive-users.md" target="_blank">docs/id-governance/lifecycle-workflow-inactive-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Sep 22, 2025 1:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-inactive-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated bullet point</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Manage workflow versions](manage-workflow-tasks.md)</div><div class="diff-line diff-deleted">&gt; [Manage workflow properties](manage-workflow-properties.md)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Next step</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Manage workflow versions](manage-workflow-tasks.md)</div><div class="diff-line diff-added">- [Manage workflow properties](manage-workflow-properties.md)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
