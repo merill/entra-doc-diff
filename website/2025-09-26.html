@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since September 24th 2025, 8:05 PM PDT</p>
+        <p>Report generated on September 25th 2025, 8:05 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-connectors.md" target="_blank">docs/global-secure-access/concept-connectors.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Sep 25, 2025 6:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-connectors" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+32</span> / 
+              <span class="deletions">-37</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates for readability and consistency.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 02/21/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Understand the Microsoft Entra private network connector</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Connectors are what make Microsoft Entra Private Access and application proxy possible. They&#39;re simple, easy to deploy and maintain, and super powerful. This article discusses what connectors are, how they work, and some suggestions for how to optimize your deployment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## What is a private network connector?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Connectors are lightweight agents that sit in a private network and facilitate the outbound connection to the Microsoft Entra Private Access and application proxy services. Connectors must be installed on a Windows Server that has access to the backend resources. You can organize connectors into connector groups, with each group handling traffic to specific resources. For more information on application proxy and a diagrammatic representation of application proxy architecture, see [Using Microsoft Entra application proxy to publish on-premises apps for remote users](../identity/app-proxy/overview-what-is-app-proxy.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To learn how to configure the Microsoft Entra private network connector, see [How to configure private network connectors for Microsoft Entra Private Access](how-to-configure-connectors.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Private network connectors are lightweight agents deployed on-premises that facilitate the outbound connection to the application proxy service in the cloud. The connectors must be installed on a Windows Server that has access to the backend application. Users connect to the application proxy cloud service that routes their traffic to the apps via the connectors.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 09/25/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Understand Microsoft Entra private network connector</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Connectors make Microsoft Entra Private Access and Application Proxy possible. They&#39;re simple to deploy and maintain, and powerful. This article explains what connectors are, how they work, and how to optimize your deployment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## What is a private network connector?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Private network connectors are lightweight agents you install on a Windows Server inside your network. They create outbound connections to Microsoft Entra Private Access and the application proxy service to reach backend resources. Organize connectors into connector groups that handle traffic for specific resources. For an architecture overview, see [Using Microsoft Entra application proxy to publish on-premises apps for remote users](../identity/app-proxy/overview-what-is-app-proxy.md). To set them up, see [How to configure private network connectors for Microsoft Entra Private Access](how-to-configure-connectors.md). Users connect to the cloud service, which routes traffic to apps through the connectors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Set up and register a connector with the application proxy service:</div><div class="diff-line diff-added">1. Open outbound ports 80 and 443 and allow access to the required service and Microsoft Entra ID URLs.</div><div class="diff-line diff-added">1. Sign in to the Microsoft Entra admin center and run the installer on an on-premises Windows Server.</div><div class="diff-line diff-added">1. Start the connector so it listens to the application proxy service.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-connector-groups.md" target="_blank">docs/global-secure-access/concept-connector-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Sep 25, 2025 3:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-connector-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+34</span> / 
+              <span class="deletions">-33</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates to bring in alignment with content type.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Understand Microsoft Entra private network connector groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Use private network connector groups to assign specific connectors to specific applications. Connector groups give you more control and let you optimize your deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Each private network connector is assigned to a connector group. All the connectors that belong to the same connector group act as a separate unit for high-availability and load balancing. All connectors belong to a connector group. If you don&#39;t create groups, then all your connectors are in a default group. You create new connector groups and assign connectors in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Connector groups are useful if your applications are hosted in different locations. You create connector groups based on location. Applications use connectors that are physically close to them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; If you have a large application proxy deployment, don&#39;t assign any applications to the default connector group. That way, new connectors don&#39;t receive any live traffic until you assign them to an active connector group. This configuration also enables you to put connectors in an idle mode by moving them back to the default group, so that you can perform maintenance without impacting your users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 09/25/2025</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Microsoft Entra private network connector groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use private network connector groups to assign connectors to applications. Connector groups give you more control and help you optimize deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Each private network connector is in a connector group. Connectors in the same group act as a unit for high availability and load balancing. If you don&#39;t create groups, all connectors are in the default group. Create new groups and assign connectors in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use connector groups when applications run in different locations. Create groups by location so each application uses nearby connectors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-added">&gt; If you have a large Application Proxy deployment, don&#39;t assign applications to the default connector group. New connectors don&#39;t receive live traffic until you move them to an active group. You can also idle connectors by moving them back to the default group so you can do maintenance without affecting users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/delegate-approvals-my-access.md" target="_blank">docs/id-governance/delegate-approvals-my-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lesia Nalepa on Sep 25, 2025 8:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/delegate-approvals-my-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixed instructions for editing/removing delegate</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the left menu, select the **Approvals** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Edit delegate** on the Approvals page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Update the delegate to another user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### To remove the delegate, you&#39;d: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [My Access portal](https://myaccess.microsoft.com).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the left menu, select the **Approvals** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Remove delegate**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Save**. </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the left menu, select the **Approvals** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Delegate approvals** on the Approvals page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Update the delegate to another user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### To remove the delegate, you&#39;d: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [My Access portal](https://myaccess.microsoft.com).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the left menu, select the **Approvals** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Delegate approvals** on the Approvals page.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">1. Select **Remove delegate**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Save**. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-clients.md" target="_blank">docs/global-secure-access/concept-clients.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Sep 25, 2025 3:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-clients" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates to align with topic type.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Global Secure Access clients</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Global Secure Access client allows organizations control over network traffic at the end-user computing device, giving organizations the ability to route specific traffic profiles through Microsoft Entra Internet Access and Microsoft Entra Private Access. Routing traffic in this method allows for more controls like continuous access evaluation (CAE), device compliance, or multifactor authentication to be required for resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Global Secure Access client acquires traffic using a lightweight filter (LWF) driver, while many other Security Service Edge (SSE) solutions integrate as a virtual private network (VPN) connection. This distinction allows the Global Secure Access client to coexist with these other solutions. The Global Secure Access client acquires traffic based on the traffic forwarding profiles you configure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Available clients</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Global Secure Access client overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Global Secure Access client gives organizations control over network traffic at the end-user computing device. With this client, organizations can route specific traffic profiles through Microsoft Entra Internet Access and Microsoft Entra Private Access. Routing traffic in this method allows for more controls like continuous access evaluation (CAE), device compliance, or multifactor authentication to be required for resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Global Secure Access client uses a lightweight filter (LWF) driver to acquire traffic. In contrast, many other Security Service Edge (SSE) solutions integrate as a virtual private network (VPN) connection. This distinction allows the Global Secure Access client to coexist with these other solutions. The Global Secure Access client acquires traffic based on the traffic forwarding profiles you configure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Available clients</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/harden-update-ad-fs-pingfederate.md" target="_blank">docs/identity/hybrid/connect/harden-update-ad-fs-pingfederate.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Sep 25, 2025 11:29 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/harden-update-ad-fs-pingfederate" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add feedback from code review</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Hardening update to Microsoft Entra Connect Sync</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In May 2025, we released a new version (2.5.79.0) of Microsoft Entra Connect Sync. This version contains a back-end service change that further hardens our services. **All customers are required to upgrade** to the minimum versions by **September 30, 2026** to avoid service disruptions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Expected impacts </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you aren’t upgraded to the minimum required version, you might encounter the following impact to the Microsoft Entra Connect Sync service when the service change takes effect:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">All synchronization services in Microsoft Entra Connect Sync will fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Hardening update to Microsoft Entra Connect Sync</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">As part of increasing the security posture of Microsoft Entra Connect, Microsoft deployed a dedicated first-party application to enable the synchronization between Active Directory and Microsoft Entra ID. This new application will manifest as a first party service principal called the &quot;Microsoft Entra AD Synchronization Service&quot; (Application Id: `6bf85cfa-ac8a-4be5-b5de-425a0d0dc016`) and will be visible in the Enterprise Applications experience within the Microsoft Entra admin center. This application is critical for the continued operation of on-premises to Microsoft Entra ID synchronization functionality through Entra Connect.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">We have since released a new version (2.5.79.0) of Microsoft Entra Connect that contains this service change.  All customers are required to upgrade to the minimum versions by September 30, 2026 to avoid service disruptions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Expected impacts </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you aren’t upgraded to the minimum required version (2.5.79.0), you might encounter the following impact to the Microsoft Entra Connect Sync service when the service change takes effect:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">All synchronization services in Microsoft Entra Connect Sync will fail.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/workload-id/workload-identities-faqs.md" target="_blank">docs/workload-id/workload-identities-faqs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Keith Brewer (MSFT) on Sep 25, 2025 4:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-faqs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update workload-identities-faqs.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">## Is the Workload ID Premium plan available on Azure Government clouds? </div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">Yes. For Azure Government cloud customers, contact your account manager to proceed with the trial.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">&lt;a name=&#39;is-it-possible-to-have-a-mix-of-azure-ad-premium-p1-azure-ad-premium-p2-and-workload-identities-premium-licenses-in-one-tenant&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Learn more about [workload identities](workload-identities-overview.md).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">## Is the Workload ID Premium plan available on Azure Government clouds? </div><div class="diff-line diff-context"></div><div class="diff-line diff-added">Yes. For Azure Government cloud customers, contact your account manager.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">&lt;a name=&#39;is-it-possible-to-have-a-mix-of-azure-ad-premium-p1-azure-ad-premium-p2-and-workload-identities-premium-licenses-in-one-tenant&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Learn more about [workload identities](workload-identities-overview.md).</div><div class="diff-line diff-added"></div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
