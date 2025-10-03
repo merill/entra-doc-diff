@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 1st 2025, 8:02 PM PDT</p>
+        <p>Report generated on October 2nd 2025, 8:02 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">28</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">148</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/plan-conditional-access.md" target="_blank">docs/identity/conditional-access/plan-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 2, 2025 6:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+47</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Deployment plan order of deployment updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Start with a few core Conditional Access policies like the ones that follow. Many policies are available as [Conditional Access policy templates](concept-conditional-access-policy-common.md). By default, each policy created from a template is in report-only mode. Test and monitor usage, to ensure the intended result, before turning on each policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Conditional Access policy | Scenario | License requirement |</div><div class="diff-line diff-deleted">| --- | --- | --- |</div><div class="diff-line diff-deleted">| [Block legacy authentication](/entra/fundamentals/configure-security#block-legacy-authentication) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Privileged Microsoft Entra built-in roles enforce phishing-resistant methods](/entra/fundamentals/configure-security#privileged-microsoft-entra-built-in-roles-are-targeted-with-conditional-access-policies-to-enforce-phishing-resistant-methods) | Privileged users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [All user sign-in activity uses strong authentication methods](/entra/fundamentals/configure-security#all-user-sign-in-activity-uses-strong-authentication-methods) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Guest access is protected by strong authentication methods](/entra/fundamentals/configure-security#guest-access-is-protected-by-strong-authentication-methods) | Guest access | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Secure the MFA registration (My Security Info) page](/entra/fundamentals/configure-security#secure-the-mfa-registration-my-security-info-page) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Require multifactor authentication for device join and device registration using user action](/entra/fundamentals/configure-security#require-multifactor-authentication-for-device-join-and-device-registration-using-user-action) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [User sign-in activity uses token protection](/entra/fundamentals/configure-security#user-sign-in-activity-uses-token-protection) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Restrict device code flow](/entra/fundamentals/configure-security#restrict-device-code-flow) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Authentication transfer is blocked](/entra/fundamentals/configure-security#authentication-transfer-is-blocked) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Restrict access to high risk users](/entra/fundamentals/configure-security#restrict-access-to-high-risk-users) | All users | Microsoft Entra ID P2 |</div><div class="diff-line diff-deleted">| [Restrict high risk sign-ins](/entra/fundamentals/configure-security#restrict-high-risk-sign-ins) | All users | Microsoft Entra ID P2 |</div><div class="diff-line diff-deleted">| [Conditional Access policies for Privileged Access Workstations are configured](/entra/fundamentals/configure-security#conditional-access-policies-for-privileged-access-workstations-are-configured) | Privileged users | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Evaluate the policy impact</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Start with a few core Conditional Access policies like the ones that follow. Many policies are available as [Conditional Access policy templates](concept-conditional-access-policy-common.md). By default, each policy created from a template is in report-only mode. Test and monitor usage, to ensure the intended result, before turning on each policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Deploy policies in the following three phases to balance security improvements with minimal user disruption. Organizations can adjust timelines based on their size, complexity, and change management capabilities.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">#### Phase 1: Foundation (Week 1-2)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Establish baseline security controls and prepare for MFA enforcement. **Prerequisites:** Ensure users can register for MFA before enabling enforcement policies.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">| Order | Conditional Access policy | Scenario | License requirement |</div><div class="diff-line diff-added">| --- | --- | --- | --- |</div><div class="diff-line diff-added">| 1 | [Block legacy authentication](/entra/fundamentals/configure-security#block-legacy-authentication) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-added">| 2 | [Secure the MFA registration (My Security Info) page](/entra/fundamentals/configure-security#secure-the-mfa-registration-my-security-info-page) | All users | Microsoft Entra ID P1 |</div><div class="diff-line diff-added">| 3 | [Privileged Microsoft Entra built-in roles enforce phishing-resistant methods](/entra/fundamentals/configure-security#privileged-microsoft-entra-built-in-roles-are-targeted-with-conditional-access-policies-to-enforce-phishing-resistant-methods) | Privileged users | Microsoft Entra ID P1 |</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">#### Phase 2: Core authentication (Week 2-3)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Enforce MFA for all users and guests. **Key impact:** Users will be required to use MFA for all sign-ins. Ensure communication plan is executed and support resources are available.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">| Order | Conditional Access policy | Scenario | License requirement |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/whats-new-docs.md" target="_blank">docs/identity-platform/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Oct 2, 2025 9:38 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> What's new - September 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## August 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Enterprise SSO plug-in for Apple devices](apple-sso-plugin.md) - We adjusted Apple SSO, updated the token protection image, and troubleshot secure enclave issues.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## July 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [What is the Microsoft identity platform?](v2-overview.md) - The update improved content clarity.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## June 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### New articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Restrictions on identifier URIs of Microsoft Entra applications](identifier-uri-restrictions.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in the Microsoft identity platform documentation. This article lists new articles that were added or had significant updates in the last three months.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## September 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Desktop app that calls web APIs: Code configuration](scenario-desktop-app-configuration.md) - The update improved content clarity.</div><div class="diff-line diff-added">- [Configure a mobile app that calls web APIs](scenario-mobile-app-configuration.md) - The update improved content clarity.</div><div class="diff-line diff-added">- [Web app that signs in users: Code configuration](scenario-web-app-sign-user-app-configuration.md) - The update improved content clarity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## August 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Microsoft Enterprise SSO plug-in for Apple devices](apple-sso-plugin.md) - We adjusted Apple SSO, updated the token protection image, and troubleshot secure enclave issues.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## July 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Updated articles</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/deployment-external-operations.md" target="_blank">docs/architecture/deployment-external-operations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Oct 2, 2025 6:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/deployment-external-operations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Security operations cross links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 09/10/2025</div><div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">#customer intent: I need to understand subscriptions and billing, consumer app security, and how to prevent fraud tactics in Microsoft Entra External ID. </div><div class="diff-line diff-context">* [Introduction to Microsoft Entra External ID deployment guide](deployment-external-intro.md)</div><div class="diff-line diff-context">* [Tenant design](deployment-external-tenant-design.md)</div><div class="diff-line diff-context">* [Customer authentication experience](deployment-external-customer-authentication.md)</div><div class="diff-line diff-deleted">* Security operations</div><div class="diff-line diff-context">* [Authentication and access control architecture](deployment-external-authentication-access-control.md)</div><div class="diff-line diff-deleted"></div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 10/02/2025</div><div class="diff-line diff-context">ms.author: gasinh</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">#customer intent: I need to understand subscriptions and billing, consumer app security, and how to prevent fraud tactics in Microsoft Entra External ID. </div><div class="diff-line diff-context">* [Introduction to Microsoft Entra External ID deployment guide](deployment-external-intro.md)</div><div class="diff-line diff-context">* [Tenant design](deployment-external-tenant-design.md)</div><div class="diff-line diff-context">* [Customer authentication experience](deployment-external-customer-authentication.md)</div><div class="diff-line diff-context">* [Authentication and access control architecture](deployment-external-authentication-access-control.md)</div><div class="diff-line diff-added">* [Security fundamentals for external tenants](../external-id/customers/concept-security-customers.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-planning-your-solution.md" target="_blank">docs/external-id/customers/concept-planning-your-solution.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Oct 2, 2025 6:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-planning-your-solution" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Security operations cross links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 04/03/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Start a free trial](https://aka.ms/ciam-free-trial?wt.mc_id=ciamcustomertenantfreetrial_linkclick_content_cnl) or [create your external tenant](how-to-create-external-tenant-portal.md).</div><div class="diff-line diff-context">- [Find samples and guidance for integrating your app](samples-ciam-all.md).</div><div class="diff-line diff-context">- [Learn how to migrate users from your current identity provider](how-to-migrate-users.md).</div><div class="diff-line diff-deleted">- See also the [Microsoft Entra External ID Developer Center](https://aka.ms/ciam/dev) for the latest developer content and resources.</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 10/02/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Start a free trial](https://aka.ms/ciam-free-trial?wt.mc_id=ciamcustomertenantfreetrial_linkclick_content_cnl) or [create your external tenant](how-to-create-external-tenant-portal.md).</div><div class="diff-line diff-context">- [Find samples and guidance for integrating your app](samples-ciam-all.md).</div><div class="diff-line diff-context">- [Learn how to migrate users from your current identity provider](how-to-migrate-users.md).</div><div class="diff-line diff-added">- See also the [Microsoft Entra External ID Developer Center](https://aka.ms/ciam/dev) for the latest developer content and resources.</div><div class="diff-line diff-added">- [Microsoft Entra External ID deployment guide for security operations](../../architecture/deployment-external-operations.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/multi-service-web-app-access-storage.md" target="_blank">docs/identity-platform/multi-service-web-app-access-storage.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by OwenRichards1 on Oct 2, 2025 2:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/multi-service-web-app-access-storage" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> final cleanup</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.date: 05/12/2025</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-deleted">ms.service: azure-app-service</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.custom: subject-rbac-steps, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an application developer, I want to learn how to access Azure Storage for an app by using managed identities.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.date: 05/12/2025</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-added">ms.service: identity-platform</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an application developer, I want to learn how to access Azure Storage for an app by using managed identities.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/multi-service-web-app-authentication-app-service.md" target="_blank">docs/identity-platform/multi-service-web-app-authentication-app-service.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by OwenRichards1 on Oct 2, 2025 2:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/multi-service-web-app-authentication-app-service" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> final cleanup</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.date: 02/17/2024</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-deleted">ms.service: azure-app-service</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.custom: app-service-web, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an application developer, enable authentication and authorization for a web app running on Azure App Service.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-context">ms.date: 02/17/2024</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-added">ms.service: identity-platform</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As an application developer, enable authentication and authorization for a web app running on Azure App Service.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/multi-service-web-app-overview.md" target="_blank">docs/identity-platform/multi-service-web-app-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by OwenRichards1 on Oct 2, 2025 2:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/multi-service-web-app-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> final cleanup</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: cilwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-deleted">ms.custom: app-service-web, storage, microsoft-graph</div><div class="diff-line diff-context">ms.date: 02/07/2024</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-deleted">ms.service: azure-app-service</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-context">#Customer intent: As an application developer, I want to learn how to secure access to a web app running on Azure App Service.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: cilwerner</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.author: cwerner</div><div class="diff-line diff-added">ms.custom:</div><div class="diff-line diff-context">ms.date: 02/07/2024</div><div class="diff-line diff-context">ms.reviewer: stsoneff</div><div class="diff-line diff-added">ms.service: identity-platform</div><div class="diff-line diff-context">ms.subservice: web-apps</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-context">#Customer intent: As an application developer, I want to learn how to secure access to a web app running on Azure App Service.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-security-customers.md" target="_blank">docs/external-id/customers/concept-security-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Oct 2, 2025 6:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-security-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Security operations cross links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 06/11/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Planning for customer identity and access management](concept-planning-your-solution.md)</div><div class="diff-line diff-context">- [Microsoft Entra Blog: Built-in security controls for external-facing apps](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/built-in-security-controls-for-external-facing-apps/4175879)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 10/02/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Planning for customer identity and access management](concept-planning-your-solution.md)</div><div class="diff-line diff-context">- [Microsoft Entra Blog: Built-in security controls for external-facing apps](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/built-in-security-controls-for-external-facing-apps/4175879)</div><div class="diff-line diff-added">- [Microsoft Entra External ID deployment guide for security operations](../../architecture/deployment-external-operations.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/all-reports.md" target="_blank">docs/permissions-management/all-reports.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/all-reports" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># View a list and description of system reports</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra Permissions Management has various types of system reports that capture specific sets of data. These reports allow management, auditors, and administrators to:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># View a list and description of system reports</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra Permissions Management has various types of system reports that capture specific sets of data. These reports allow management, auditors, and administrators to:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/error-codes-onboarding.md" target="_blank">docs/permissions-management/error-codes-onboarding.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/error-codes-onboarding" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Error codes: Microsoft Entra Permissions Management </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">During onboarding, Microsoft Entra Permissions Management may return error messages that an admin can triage. This article lists data collection error messages and their descriptions shown in the Permissions Management UI, along with proposed solutions.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Error codes: Microsoft Entra Permissions Management </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">During onboarding, Microsoft Entra Permissions Management may return error messages that an admin can triage. This article lists data collection error messages and their descriptions shown in the Permissions Management UI, along with proposed solutions.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/faqs.md" target="_blank">docs/permissions-management/faqs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/faqs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Frequently asked questions (FAQs)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article answers frequently asked questions (FAQs) about Microsoft Entra Permissions Management.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Frequently asked questions (FAQs)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article answers frequently asked questions (FAQs) about Microsoft Entra Permissions Management.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/how-to-add-remove-role-task.md" target="_blank">docs/permissions-management/how-to-add-remove-role-task.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/how-to-add-remove-role-task" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Add and remove roles and tasks for Microsoft Azure and Google Cloud Platform (GCP) identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can add and remove roles and tasks for Microsoft Azure and Google Cloud Platform (GCP) identities using the **Remediation** dashboard.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Add and remove roles and tasks for Microsoft Azure and Google Cloud Platform (GCP) identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can add and remove roles and tasks for Microsoft Azure and Google Cloud Platform (GCP) identities using the **Remediation** dashboard.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/how-to-add-remove-user-to-group.md" target="_blank">docs/permissions-management/how-to-add-remove-user-to-group.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/how-to-add-remove-user-to-group" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Add or remove a user in Microsoft Entra Permissions Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can add or remove a new user for a group in Permissions Management. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Add or remove a user in Microsoft Entra Permissions Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can add or remove a new user for a group in Permissions Management. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/how-to-attach-detach-permissions.md" target="_blank">docs/permissions-management/how-to-attach-detach-permissions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/how-to-attach-detach-permissions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Attach and detach policies for Amazon Web Services (AWS) identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can attach and detach permissions for users, roles, and groups for Amazon Web Services (AWS) identities using the **Remediation** dashboard.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Attach and detach policies for Amazon Web Services (AWS) identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can attach and detach permissions for users, roles, and groups for Amazon Web Services (AWS) identities using the **Remediation** dashboard.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/permissions-management/how-to-audit-trail-results.md" target="_blank">docs/permissions-management/how-to-audit-trail-results.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 2, 2025 4:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/permissions-management/how-to-audit-trail-results" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating retirement date to November 1, 2025</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"># Generate an on-demand report from a query</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on October 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can generate an on-demand report from a query in the **Audit** dashboard in Permissions Management. You can:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"># Generate an on-demand report from a query</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Effective April 1, 2025, Microsoft Entra Permissions Management will no longer be available for purchase, and on November 1, 2025, we&#39;ll retire and discontinue support of this product. More information can be found [here](https://aka.ms/MEPMretire).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes how you can generate an on-demand report from a query in the **Audit** dashboard in Permissions Management. You can:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
