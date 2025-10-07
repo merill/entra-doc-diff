@@ -1,0 +1,627 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 5th 2025, 8:03 PM PDT</p>
+        <p>Report generated on October 6th 2025, 8:03 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">40</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/recover-from-deletions.md" target="_blank">docs/architecture/recover-from-deletions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 6, 2025 3:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/recover-from-deletions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+74</span> / 
+              <span class="deletions">-46</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Soft delete and restore</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Recover from deletions in Microsoft Entra ID</div><div class="diff-line diff-deleted">description: Learn how to recover from unintended deletions.</div><div class="diff-line diff-context">author: janicericketts</div><div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.subservice: architecture</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-deleted">ms.date: 11/14/2022</div><div class="diff-line diff-context">ms.author: jricketts</div><div class="diff-line diff-context">ms.reviewer: jricketts</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context"># Recover from deletions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article addresses recovering from soft and hard deletions in your Microsoft Entra tenant. If you haven&#39;t already done so, read [Recoverability best practices](recoverability-overview.md) for foundational knowledge.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Monitor for deletions</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Recover from deletions in Microsoft Entra ID</div><div class="diff-line diff-added">description: Understand the difference between soft and hard deletions and how to recover or recreate objects in Microsoft Entra ID.</div><div class="diff-line diff-context">author: janicericketts</div><div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.subservice: architecture</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-added">ms.date: 10/06/2025</div><div class="diff-line diff-context">ms.author: jricketts</div><div class="diff-line diff-context">ms.reviewer: jricketts</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Recover from deletions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Managing deletions in Microsoft Entra ID is a critical aspect of maintaining the integrity and availability of your organization&#39;s identity infrastructure. This article provides a comprehensive guide to understand the differences between soft and hard deletions, monitor for deletions, and recover or recreate objects in your Microsoft Entra tenant. Whether you&#39;re dealing with accidental deletions or preparing recovery strategies, this guide equips you with the knowledge and tools to minimize disruption and ensure continuity. For foundational insights, start with [Recoverability best practices](recoverability-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Monitor for deletions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The [Microsoft Entra audit log](~/identity/monitoring-health/concept-audit-logs.md) contains information on all delete operations performed in your tenant. Export these logs to a security information and event management tool, such as [Microsoft Sentinel](/azure/sentinel/overview).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/scim-validator-tutorial.md" target="_blank">docs/identity/app-provisioning/scim-validator-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 6, 2025 7:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/scim-validator-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+83</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Adding SCIM Validations</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: app-provisioning</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 09/12/2025</div><div class="diff-line diff-context">ms.custom: template-tutorial, sfi-image-nochange</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;./media/scim-validator-tutorial/scim-validator-results.png&quot; alt-text=&quot;Screenshot of SCIM Validator results page.&quot; lightbox=&quot;./media/scim-validator-tutorial/scim-validator-results.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Check validations performed by the SCIM Validator</div><div class="diff-line diff-deleted">    1. [Validations performed by SCIM Validator - create user](./use-scim-to-build-users-and-groups-endpoints.md#validations-performed-by-scim-validator-create-user)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Using Expressions on SCIM Validator</div><div class="diff-line diff-context">The SCIM Validator supports using expressions to generate desired values for attributes.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: app-provisioning</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 10/06/2025</div><div class="diff-line diff-context">ms.custom: template-tutorial, sfi-image-nochange</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;./media/scim-validator-tutorial/scim-validator-results.png&quot; alt-text=&quot;Screenshot of SCIM Validator results page.&quot; lightbox=&quot;./media/scim-validator-tutorial/scim-validator-results.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Note validations performed by SCIM Validator</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Create New User**</div><div class="diff-line diff-added">- POST /Users – Creates a new user with a complete JSON payload.</div><div class="diff-line diff-added">    - Endpoint returns HTTP 201</div><div class="diff-line diff-added">    - POST response contains created user ID</div><div class="diff-line diff-added">- GET /Users?filter={joiningProperty} eq &quot;value&quot; – Verifies creation by filtering on the joining property.</div><div class="diff-line diff-added">    - GET returns created user</div><div class="diff-line diff-added">    - Returned values from GET match the passed values from the POST request (varies based on endpoint)</div><div class="diff-line diff-added">- DELETE /Users - Cleans Up Test User.	</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/guidance-it-architects-source-of-authority.md" target="_blank">docs/identity/hybrid/guidance-it-architects-source-of-authority.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 4:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/guidance-it-architects-source-of-authority" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-43</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **LDAP Authentication/Queries** – Applications can have LDAP server settings pointing to AD and perform binds or lookups, custom-developed or third-party products prompting users for AD credentials.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Federation/Modern Authentication** – Some applications are already federated via AD FS, or support modern protocols such as SAML or OAuth. These can generally be reconfigured to use Microsoft Entra ID with minimal effort.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Other Legacy Methods** – Includes cases where apps use RADIUS against AD or local accounts. Though not the primary focus, these should be documented for completeness.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 3. Assess modernization feasibility</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 7. Handling LDAP-based applications (Directory-Bound Apps)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**LDAP-bound applications** or services directly query Active Directory Domain Services (AD DS) via LDAP, most often for authentication using a simple bind with username and password, or for directory reads. Common examples include older enterprise applications, network appliances, or custom-developed apps that rely on LDAP binds to validate credentials. These applications typically require an LDAP server, and can&#39;t easily transition to modern authentication protocols.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Recommended Solution: Microsoft Entra Domain Services</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The recommended solution for supporting LDAP-bound apps in the cloud is Microsoft Entra Domain Services. Hosted on Azure, Microsoft Entra Domain Services provides LDAP, Kerberos, and NTLM endpoints, syncing user accounts, and credentials from your Microsoft Entra ID tenant. This allows legacy applications to use cloud-hosted AD for authentication without switching</div><div class="diff-line diff-deleted">to modern protocols. The managed domain mainly supports read and authentication for LDAP clients.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 8. Handling Kerberos-Based Applications (Windows Integrated Auth)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **LDAP Authentication/Queries** – Applications can have LDAP server settings pointing to AD and perform binds or lookups, custom-developed or third-party products prompting users for AD credentials.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Federation/Modern Authentication** – Some applications are already federated via [AD FS](/windows-server/identity/ad-fs/ad-fs-overview), or support modern protocols such as SAML or OAuth. These can generally be reconfigured to use Microsoft Entra ID with minimal effort.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Other Legacy Methods** – Includes cases where apps use RADIUS against AD or local accounts. Though not the primary focus, these should be documented for completeness. For more information, see: [RADIUS authentication with Microsoft Entra ID](../../architecture/auth-radius.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 3. Assess modernization feasibility</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 7. Handling LDAP-based applications (Directory-Bound Apps)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**LDAP-bound applications** or services directly query Active Directory Domain Services (AD DS) via LDAP, most often for authentication using a simple bind with username and password, or for directory reads. Common examples include older enterprise applications, network appliances, or custom-developed apps that rely on LDAP binds to validate credentials. These applications typically require an LDAP server, and can&#39;t easily transition to modern authentication protocols. For more information, see: [LDAP authentication with Microsoft Entra ID](../../architecture/auth-ldap.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Recommended Solution: Microsoft Entra Domain Services</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The recommended solution for supporting LDAP-bound apps in the cloud is Microsoft Entra Domain Services. Hosted on Azure, Microsoft Entra Domain Services provides LDAP, Kerberos, and NTLM endpoints, syncing user accounts, and credentials from your Microsoft Entra ID tenant. This allows legacy applications to use cloud-hosted AD for authentication without switching</div><div class="diff-line diff-added">to modern protocols. The managed domain mainly supports read and authentication for LDAP clients. For more information, see: [What is Microsoft Entra Domain Services?](../../identity/domain-services/overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Step 8. Handling Kerberos-Based Applications (Windows Integrated Auth)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/use-scim-to-provision-users-and-groups.md" target="_blank">docs/identity/app-provisioning/use-scim-to-provision-users-and-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 6, 2025 7:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/use-scim-to-provision-users-and-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+41</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add missing validations from PR9736</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    &quot;members&quot;: []</div><div class="diff-line diff-context">}</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Get Group</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">*HTTP/1.1 204 No Content*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Update Group [Add Members]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">##### &lt;a name=&quot;request-11&quot;&gt;&lt;/a&gt;Request</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">*HTTP/1.1 204 No Content*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Update Group [Remove Members]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">##### &lt;a name=&quot;request-12&quot;&gt;&lt;/a&gt;Request</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    &quot;members&quot;: []</div><div class="diff-line diff-context">}</div><div class="diff-line diff-context">```</div><div class="diff-line diff-added">##### Validations performed by SCIM Validator</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Create New Group**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- POST /Groups – Creates a new group with a complete JSON payload.</div><div class="diff-line diff-added">    - Endpoint returns HTTP 201</div><div class="diff-line diff-added">    - POST response contains created group ID</div><div class="diff-line diff-added">- GET /Group?filter={joiningProperty} eq &quot;value&quot; – Verifies creation by filtering on the joining property.</div><div class="diff-line diff-added">    - GET returns created group</div><div class="diff-line diff-added">    - Returned values from GET match the passed values from the POST request (varies based on endpoint)</div><div class="diff-line diff-added">- DELETE /Groups - Cleans Up Test User.	</div><div class="diff-line diff-added">    - Only called if hard delete is supported</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Create Duplicate Group**	</div><div class="diff-line diff-added">- POST /Groups – Attempts to create a group using an identical payload (with the same unique/joining attribute) to an existing group.</div><div class="diff-line diff-added">    - Return HTTP 201 on first create request</div><div class="diff-line diff-added">    - Return HTTP 409 on second create request</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/prepare-user-source-of-authority-environment.md" target="_blank">docs/identity/hybrid/prepare-user-source-of-authority-environment.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 4:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/prepare-user-source-of-authority-environment" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> SOA Quick fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once you identify the employees for SOA conversion, follow these steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Create a new provisioning application in Microsoft Entra ID to provision users from your HR system directly to Microsoft Entra ID. Use scoping filters to restrict this app to only handle SOA converted users. For example: In the first phase, if you’re transferring SOA only for users in the “*Finance*” department, then set the scoping filter as department EQUALS “*Finance*.” Expand the scoping filter in future phases to include more users.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1.	Update the configuration of your HR to Active Directory provisioning app to exclude the SOA transferred users from syncing to AD. Continuing with the previous example, you can exclude *“Finance”* department users from syncing to AD by setting the filter department to NOT EQUALS “*Finance*.” </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1.	Update the configuration of your Microsoft Entra Connect Sync / Cloud Sync app to exclude the SOA transferred users from syncing to Microsoft Entra ID using a similar scoping filter. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram depicts the new SOA-aware provisioning configuration:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once you identify the employees for SOA conversion, follow these steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1.	Stop the “*HR to on-premises Active Directory*” provisioning job. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1.	For users eligible for SOA conversion, switch the SOA of the users from on-premises Active Directory to Entra ID.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1.	Create a new “*HR to Microsoft Entra ID*” provisioning application to provision users from your HR system to Entra ID. Use scoping filters to restrict this app to only handle SOA converted users. For example: In the first phase, if you’re converting SOA only for users in the “Finance” department, then set the scoping filter as department EQUALS “Finance”. Expand the scoping filter in future phases to include more users.  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	Start the new “*HR to Microsoft Entra ID*” provisioning job. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	Update the configuration of your “HR to on-premises Active Directory” provisioning app to exclude the SOA converted users from syncing to AD. Ensure that the skip out of scope deletions flag is set on the provisioning job. Continuing with the example above, you can exclude “Finance” department users from syncing to AD by setting the filter department NOT EQUALS “Finance”. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	Restart the “*HR to on-premises Active Directory*” provisioning job. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1.	Update the configuration of your Entra Connect Sync / Cloud Sync app to exclude the SOA converted users from syncing to Entra ID using a similar scoping filter. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram depicts the new SOA-aware provisioning configuration:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 9:31 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> User SOA added to whats new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## September 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Public Preview - Use SMS as a verification method in password reset flows in Microsoft Entra External ID </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** New feature    </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## September 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Public Preview - Convert Source of Authority of synced Active Directory users to the cloud</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** Group Management  </div><div class="diff-line diff-added">**Product capability:** Microsoft Entra Connect and Microsoft Entra Cloud Sync</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The Source of Authority (SOA) at the object level allows administrators to convert specific users synced from Active Directory (AD) to Microsoft Entra ID into cloud-editable objects, which are no longer synced from AD and act as if originally created in the cloud. This feature supports a gradual migration process, decreasing dependencies on AD while aiming to minimize user and operational impact. Both Microsoft Entra Connect Sync and Cloud Sync recognize the SOA switch for these objects. The option to switch the SOA of synced users from AD to Microsoft Entra ID is currently available in Public Preview. For more information, see: [Embrace cloud-first posture: Transfer user Source of Authority (SOA) to the cloud (Preview)](../identity/hybrid/user-source-of-authority-overview.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">---</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Public Preview - Use SMS as a verification method in password reset flows in Microsoft Entra External ID </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** New feature    </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/user-flow-add-custom-attributes.md" target="_blank">docs/external-id/user-flow-add-custom-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Oct 6, 2025 2:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/user-flow-add-custom-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Minor updates.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 10/21/2024</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration user flow administrator, I want to define custom attributes for user flows in Microsoft Entra, so that I can collect specific information during sign-up and extend the set of attributes stored on a guest account.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Define custom attributes to self-service sign-up flows in Microsoft Entra External ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; This article applies to B2B collaboration user flows in workforce tenants. For information about external tenants, see [Collect user attributes during sign-up](customers/how-to-define-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For each application, you might have different requirements for the information you want to collect during sign-up. Microsoft Entra External ID comes with a built-in set of information stored in attributes, such as Given Name, Surname, City, and Postal Code. With Microsoft Entra External ID, you can extend the set of attributes stored on a guest account when the external user signs up through a user flow.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 10/06/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration user flow administrator, I want to define custom attributes for user flows in Microsoft Entra, so that I can collect specific information during sign-up and extend the set of attributes stored on a guest account.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Collect custom user attributes during B2B collaboration sign-up</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-added">&gt; This article applies to B2B collaboration user flows in workforce tenants. For information about external tenants, see [Collect custom user attributes during external tenant sign-up](customers/how-to-define-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For each application, you might have different requirements for the information you want to collect during sign-up. Microsoft Entra External ID comes with a built-in set of information stored in attributes, such as Given Name, Surname, City, and Postal Code. With Microsoft Entra External ID, you can extend the set of attributes stored on a guest account when the external user signs up through a user flow.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md" target="_blank">docs/identity/hybrid/how-to-user-source-of-authority-configure.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 9:47 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Requested changes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/how-to-user-source-of-authority-configure/try-update.png&quot; alt-text=&quot;Screenshot of an attempt to update a user to verify it&#39;s read-only.&quot;:::</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">1. Search the Microsoft Entra admin center for the user. Verify that all user fields are greyed out, and that source is Windows Server AD DS:  </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; border=&quot;true&quot; source=&quot;media/how-to-user-source-of-authority-configure/properties.png&quot; alt-text=&quot;Screenshot of advanced user properties.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Now you can update the SOA of the user to be cloud-managed. Run the following operation in Microsoft Graph Explorer for the user object you want to transfer to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Confirm the change in the Audit Logs. To access Audit Logs in the Azure portal, open **Manage Microsoft Entra ID** &gt; **Monitoring** &gt; **Audit Logs**, or search for *audit logs*. Select **Change Source of Authority from AD to cloud** as the activity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; border=&quot;true&quot; source=&quot;media/how-to-user-source-of-authority-configure/audit.png&quot; alt-text=&quot;Screenshot of change to user properties in Audit Logs.&quot;:::</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">1. Check that the user can be updated in the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ```https</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/how-to-user-source-of-authority-configure/try-update.png&quot; alt-text=&quot;Screenshot of an attempt to update a user to verify it&#39;s read-only.&quot;:::</div><div class="diff-line diff-context"> </div><div class="diff-line diff-added">1. Search the Microsoft Entra admin center for the user. Verify that all user fields are greyed out, and that source is Windows Server AD DS.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Now you can update the SOA of the user to be cloud-managed. Run the following operation in Microsoft Graph Explorer for the user object you want to transfer to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Confirm the change in the Audit Logs. To access Audit Logs in the Azure portal, open **Manage Microsoft Entra ID** &gt; **Monitoring** &gt; **Audit Logs**, or search for *audit logs*. Select **Change Source of Authority from AD to cloud** as the activity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Check that the user can be updated in the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ```https</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-assignment-network.md" target="_blank">docs/identity/conditional-access/concept-assignment-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 6, 2025 3:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Soft delete and restore</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some IP addresses can&#39;t be mapped to a specific country or region. To capture these IP locations, select the box **Include unknown countries/regions** when defining a geographic location. This option allows you to choose if these IP addresses should be included in the named location. Use this setting when the policy using the named location should apply to unknown locations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Common questions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Is there Graph API support</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some IP addresses can&#39;t be mapped to a specific country or region. To capture these IP locations, select the box **Include unknown countries/regions** when defining a geographic location. This option allows you to choose if these IP addresses should be included in the named location. Use this setting when the policy using the named location should apply to unknown locations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Restore deleted locations</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">If a Conditional Access policy or location is deleted, it can be restored within the 30 day soft-delete period. For more information about restoring Conditional Access policies and named locations, see the article [Recover from deletions](../../architecture/recover-from-deletions.md#conditional-access-policies).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Common questions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Is there Graph API support</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/plan-conditional-access.md" target="_blank">docs/identity/conditional-access/plan-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 6, 2025 3:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Conditional Access] Soft delete and restore</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If a policy is disabled and no longer needed, **delete it**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Troubleshoot Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If a user has an issue with a Conditional Access policy, collect this information to help with troubleshooting.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If a policy is disabled and no longer needed, **delete it**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">##### Restore deleted policies</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">If a Conditional Access or location is deleted, it can be restored within the 30 day soft-delete period. For more information about restoring Conditional Access policies and named locations, see the article [Recover from deletions](../../architecture/recover-from-deletions.md#conditional-access-policies).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Troubleshoot Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If a user has an issue with a Conditional Access policy, collect this information to help with troubleshooting.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-define-custom-attributes.md" target="_blank">docs/external-id/customers/how-to-define-custom-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Oct 6, 2025 2:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-define-custom-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Minor updates.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Collect custom user attributes during sign-up</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; This article applies to user flows in external tenants. For information about workforce tenants, see [Define custom attributes for user flows](../user-flow-add-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your app requires more information than the built-in user attributes provide, you can add your own attributes. We refer to these attributes as *custom user attributes*.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Collect custom user attributes during external tenant sign-up</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-added">&gt; This article applies to user flows in external tenants. For information about workforce tenants, see [Collect custom user attributes during B2B collaboration sign-up](../user-flow-add-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your app requires more information than the built-in user attributes provide, you can add your own attributes. We refer to these attributes as *custom user attributes*.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-certificate-based-authentication-mobile-android.md" target="_blank">docs/identity/authentication/concept-certificate-based-authentication-mobile-android.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by vimrang on Oct 6, 2025 9:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-certificate-based-authentication-mobile-android" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added a note for shared device mode</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|Edge browser with profile login	 |  &amp;#x2705; |</div><div class="diff-line diff-context">|Managed Home Screen	 |  &amp;#x2705; |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Browsers</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Operating system | Chrome certificate on-device | Chrome smart card/security key | Safari certificate on-device | Safari smart card/security key | Edge certificate on-device | Edge smart card/security key |</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|Edge browser with profile login	 |  &amp;#x2705; |</div><div class="diff-line diff-context">|Managed Home Screen	 |  &amp;#x2705; |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt;When using Microsoft Entra certificate-based authentication on Android devices in kiosk mode (common in Shared Device Mode), customers should allow list com.android.systemui as a required package to ensure they are presented with the appropriate UI to complete their authentication. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Browsers</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Operating system | Chrome certificate on-device | Chrome smart card/security key | Safari certificate on-device | Safari smart card/security key | Edge certificate on-device | Edge smart card/security key |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/user-source-of-authority-overview.md" target="_blank">docs/identity/hybrid/user-source-of-authority-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 6:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/user-source-of-authority-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> SOA image and wording fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">### Password-less authentication of SOA transferred users</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">**Scenario**:  You’ve transferred the SOA for users and now want to allow them to access both on-premises, and cloud, resources. Instead of completely removing users from on-premises, introduce Cloud Kerberos Trust password-less authentication to allow them to maintain a hybrid presence allowing them to continue to access their on-premises resources, while also allowing them to access cloud resources. Password-less authentication methods, such as [Windows Hello for Business](/windows/security/identity-protection/hello-for-business/configure) or [FIDO2 security keys](../../identity/authentication/how-to-enable-passkey-fido2.md), can be used to allow these users to access both their on-premises resources, and cloud resources such as [Azure Files](/azure/storage/files/storage-files-introduction) through [Microsoft Entra Private Access](../../global-secure-access/concept-private-access.md). Using Password-less authentication also enables Multifactor Authentication on the SOA transferred users increasing security. Password-less authentication also allows you to enable Conditional Access policies on the on-premises resources, allowing greater control and security over these resources.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/user-source-of-authority-overview/passwordless-authentication-source-of-authority.png&quot; alt-text=&quot;Screenshot of the password-less authentication scenario for User SOA.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">### Password-less authentication of SOA transferred users</div><div class="diff-line diff-context"> </div><div class="diff-line diff-added">**Scenario**:  You’ve transferred the SOA for users and now want to allow them to access both on-premises, and cloud, resources. Instead of completely removing users from on-premises, introduce Cloud Kerberos Trust password-less authentication to allow them to maintain a hybrid presence allowing them to continue to access their on-premises resources, while also allowing them to access cloud resources. Password-less authentication methods, such as [Windows Hello for Business](/windows/security/identity-protection/hello-for-business/configure) or [FIDO2 security keys](../../identity/authentication/how-to-enable-passkey-fido2.md), can be used to allow these users to access both their on-premises resources, and cloud resources such as [Azure Files](/azure/storage/files/storage-files-introduction) through [Microsoft Entra Private Access](../../global-secure-access/concept-private-access.md). Using Password-less authentication also enables Multifactor Authentication on the SOA transferred users increasing security. Password-less authentication also allows you to enable Conditional Access policies on the on-premises resources, allowing greater control and security over these resources. **The user account must remain in Active Directory for this scenario to work**.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/user-source-of-authority-overview/passwordless-authentication-source-of-authority.png&quot; alt-text=&quot;Screenshot of the password-less authentication scenario for User SOA.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/concept-source-of-authority-overview.md" target="_blank">docs/identity/hybrid/concept-source-of-authority-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Oct 6, 2025 4:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/concept-source-of-authority-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Links added for SOA</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">One AD DS minimization approach is to convert the Group Source of Authority (SOA) to Microsoft Entra ID. This approach lets you directly manage those groups in the cloud. You can delete AD DS groups that you no longer need on-premises. If you need to keep a group on-premises, you can configure security group provisioning from Microsoft Entra ID to AD DS. Then you can make changes to the group in Microsoft Entra ID and have those changes reflected in the on-premises group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how Group SOA can help IT administrators transition group management from AD DS to the cloud. You can also enable advanced scenarios like access governance with Microsoft Entra ID Governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Video: Microsoft Entra Group Source of Authority </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">One AD DS minimization approach is to convert the Group Source of Authority (SOA) to Microsoft Entra ID. This approach lets you directly manage those groups in the cloud. You can delete AD DS groups that you no longer need on-premises. If you need to keep a group on-premises, you can configure security group provisioning from Microsoft Entra ID to AD DS. Then you can make changes to the group in Microsoft Entra ID and have those changes reflected in the on-premises group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes how Group SOA can help IT administrators transition group management from AD DS to the cloud. You can also enable advanced scenarios like access governance with Microsoft Entra ID Governance. For a guide on using group SOA for IT architects, see: [Cloud-First identity management: Guidance for IT architects](guidance-it-architects-source-of-authority.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Video: Microsoft Entra Group Source of Authority </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
