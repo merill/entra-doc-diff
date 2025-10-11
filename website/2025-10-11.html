@@ -1,0 +1,597 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 9th 2025, 7:59 PM PDT</p>
+        <p>Report generated on October 10th 2025, 7:59 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21839.md" target="_blank">docs/includes/secure-recommendations/21839.md</a>
+            </div>
+            <div class="file-meta">
+              Added by John Flores on Oct 10, 2025 1:47 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21839" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+22 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> [Secure Entra] Additions</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21874.md" target="_blank">docs/includes/secure-recommendations/21874.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 6:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21874" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise secure recommendations for guest access control</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Allow/Deny lists of domains to restrict external collaboration are configured</div><div class="diff-line diff-deleted">ms.author: sarahlipsey</div><div class="diff-line diff-deleted">author: shlipsey3</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 07/07/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># sfipillar: Protect tenants and isolate production systems</div><div class="diff-line diff-context"># category: External collaboration</div><div class="diff-line diff-context"># risklevel: Medium</div><div class="diff-line diff-context"># userimpact: Medium</div><div class="diff-line diff-deleted"># implementationcost: Medium</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Without configured domain allow/deny lists for external collaboration, organizations lack essential domain-level access controls that act as the frontline defense in their security model. Domain allow/deny lists operate at the tenant level and take precedence over Cross-Tenant Access Policies (XTAP), blocking invitations from domains on the deny list regardless of cross-tenant access settings. While XTAP enables granular controls for specific trusted tenants, domain restrictions are critical for preventing invitations from unknown or unverified domains that haven&#39;t been explicitly allowed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Without these restrictions, internal users can invite external accounts from any domain—including potentially compromised or attacker-controlled domains. Threat actors can register domains that appear legitimate to conduct social engineering attacks, tricking users into sending collaboration invitations that circumvent XTAP&#39;s targeted protections. Once granted access, these external guest accounts can be used for reconnaissance, mapping internal resources, user relationships, and collaboration patterns.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">These invited accounts provide persistent access that appears legitimate in audit logs and security monitoring systems. Attackers can maintain a long-term presence to collect data, access shared resources, documents, and applications configured for external collaboration, and potentially exfiltrate data through authorized channels without triggering alerts.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Limit guest access to approved tenants</div><div class="diff-line diff-added">ms.author: joflore</div><div class="diff-line diff-added">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 10/10/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># sfipillar: Protect tenants and isolate production systems</div><div class="diff-line diff-context"># category: External collaboration</div><div class="diff-line diff-context"># risklevel: Medium</div><div class="diff-line diff-context"># userimpact: Medium</div><div class="diff-line diff-added"># implementationcost: High</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Limiting guest access to a known and approved list of tenants helps to prevent threat actors from exploiting unrestricted guest access to establish initial access through compromised external accounts or by creating accounts in untrusted tenants. Threat actors who gain access through an unrestricted domain can discover internal resources, users, and applications to perform additional attacks. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations should take inventory and configure an allowlist or blocklist to control B2B collaboration invitations from specific organizations. Without these controls, threat actors might use social engineering techniques to obtain invitations from legitimate internal users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-identities.md" target="_blank">docs/fundamentals/zero-trust-protect-identities.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 1:47 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-identities" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Secure Entra] Additions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### All privileged role assignments are activated just in time and not permanently active</div><div class="diff-line diff-context">[!INCLUDE [21815](../includes/secure-recommendations/21815.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Privileged accounts have phishing-resistant methods registered</div><div class="diff-line diff-deleted">[!INCLUDE [21782](../includes/secure-recommendations/21782.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Privileged Microsoft Entra built-in roles are targeted with Conditional Access policies to enforce phishing-resistant methods</div><div class="diff-line diff-context">[!INCLUDE [21783](../includes/secure-recommendations/21783.md)]</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### All privileged role assignments are activated just in time and not permanently active</div><div class="diff-line diff-context">[!INCLUDE [21815](../includes/secure-recommendations/21815.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Passkey authentication method enabled</div><div class="diff-line diff-added">[!INCLUDE [21815](../includes/secure-recommendations/21815.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Privileged accounts have phishing-resistant methods registered</div><div class="diff-line diff-added">[!INCLUDE [21839](../includes/secure-recommendations/21839.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Privileged Microsoft Entra built-in roles are targeted with Conditional Access policies to enforce phishing-resistant methods</div><div class="diff-line diff-context">[!INCLUDE [21783](../includes/secure-recommendations/21783.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/includes/prepare-converted-groups.md" target="_blank">docs/identity/hybrid/includes/prepare-converted-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Oct 10, 2025 2:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/includes/prepare-converted-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typos and update date in hybrid identity docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: omondiatieno</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: Include</div><div class="diff-line diff-deleted">ms.date: 10/09/2025</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.custom: Include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">4. At the top, switch **Object type** to **Group**.</div><div class="diff-line diff-context">5. Add a new attribute mapping.</div><div class="diff-line diff-context">   - Mapping type: Direct</div><div class="diff-line diff-deleted">   - Source attribute: distinguishedName (the on-prem group’s DN)</div><div class="diff-line diff-context">   - Target attribute: `extension_&lt;appIdWithoutHyphens&gt;_GroupDN`</div><div class="diff-line diff-context">6. Save the schema to trigger a sync.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: omondiatieno</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: Include</div><div class="diff-line diff-added">ms.date: 10/10/2025</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.custom: Include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">4. At the top, switch **Object type** to **Group**.</div><div class="diff-line diff-context">5. Add a new attribute mapping.</div><div class="diff-line diff-context">   - Mapping type: Direct</div><div class="diff-line diff-added">   - Source attribute: distinguishedName (the on-premises group’s DN)</div><div class="diff-line diff-context">   - Target attribute: `extension_&lt;appIdWithoutHyphens&gt;_GroupDN`</div><div class="diff-line diff-context">6. Save the schema to trigger a sync.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21953.md" target="_blank">docs/includes/secure-recommendations/21953.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 5:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21953" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> blocker fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">Without Local Admin Password Solution (LAPS) deployed, threat actors exploit static local administrator passwords to establish initial access. After threat actors compromise a single device with a shared local administrator credential, they can move laterally across the environment and authenticate to other systems sharing the same password. Compromised local administrator access gives threat actors system-level privileges, letting them disable security controls, install persistent backdoors, exfiltrate sensitive data, and establish command and control channels. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The automated password rotation and centralized management of LAPS closes this security gap and adds controls to help manage who has access to these critical accounts. Without soultions like LAPS, you can&#39;t detect or respond to unauthorized use of local administrator accounts, giving threat actors extended dwell time to achieve their objectives while remaining undetected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Configure Windows Local Administrator Password Solution](/entra/identity/devices/howto-manage-local-admin-passwords).</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">Without Local Admin Password Solution (LAPS) deployed, threat actors exploit static local administrator passwords to establish initial access. After threat actors compromise a single device with a shared local administrator credential, they can move laterally across the environment and authenticate to other systems sharing the same password. Compromised local administrator access gives threat actors system-level privileges, letting them disable security controls, install persistent backdoors, exfiltrate sensitive data, and establish command and control channels. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The automated password rotation and centralized management of LAPS closes this security gap and adds controls to help manage who has access to these critical accounts. Without solutions like LAPS, you can&#39;t detect or respond to unauthorized use of local administrator accounts, giving threat actors extended dwell time to achieve their objectives while remaining undetected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Configure Windows Local Administrator Password Solution](/entra/identity/devices/howto-manage-local-admin-passwords).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/configure-security.md" target="_blank">docs/fundamentals/configure-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/configure-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> WIP</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Check | Minimum required license |</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">| [Permissions to create new tenants are limited to the Tenant Creator role](zero-trust-protect-tenants.md#permissions-to-create-new-tenants-are-limited-to-the-tenant-creator-role) | Microsoft Entra ID Free |</div><div class="diff-line diff-deleted">| [Guest access limited to approved tenants](zero-trust-protect-tenants.md#allowdeny-lists-of-domains-to-restrict-external-collaboration-are-configured) | Microsoft Entra ID Free |</div><div class="diff-line diff-context">| [Guests are not assigned high privileged directory roles](zero-trust-protect-tenants.md#guests-are-not-assigned-high-privileged-directory-roles) | Microsoft Entra ID Free&lt;br&gt;Microsoft Entra ID P2 or Microsoft ID Governance for PIM |</div><div class="diff-line diff-context">| [Guests can&#39;t invite other guests](zero-trust-protect-tenants.md#guests-cant-invite-other-guests) | Microsoft Entra ID Free |</div><div class="diff-line diff-context">| [Guests have restricted access to directory objects](zero-trust-protect-tenants.md#guests-have-restricted-access-to-directory-objects) | Microsoft Entra ID Free |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Check | Minimum required license |</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">| [Permissions to create new tenants are limited to the Tenant Creator role](zero-trust-protect-tenants.md#permissions-to-create-new-tenants-are-limited-to-the-tenant-creator-role) | Microsoft Entra ID Free |</div><div class="diff-line diff-added">| [Guest access is limited to approved tenants](zero-trust-protect-tenants.md#guest-access-is-limited-to-approved-tenants) | Microsoft Entra ID Free |</div><div class="diff-line diff-context">| [Guests are not assigned high privileged directory roles](zero-trust-protect-tenants.md#guests-are-not-assigned-high-privileged-directory-roles) | Microsoft Entra ID Free&lt;br&gt;Microsoft Entra ID P2 or Microsoft ID Governance for PIM |</div><div class="diff-line diff-context">| [Guests can&#39;t invite other guests](zero-trust-protect-tenants.md#guests-cant-invite-other-guests) | Microsoft Entra ID Free |</div><div class="diff-line diff-context">| [Guests have restricted access to directory objects](zero-trust-protect-tenants.md#guests-have-restricted-access-to-directory-objects) | Microsoft Entra ID Free |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-tenants.md" target="_blank">docs/fundamentals/zero-trust-protect-tenants.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-tenants" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> WIP</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### Protected actions are enabled for high-impact management tasks</div><div class="diff-line diff-context">[!INCLUDE [21831](../includes/secure-recommendations/21831.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Guest access limited to approved tenants</div><div class="diff-line diff-context">[!INCLUDE [21874](../includes/secure-recommendations/21874.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Guests are not assigned high privileged directory roles</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### Protected actions are enabled for high-impact management tasks</div><div class="diff-line diff-context">[!INCLUDE [21831](../includes/secure-recommendations/21831.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Guest access is limited to approved tenants</div><div class="diff-line diff-context">[!INCLUDE [21874](../includes/secure-recommendations/21874.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Guests are not assigned high privileged directory roles</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-engineering-systems.md" target="_blank">docs/fundamentals/zero-trust-protect-engineering-systems.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 5:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-engineering-systems" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> blocker fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">[!INCLUDE [21869](../includes/secure-recommendations/21869.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Limit the maximum number of devices per user to 10</div><div class="diff-line diff-deleted">[!INCLUDE [21869](../includes/secure-recommendations/21869.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Conditional Access policies for Privileged Access Workstations are configured</div><div class="diff-line diff-context">[!INCLUDE [21830](../includes/secure-recommendations/21830.md)]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">[!INCLUDE [21869](../includes/secure-recommendations/21869.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Limit the maximum number of devices per user to 10</div><div class="diff-line diff-added">[!INCLUDE [21837](../includes/secure-recommendations/21837.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Conditional Access policies for Privileged Access Workstations are configured</div><div class="diff-line diff-context">[!INCLUDE [21830](../includes/secure-recommendations/21830.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21822.md" target="_blank">docs/includes/secure-recommendations/21822.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 5:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21822" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> blocker fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 09/26/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-deleted"># sfipillar: </div><div class="diff-line diff-context"># category: External collaboration</div><div class="diff-line diff-context"># risklevel: Medium</div><div class="diff-line diff-context"># userimpact: Medium</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 09/26/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-added"># sfipillar: Protect tenants and isolate production systems</div><div class="diff-line diff-context"># category: External collaboration</div><div class="diff-line diff-context"># risklevel: Medium</div><div class="diff-line diff-context"># userimpact: Medium</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21837.md" target="_blank">docs/includes/secure-recommendations/21837.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Oct 10, 2025 5:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21837" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> blocker fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Learn how to [limit the maximum number of devices per user](/entra/identity/devices/manage-device-identities#configure-device-settings)..</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Learn how to [limit the maximum number of devices per user](/entra/identity/devices/manage-device-identities#configure-device-settings).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/custom-attribute-mapping.md" target="_blank">docs/identity/hybrid/cloud-sync/custom-attribute-mapping.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Oct 10, 2025 2:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/custom-attribute-mapping" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typos and clarify wording in cloud sync docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Method|Description|URL|</div><div class="diff-line diff-context">|-----|-----|-----|</div><div class="diff-line diff-deleted">|MS Graph|Create extensions using GRAPH|[Create extensionProperty](/graph/api/application-post-extensionproperty?view=graph-rest-1.0&amp;tabs=http&amp;preserve-view=true)|</div><div class="diff-line diff-context">|PowerShell|Create extensions using PowerShell|[New-MgApplicationExtensionProperty](/powershell/module/microsoft.graph.applications/new-mgapplicationextensionproperty)| </div><div class="diff-line diff-context">Using cloud sync and Microsoft Entra Connect|Create extensions using Microsoft Entra Connect|[Create an extension attribute using Microsoft Entra Connect](../../app-provisioning/user-provisioning-sync-attributes-for-mapping.md#create-an-extension-attribute-using-azure-ad-connect)|</div><div class="diff-line diff-context">|Customizing attributes to sync|Information on customizing, which attributes to synch|[Customize which attributes to synchronize with Microsoft Entra ID](../connect/how-to-connect-sync-feature-directory-extensions.md#select-which-attributes-to-synchronize-with-microsoft-entra-id)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Method|Description|URL|</div><div class="diff-line diff-context">|-----|-----|-----|</div><div class="diff-line diff-added">|MS Graph|Create extensions using Microsoft Graph|[Create extensionProperty](/graph/api/application-post-extensionproperty?view=graph-rest-1.0&amp;tabs=http&amp;preserve-view=true)|</div><div class="diff-line diff-context">|PowerShell|Create extensions using PowerShell|[New-MgApplicationExtensionProperty](/powershell/module/microsoft.graph.applications/new-mgapplicationextensionproperty)| </div><div class="diff-line diff-context">Using cloud sync and Microsoft Entra Connect|Create extensions using Microsoft Entra Connect|[Create an extension attribute using Microsoft Entra Connect](../../app-provisioning/user-provisioning-sync-attributes-for-mapping.md#create-an-extension-attribute-using-azure-ad-connect)|</div><div class="diff-line diff-context">|Customizing attributes to sync|Information on customizing, which attributes to synch|[Customize which attributes to synchronize with Microsoft Entra ID](../connect/how-to-connect-sync-feature-directory-extensions.md#select-which-attributes-to-synchronize-with-microsoft-entra-id)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/tutorial-group-provisioning.md" target="_blank">docs/identity/hybrid/cloud-sync/tutorial-group-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Oct 10, 2025 2:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/tutorial-group-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typos and clarify wording in cloud sync docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   9. There are two possible approaches to set the OU:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">      - You can use custom expressions ensure the group is re-created with the same OU. Us the following expression for ParentDistinguishedName value:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">        ```https</div><div class="diff-line diff-context">        IIF(</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   9. There are two possible approaches to set the OU:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">      - You can use custom expressions ensure the group is re-created with the same OU. Use the following expression for ParentDistinguishedName value:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">        ```https</div><div class="diff-line diff-context">        IIF(</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/includes/gpad-prereqs.md" target="_blank">docs/identity/hybrid/includes/gpad-prereqs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Oct 10, 2025 2:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/includes/gpad-prereqs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typos and update date in hybrid identity docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> &gt;</div><div class="diff-line diff-context"> &gt;These permissions aren&#39;t applied to AdminSDHolder objects by default. For more information, see [Microsoft Entra provisioning agent gMSA PowerShell cmdlets](../cloud-sync/how-to-gmsa-cmdlets.md#grant-permissions-to-a-specific-domain). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> - The provisioning agent must beinstalled on a server that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016.</div><div class="diff-line diff-context"> - The provisioning agent must be able to communicate with one or more domain controllers on ports TCP/389 (LDAP) and TCP/3268 (Global Catalog).</div><div class="diff-line diff-context">     - Required for Global Catalog lookup to filter out invalid membership references</div><div class="diff-line diff-context"> - Microsoft Entra Connect Sync with build version [2.22.8.0](../connect/reference-connect-version-history.md#2280)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> &gt;</div><div class="diff-line diff-context"> &gt;These permissions aren&#39;t applied to AdminSDHolder objects by default. For more information, see [Microsoft Entra provisioning agent gMSA PowerShell cmdlets](../cloud-sync/how-to-gmsa-cmdlets.md#grant-permissions-to-a-specific-domain). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"> - The provisioning agent must be installed on a server that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016.</div><div class="diff-line diff-context"> - The provisioning agent must be able to communicate with one or more domain controllers on ports TCP/389 (LDAP) and TCP/3268 (Global Catalog).</div><div class="diff-line diff-context">     - Required for Global Catalog lookup to filter out invalid membership references</div><div class="diff-line diff-context"> - Microsoft Entra Connect Sync with build version [2.22.8.0](../connect/reference-connect-version-history.md#2280)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/secure-recommendations/21822.md
+            </div>
+            <div class="file-meta">
+              Deleted by John Flores on Oct 10, 2025 6:02 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21822</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-19 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Delete docs/includes/secure-recommendations/21822.md</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
