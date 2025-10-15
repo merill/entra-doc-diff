@@ -1,0 +1,368 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 13th 2025, 8:10 PM PDT</p>
+        <p>Report generated on October 14th 2025, 8:10 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">34</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/domain-services/group-policy.md" target="_blank">docs/identity/domain-services/group-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by James Ndung'u (from Dev Box) on Oct 14, 2025 7:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/domain-services/group-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+47</span> / 
+              <span class="deletions">-108</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Improve formatting</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Backup Location</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- \*\*Primary Path\*\*: `F:\\GPO\\Backups`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- \*\*Network Share\*\*: `GPOBackupsShare$` (hidden share)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Directory Structure</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">F:\\GPO\\Backups\\</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">├── MMddyyyyHHmm\\          # Timestamp folder (e.g., 092520251430)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">│   ├── {GUID-1}\\          # Individual GPO backup folder</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">│   ├── {GUID-2}\\          # Individual GPO backup folder</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">│   └── ...</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Backup Location</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Primary Path**: `F:\\GPO\\Backups`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Network Share**: `GPOBackupsShare$` (hidden share)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Directory Structure</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-added">F:\GPO\Backups\</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">├── MMddyyyyHHmm\          # Timestamp folder (e.g., 092520251430)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">│   ├── {GUID-1}\          # Individual GPO backup folder</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">│   ├── {GUID-2}\          # Individual GPO backup folder</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">│   └── ...</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-authentication-methods-customers.md" target="_blank">docs/external-id/customers/concept-authentication-methods-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Oct 14, 2025 11:28 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-authentication-methods-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added domain hint strings.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The following screenshots show the sign-in with Apple experience. In the sign-in page, users select **Sign-in with Apple**. Then the user is redirected to the Apple identity provider to complete the sign-in.</div><div class="diff-line diff-context">Learn how to [add Apple as an identity provider](how-to-apple-federation-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Custom SAML/WS-Fed identity providers</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can set up a SAML or WS-Fed identity provider to allow users to sign up and sign in to your applications using their own account with the identity provider. The user can sign up or sign in by selecting the **Sign up with** or **Sign in with** option. They&#39;re redirected to the identity provider, and then returned to Microsoft Entra once they successfully sign in. For external tenants, a user&#39;s sign-in email doesn&#39;t need to match the predefined domains set up during SAML federation. As a result, updating the federation setup by adding, changing, or removing domains won&#39;t affect the experience for existing users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [SAML/WS-Fed identity providers](../direct-federation-overview.md). For detailed setup steps, see [Add federation with SAML/WS-Fed identity providers](../direct-federation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Custom OIDC identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can set up a custom OpenID Connect (OIDC) identity provider to allow users to sign up and sign in to your applications using their credentials in the external identity provider. You can also federate your sign-in and sign-up flows with an Azure AD B2C tenant using the OIDC protocol.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Learn how to [set up a custom OIDC identity provider](how-to-custom-oidc-federation-customers.md).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## Issuer acceleration</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">When you use identity providers such as Facebook, Google, Apple, custom OIDC, or SAML, users usually see the Microsoft sign-in page first. From there, they choose their identity provider. To simplify this experience, you can use the `domain_hint` parameter in the sign-in URL. This parameter lets you skip the Microsoft sign-in page and go directly to the selected identity provider’s sign-in page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Issuer acceleration for custom OIDC providers</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The following screenshots show the sign-in with Apple experience. In the sign-in page, users select **Sign-in with Apple**. Then the user is redirected to the Apple identity provider to complete the sign-in.</div><div class="diff-line diff-context">Learn how to [add Apple as an identity provider](how-to-apple-federation-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Custom OIDC identity provider</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can set up a custom OpenID Connect (OIDC) identity provider to allow users to sign up and sign in to your applications using their credentials in the external identity provider. You can also federate your sign-in and sign-up flows with an Azure AD B2C tenant using the OIDC protocol.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Learn how to [set up a custom OIDC identity provider](how-to-custom-oidc-federation-customers.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Custom SAML/WS-Fed identity providers</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can set up a SAML or WS-Fed identity provider to allow users to sign up and sign in to your applications using their own account with the identity provider. The user can sign up or sign in by selecting the **Sign up with** or **Sign in with** option. They&#39;re redirected to the identity provider, and then returned to Microsoft Entra once they successfully sign in. For external tenants, a user&#39;s sign-in email doesn&#39;t need to match the predefined domains set up during SAML federation. As a result, updating the federation setup by adding, changing, or removing domains won&#39;t affect the experience for existing users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [SAML/WS-Fed identity providers](../direct-federation-overview.md). For detailed setup steps, see [Add federation with SAML/WS-Fed identity providers](../direct-federation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Domain acceleration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you federate with custom SAML/WS-Fed IdPs, users usually see the Microsoft sign-in page first and then choose their identity provider. These IdPs can be associated with one or more domains. Including the `domain_hint` parameter in the sign-in URL allows users to go directly to the sign-in page for the identity provider associated with the specified domain.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For a custom SAML identity provider, use the domain specified in the **Domain name of federating IdP** field in the `domain_hint` syntax.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Eunice Waweru on Oct 14, 2025 10:11 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Minor edit</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra Connect must be installed on a domain-joined server that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016. We recommend Windows Server 2022. You can deploy Microsoft Entra Connect on Windows Server 2016. However, since Windows Server 2016 is in extended support, you might need [a paid support program](/lifecycle/policies/fixed#extended-support) if you require support for this configuration. Installing on unsupported versions of Windows Server may cause service failures or unexpected behavior.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!IMPORTANT]</div><div class="diff-line diff-deleted">&gt;**Windows Server 2025 is NOT supported. Applying [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9) updates will cause Microsoft Entra Connect Sync to stop functioning.** If you upgraded to Windows Server 2025 and applied [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9) update, modify your registry with the following details:</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt;```</div><div class="diff-line diff-deleted">&gt;Path: Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides</div><div class="diff-line diff-deleted">&gt;Name: 2362988687</div><div class="diff-line diff-deleted">&gt;Type: REG_DWORD</div><div class="diff-line diff-deleted">&gt;Value: 0</div><div class="diff-line diff-deleted">&gt;```</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt;This registry modification is a mitigation. Windows Server 2025 support for Microsoft Entra Connect Sync is planned for a future release.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The minimum .NET Framework version required is 4.6.2, and newer versions of .NET are also supported. The .NET version 4.8 and greater offers the best accessibility compliance.</div><div class="diff-line diff-context">- Microsoft Entra Connect can&#39;t be installed on Small Business Server or Windows Server Essentials before 2019 (Windows Server Essentials 2019 is supported). The server must be using Windows Server standard or better. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra Connect must be installed on a domain-joined server that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016. We recommend Windows Server 2022. You can deploy Microsoft Entra Connect on Windows Server 2016. However, since Windows Server 2016 is in extended support, you might need [a paid support program](/lifecycle/policies/fixed#extended-support) if you require support for this configuration. Installing on unsupported versions of Windows Server may cause service failures or unexpected behavior.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">  &gt;[!IMPORTANT]</div><div class="diff-line diff-added">  &gt;**Windows Server 2025 is NOT supported. Applying [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9) updates will cause Microsoft Entra Connect Sync to stop functioning.** If you upgraded to Windows Server 2025 and applied [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9) update, modify your registry with the following details:</div><div class="diff-line diff-added">  &gt;</div><div class="diff-line diff-added">  &gt;```</div><div class="diff-line diff-added">  &gt;Path: Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides</div><div class="diff-line diff-added">  &gt;Name: 2362988687</div><div class="diff-line diff-added">  &gt;Type: REG_DWORD</div><div class="diff-line diff-added">  &gt;Value: 0</div><div class="diff-line diff-added">  &gt;```</div><div class="diff-line diff-added">  &gt;</div><div class="diff-line diff-added">  &gt;This registry modification is a mitigation. Windows Server 2025 support for Microsoft Entra Connect Sync is planned for a future release.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The minimum .NET Framework version required is 4.6.2, and newer versions of .NET are also supported. The .NET version 4.8 and greater offers the best accessibility compliance.</div><div class="diff-line diff-context">- Microsoft Entra Connect can&#39;t be installed on Small Business Server or Windows Server Essentials before 2019 (Windows Server Essentials 2019 is supported). The server must be using Windows Server standard or better. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-prerequisites.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nuno Alexandre on Oct 14, 2025 8:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update how-to-prerequisites.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You need the following to use Microsoft Entra Cloud Sync:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Domain Administrator or Enterprise Administrator credentials to create the Microsoft Entra Connect cloud sync gMSA (group managed service account) to run the agent service.</div><div class="diff-line diff-context">- A Hybrid Identity Administrator account for your Microsoft Entra tenant that isn&#39;t a guest user.</div><div class="diff-line diff-deleted">- An on-premises server for the provisioning agent that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016. This server should be a tier 0 server based on the [Active Directory administrative tier model](/security/privileged-access-workstations/privileged-access-access-model). Installing the agent on a domain controller is supported.  For more information, see [Harden your Microsoft Entra provisioning agent server](#harden-your-microsoft-entra-provisioning-agent-server)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">  - Required for AD Schema attribute  - msDS-ExternalDirectoryObjectId</div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-context">- The Windows Credential Manager service (VaultSvc) cannot be disabled as that prevents the provisioning agent from installing.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- High availability refers to the Microsoft Entra Cloud Sync&#39;s ability to operate continuously without failure for a long time. By having multiple active agents installed and running, Microsoft Entra Cloud Sync can continue to function even if one agent should fail. Microsoft recommends having 3 active agents installed for high availability.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You need the following to use Microsoft Entra Cloud Sync:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Domain Administrator or Enterprise Administrator credentials to create the Microsoft Entra Connect cloud sync gMSA (group managed service account) to run the agent service.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- A Hybrid Identity Administrator account for your Microsoft Entra tenant that isn&#39;t a guest user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Microsoft Entra Cloud Sync agent must be installed on a domain-joined server that runs Windows Server 2022, Windows Server 2019, or Windows Server 2016. We recommend Windows Server 2022. You can deploy Microsoft Entra Cloud Sync on Windows Server 2016, but since it&#39;s in extended support, you might need [a paid support program](/lifecycle/policies/fixed#extended-support) if you require support for this configuration. Installing on unsupported versions of Windows Server may cause service failures or unexpected behavior.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- This server should be a tier 0 server based on the [Active Directory administrative tier model](/security/privileged-access-workstations/privileged-access-access-model). Installing the agent on a domain controller is supported.  For more information, see [Harden your Microsoft Entra provisioning agent server](#harden-your-microsoft-entra-provisioning-agent-server)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">  &gt;[!IMPORTANT]</div><div class="diff-line diff-added">  &gt;**Windows Server 2025 is NOT supported. There is a known issue on Windows server 2025 with the [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9) update installed that will cause Microsoft Entra Connect Sync to encounter sync issues.** If you upgraded to Windows Server 2025 and installed update [KB5065426](https://support.microsoft.com/en-us/topic/september-9-2025-kb5065426-os-build-26100-6584-77a41d9b-1b7c-4198-b9a5-3c4b6706dea9), apply the following registry key as soon as possible to avoid sync disruption.</div><div class="diff-line diff-added">  &gt;</div><div class="diff-line diff-added">  &gt;```</div><div class="diff-line diff-added">  &gt;Windows Registry Editor Version 5.00</div><div class="diff-line diff-added">  &gt;</div><div class="diff-line diff-added">  &gt;[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides]</div><div class="diff-line diff-added">  &gt;&quot;2362988687&quot;=dword:00000000</div><div class="diff-line diff-added">  &gt;```</div><div class="diff-line diff-added">  &gt;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-optimization.md" target="_blank">docs/identity/conditional-access/agent-optimization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Oct 14, 2025 3:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-optimization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> image-step-update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">ms.date: 10/13/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure notifications in the Conditional Access optimization agent settings:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the Conditional Access optimization agent settings, select the **Users and groups** link.</div><div class="diff-line diff-deleted">1. Select the users or groups you want to receive notifications, then select the **Save** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/agent-optimization/agent-teams-suggestion-message.png&quot; alt-text=&quot;Screenshot of the Conditional Access agent notification message in Teams.&quot; lightbox=&quot;media/agent-optimization/agent-teams-suggestion-message.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can select up to ten recipients to receive notifications. You can select a group to receive the notifications, but the membership of that group can&#39;t exceed ten users. If you select a group that has fewer than ten users but more are added later, the group no longer receives notifications. Similarly, the notifications can only be sent to five objects, such as a combination of individual users or groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At this time, the agent&#39;s communication is one direction, so you can receive notifications but can&#39;t respond to them in Microsoft Teams. To take action on a suggestion, select **Review suggestion** from the chat to open the Conditional Access optimization agent in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Phased rollout</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.reviewer: lhuangnorth</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">ms.date: 10/14/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure notifications in the Conditional Access optimization agent settings:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the Conditional Access optimization agent settings, select the **Select users and groups** link.</div><div class="diff-line diff-added">1. Select the users or groups you want to receive notifications, then select the **Select** button.</div><div class="diff-line diff-added"> </div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/agent-optimization/agent-teams-people-picker.png&quot; alt-text=&quot;Screenshot of the Conditional Access agent setting to pick the users and groups for notifications.&quot; lightbox=&quot;media/agent-optimization/agent-teams-people-picker.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. At the bottom of the main **Settings** page, select the **Save** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can select up to ten recipients to receive notifications. You can select a group to receive the notifications, but the membership of that group can&#39;t exceed ten users. If you select a group that has fewer than ten users but more are added later, the group no longer receives notifications. Similarly, the notifications can only be sent to five objects, such as a combination of individual users or groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At this time, the agent&#39;s communication is one direction, so you can receive notifications but can&#39;t respond to them in Microsoft Teams. To take action on a suggestion, select **Review suggestion** from the chat to open the Conditional Access optimization agent in the Microsoft Entra admin center.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-sign-in-passkey-authenticator.md" target="_blank">docs/identity/authentication/how-to-sign-in-passkey-authenticator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Oct 14, 2025 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-sign-in-passkey-authenticator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update passkey authenticator doc date and content</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id </div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/04/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; Bluetooth and an internet connection are required for this step and both must be enabled on your mobile and remote device.</div><div class="diff-line diff-deleted">   &gt;</div><div class="diff-line diff-deleted">   &gt; For quicker sign-in, Android allows you to remember some browsers and Windows devices after you scan the WebAuthn QR code. In such cases, instead of having to scan a QR code each time, you can select the device and receive a notification to continue the passkey authentication.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">1. To select your passkey, follow the steps in the Android operating system dialog. Verify yourself by scanning your face or fingerprint, or enter your device PIN or unlock gesture.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">On your other device, you&#39;re now signed in to Microsoft Entra ID.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id </div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 10/14/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; Bluetooth and an internet connection are required for this step and both must be enabled on your mobile and remote device.</div><div class="diff-line diff-added">   </div><div class="diff-line diff-context">1. To select your passkey, follow the steps in the Android operating system dialog. Verify yourself by scanning your face or fingerprint, or enter your device PIN or unlock gesture.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">On your other device, you&#39;re now signed in to Microsoft Entra ID.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/known-issues.md" target="_blank">docs/identity/app-provisioning/known-issues.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on Oct 14, 2025 10:08 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/known-issues" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update known issues date and remove scenario</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: app-provisioning</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">zone_pivot_groups: app-provisioning-cross-tenant-synchronization</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">### Unsupported synchronization scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Synchronizing groups, devices, and contacts into another tenant</div><div class="diff-line diff-deleted">- Synchronizing users across clouds</div><div class="diff-line diff-context">- Synchronizing photos across tenants</div><div class="diff-line diff-context">- Synchronizing contacts and converting contacts to B2B users</div><div class="diff-line diff-context">- Synchronizing meeting rooms across tenants</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: app-provisioning</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-added">ms.date: 10/04/2025</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">zone_pivot_groups: app-provisioning-cross-tenant-synchronization</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">### Unsupported synchronization scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Synchronizing groups, devices, and contacts into another tenant</div><div class="diff-line diff-context">- Synchronizing photos across tenants</div><div class="diff-line diff-context">- Synchronizing contacts and converting contacts to B2B users</div><div class="diff-line diff-context">- Synchronizing meeting rooms across tenants</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
