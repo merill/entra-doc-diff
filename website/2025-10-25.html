@@ -1,0 +1,368 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 23rd 2025, 8:09 PM PDT</p>
+        <p>Report generated on October 24th 2025, 8:09 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/configure-workday-termination-lookahead.md" target="_blank">docs/identity/app-provisioning/configure-workday-termination-lookahead.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Oct 24, 2025 8:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/configure-workday-termination-lookahead" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> PR reviewer edits</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Workday Termination Lookahead </div><div class="diff-line diff-deleted">description: Enable Termination Lookahead query for your Workday-to-AD/Entra ID provisioning job.</div><div class="diff-line diff-context">author: jenniferf-skc</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.reviewer: chmutali</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#customer intent: As an IT admin, I want to understand how to enable the Workday Termination Lookahead query so I can leverage it for Workday-to-AD/Entra ID provisioning.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure Workday termination lookahead (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For a user in Japan whose last working day is 14-May-2025, the connector starts including the attributes `StatusTerminationLastDayOfWork` and `StatusTerminationDate`, starting Japan time 4:00pm on 14-May-2025, which corresponds to the 16-hour time difference between PDT and Japan Standard time in May.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This adjustment ensures the termination data is available earlier for workers in time zones ahead of Pacific Time. By updating attribute mapping rules in Entra ID, you can then implement time-zone aware terminations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Job Configuration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Workday Termination Lookahead </div><div class="diff-line diff-added">description: Enable Termination Lookahead query for your Workday-to-AD/Microsoft Entra ID provisioning job.</div><div class="diff-line diff-context">author: jenniferf-skc</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.reviewer: chmutali</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#customer intent: As an IT admin, I want to understand how to enable the Workday Termination Lookahead query so I can leverage it for Workday-to-AD/Microsoft Entra ID provisioning.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure Workday termination lookahead (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For a user in Japan whose last working day is 14-May-2025, the connector starts including the attributes `StatusTerminationLastDayOfWork` and `StatusTerminationDate`, starting Japan time 4:00pm on 14-May-2025, which corresponds to the 16-hour time difference between PDT and Japan Standard time in May.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This adjustment ensures the termination data is available earlier for workers in time zones ahead of Pacific Time. By updating attribute mapping rules in Microsoft Entra ID, you can then implement time-zone aware terminations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Job configuration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/plan-an-application-integration.md" target="_blank">docs/identity/enterprise-apps/plan-an-application-integration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Oct 24, 2025 4:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/plan-an-application-integration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to plan integration</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before integrating applications with Microsoft Entra ID, it&#39;s important to know where you are and where you want to go. The following questions are intended to help you think about your Microsoft Entra application integration project.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Application inventory</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Where are all of your applications? Who owns them?</div><div class="diff-line diff-context">- Where do your user accounts reside?</div><div class="diff-line diff-context">  - On-premises Active Directory</div><div class="diff-line diff-context">  - Microsoft Entra ID</div><div class="diff-line diff-context">  - Within a separate application database that you own</div><div class="diff-line diff-context">  - In unsanctioned applications</div><div class="diff-line diff-context">  - All of the listed options</div><div class="diff-line diff-context">- What permissions and role assignments do individual users currently have? Do you need to review their access or are you sure that your user access and role assignments are appropriate now?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Using applications in the Azure application gallery](what-is-single-sign-on.md)</div><div class="diff-line diff-context">- [Integrating SaaS applications tutorials list](~/identity/saas-apps/tutorial-list.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;capabilities-for-apps-not-listed-in-the-azure-ad-gallery&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before integrating applications with Microsoft Entra ID, it&#39;s important to know where you are and where you want to go. The following questions are intended to help you think about your Microsoft Entra application integration project.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Policy inventory</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added"> - What are your organization&#39;s policies for governing access to the applications</div><div class="diff-line diff-added"> - What are the compliance requirements for the applications to be integrated and properly licensed</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Application inventory</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Where are all of your applications? Who owns them?</div><div class="diff-line diff-context">- Where do your user accounts reside?</div><div class="diff-line diff-context">  - On-premises Active Directory</div><div class="diff-line diff-context">  - Microsoft Entra ID</div><div class="diff-line diff-added">  - Another LDAP directory</div><div class="diff-line diff-context">  - Within a separate application database that you own</div><div class="diff-line diff-added">  - In other applications such as within SAP Cloud Identity Services</div><div class="diff-line diff-context">  - In unsanctioned applications</div><div class="diff-line diff-context">  - All of the listed options</div><div class="diff-line diff-context">- What permissions and role assignments do individual users currently have? Do you need to review their access or are you sure that your user access and role assignments are appropriate now?</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/what-is-application-management.md" target="_blank">docs/identity/enterprise-apps/what-is-application-management.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Oct 24, 2025 3:47 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-application-management" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to governance, private access etc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Develop, add, or connect</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There are several ways that you might manage applications in Microsoft Entra ID. The easiest way to start managing an application is to use a preintegrated application from the Microsoft Entra gallery. Developing your own application and registering it in Microsoft Entra ID is an option, or you can continue to use an on-premises application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following image shows how these applications interact with Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### On-premises applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you want to continue using an on-premises application, but take advantage of what Microsoft Entra ID offers, connect it with Microsoft Entra ID using [Microsoft Entra application proxy](/entra/identity/app-proxy). Application Proxy can be implemented when you want to publish on-premises applications externally. Remote users who need access to internal applications can then access them in a secure manner.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Manage access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### User, group, and owner assignment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">By default, all users can access your enterprise applications without being assigned to them. However, if you want to assign the application to a set of users, configure the application to require user assignment and assign the select users to the application. For a simple example of how to create and assign a user account to an application, see [Quickstart: Create and assign a user account](add-application-portal-assign-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If included in your subscription, [assign groups to an application](assign-user-or-group-access-portal.md) so that you can delegate ongoing access management to the group owner.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Develop, add, or connect</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There are several ways that you might manage applications in Microsoft Entra ID. The easiest way to start managing an application is to use a preintegrated application from the Microsoft Entra gallery, for both SaaS and on-premises or private cloud hosted applications. Developing your own application and registering it in Microsoft Entra ID is an option.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following image shows how these applications interact with Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### On-premises applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you want to deploy an on-premises application or continue using an existing on-premises application, but take advantage of what Microsoft Entra ID offers, connect it with Microsoft Entra ID using [Microsoft Entra Private Access](../../global-secure-access/overview-what-is-global-secure-access.md), [Microsoft Entra application proxy](/entra/identity/app-proxy) or [provisioning](../app-provisioning/user-provisioning.md), depending on the supported protocols of the application. Application Proxy can be implemented when you want to publish on-premises applications externally. Remote users who need access to internal applications can then access them in a secure manner.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Manage access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### User, group, and owner assignment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can select that all users in your tenant can access your enterprise applications without being assigned to them. However, if you want to assign the application to a set of users, configure the application to require user assignment and assign the select users to the application. For a simple example of how to create and assign a user account to an application, see [Quickstart: Create and assign a user account](add-application-portal-assign-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If included in your subscription, [assign groups to an application](assign-user-or-group-access-portal.md) or [include the application role in an access package](../../id-governance/entitlement-management-access-package-create.md) so that you can delegate ongoing access management to the group owner. You can also [bring in the existing users of an application to Microsoft Entra](../../id-governance/identity-governance-applications-existing-users.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/tutorial-govern-monitor.md" target="_blank">docs/identity/enterprise-apps/tutorial-govern-monitor.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Oct 24, 2025 4:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/tutorial-govern-monitor" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add license prerequisite</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt; * Create an access review</div><div class="diff-line diff-deleted">&gt; * Access the audit logs</div><div class="diff-line diff-deleted">&gt; * Access the sign-ins</div><div class="diff-line diff-context">&gt; * Send logs to Azure Monitor</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- An Azure account with an active subscription. If you don&#39;t already have one, [Create an account for free](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).</div><div class="diff-line diff-context">- One of the following roles: Identity Governance Administrator, Privileged Role Administrator, Cloud Application Administrator, or Application Administrator.</div><div class="diff-line diff-context">- An enterprise application that has been configured in your Microsoft Entra tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **Results** page provides information on each user under review in the instance, including the ability to Stop, Reset, and Download results. To learn more, check out the [Complete an access review of groups and applications in Microsoft Entra access reviews](~/id-governance/complete-access-review.md) article. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Access the audit logs</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra audit logs capture a wide variety of activities within your tenant. These logs provide valuable insights into the activities you need to monitor. For more information, see [Audit logs in Microsoft Entra ID](~/identity/monitoring-health/concept-audit-logs.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt; * Create an access review</div><div class="diff-line diff-added">&gt; * View the audit logs</div><div class="diff-line diff-added">&gt; * View the sign-ins</div><div class="diff-line diff-context">&gt; * Send logs to Azure Monitor</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- An Azure account with an active subscription. If you don&#39;t already have one, [Create an account for free](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).</div><div class="diff-line diff-added">- A Microsoft Entra ID Governance subscription for your organization&#39;s member users, including for all employees who are reviewing access or having their access reviewed. Some capabilities within this feature might operate with a Microsoft Entra ID P2 subscription.</div><div class="diff-line diff-context">- One of the following roles: Identity Governance Administrator, Privileged Role Administrator, Cloud Application Administrator, or Application Administrator.</div><div class="diff-line diff-context">- An enterprise application that has been configured in your Microsoft Entra tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **Results** page provides information on each user under review in the instance, including the ability to Stop, Reset, and Download results. To learn more, check out the [Complete an access review of groups and applications in Microsoft Entra access reviews](~/id-governance/complete-access-review.md) article. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## View the audit logs</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra audit logs capture a wide variety of activities within your tenant. These logs provide valuable insights into the activities you need to monitor. For more information, see [Audit logs in Microsoft Entra ID](~/identity/monitoring-health/concept-audit-logs.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/assign-user-or-group-access-portal.md" target="_blank">docs/identity/enterprise-apps/assign-user-or-group-access-portal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Oct 24, 2025 8:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-user-or-group-access-portal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update module link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To assign a group to an enterprise app, replace `Get-EntraUser` with `Get-EntraGroup` and replace `New-EntraUserAppRoleAssignment` with `New-EntraGroupAppRoleAssignment`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information on how to assign a group to an application role, see the documentation for [New-EntraGroupAppRoleAssignment](/powershell/module/microsoft.entra/new-entragroupapproleassignment).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Unassign users and groups from an application using Microsoft Entra PowerShell</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To assign a group to an enterprise app, replace `Get-EntraUser` with `Get-EntraGroup` and replace `New-EntraUserAppRoleAssignment` with `New-EntraGroupAppRoleAssignment`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For more information on how to assign a group to an application role, see the documentation for [New-EntraGroupAppRoleAssignment](/powershell/module/microsoft.entra.groups/new-entragroupapproleassignment).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Unassign users and groups from an application using Microsoft Entra PowerShell</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/backup-authentication-system.md" target="_blank">docs/architecture/backup-authentication-system.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shannon Leavitt on Oct 24, 2025 7:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/backup-authentication-system" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/architecture/backup-authentication-system.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How does certificate revocation work in an outage? </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To enhance its resilience posture, the backup authentication system does not have the ability to perform fresh revocation checks. Instead it relies on the state of the certificate revocation list (CRL) check performed when the session was last backed up. If you need to revoke before this backup expires, you should explicitly revoke the session instead of waiting for the CRL.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Workload identity resilience in the backup authentication system</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How does certificate revocation work in an outage? </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To enhance its resilience posture, the backup authentication system can&#39;t perform fresh revocation checks. Instead, it relies on the state of the certificate revocation list (CRL) check that&#39;s performed when the session was last backed up. If you need to revoke before this backup expires, you should explicitly revoke the session instead of waiting for the CRL.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Workload identity resilience in the backup authentication system</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/security-copilot/conditional-access-agent-optimization.md" target="_blank">docs/security-copilot/conditional-access-agent-optimization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sammak on Oct 24, 2025 6:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/security-copilot/conditional-access-agent-optimization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update notification recipient details in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. At the bottom of the main **Settings** page, select the **Save** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can select up to 10 recipients to receive notifications. You can select a group to receive the notifications, but the membership of that group can&#39;t exceed 10 users. If you select a group that has fewer than 10 users but more are added later, the group no longer receives notifications. Similarly, the notifications can only be sent to five objects, such as a combination of individual users or groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At this time, the agent&#39;s communication is one direction, so you can receive notifications but can&#39;t respond to them in Microsoft Teams. To take action on a suggestion, select **Review suggestion** from the chat to open the Conditional Access optimization agent in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. At the bottom of the main **Settings** page, select the **Save** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can select up to 10 recipients to receive notifications. You can select a group to receive the notifications, but the membership of that group can&#39;t exceed 10 users. If you select a group that has fewer than 10 users but more are added later, the group no longer receives notifications. Similarly, the notifications can only be sent to five objects, such as a combination of individual users or groups. To stop receiving notifications, remove your user object or the group you&#39;re included in from the recipient&#39;s list. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At this time, the agent&#39;s communication is one direction, so you can receive notifications but can&#39;t respond to them in Microsoft Teams. To take action on a suggestion, select **Review suggestion** from the chat to open the Conditional Access optimization agent in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
