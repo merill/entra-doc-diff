@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since October 27th 2025, 8:21 PM PDT</p>
+        <p>Report generated on October 28th 2025, 8:21 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-external-method-manage.md" target="_blank">docs/identity/authentication/how-to-authentication-external-method-manage.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Akul Loomba on Oct 28, 2025 7:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-external-method-manage" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add FAQ on External Authentication Methods for Windows 10</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Include a test group of users for each policy, but not both. If a user is included in both policies, or any policy with both conditions, the user has to satisfy MFA during sign-in. They also have to satisfy the custom control, which makes them redirected to the external provider a second time.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about how to manage authentication methods, see [Manage authentication methods for Microsoft Entra ID](/entra/identity/authentication/concept-authentication-methods-manage).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Include a test group of users for each policy, but not both. If a user is included in both policies, or any policy with both conditions, the user has to satisfy MFA during sign-in. They also have to satisfy the custom control, which makes them redirected to the external provider a second time.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## FAQ</div><div class="diff-line diff-added">### 1. Why doesn’t External Authentication Methods (EAM) work on Windows 10 during device setup?</div><div class="diff-line diff-added">**Answer:**  </div><div class="diff-line diff-added">If you are setting up a device running **Windows 10** using an **EAM-only identity**, you may encounter an issue where the **Out-of-Box (OOB) setup experience** fails and prevents you from proceeding with sign-in.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This behavior occurs because **Windows 10 does not natively support EAM during OOBE (Out-of-Box Experience)**.  </div><div class="diff-line diff-added">Microsoft no longer supports Windows 10 (https://www.microsoft.com/en-us/windows/end-of-support?msockid=26a3312b6b246f501ec624846a4f6e11), and there are **no plans to extend EAM support** to it.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To use External Authentication Methods for sign-in, **upgrade to Windows 11**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about how to manage authentication methods, see [Manage authentication methods for Microsoft Entra ID](/entra/identity/authentication/concept-authentication-methods-manage).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-sign-in-alias.md" target="_blank">docs/external-id/customers/how-to-sign-in-alias.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Robert Lyon on Oct 28, 2025 6:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-sign-in-alias" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update email references to woodgrovebank</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">        {</div><div class="diff-line diff-context">            &quot;signInType&quot;: &quot;emailAddress&quot;,</div><div class="diff-line diff-context">            &quot;issuer&quot;: &quot;contoso.onmicrosoft.com&quot;,</div><div class="diff-line diff-deleted">            &quot;issuerAssignedId&quot;: &quot;dylan@woodgrove.com&quot;</div><div class="diff-line diff-context">        },</div><div class="diff-line diff-context">        {</div><div class="diff-line diff-context">            &quot;signInType&quot;: &quot;username&quot;,</div><div class="diff-line diff-context">            &quot;issuerAssignedId&quot;: &quot;dylan123&quot;</div><div class="diff-line diff-context">        }</div><div class="diff-line diff-context">    ],</div><div class="diff-line diff-deleted">    &quot;mail&quot;: &quot;dylan@woodgrove.com&quot;,</div><div class="diff-line diff-context">    &quot;passwordProfile&quot;: {</div><div class="diff-line diff-context">        &quot;password&quot;: &quot;passwordValue&quot;,</div><div class="diff-line diff-context">        &quot;forceChangePasswordNextSignIn&quot;: false</div><div class="diff-line diff-context">Use `$filter` to get the user object, and `$select` to return the ID and `identities[]` properties. The following request example shows how to retrieve a user account using the email address as a sign-in identifier.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```http</div><div class="diff-line diff-deleted">GET https://graph.microsoft.com/v1.0/users?$select=displayName,id,identities&amp;$filter=identities/any(c:c/issuerAssignedId eq &#39;dylan@woodgrove.com&#39; and c/issuer eq &#39;contoso.onmicrosoft.com&#39;)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">        {</div><div class="diff-line diff-context">            &quot;signInType&quot;: &quot;emailAddress&quot;,</div><div class="diff-line diff-context">            &quot;issuer&quot;: &quot;contoso.onmicrosoft.com&quot;,</div><div class="diff-line diff-added">            &quot;issuerAssignedId&quot;: &quot;dylan@woodgrovebank.com&quot;</div><div class="diff-line diff-context">        },</div><div class="diff-line diff-context">        {</div><div class="diff-line diff-context">            &quot;signInType&quot;: &quot;username&quot;,</div><div class="diff-line diff-context">            &quot;issuerAssignedId&quot;: &quot;dylan123&quot;</div><div class="diff-line diff-context">        }</div><div class="diff-line diff-context">    ],</div><div class="diff-line diff-added">    &quot;mail&quot;: &quot;dylan@woodgrovebank.com&quot;,</div><div class="diff-line diff-context">    &quot;passwordProfile&quot;: {</div><div class="diff-line diff-context">        &quot;password&quot;: &quot;passwordValue&quot;,</div><div class="diff-line diff-context">        &quot;forceChangePasswordNextSignIn&quot;: false</div><div class="diff-line diff-context">Use `$filter` to get the user object, and `$select` to return the ID and `identities[]` properties. The following request example shows how to retrieve a user account using the email address as a sign-in identifier.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```http</div><div class="diff-line diff-added">GET https://graph.microsoft.com/v1.0/users?$select=displayName,id,identities&amp;$filter=identities/any(c:c/issuerAssignedId eq &#39;dylan@woodgrovebank.com&#39; and c/issuer eq &#39;contoso.onmicrosoft.com&#39;)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/disable-user-sign-in-portal.md" target="_blank">docs/identity/enterprise-apps/disable-user-sign-in-portal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Dennis Rea on Oct 28, 2025 8:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/disable-user-sign-in-portal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Typo fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Disable user sign-in for an application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There might be situations while configuring or managing an application where you don&#39;t want tokens to be issued for an application. Or, you might want to block an application that you don&#39;t want your employees to try to access, like the deprecared Azure AD PowerShell modules (AppID 1b730954-1685-4b74-9bfd-dac224a7b894). To block user access to an application, you can disable user sign-in for the application, which prevents all tokens from being issued for that application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this article, you learn how to prevent users from signing in to an application in Microsoft Entra ID through both the Microsoft Entra admin center and PowerShell. If you&#39;re looking for how to block specific users from accessing an application, use [user or group assignment](./assign-user-or-group-access-portal.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Disable user sign-in for an application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There might be situations while configuring or managing an application where you don&#39;t want tokens to be issued for an application. Or, you might want to block an application that you don&#39;t want your employees to try to access, like the deprecated Azure AD PowerShell modules (AppID 1b730954-1685-4b74-9bfd-dac224a7b894). To block user access to an application, you can disable user sign-in for the application, which prevents all tokens from being issued for that application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this article, you learn how to prevent users from signing in to an application in Microsoft Entra ID through both the Microsoft Entra admin center and PowerShell. If you&#39;re looking for how to block specific users from accessing an application, use [user or group assignment](./assign-user-or-group-access-portal.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/manage-app-consent-policies.md" target="_blank">docs/identity/enterprise-apps/manage-app-consent-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Oct 28, 2025 8:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity/enterprise-apps/manage-app-consent-policies.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Updates to this consent policy will have at least 30 days of given notice.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Starting at the end of October 2025, the Microsoft managed policy will be updated to require admin consent for the following MS Graph permissions: Mail.Read, Mail.ReadWrite, Mail.ReadBasic, Mail.Read.Shared, Mail.ReadBasic.Shared, Mail.ReadWrite.Shared, MailboxItem.Read, Calendars.Read, Calendars.ReadBasic, Calendars.ReadWrite, Calendars.Read.Shared, Calendars.ReadBasic.Shared, Calendars.ReadWrite.Shared, Chat.Read, Chat.ReadWrite, ChannelMessage.Read.All, OnlineMeetings.Read, OnlineMeetings.ReadWrite, OnlineMeetingTranscript.Read.All, OnlineMeetingRecording.Read.All. At the end of November 2025, this will expand to include EAS.AccessAsUser.All, EWS.AccessAsUser.All, IMAP.AcessAsUser.All, POP.AccessAsUser.All</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Updates to this consent policy will have at least 30 days of given notice.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Starting at the end of October 2025, the Microsoft managed policy will be updated to require admin consent for the following MS Graph permissions: Mail.Read, Mail.ReadWrite, Mail.ReadBasic, Mail.Read.Shared, Mail.ReadBasic.Shared, Mail.ReadWrite.Shared, MailboxItem.Read, Calendars.Read, Calendars.ReadBasic, Calendars.ReadWrite, Calendars.Read.Shared, Calendars.ReadBasic.Shared, Calendars.ReadWrite.Shared, Chat.Read, Chat.ReadWrite, ChannelMessage.Read.All, OnlineMeetings.Read, OnlineMeetings.ReadWrite, OnlineMeetingTranscript.Read.All, OnlineMeetingRecording.Read.All. At the end of November 2025, this will expand to include EAS.AccessAsUser.All, EWS.AccessAsUser.All, IMAP.AccessAsUser.All, POP.AccessAsUser.All</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/reference-managed-identity-libraries.md" target="_blank">docs/identity/managed-identities-azure-resources/reference-managed-identity-libraries.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jason Howell on Oct 28, 2025 5:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/reference-managed-identity-libraries" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update reference-managed-identity-libraries.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 11/11/2024</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-deleted">ms.reviewer: rwike77</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a developer, I&#39;d like to know the available libraries that I can use when authenticating my apps using managed identities.</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 11/11/2024</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a developer, I&#39;d like to know the available libraries that I can use when authenticating my apps using managed identities.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/overview.md" target="_blank">docs/identity/managed-identities-azure-resources/overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jason Howell on Oct 28, 2025 5:18 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update overview.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-deleted">ms.reviewer: ryanwi</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a developer, I&#39;d like to securely manage the credentials that my application uses for authenticating to cloud services without having the credentials in my code or checked into source control.</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 08/19/2025</div><div class="diff-line diff-context">ms.author: shermanouko</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a developer, I&#39;d like to securely manage the credentials that my application uses for authenticating to cloud services without having the credentials in my code or checked into source control.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
