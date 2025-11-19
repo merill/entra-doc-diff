@@ -1,0 +1,803 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since November 17th 2025, 7:17 PM PST</p>
+        <p>Report generated on November 18th 2025, 7:17 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">64</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">17</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">23</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/preview-known-issues.md" target="_blank">docs/agent-id/identity-platform/preview-known-issues.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Sherman Ouko on Nov 18, 2025 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/preview-known-issues" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+167 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/sign-in-process.md" target="_blank">docs/agent-id/identity-professional/sign-in-process.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Sherman Ouko on Nov 18, 2025 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/sign-in-process" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+93 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/reference-registry-roles.md" target="_blank">docs/agent-id/identity-professional/reference-registry-roles.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 18, 2025 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/reference-registry-roles" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+85</span> / 
+              <span class="deletions">-121</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 11/07/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Microsoft Entra Agent Registry built-in roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In the Microsoft Entra Agent Registry, you can assign built-in roles to administrators or other security principals to manage agents, agent cards, collections, and role assignments. These roles provide the permissions required to perform specific actions, such as creating or updating agent instances, managing collection membership, or configuring agent discoverability.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article lists the Agent Registry built-in roles you can assign to manage Agent Registry resources. Agent Registry also requires the [Agent Registry Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-registry-administrator) built-in Microsoft Entra role.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assign Agent Registry roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as an [Agent Registry Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-registry-administrator).</div><div class="diff-line diff-deleted">1. Browse to **Entra ID** &gt; **Agent ID** &gt; **Agent Registry**.</div><div class="diff-line diff-deleted">1. Select **Access Control** &gt; **Role assignments** &gt; **Add principal**.</div><div class="diff-line diff-deleted">1. Select the principal you want to assign and select **Save**.</div><div class="diff-line diff-deleted">1. Choose the desired role and select **Entire application** as the scope.</div><div class="diff-line diff-deleted">1. Select **Create** to complete the role assignment.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 11/07/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-added">ms.reviewer: paparth</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Microsoft Entra Agent Registry roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In the Microsoft Entra Agent Registry, you can assign roles to administrators or other security principals to manage agent instances, agent card manifests, and agent collections. These roles provide the permissions required to perform specific actions, such as creating or updating agent instances, create agent card manifests, or managing collection membership.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article lists the Agent Registry roles you can assign to manage Agent Registry resources. Agent Registry also allows the [Agent Registry Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-registry-administrator) built-in Microsoft Entra role.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assign Agent Registry roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as an [Agent Registry Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-registry-administrator).</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Agent ID** &gt; **Agent collections** &gt; **Custom** &gt; **Manage role assignments**.</div><div class="diff-line diff-added">1. Under **Access Control**, select **Role Assignments** &gt; **Create Role Assignment**.</div><div class="diff-line diff-added">1. Choose **Select principal** &gt; select **Role** &gt; **Resource scope** &gt; **Next**. Role assignment to Groups isn&#39;t supported. If you&#39;re choosing Resource scope as specific resource, select Resource type and enter Resource ID as the corresponding objectId.</div><div class="diff-line diff-added">1. Review and select **Create**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/disable-agent-identities.md" target="_blank">docs/agent-id/identity-professional/disable-agent-identities.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 18, 2025 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/disable-agent-identities" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+31</span> / 
+              <span class="deletions">-28</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Disable agent identities in your tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Agent identities are enabled by default in all Microsoft Entra ID tenants. Customers concerned about security or reliability of agent identities can use the steps in this article to fully disable their use in your tenant. Microsoft Entra agent ID is subject to its [standard preview terms and conditions](/entra/fundamentals/licensing-preview-info).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Types of identities used by AI agents</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Agents using Agent IDs**: Agents created using systems like Microsoft Copilot Studio, Azure AI Foundry, and Security Copilot might also be created as proper agent identities in your tenant. These agent identities are a new identity with clear classification, richer metadata, and feature designed to address the unique security challenges of AI agents.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The remainder of this article discusses methods for disabling the use of these agent identities in your tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Review existing agent identities in your tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Apply Conditional Access policies to prevent agent identities from authenticating.</div><div class="diff-line diff-context">1. (Optional) Block creation of agent identities in your tenant via various channels.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## 1. Block token issuance to Agent IDs using Conditional Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Conditional Access policies can be used to block authentication and token issuance of Agent IDs. Applying the policies below will prevent existing and new Agent IDs from authenticating. It will not prevent the creation of Agent IDs in your tenant.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Disable agent identities in your tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Agent identities are enabled by default in all Microsoft Entra ID tenants. Customers who want to control which Agent IDs are allowed in their tenant can follow the guidance in this article to configure their preferred settings. Microsoft Entra Agent ID is subject to its [standard preview terms and conditions](/entra/fundamentals/licensing-preview-info).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Types of identities used by AI agents</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Agents using Agent IDs**: Agents created using systems like Microsoft Copilot Studio, Azure AI Foundry, and Security Copilot might also be created as proper agent identities in your tenant. These agent identities are a new identity with clear classification, richer metadata, and feature designed to address the unique security challenges of AI agents.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The remainder of this article discusses methods for disabling the use of Agent IDs in your tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Review existing agent identities in your tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Apply Conditional Access policies to prevent agent identities from authenticating.</div><div class="diff-line diff-context">1. (Optional) Block creation of agent identities in your tenant via various channels.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Monitor for Agent ID creations and activity</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/kerberos.md" target="_blank">docs/identity/authentication/kerberos.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Downie on Nov 18, 2025 10:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/kerberos" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+16</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise Kerberos documentation for cloud only identity support preview</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-deleted">ms.date: 09/05/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: Vimala</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about Kerberos in Windows, see [Kerberos authentication overview in Windows Server](/windows-server/security/kerberos/kerberos-authentication-overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Hybrid identity</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Currently, Microsoft Entra Kerberos works only with hybrid identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">A hybrid identity refers to a user identity that exists both in on-premises AD DS and in Microsoft Entra ID. These identities are synchronized through tools like Microsoft Entra Connect, so users can access both cloud-based and on-premises resources by using a single set of credentials.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This setup enables seamless authentication and SSO experiences across environments. It&#39;s ideal for organizations that want to transition to the cloud while maintaining legacy infrastructure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Key features and benefits</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-added">ms.date: 11/18/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: Vimala</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information about Kerberos in Windows, see [Kerberos authentication overview in Windows Server](/windows-server/security/kerberos/kerberos-authentication-overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Hybrid versus cloud-only identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra Kerberos works with hybrid identities and cloud-only identities. Cloud-only identity support is currently in preview.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">A hybrid identity refers to a user identity that exists both in on-premises AD DS and in Microsoft Entra ID. These identities are synchronized through tools like Microsoft Entra Connect, so users can access both cloud-based and on-premises resources by using a single set of credentials. This setup enables seamless authentication and SSO experiences across environments. It&#39;s ideal for organizations that want to transition to the cloud while maintaining legacy infrastructure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Cloud-only identities are created and managed exclusively in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Key features and benefits</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/howto-investigate-remote-networks-scenario-signals.md" target="_blank">docs/identity/monitoring-health/howto-investigate-remote-networks-scenario-signals.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Nov 18, 2025 6:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-investigate-remote-networks-scenario-signals" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating bulleted text</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [How to use Microsoft Entra health monitoring signals and alerts](/entra/identity/monitoring-health/howto-use-health-scenario-alerts)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes the health metrics related to Remote Networks connectivity and troubleshoot potential problems.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This scenario:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- Aggregate the \# of tunnels that are connected.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- Aggregate the \# of tunnels that are disconnected.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- Aggregate the \# of tunnels with BGP disconnected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are different roles, permissions, and license requirements to view health monitoring signals and configure and receive alerts. We recommend using a role with least privilege access to align with the [Zero Trust guidance](/security/zero-trust/zero-trust-overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- A tenant with a [Microsoft Entra P1 or P2 license](/entra/fundamentals/get-started-premium) is required to *view* the Microsoft Entra health scenario monitoring signals.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A tenant with Microsoft Entra Global Secure Access license is required. For details, see the licensing section of [What is Global Secure Access?](/entra/global-secure-access/overview-what-is-global-secure-access).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [How to use Microsoft Entra health monitoring signals and alerts](/entra/identity/monitoring-health/howto-use-health-scenario-alerts)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes the health metrics related to Remote Network connectivity and provides steps to troubleshoot potential problems.</div><div class="diff-line diff-added"> </div><div class="diff-line diff-added">This article covers two scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Global Secure Access requiring remote network tunnel connectivity</div><div class="diff-line diff-added">    - Presents data showing the number of remote network tunnels that are connected.</div><div class="diff-line diff-added">    - Presents data showing the number of remote network tunnels that are disconnected.</div><div class="diff-line diff-added">- Global Secure Access requiring remote network BGP connectivity</div><div class="diff-line diff-added">    - Presents data showing the number of remote networks with BGP connected.</div><div class="diff-line diff-added">    - Presents data showing the number of remote networks with BGP  disconnected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are different roles, permissions, and license requirements to view health monitoring signals and configure and receive alerts. We recommend using a role with least privilege access to align with the [Zero Trust guidance](/security/zero-trust/zero-trust-overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- A tenant with a [Microsoft Entra P1 or P2 license](/entra/fundamentals/get-started-premium) is required to *view* the Microsoft Entra health scenario monitoring signals</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-passkey-profiles.md" target="_blank">docs/identity/authentication/how-to-authentication-passkey-profiles.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Nov 18, 2025 5:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-passkey-profiles" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @MicrosoftGuyJFlo</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Disable passkey profiles (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt;Opting out of passkey profiles (preview) will:</div><div class="diff-line diff-deleted">&gt;*Remove all passkey profiles and their associated targets</div><div class="diff-line diff-deleted">&gt;*Revert your passkey policy to the configuration of your default passkey profile, including its user targets</div><div class="diff-line diff-deleted">&gt;*Disable support for synced passkeys</div><div class="diff-line diff-deleted">&gt;Ensure taht no administrators will be locked out of their accounts due to these changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the Microsoft Entra admin center as at least an [Authentication Policy Administrator](/entra/identity/role-based-access-control/permissions-reference#authentication-policy-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Security** &gt; **Authentication methods** &gt; **Policies**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Disable passkey profiles (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Opting out of passkey profiles (preview) will:</div><div class="diff-line diff-added">&gt; * Remove all passkey profiles and their associated targets</div><div class="diff-line diff-added">&gt; * Revert your passkey policy to the configuration of your default passkey profile, including its user targets</div><div class="diff-line diff-added">&gt; * Disable support for synced passkeys</div><div class="diff-line diff-added">&gt; * Ensure that no administrators will be locked out of their accounts due to these changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the Microsoft Entra admin center as at least an [Authentication Policy Administrator](/entra/identity/role-based-access-control/permissions-reference#authentication-policy-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Security** &gt; **Authentication methods** &gt; **Policies**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-ignite-2025.md" target="_blank">docs/fundamentals/whats-new-ignite-2025.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Nov 18, 2025 4:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-ignite-2025" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added External ID details.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Configure risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md) (Updated)</div><div class="diff-line diff-context">- [Identity Protection overview](../id-protection/overview-identity-protection.md) (Updated)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Configure risk policies](../id-protection/howto-identity-protection-configure-risk-policies.md) (Updated)</div><div class="diff-line diff-context">- [Identity Protection overview](../id-protection/overview-identity-protection.md) (Updated)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Microsoft Entra External ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Built-in protection with third-party partner solutions.** New partner integrations provide comprehensive protection across the identity lifecycle, including edge security, sign-up fraud prevention, and unified monitoring. Customers can configure sign-in using a unique username or alias.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Akamai WAF integration](../external-id/customers/how-to-configure-akamai-integration.md) (New)</div><div class="diff-line diff-added">- [Cloudflare WAF integration](../external-id/customers/how-to-configure-waf-integration.md) (Updated)</div><div class="diff-line diff-added">- [Arkose Labs and HUMAN Security fraud protection](../external-id/customers/how-to-integrate-fraud-protection.md) (New)</div><div class="diff-line diff-added">- [Azure Monitor and Microsoft Sentinel integration](../external-id/customers/how-to-azure-monitor) (Updated)</div><div class="diff-line diff-added">- [Sign in with an alias](../external-id/customers/how-to-sign-in-alias.md) (New)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/concept-risky-agents.md" target="_blank">docs/id-protection/concept-risky-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Nov 18, 2025 5:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/concept-risky-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> idp-updates-111825</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Licensing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- ID Protection for agents is included with the Microsoft Entra P2 license.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How it works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Agent risk detection | Detection type | Description | riskEventType |</div><div class="diff-line diff-context">|----------|-----|--------|----|</div><div class="diff-line diff-deleted">| Unfamiliar resource access | Offline  | Agent targeted resources that it doesn&#39;t usually access. This detection can mean that an attacker is trying to access sensitive resources beyond the agent&#39;s intended purpose. | unfamiliarResourceAccess |</div><div class="diff-line diff-context">| Sign-in spike | Offline | Agent made a higher number of sign-ins compared to its usual sign-in frequency. This spike can be an indicator that an attacker is using automation or a toolkit. | signInSpike | </div><div class="diff-line diff-context">| Failed access attempt | Offline  | Agent attempted and failed to access resources for which it isn&#39;t authorized. This detection can indicate an attacker is attempting to replay an agent&#39;s token against an unauthorized resource. | failedAccessAttempt |</div><div class="diff-line diff-context">| Sign-in by risky user  | Offline | Agent signed in on behalf of a risky user during a delegated authentication. This detection means that an attacker might be using a compromised user&#39;s credentials to exploit an agent. | riskyUserSignIn |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## View the risky agent report</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Confirm compromise**: Select after manual investigation or automated detection confirms the account is compromised. This step is useful as part of incident response to prevent further damage. Confirm compromise automatically sets the risk level to High and creates an event in the agent&#39;s **Risk detections**. This action triggers risk-based Conditional Access policies that are configured to block access on High Agent Risk. </div><div class="diff-line diff-context">- **Confirm safe**: Marks the user as safe after investigation and clears any active risk state for that user by setting risk level to None. Use this option when you want to mark a false positive and for the system to avoid flagging similar activity.</div><div class="diff-line diff-context">- **Dismiss risk**: Tells the system that the detected risk for an agent is no longer relevant after investigation, or is a benign true positive where you want the system to continue to flag similar activity.  </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Licensing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- ID Protection for agents is included with the Microsoft Entra P2 license while in preview.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How it works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Agent risk detection | Detection type | Description | riskEventType |</div><div class="diff-line diff-context">|----------|-----|--------|----|</div><div class="diff-line diff-added">| Unfamiliar resource access | Offline  | Agent targeted resources that it doesn&#39;t usuallyÂ access. This detection can mean that an attacker is trying to access sensitive resources beyond the agent&#39;s intended purpose. | unfamiliarResourceAccess |</div><div class="diff-line diff-context">| Sign-in spike | Offline | Agent made a higher number of sign-ins compared to its usual sign-in frequency. This spike can be an indicator that an attacker is using automation or a toolkit. | signInSpike | </div><div class="diff-line diff-context">| Failed access attempt | Offline  | Agent attempted and failed to access resources for which it isn&#39;t authorized. This detection can indicate an attacker is attempting to replay an agent&#39;s token against an unauthorized resource. | failedAccessAttempt |</div><div class="diff-line diff-context">| Sign-in by risky user  | Offline | Agent signed in on behalf of a risky user during a delegated authentication. This detection means that an attacker might be using a compromised user&#39;s credentials to exploit an agent. | riskyUserSignIn |</div><div class="diff-line diff-added">| Confirmed compromised | Offline | Admin confirmed agent compromised | adminConfirmedAgentCompromised |</div><div class="diff-line diff-added">| Microsoft Entra threat intelligence | Offline | Microsoft identified activity that is consistent with known attack patterns based on its internal and external threat intelligence sources. | threatIntelligenceAccount |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## View the risky agent report</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Confirm compromise**: Select after manual investigation or automated detection confirms the account is compromised. This step is useful as part of incident response to prevent further damage. Confirm compromise automatically sets the risk level to High and creates an event in the agent&#39;s **Risk detections**. This action triggers risk-based Conditional Access policies that are configured to block access on High Agent Risk. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/sso-linux.md" target="_blank">docs/identity/devices/sso-linux.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Ploegert on Nov 18, 2025 9:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/sso-linux" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update sso-linux.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft single sign-on for Linux is supported with the following operating systems (physical or Hyper-V machine with x86/64 CPUs):  </div><div class="diff-line diff-deleted"> - Ubuntu Desktop 24.04, 22.04 or 20.04 LTS  </div><div class="diff-line diff-context"> - RedHat Enterprise Linux 8  </div><div class="diff-line diff-context"> - RedHat Enterprise Linux 9</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Demo of the Linux Login component component](./media/sso-linux/linux-entra-login.gif)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Deployment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Installation</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft single sign-on for Linux is supported with the following operating systems (physical or Hyper-V machine with x86/64 CPUs):  </div><div class="diff-line diff-added">- Ubuntu Desktop 24.04, 22.04 or 20.04 LTS  </div><div class="diff-line diff-context"> - RedHat Enterprise Linux 8  </div><div class="diff-line diff-context"> - RedHat Enterprise Linux 9</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Demo of the Linux Login component component](./media/sso-linux/linux-entra-login.gif)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The microsoft.identity.broker version 2.0.1 and less does not currently support [FIPs compliance](https://www.nist.gov/standardsgov/compliance-faqs-federal-information-processing-standards-fips&quot;https://www.nist.gov/standardsgov/compliance-faqs-federal-information-processing-standards-fips&quot;).&quot;  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Deployment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Installation</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/permissions-reference.md" target="_blank">docs/identity/role-based-access-control/permissions-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Nov 18, 2025 7:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Agent Registry Administrator guid</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; | Role | Description | Template ID |</div><div class="diff-line diff-context">&gt; | --- | --- | --- |</div><div class="diff-line diff-context">&gt; | [Agent ID Administrator](#agent-id-administrator) | Manage all aspects of agents in a tenant including identity lifecycle operations for agent blueprints, agent service principals, agent identities, and agentic users.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) |db506228-d27e-4b7d-95e5-295956d6615f |</div><div class="diff-line diff-deleted">&gt; | [Agent ID Developer](#agent-id-developer) | Create an agent blueprint and its service principal in a tenant. User will be added as an owner of the agent blueprint and its service principal. |adb2368d-a9be-41b5-8667-d96778e081b0 |</div><div class="diff-line diff-deleted">&gt; | [Agent Registry Administrator](#agent-registry-administrator) | Manage all aspects of the Agent Registry service in Microsoft Entra ID | e733d94e-9700-4c6d-83f2-29c61df70250 |</div><div class="diff-line diff-context">&gt; | [AI Administrator](#ai-administrator) | Manage all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365. | d2562ede-74db-457e-a7b6-544e236ebb61 |</div><div class="diff-line diff-context">&gt; | [Application Administrator](#application-administrator) | Can create and manage all aspects of app registrations and enterprise apps.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | 9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3 |</div><div class="diff-line diff-context">&gt; | [Application Developer](#application-developer) | Can create application registrations independent of the &#39;Users can register applications&#39; setting.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | cf1c38e5-3621-4004-a7cb-879624dced7c |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; | Role | Description | Template ID |</div><div class="diff-line diff-context">&gt; | --- | --- | --- |</div><div class="diff-line diff-context">&gt; | [Agent ID Administrator](#agent-id-administrator) | Manage all aspects of agents in a tenant including identity lifecycle operations for agent blueprints, agent service principals, agent identities, and agentic users.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) |db506228-d27e-4b7d-95e5-295956d6615f |</div><div class="diff-line diff-added">&gt; | [Agent ID Developer](#agent-id-developer) | Create an agent blueprint and its service principal in a tenant. User will be added as an owner of the agent blueprint and its service principal. | adb2368d-a9be-41b5-8667-d96778e081b0 |</div><div class="diff-line diff-added">&gt; | [Agent Registry Administrator](#agent-registry-administrator) | Manage all aspects of the Agent Registry service in Microsoft Entra ID | 6b942400-691f-4bf0-9d12-d8a254a2baf5 |</div><div class="diff-line diff-context">&gt; | [AI Administrator](#ai-administrator) | Manage all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365. | d2562ede-74db-457e-a7b6-544e236ebb61 |</div><div class="diff-line diff-context">&gt; | [Application Administrator](#application-administrator) | Can create and manage all aspects of app registrations and enterprise apps.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | 9b895d92-2cd3-44c7-9d02-a6ac2d5ea5c3 |</div><div class="diff-line diff-context">&gt; | [Application Developer](#application-developer) | Can create application registrations independent of the &#39;Users can register applications&#39; setting.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | cf1c38e5-3621-4004-a7cb-879624dced7c |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/howto-investigate-internet-access-signals.md" target="_blank">docs/identity/monitoring-health/howto-investigate-internet-access-signals.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Nov 18, 2025 8:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-investigate-internet-access-signals" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Adding image to Internet Access document</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    - Select the **Internet applications blocked by Entra Internet Access Policy** scenario.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3.  Review your Microsoft Entra Internet Access content filtering policies. For more information, see [How to configure Global Secure Access web content filtering - Global Secure Access \| Microsoft Learn](/entra/global-secure-access/how-to-configure-web-content-filtering).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4.  Review Microsoft Entra Internet Access forwarding profile for access policies and user assignments. For more information, see [How to manage the Internet Access profile - Global Secure Access \| Microsoft Learn](/entra/global-secure-access/how-to-manage-internet-access-profile).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    - Select the **Internet applications blocked by Entra Internet Access Policy** scenario.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">        :::image type=&quot;content&quot; source=&quot;media/howto-investigate-internet-access-signals/internet-access-blocked.png&quot; alt-text=&quot;Screenshot showing the Internet applications blocked by Entra Internet Access Policy scenario in the health monitoring dashboard.&quot; lightbox=&quot;media/howto-investigate-internet-access-signals/internet-access-blocked.png&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">3.  Review your Microsoft Entra Internet Access content filtering policies. For more information, see [How to configure Global Secure Access web content filtering - Global Secure Access \| Microsoft Learn](/entra/global-secure-access/how-to-configure-web-content-filtering).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4.  Review Microsoft Entra Internet Access forwarding profile for access policies and user assignments. For more information, see [How to manage the Internet Access profile - Global Secure Access \| Microsoft Learn](/entra/global-secure-access/how-to-manage-internet-access-profile).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-secure-web-ai-gateway-agents.md" target="_blank">docs/global-secure-access/how-to-secure-web-ai-gateway-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Nov 18, 2025 5:42 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-secure-web-ai-gateway-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove a duplicate from content + remove explicit reference to specific 3P vendor</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The enforcement feature supports only the baseline profile. Network security policies apply per tenant.</div><div class="diff-line diff-deleted">- Integration with third-party DLP and ATP services, such as Netskope, isn&#39;t supported.</div><div class="diff-line diff-context">- Copilot Studio Bing search network transactions aren&#39;t supported.</div><div class="diff-line diff-context">- Only specific Copilot Studio connectors are supported with network security controls. Refer to the Copilot Studio documentation for the list of supported connectors.</div><div class="diff-line diff-context">- Currently the Agent Name returned in the Global Secure Access traffic logs is the agent&#39;s unique *schema name*.</div><div class="diff-line diff-context">- Currently the block experience for Copilot Studio agents blocked by GSA shows a *502 Bad Gateway* for HTTP Actions or a *403 Forbidden* for connectors. This is a known issue, and improvements are coming soon.</div><div class="diff-line diff-deleted">- Currently only the baseline profile is supported for enforcement, so network security policies are per-tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The enforcement feature supports only the baseline profile. Network security policies apply per tenant.</div><div class="diff-line diff-added">- Global Secure Access partner ecosystem integrations, such as third-party Data Loss Prevention (DLP), aren&#39;t supported.</div><div class="diff-line diff-context">- Copilot Studio Bing search network transactions aren&#39;t supported.</div><div class="diff-line diff-context">- Only specific Copilot Studio connectors are supported with network security controls. Refer to the Copilot Studio documentation for the list of supported connectors.</div><div class="diff-line diff-context">- Currently the Agent Name returned in the Global Secure Access traffic logs is the agent&#39;s unique *schema name*.</div><div class="diff-line diff-context">- Currently the block experience for Copilot Studio agents blocked by GSA shows a *502 Bad Gateway* for HTTP Actions or a *403 Forbidden* for connectors. This is a known issue, and improvements are coming soon.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/custom-data-resource-access-reviews.md" target="_blank">docs/id-governance/custom-data-resource-access-reviews.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 18, 2025 7:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/custom-data-resource-access-reviews" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates to custom data access review post ignite</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/custom-data-resource-access-reviews/upload-access-data-files.png&quot; alt-text=&quot;Screenshot of uploading files to custom access data.&quot;:::</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">    &gt; To confirm all CSVs were uploaded successfully, view the [audit logs](entitlement-management-logs-and-reporting.md).</div><div class="diff-line diff-deleted">1. You have **up to two hours** from the time the review enters the *Initializing* state to complete the upload. After two hours, the system transitions the review status to **Active**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Active review state</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/custom-data-resource-access-reviews/upload-access-data-files.png&quot; alt-text=&quot;Screenshot of uploading files to custom access data.&quot;:::</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">    &gt; To confirm all CSVs were uploaded successfully, view the [audit logs](entitlement-management-logs-and-reporting.md).</div><div class="diff-line diff-added">1. You have **up to two hours** from the time the review enters the *Initializing* state to complete the upload.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Active review state</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/microsoft-entra-agent-identities-for-ai-agents.md" target="_blank">docs/agent-id/identity-professional/microsoft-entra-agent-identities-for-ai-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 18, 2025 5:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/microsoft-entra-agent-identities-for-ai-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Using real-time signals such as agent identities risk controlling agent access to resources, with Microsoft Managed Policies providing a secure baseline by blocking high-risk agents.</div><div class="diff-line diff-context">- Deploying Conditional Access policies at scale using custom security attributes, while still supporting fine-grained controls for individual agents.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information, see [Conditional Access](/entra/identity/conditional-access/overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Identity governance for agents</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Using real-time signals such as agent identities risk controlling agent access to resources, with Microsoft Managed Policies providing a secure baseline by blocking high-risk agents.</div><div class="diff-line diff-context">- Deploying Conditional Access policies at scale using custom security attributes, while still supporting fine-grained controls for individual agents.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For more information, see [Conditional Access](/entra/identity/conditional-access/agent-id).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Identity governance for agents</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/preview-known-issues.md" target="_blank">docs/agent-id/identity-platform/preview-known-issues.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 18, 2025 5:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/preview-known-issues" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following known issues and gaps relate to consent and permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Admin consent workflow (ACW)**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra ID [admin consent workflow](/entra/identity/enterprise-apps/configure-admin-consent-workflow) doesn&#39;t work properly for permissions requested by Agent IDs. Users can contact their Microsoft Entra ID tenant admins to request permissions be granted to an Agent ID.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following known issues and gaps relate to consent and permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Admin consent workflow (ACW)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra ID [admin consent workflow](/entra/identity/enterprise-apps/configure-admin-consent-workflow) doesn&#39;t work properly for permissions requested by Agent IDs. Users can contact their Microsoft Entra ID tenant admins to request permissions be granted to an Agent ID.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/agent-id-creation-channels.md" target="_blank">docs/agent-id/identity-professional/agent-id-creation-channels.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 18, 2025 5:11 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/agent-id-creation-channels" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add updates to agent ID docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How are agent identities created?</div><div class="diff-line diff-deleted">description: Learn the channels and roles involved in creating Microsoft Entra agent identity blueprints, agent identities, and agent. Monitor and control their introduction into your tenant.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 11/04/2025</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How are agent identities created?</div><div class="diff-line diff-added">description: Learn the channels and roles involved in creating Microsoft Entra agent identity blueprints, agent identities, and agent users. Monitor and control their introduction into your tenant.</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 11/04/2025</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/enterprise-apps/agent-app-lifecycle-management.md
+            </div>
+            <div class="file-meta">
+              Deleted by omondiatieno on Nov 18, 2025 10:39 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/agent-app-lifecycle-management</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-140 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove agent articles</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/enterprise-apps/agent-contact-app-owners.md
+            </div>
+            <div class="file-meta">
+              Deleted by omondiatieno on Nov 18, 2025 10:39 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/agent-contact-app-owners</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-139 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove agent articles</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/enterprise-apps/agent-app-lifecycle-remediation-plans.md
+            </div>
+            <div class="file-meta">
+              Deleted by omondiatieno on Nov 18, 2025 10:39 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/agent-app-lifecycle-remediation-plans</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-127 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove agent articles</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/enterprise-apps/agent-app-lifecycle-discovery-onboard.md
+            </div>
+            <div class="file-meta">
+              Deleted by omondiatieno on Nov 18, 2025 10:39 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/agent-app-lifecycle-discovery-onboard</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-112 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove agent articles</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/enterprise-apps/agent-identify-prioritize-risky-apps.md
+            </div>
+            <div class="file-meta">
+              Deleted by omondiatieno on Nov 18, 2025 10:39 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/agent-identify-prioritize-risky-apps</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-92 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove agent articles</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
