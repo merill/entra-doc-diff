@@ -1,0 +1,479 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since November 19th 2025, 7:16 PM PST</p>
+        <p>Report generated on November 20th 2025, 7:16 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">49</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/authenticate-application-id.md" target="_blank">docs/identity/hybrid/connect/authenticate-application-id.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Nov 20, 2025 3:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/authenticate-application-id" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+642</span> / 
+              <span class="deletions">-288</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Modern auth updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: mwongerapk</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 07/24/2025</div><div class="diff-line diff-context">ms.subservice: hybrid</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">Microsoft Entra Connect provides three options for application and certificate management:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Managed by Microsoft Entra Connect (default)](#managed-by-microsoft-entra-connect-default)</div><div class="diff-line diff-deleted">- [Bring Your Own Application (BYOA)](#bring-your-own-application)</div><div class="diff-line diff-context">- [Bring Your Own Certificate (BYOC)](#bring-your-own-certificate)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; The [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator) role grants the ability to consent for application permissions, with the exception of application permissions for Azure AD Graph and Microsoft Graph. This means that the application administrator can still consent to application permissions for other apps, notably the AWS first-party app and SSPR first-party app.</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt; This role also grants the ability to manage application credentials. User assigned to this role can add credentials to an application (notably the Connect Sync) and use those credentials to impersonate the application&#39;s identity. This might be an elevation of privilege over what the user can do via their role assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> :::image type=&quot;content&quot; source=&quot;media/authenticate-application-id/auth-1.png&quot; alt-text=&quot;Diagram that shows authentication with application ID.&quot; lightbox=&quot;media/authenticate-application-id/auth-1.png&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: mwongerapk</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 07/24/2025</div><div class="diff-line diff-context">ms.subservice: hybrid</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">Microsoft Entra Connect provides three options for application and certificate management:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Managed by Microsoft Entra Connect (default)](#managed-by-microsoft-entra-connect-default)</div><div class="diff-line diff-context">- [Bring Your Own Certificate (BYOC)](#bring-your-own-certificate)</div><div class="diff-line diff-added">- [Bring Your Own Application (BYOA)](#bring-your-own-application)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator) role grants the ability to consent for application permissions, except for application permissions for Azure AD Graph and Microsoft Graph. This means that the application administrator can still consent to application permissions for other apps, notably the AWS first-party app, and SSPR first-party app.</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt; This role also grants the ability to manage application credentials. User assigned to this role can add credentials to an application (notably the Connect Sync) and use those credentials to impersonate the application&#39;s identity. This might be an elevation of privilege over what the user can do via their role assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> :::image type=&quot;content&quot; source=&quot;media/authenticate-application-id/auth-1.png&quot; alt-text=&quot;Diagram that shows authentication with application ID.&quot; lightbox=&quot;media/authenticate-application-id/auth-1.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/kerberos.md" target="_blank">docs/identity/authentication/kerberos.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Nov 20, 2025 3:47 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/kerberos" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> addressing reviewer comments</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, when a Microsoft Entra ID-joined Windows client accesses a file share or application over the internet, Microsoft Entra ID can issue the necessary Kerberos tickets as a KDC associated with the resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Cloud-only identity support (Preview)**: Cloud-only identities can now use Kerberos authentication for workloads like Azure Files without requiring on-prem AD DS. This is enabled by Entra Kerberos, which acts as a cloud-based KDC.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Enhanced security with modern credentials support**: Users can sign in by using passwordless methods such as Windows Hello for Business or FIDO2 security keys, yet still access on-premises resources that have Kerberos protections. This ability enables multifactor authentication (MFA) and passwordless authentication to reduce the risks associated with password theft and phishing attacks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Upon successful authentication, Microsoft Entra ID issues a PRT that contains user and device information. Alongside the PRT, Microsoft Entra ID issues a Cloud TGT for the realm `KERBEROS.MICROSOFTONLINE.COM`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID also issues a OnPremTgt(partial TGT) that contains the user&#39;s security identifier (SID) but no group claims. This partial TGT is not sufficient for direct access to on-premises resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Cloud TGT issuance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID acts as a KDC for cloud resources by issuing a Cloud TGT to the client when appropriate. The client recognizes the Microsoft Entra ID tenant as a separate Kerberos realm for cloud resources, and the TGT is stored in the client&#39;s Kerberos ticket cache. The Cloud TGT is cached locally and can be verified using PowerShell command &#39;klist cloud_debug&#39;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Cloud TGT that Microsoft Entra ID issues:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- On-premises domain controllers must be patched to support Kerberos Cloud Trust.</div><div class="diff-line diff-context">- Ensure line of sight between client devices and domain controllers for ticket exchange.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, when a Microsoft Entra ID-joined Windows client accesses a file share or application over the internet, Microsoft Entra ID can issue the necessary Kerberos tickets as a KDC associated with the resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Cloud-only identity support (Preview)**: Cloud-only identities can now use Kerberos authentication for workloads like Azure Files without requiring on-premises AD DS. This is enabled by Entra Kerberos, which acts as a cloud-based KDC.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Enhanced security with modern credentials support**: Users can sign in by using passwordless methods such as Windows Hello for Business or FIDO2 security keys, yet still access on-premises resources that have Kerberos protections. This ability enables multifactor authentication (MFA) and passwordless authentication to reduce the risks associated with password theft and phishing attacks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Upon successful authentication, Microsoft Entra ID issues a PRT that contains user and device information. Alongside the PRT, Microsoft Entra ID issues a Cloud TGT for the realm `KERBEROS.MICROSOFTONLINE.COM`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID also issues an OnPremTgt (partial TGT) that contains the user&#39;s security identifier (SID) but no group claims. This partial TGT is not sufficient for direct access to on-premises resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Cloud TGT issuance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID acts as a KDC for cloud resources by issuing a Cloud TGT to the client when appropriate. The client recognizes the Microsoft Entra ID tenant as a separate Kerberos realm for cloud resources, and the TGT is stored in the client&#39;s Kerberos ticket cache. The Cloud TGT is cached locally and can be verified using PowerShell command &#39;klist cloud_debug&#39;.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Cloud TGT that Microsoft Entra ID issues:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- On-premises domain controllers must be patched to support Kerberos Cloud Trust.</div><div class="diff-line diff-context">- Ensure line of sight between client devices and domain controllers for ticket exchange.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-entitlement-management-request-policy.md" target="_blank">docs/includes/entra-entitlement-management-request-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 20, 2025 3:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-entitlement-management-request-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> new note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    After you create the access package, you can directly assign specific internal and external users to it. If you specify an external user, a guest user account is created in your directory. For information about directly assigning a user, see [View, add, and remove assignments for an access package](~/id-governance/entitlement-management-access-package-assignments.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Skip down to the [Enable requests](#enable-requests) section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Specify approval settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can always either enable, or disable, email notifications in the future after you finish creating the access package.    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Enable requests</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. If you want the access package to be made immediately available for users in the request policy to request, move the **Enable new requests and assignments** toggle to **Yes**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    You can always enable it in the future, after you finish creating the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    If you select **None (administrator direct assignments only)** and you set **Enable new requests and assignments** to **No**, administrators can&#39;t directly assign this access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot that shows the option for enabling new requests and assignments.](./media/entitlement-management-request-policy/enable-requests.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    After you create the access package, you can directly assign specific internal and external users to it. If you specify an external user, a guest user account is created in your directory. For information about directly assigning a user, see [View, add, and remove assignments for an access package](~/id-governance/entitlement-management-access-package-assignments.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Skip down to the [Who can request access](#who-can-request-access) section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Specify approval settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can always either enable, or disable, email notifications in the future after you finish creating the access package.    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Who can request access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. After deciding who the access package is for you can designate who can request access for the access package. You can choose Self, Admin, or Manager as those who can request access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can always enable it in the future, after you finish creating the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you selected **None (administrator direct assignments only)** and you set enable to **No**, then administrators can&#39;t directly assign this access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">![Screenshot that shows the option for enabling new requests and assignments.](./media/entitlement-management-request-policy/enable-requests.png)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/assign-agent-identities-to-applications.md" target="_blank">docs/identity/enterprise-apps/assign-agent-identities-to-applications.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Nov 20, 2025 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-agent-identities-to-applications" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fix blocking issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Applications using the Microsoft Entra identity platform can [expose APIs for other client applications to call](../../identity-platform/quickstart-configure-app-expose-web-apis.md#register-the-web-api). The application with the API can expose OAuth scopes for those API calls. The tool&#39;s service principal can be consented permission to those scopes, allowing it to call the APIs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;../../identity-platform/media/quickstart-configure-app-access-web-apis/diagram-01-app-permission-to-api-scopes.svg&quot; alt-text=&quot;Line diagram showing a web API with exposed scopes on the right and a client app on the left with those scopes selected as permissions&quot; border=&quot;false&quot;:::</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">For more information on consenting an agent identity or service principal, see [admin consent for application permissions](grant-admin-consent.md#grant-admin-consent-for-application-permissions-using-microsoft-graph-api).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning an agent identity to an application role</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once these applications, users, role assignments, and grants are in place in the tenant, then an agent that needs a SAML assertion for authenticating to the enterprise application can:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Get a token as the agent identity blueprint.</div><div class="diff-line diff-deleted">1. Use that token to make a token request to `https://login.microsoftonline.com/&lt;tenantid&gt;/oauth2/v2.0/token` endpoint, and get a federated identity credential (FIC) token as the agent identity. </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">   In that request, the `client_id` is the agent identity ID, the `scope` is `api://AzureADTokenExchange/.default`, the `grant_type` is `client_credentials`, the `client_assertion_type` is `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, and the `client_assertion` is the agent identity blueprint token from step 1.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Use those two tokens to make a token request for a token as the agent user with the scope of the helper application. </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">   In this request, the `client_id` is the agent identity ID, the `scope` is the concatenation of `api://&#39;`, the SAML helper application&#39;s application ID, and `/.default`, the `grant_type` is `user_fic`, the `client_assertion_type` is `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, the `client_assertion` is the agent identity blueprint token, the `user_id` is the agent user object ID, and the `user_federated_identity_credential` is the agent identity token.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Applications using the Microsoft Entra identity platform can [expose APIs for other client applications to call](../../identity-platform/quickstart-configure-app-expose-web-apis.md#register-the-web-api). The application with the API can expose OAuth scopes for those API calls. The tool&#39;s service principal can be consented permission to those scopes, allowing it to call the APIs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on consenting an agent identity or service principal, see [admin consent for application permissions](grant-admin-consent.md#grant-admin-consent-for-application-permissions-using-microsoft-graph-api).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning an agent identity to an application role</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once these applications, users, role assignments, and grants are in place in the tenant, then an agent that needs a SAML assertion for authenticating to the enterprise application can:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Get a token as the agent identity blueprint.</div><div class="diff-line diff-added">- Use that token to make a token request to `https://login.microsoftonline.com/&lt;tenantid&gt;/oauth2/v2.0/token` endpoint, and get a federated identity credential (FIC) token as the agent identity. </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">   In that request, the `client_id` is the agent identity ID, the `scope` is `api://AzureADTokenExchange/.default`, the `grant_type` is `client_credentials`, the `client_assertion_type` is `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, and the `client_assertion` is the agent identity blueprint token from step 1.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Use those two tokens to make a token request for a token as the agent user with the scope of the helper application. </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">   In this request, the `client_id` is the agent identity ID, the `scope` is the concatenation of `api://&#39;`, the SAML helper application&#39;s application ID, and `/.default`, the `grant_type` is `user_fic`, the `client_assertion_type` is `urn:ietf:params:oauth:client-assertion-type:jwt-bearer`, the `client_assertion` is the agent identity blueprint token, the `user_id` is the agent user object ID, and the `user_federated_identity_credential` is the agent identity token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Make the on-behalf-of-call token request to `https://login.microsoftonline.com/&lt;tenantid&gt;/oauth2/v2.0/token` to [obtain a SAML token](../../identity-platform/v2-oauth2-on-behalf-of-flow.md#obtain-a-saml-token-by-using-an-obo-request-with-a-shared-secret). </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-request-policy.md" target="_blank">docs/id-governance/entitlement-management-access-package-request-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 20, 2025 3:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-request-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> new note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Who can request access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. After choosing who can get access and the scope you are able to specify who can request access to the access package. Here you can grant Self, Admin, or Manager the ability to request access to the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    You can always enable it in the future after you have finished creating the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    If you selected **None (administrator direct assignments only)** then the who can request access section boxes are not selectable.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Access package - Policy- Enable policy setting](./media/entitlement-management-access-package-approval-policy/enable-requests.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Who can request access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Previously, a setting called &quot;*Enable new requests and assignments*&quot; controlled self-service access requests. This capability is now more accurately reflected by the &quot;*Self*&quot; option.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">1. After choosing who can get access and the scope you are able to specify who can request access to the access package. Here you can grant Self, Admin, or Manager the ability to request access to the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    You can always enable it in the future after you have finished creating the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    If you selected **None (administrator direct assignments only)** then the who can request access section boxes are not selectable.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of access package policy who can request access.](./media/entitlement-management-access-package-approval-policy/enable-requests.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-cloud-apps.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-cloud-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Nov 20, 2025 9:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fixing typo</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Use sensitivity labels to protect content in Microsoft Teams, Microsoft 365 groups, and SharePoint sites](/purview/sensitivity-labels-teams-groups-sites)</div><div class="diff-line diff-context">- [Microsoft Defender for Cloud Apps](/defender-cloud-apps/session-policy-aad?branch=pr-en-us-2082#require-step-up-authentication-authentication-context)</div><div class="diff-line diff-context">- [Custom applications](~/identity-platform/developer-guide-conditional-access-authentication-context.md)</div><div class="diff-line diff-deleted">- [Priviledged Identity Management - On activation, require Microsoft Entra Conditional Access authentication context](/entra/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings#on-activation-require-microsoft-entra-conditional-access-authentication-context)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Use sensitivity labels to protect content in Microsoft Teams, Microsoft 365 groups, and SharePoint sites](/purview/sensitivity-labels-teams-groups-sites)</div><div class="diff-line diff-context">- [Microsoft Defender for Cloud Apps](/defender-cloud-apps/session-policy-aad?branch=pr-en-us-2082#require-step-up-authentication-authentication-context)</div><div class="diff-line diff-context">- [Custom applications](~/identity-platform/developer-guide-conditional-access-authentication-context.md)</div><div class="diff-line diff-added">- [Privileged Identity Management - On activation, require Microsoft Entra Conditional Access authentication context](/entra/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings#on-activation-require-microsoft-entra-conditional-access-authentication-context)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-token-protection.md" target="_blank">docs/identity/conditional-access/concept-token-protection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Nov 20, 2025 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @MicrosoftGuyJFlo</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Windows Server 2019 or newer that are hybrid Microsoft Entra joined.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]  </div><div class="diff-line diff-deleted">&gt; For detailed steps on how to register your device, see [How it works: Device registration – Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity/devices/device-registration-how-it-works).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Supported applications</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Windows Server 2019 or newer that are hybrid Microsoft Entra joined.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]  </div><div class="diff-line diff-added">&gt; For detailed steps on how to register your device, see [Register your personal device on your work or school network](https://support.microsoft.com/account-billing/register-your-personal-device-on-your-work-or-school-network-8803dd61-a613-45e3-ae6c-bd1ab25bf8a8).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Supported applications</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/assign-local-admin.md" target="_blank">docs/identity/devices/assign-local-admin.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 20, 2025 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/assign-local-admin" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Microsoft Entra groups deployed to a device with this policy don&#39;t apply to remote desktop connections. To control remote desktop permissions for Microsoft Entra joined devices, you need to add the individual user&#39;s SID to the appropriate group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Windows sign-in with Microsoft Entra ID supports evaluation of up to 20 groups for administrator rights. We recommend having no more than 20 Microsoft Entra groups on each device, or having a user as a member in no more than 20 groups to ensure that administrator rights are correctly assigned. This limitation also applies to nested groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Manage regular users</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Microsoft Entra groups deployed to a device with this policy don&#39;t apply to remote desktop connections. To control remote desktop permissions for Microsoft Entra joined devices, you need to add the individual user&#39;s SID to the appropriate group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Windows sign-in with Microsoft Entra ID supports evaluation of up to 20 groups for administrator rights. We recommend having no more than 20 Microsoft Entra groups on each device, and having a user as a member in no more than 20 groups, to ensure that administrator rights are correctly assigned. This limitation also applies to nested groups.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Manage regular users</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-assignments.md" target="_blank">docs/id-governance/entitlement-management-access-package-assignments.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jill Grant on Nov 20, 2025 3:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-assignments" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/id-governance/entitlement-management-access-package-assignments.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **New assignment** to open Add user to access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of adding identities to an access package](./media/entitlement-management-access-package-assignments/assignments-add-user.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Select policy** list, select a policy that the users&#39; future requests and lifecycle will be governed and tracked by. If you want the selected users to have different policy settings, you can select **Create new policy** to add a new policy.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **New assignment** to open Add user to access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of adding identities to an access package.](./media/entitlement-management-access-package-assignments/assignments-add-user.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Select policy** list, select a policy that the users&#39; future requests and lifecycle will be governed and tracked by. If you want the selected users to have different policy settings, you can select **Create new policy** to add a new policy.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/workload-id/workload-identity-federation-considerations.md" target="_blank">docs/workload-id/workload-identity-federation-considerations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Denis Salamanca on Nov 20, 2025 5:11 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-considerations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update workload-identity-federation-considerations.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Creation of federated identity credentials is currently **not supported** on user-assigned managed identities created in the following regions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Malaysia South</div><div class="diff-line diff-deleted">- New Zealand North</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Support for creating federated identity credentials on user assigned identities in these regions will be gradually rolled out. </div><div class="diff-line diff-context">Resources in this region which need to use federated identity credentials, can do so by leveraging a user assigned managed identity created in a supported region. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Creation of federated identity credentials is currently **not supported** on user-assigned managed identities created in the following regions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Malaysia South</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Support for creating federated identity credentials on user assigned identities in these regions will be gradually rolled out. </div><div class="diff-line diff-context">Resources in this region which need to use federated identity credentials, can do so by leveraging a user assigned managed identity created in a supported region. </div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
