@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since November 23rd 2025, 7:21 PM PST</p>
+        <p>Report generated on November 24th 2025, 7:21 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-archive.md" target="_blank">docs/fundamentals/whats-new-archive.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 24, 2025 2:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-archive" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+58</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> May 2025 added to archive</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## April 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Public Preview -  Conditional Access Optimization Agent in Microsoft Entra </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## May 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### General Availability - Microsoft Entra External ID:  User authentication with SAML/WS-Fed Identity Providers</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** B2C - Consumer Identity Management  </div><div class="diff-line diff-added">**Product capability:** B2B/B2C  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Set up a SAML or WS-Fed identity provider to enable users to sign up and sign in to, your applications using their own account with the identity provider. Users will be redirected to the identity provider, and then redirected back to Microsoft Entra after successful sign in. For more information, see: [SAML/WS-Fed identity providers](../external-id/direct-federation-overview.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">---</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### General Availability - Pre/Post Attribute Collection Custom Extensions in Microsoft Entra External ID</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** B2C - Consumer Identity Management  </div><div class="diff-line diff-added">**Product capability:** Extensibility   </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Nov 24, 2025 2:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-51</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> May 2025 added to archive</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## May 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### General Availability - Microsoft Entra External ID:  User authentication with SAML/WS-Fed Identity Providers</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">**Type:** New feature  </div><div class="diff-line diff-deleted">**Service category:** B2C - Consumer Identity Management  </div><div class="diff-line diff-deleted">**Product capability:** B2B/B2C  </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Set up a SAML or WS-Fed identity provider to enable users to sign up and sign in to, your applications using their own account with the identity provider. Users will be redirected to the identity provider, and then redirected back to Microsoft Entra after successful sign in. For more information, see: [SAML/WS-Fed identity providers](../external-id/direct-federation-overview.md).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### General Availability - Pre/Post Attribute Collection Custom Extensions in Microsoft Entra External ID</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">**Type:** New feature  </div><div class="diff-line diff-deleted">**Service category:** B2C - Consumer Identity Management  </div><div class="diff-line diff-deleted">**Product capability:** Extensibility   </div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/device-join-out-of-box.md" target="_blank">docs/identity/devices/device-join-out-of-box.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Nov 24, 2025 9:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/device-join-out-of-box" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [Authentication] Windows device join methods</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Join a new Windows 11 device with Microsoft Entra ID during the out of box experience</div><div class="diff-line diff-deleted">description: How users can set up Microsoft Entra join during OOBE.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: devices</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 06/27/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">author: owinfreyATL</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft Entra join a new Windows device during the out of box experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Windows 11 users can join new Windows devices to Microsoft Entra ID during the first-run out-of-box experience (OOBE). This functionality enables you to distribute shrink-wrapped devices to your employees or students.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This functionality pairs well with mobile device management platforms like [Microsoft Intune](/mem/intune/fundamentals/what-is-intune) and tools like [Windows Autopilot](/mem/autopilot/windows-autopilot) to ensure devices are configured according to your standards.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Turn on your new device and start the setup process. Follow the prompts to set up your device.</div><div class="diff-line diff-context">1. When prompted **How would you like to set up this device?**, select **Set up for work or school**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Join Windows 11 Devices to Microsoft Entra ID During OOBE</div><div class="diff-line diff-added">description: Discover how to set up Microsoft Entra join on a Windows 11 device during OOBE, ensuring seamless integration with your organization&#39;s directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: devices</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 11/24/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">author: owinfreyATL</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft Entra join a new Windows device during the out of box experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This tutorial shows you how to join a new Windows 11 device to Microsoft Entra ID during the out-of-box experience (OOBE). When you join a device during OOBE, the device becomes part of your organization&#39;s directory and can be managed according to their policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This functionality pairs well with mobile device management platforms like [Microsoft Intune](/mem/intune/fundamentals/what-is-intune) and tools like [Windows Autopilot](/mem/autopilot/windows-autopilot) to ensure devices are configured according to your standards.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Turn on your new device and start the setup process. Follow the prompts to set up your device.</div><div class="diff-line diff-context">1. When prompted **How would you like to set up this device?**, select **Set up for work or school**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-registry-manage-collections.md" target="_blank">docs/agent-id/identity-platform/agent-registry-manage-collections.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sherman Ouko on Nov 24, 2025 2:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-registry-manage-collections" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add images to manage collections in registry doc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. In the **Agent collections** view, you see a tabbed section containing two options:</div><div class="diff-line diff-context">    - Select **Predefined** tab to view agents added to the **Global** collection.</div><div class="diff-line diff-context">    - Select **Custom** tab to view agents added to custom collections. This tab displays any custom collections that you created in your tenant. Selecting a custom collection shows the agents that are part of that collection.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Create a custom collection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a custom collection, follow these steps:</div><div class="diff-line diff-context">1. Select **+ Create collection**.</div><div class="diff-line diff-context">1. Provide a descriptive and meaningful **Name** and **Description** of the collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add an agent to predefined collections</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use the following steps to add an agent to a predefined collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Predefined** tab to view the predefined collections.</div><div class="diff-line diff-deleted">1. Select the predefined collection you want to add the agent to. It opens a view listing all the agents in that collection and their source (builder platform).</div><div class="diff-line diff-context">1. To add an agent to the collection, select **+ Add**, then choose the agents you want to add.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add an agent to custom collections</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. In the **Agent collections** view, you see a tabbed section containing two options:</div><div class="diff-line diff-context">    - Select **Predefined** tab to view agents added to the **Global** collection.</div><div class="diff-line diff-context">    - Select **Custom** tab to view agents added to custom collections. This tab displays any custom collections that you created in your tenant. Selecting a custom collection shows the agents that are part of that collection.</div><div class="diff-line diff-added">    </div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;media/agent-registry-manage-collections/agent-collections.png&quot; alt-text=&quot;Screenshot of the Agent collections view showing predefined and custom tabs.&quot;:::</div><div class="diff-line diff-added">    </div><div class="diff-line diff-context">## Create a custom collection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a custom collection, follow these steps:</div><div class="diff-line diff-context">1. Select **+ Create collection**.</div><div class="diff-line diff-context">1. Provide a descriptive and meaningful **Name** and **Description** of the collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;media/agent-registry-manage-collections/custom-collections.png&quot; alt-text=&quot;Screenshot of the create custom collection dialog view.&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Add an agent to predefined collections</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use the following steps to add an agent to a predefined collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Predefined** tab to view the predefined collections.</div><div class="diff-line diff-added">1. Select the predefined collection you want to add the agent to. It opens a view listing all the agents in that collection and their publisher (builder platform).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/tenant-restrictions-v2.md" target="_blank">docs/external-id/tenant-restrictions-v2.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by vimrang on Nov 24, 2025 8:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/tenant-restrictions-v2" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update tenant restrictions documentation for clarity</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- All Office apps (all versions/release channels)</div><div class="diff-line diff-context">- Universal Windows Platform (UWP) .NET applications</div><div class="diff-line diff-context">- Authentication plane protection for all applications that authenticate with Microsoft Entra ID, including all Microsoft applications and any partner applications that use Microsoft Entra ID for authentication</div><div class="diff-line diff-deleted">- Data plane protection for SharePoint Online, Exchange Online, and Microsoft Graph</div><div class="diff-line diff-context">- Anonymous access protection for Forms, SharePoint Online, OneDrive, and Teams (with federation controls configured)</div><div class="diff-line diff-context">- Authentication and data plane protection for Microsoft tenant or consumer accounts</div><div class="diff-line diff-context">- When you use universal tenant restrictions in Global Secure Access, all browsers and platforms</div><div class="diff-line diff-context">- When you use Windows Group Policy, Microsoft Edge and all websites in Microsoft Edge</div><div class="diff-line diff-context">- Scenarios with device-based authentication (including custom applications integrated with Microsoft Graph)</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">### Unsupported scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- All Office apps (all versions/release channels)</div><div class="diff-line diff-context">- Universal Windows Platform (UWP) .NET applications</div><div class="diff-line diff-context">- Authentication plane protection for all applications that authenticate with Microsoft Entra ID, including all Microsoft applications and any partner applications that use Microsoft Entra ID for authentication</div><div class="diff-line diff-added">- Data plane protection for SharePoint Online, Exchange Online and Microsoft Graph</div><div class="diff-line diff-context">- Anonymous access protection for Forms, SharePoint Online, OneDrive, and Teams (with federation controls configured)</div><div class="diff-line diff-context">- Authentication and data plane protection for Microsoft tenant or consumer accounts</div><div class="diff-line diff-context">- When you use universal tenant restrictions in Global Secure Access, all browsers and platforms</div><div class="diff-line diff-context">- When you use Windows Group Policy, Microsoft Edge and all websites in Microsoft Edge</div><div class="diff-line diff-context">- Scenarios with device-based authentication (including custom applications integrated with Microsoft Graph)</div><div class="diff-line diff-added">- Tenant Restrictions v2 (TRv2) enforcement over Azure ExpressRoute when the TRv2 header to be present.</div><div class="diff-line diff-added">  - TRv2 headers are automatically added when using Universal TRv2 via GSA or Windows Group Policy Objects (GPO) for client-side signaling. This approach supports        both authentication and data plane protection.</div><div class="diff-line diff-added">  - For proxy-based signaling, headers are injected only at the authentication plane protection and do not apply to the data plane protection. ExpressRoute operates      at the network layer and does not terminate TLS or inspect HTTP traffic and the header injection requires TLS interception and application-layer processing,          which must occur on a proxy or firewall before traffic enters ExpressRoute. If Trv2 headers are not added on the request, TRv2 will not enforced.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">### Unsupported scenarios</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/assign-agent-identities-to-applications.md" target="_blank">docs/identity/enterprise-apps/assign-agent-identities-to-applications.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Nov 24, 2025 10:21 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-agent-identities-to-applications" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add image</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  * the SAML helper application registration as the resource</div><div class="diff-line diff-context">  * the scope value of the concatenation of `api://&#39;`, the SAML helper application&#39;s application ID, and `/.default`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the agent has multiple agent identities, then permission inheritance can be used to grant consent once at the agent identity blueprint and inherit it for the agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once these applications, users, role assignments, and grants are in place in the tenant, then an agent that needs a SAML assertion for authenticating to the enterprise application can:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  * the SAML helper application registration as the resource</div><div class="diff-line diff-context">  * the scope value of the concatenation of `api://&#39;`, the SAML helper application&#39;s application ID, and `/.default`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/assign-agent-identities-to-applications/agent-saml.png&quot; alt-text=&quot;Diagram of relationships between Microsoft Entra artifacts needed for SAML token issuance.&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">If the agent has multiple agent identities, then permission inheritance can be used to grant consent once at the agent identity blueprint and inherit it for the agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once these applications, users, role assignments, and grants are in place in the tenant, then an agent that needs a SAML assertion for authenticating to the enterprise application can:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
