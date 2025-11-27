@@ -1,0 +1,590 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since November 25th 2025, 7:18 PM PST</p>
+        <p>Report generated on November 26th 2025, 7:18 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">19</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-resources.md" target="_blank">docs/id-governance/entitlement-management-access-package-resources.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 7:11 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-resources" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add API permissions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Check catalog for resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you need to add resources to an access package, you should check whether the resources you need are available in the access package&#39;s catalog. If you&#39;re an access package manager, you can&#39;t add resources to a catalog, even if you own them. You&#39;re restricted to using the resources available in the catalog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Identity Governance Administrator](../identity/role-based-access-control/permissions-reference.md#identity-governance-administrator).</div><div class="diff-line diff-context">    &gt; [!TIP]</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; If identities were added to the resources outside of entitlement management, and they need to retain access even if they later receive access package assignments and their access package assignments expire, then don&#39;t add the resource roles to an access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you want some identities to receive different resource roles than others, then you need to create multiple access packages in the catalog, with separate access packages for each of the resource roles. You can also mark the access packages as [incompatible](entitlement-management-access-package-incompatible.md) with each other so identities can&#39;t request access to access packages that would give them excessive access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In particular, applications can have multiple app roles. When you add an application&#39;s app role as a resource role to an access package, if that application has more than one app role, you need to specify the appropriate role for those identities in the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Access package - Add resource roles](./media/entitlement-management-access-package-resources/resource-roles-add.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Depending on whether you want to add a membership of a group or team, access to an application, SharePoint site, or Microsoft Entra role(Preview) perform the steps in one of the following resource role sections.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add a group or team resource role</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Check catalog for resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you need to add resources such as groups or apps to an access package, you should check whether the resources you need are available in the access package&#39;s catalog. If you&#39;re an access package manager, you can&#39;t add resources to a catalog, even if you own them. You&#39;re restricted to using the resources available in the catalog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Identity Governance Administrator](../identity/role-based-access-control/permissions-reference.md#identity-governance-administrator).</div><div class="diff-line diff-context">    &gt; [!TIP]</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; If identities were added to the resources outside of entitlement management, and they need to retain access even if they later receive access package assignments and their access package assignments expire, then don&#39;t add the resource roles to an access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you want some identities to receive different resource roles than others, then you need to create multiple access packages in the catalog, with separate access packages for each of the resource roles. For example, if you wish to assign API permissions to an agent ID (preview), then you&#39;ll need this to be in a separate access package from member or guest users, since member or guest users can&#39;t have API permissions assigned to them. You can also mark the access packages as [incompatible](entitlement-management-access-package-incompatible.md) with each other so identities can&#39;t request access to access packages that would give them excessive access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In particular, applications can have multiple app roles. When you add an application&#39;s app role as a resource role to an access package, if that application has more than one app role, you need to specify the appropriate role for those identities in the access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Access package - Add resource roles](./media/entitlement-management-access-package-resources/resource-roles-add.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Depending on whether you want to add a [membership of a group or team](#add-a-group-or-team-resource-role), [access to an application](#add-an-application-resource-role), [SharePoint site](#add-a-sharepoint-site-resource-role), [Microsoft Entra role (Preview)](#add-a-microsoft-entra-role-assignment) or [API permission (Preview)](#add-an-api-permission-preview), perform the steps in one of the following resource role sections.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add a group or team resource role</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-scenarios.md" target="_blank">docs/id-governance/entitlement-management-scenarios.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-scenarios" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links for agents to existing gov articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. [Sign in to the My Access portal](entitlement-management-request-access.md#sign-in-to-the-my-access-portal)</div><div class="diff-line diff-context">1. View active access packages</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Day-to-day management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Administrator: View the connected organizations that are proposed and configured</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. [Sign in to the My Access portal](entitlement-management-request-access.md#sign-in-to-the-my-access-portal)</div><div class="diff-line diff-context">1. View active access packages</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Govern access for agents (preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [entra-agent-id-license](../includes/entra-agent-id-license-note.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. [Create a new access package](entitlement-management-access-package-create.md#start-the-creation-process)</div><div class="diff-line diff-added">1. [Add groups or API permissions to access package](entitlement-management-access-package-create.md#select-resource-roles)</div><div class="diff-line diff-added">1. [Add a request policy to allow service principals and agent identities in your directory to request access](entitlement-management-access-package-create.md#allow-users-service-principals-and-agent-identities-in-your-directory-to-request-the-access-package)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Day-to-day management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Administrator: View the connected organizations that are proposed and configured</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-supported-features-customers.md" target="_blank">docs/external-id/customers/concept-supported-features-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Nov 26, 2025 11:36 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-supported-features-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> PM suggested updates.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Integrated security solutions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra External ID supports integrated security features and partner solutions to help protect identities across the lifecycle. These capabilities include edge protection, sign-up fraud prevention, and unified monitoring. You can enable these solutions directly in External ID and access partner integrations through the [Microsoft Security Store](https://securitystore.microsoft.com/). This approach allows organizations to deploy trusted security tools quickly without complex setup.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Feature  |Workforce tenant  | External tenant |</div><div class="diff-line diff-context">|---------|---------|---------|</div><div class="diff-line diff-deleted">| **Sign-up fraud protection** | Not available | Use [Arkose Labs](/entra/external-id/customers/how-to-integrate-fraud-protection?pivots=arkose) and [HUMAN Security](/entra/external-id/customers/how-to-integrate-fraud-protection?pivots=human) to protect against sign-up fraud and block automated bot attacks. |</div><div class="diff-line diff-deleted">| **DDoS and WAF protection** | Not available | Use [Cloudflare](/entra/external-id/customers/how-to-configure-waf-integration) and [Akamai](/entra/external-id/customers/how-to-configure-akamai-integration) to defend at the edge with DDoS mitigation and web application firewall (WAF) features. |</div><div class="diff-line diff-deleted">| **Security analytics** | Not available   | Use [Azure Monitor and Microsoft Sentinel](/entra/external-id/customers/how-to-azure-monitor) to enable one-click monitoring, log analytics, and advanced threat detection.  |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Activity logs and reports</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Integrated security solutions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra External ID supports integrated security features and partner solutions to help protect identities across the lifecycle. These capabilities include edge protection, sign-up fraud prevention, and unified monitoring. You can enable these solutions directly in External ID and access partner integrations through the [Microsoft Security Store](https://securitystore.microsoft.com/). This approach allows organizations to deploy trusted security tools quickly without complex setup. All these features are available in a wizard under the Security Store blade experience.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Feature  |Workforce tenant  | External tenant |</div><div class="diff-line diff-context">|---------|---------|---------|</div><div class="diff-line diff-added">| **Sign-up fraud protection** | The Security Store wizard experience is not available.  | Use [Arkose Labs](/entra/external-id/customers/how-to-integrate-fraud-protection?pivots=arkose) and [HUMAN Security](/entra/external-id/customers/how-to-integrate-fraud-protection?pivots=human) to protect against sign-up fraud and block automated bot attacks. |</div><div class="diff-line diff-added">| **DDoS and WAF protection** | The Security Store wizard experience is not available. | Use [Cloudflare](/entra/external-id/customers/how-to-configure-waf-integration) and [Akamai](/entra/external-id/customers/how-to-configure-akamai-integration) to defend at the edge with DDoS mitigation and web application firewall (WAF) features. |</div><div class="diff-line diff-added">| **Security analytics** | The Security Store wizard experience is not available.   | Use [Azure Monitor and Microsoft Sentinel](/entra/external-id/customers/how-to-azure-monitor) to enable one-click monitoring, log analytics, and advanced threat detection.  |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Activity logs and reports</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/licensing-fundamentals.md" target="_blank">docs/id-governance/licensing-fundamentals.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/licensing-fundamentals" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fix link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra ID Governance licensing fundamentals</div><div class="diff-line diff-deleted">This following document discusses Microsoft Entra ID Governance licensing. It&#39;s intended for IT decision makers, IT administrators, and IT professionals who are considering Microsoft Entra ID Governance services for their organizations. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Types of licenses</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the product details page, select **Start free trial**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [licensing](../includes/licensing-governance.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra ID Governance licensing fundamentals</div><div class="diff-line diff-added">This following document discusses Microsoft Entra ID Governance licensing for employees. It&#39;s intended for IT decision makers, IT administrators, and IT professionals who are considering Microsoft Entra ID Governance services for their organizations.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">For licensing governance for guest users, see [Microsoft Entra ID Governance licensing for guest users](microsoft-entra-id-governance-licensing-for-guest-users.md). For the preview for agents, see [governing agent identities (preview)](agent-id-governance-overview.md#license-requirements).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Types of licenses</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the product details page, select **Start free trial**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Microsoft Entra ID Governance features</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [licensing](../includes/licensing-governance.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/slack-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/slack-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kristine Toliver on Nov 26, 2025 9:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/slack-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update slack-provisioning-tutorial.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: User provisioning for Slack</div><div class="diff-line diff-context">description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Slack.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: thomasakelo</div><div class="diff-line diff-context">manager: jeedes</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2024</div><div class="diff-line diff-deleted">ms.author: thomasakelo</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Slack so that I can streamline the user management process and ensure that users have the appropriate access to Slack.</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: User provisioning for Slack</div><div class="diff-line diff-context">description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Slack.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: jeevansd</div><div class="diff-line diff-context">manager: jeedes</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2024</div><div class="diff-line diff-added">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Slack so that I can streamline the user management process and ensure that users have the appropriate access to Slack.</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-create.md" target="_blank">docs/id-governance/entitlement-management-access-package-create.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 7:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-create" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update section</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you&#39;re not sure which resource roles to include, you can skip adding them while creating the access package, and then [add them](entitlement-management-access-package-resources.md) later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select the resource type that you want to add (**Groups and Teams**, **Applications**, **SharePoint sites**, **Microsoft Entra role (Preview)**, **API Permissions (Preview)**, or **Custom Data Provided Resource**).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Select applications** panel that appears, select one or more resources from the list.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For [groups managed by Privileged Identity Management](./privileged-identity-management/groups-discover-groups.md), both active and eligible roles are available as options.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-access-package-create/pim-for-groups-roles.png&quot; alt-text=&quot;Screenshot of available roles to be assigned to PIM for groups resource in an access package.&quot;:::</div><div class="diff-line diff-context">1. For [assigning Microsoft Entra roles](entitlement-management-roles.md), both active and eligible member assignments are available as options.</div><div class="diff-line diff-deleted">1. For [assigning API permissions](entitlement-management-access-package-resources.md#add-an-api-permission-preview) as a resource role to an access package for service principals or agent IDs (preview), select one of more API permissions from the list.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-access-package-create/api-permissions-roles.png&quot; alt-text=&quot;Screenshot of adding API permissions as resource roles to an access package.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next: Requests**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you&#39;re not sure which resource roles to include, you can skip adding them while creating the access package, and then [add them](entitlement-management-access-package-resources.md) later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select the resource type that you want to add (**Groups and Teams**, **Applications**, **SharePoint sites**, **Microsoft Entra role (Preview)**, or **API Permissions (Preview)**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Select applications** panel that appears, select one or more resources from the list.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For [groups managed by Privileged Identity Management](./privileged-identity-management/groups-discover-groups.md), both active and eligible roles are available as options.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-access-package-create/pim-for-groups-roles.png&quot; alt-text=&quot;Screenshot of available roles to be assigned to PIM for groups resource in an access package.&quot;:::</div><div class="diff-line diff-context">1. For [assigning Microsoft Entra roles](entitlement-management-roles.md), both active and eligible member assignments are available as options.</div><div class="diff-line diff-added">1. For [including API permissions](entitlement-management-access-package-resources.md#add-an-api-permission-preview) as a resource role to an access package for service principals or agent IDs (preview), select one of more API permissions from the list.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-access-package-create/api-permissions-roles.png&quot; alt-text=&quot;Screenshot of adding API permissions as resource roles to an access package.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next: Requests**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-overview.md" target="_blank">docs/id-governance/entitlement-management-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links for agents to existing gov articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [active-directory-p2-governance-license.md](~/includes/entra-p2-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [active-directory-p2-governance-license.md](~/includes/entra-p2-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### License requirements for assigning agents to access packages (preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [entra-agent-id-license](../includes/entra-agent-id-license-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-overview.md" target="_blank">docs/id-governance/identity-governance-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links for agents to existing gov articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Provisioning users into on-premises and cloud applications that have their own directories or databases | [Configure automatic user provisioning](../identity/app-provisioning/user-provisioning.md) with user assignments or [scoping filters](../identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md) |</div><div class="diff-line diff-context">| Other scheduled tasks | [Automate identity governance tasks with Azure Automation](identity-governance-automation.md) and Microsoft Graph via the [Microsoft.Graph.Identity.Governance](https://www.powershellgallery.com/packages/Microsoft.Graph.Identity.Governance/) PowerShell module|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Provisioning users into on-premises and cloud applications that have their own directories or databases | [Configure automatic user provisioning](../identity/app-provisioning/user-provisioning.md) with user assignments or [scoping filters](../identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md) |</div><div class="diff-line diff-context">| Other scheduled tasks | [Automate identity governance tasks with Azure Automation](identity-governance-automation.md) and Microsoft Graph via the [Microsoft.Graph.Identity.Governance](https://www.powershellgallery.com/packages/Microsoft.Graph.Identity.Governance/) PowerShell module|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Identity governance for agents</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">With the addition of the Microsoft agent identity platform, managing agent&#39;s identity and access in the same way as people is just as important in the governance lifecycle of your organization. For more information, see [governing agent identities (preview)](agent-id-governance-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-entitlement-management-request-policy.md" target="_blank">docs/includes/entra-entitlement-management-request-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-entitlement-management-request-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fix link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Guest users are external identities who have been invited into your directory via [Microsoft Entra B2B](~/external-id/what-is-b2b.md). For more information about the differences between member users and guest users, see [What are the default user permissions in Microsoft Entra ID?](~/fundamentals/users-default-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    The **All Service principals** and **All agents** preview require Microsoft Entra Agent ID. For more information, see [Governing agent identities (preview)](agent-id-governance-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If you selected **Specific users and groups**, select **Add users and groups**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Guest users are external identities who have been invited into your directory via [Microsoft Entra B2B](~/external-id/what-is-b2b.md). For more information about the differences between member users and guest users, see [What are the default user permissions in Microsoft Entra ID?](~/fundamentals/users-default-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    The **All Service principals** and **All agents** preview require Microsoft Entra Agent ID. For more information, see [Governing agent identities (preview)](~/id-governance/agent-id-governance-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If you selected **Specific users and groups**, select **Add users and groups**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/agent-id-governance-overview.md" target="_blank">docs/id-governance/agent-id-governance-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 5:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add to more articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Agent identities can have resources assigned to them directly via access packages. Resource assignments allow agent identities to request an access package for themselves, or have their owner or sponsor request one on their behalf. With Access packages, you&#39;re able to assign agent identities the following resources:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Security Groups</div><div class="diff-line diff-deleted">- Application roles and API permissions(including Graph permissions)</div><div class="diff-line diff-context">- Microsoft Entra roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Agent identities can have resources assigned to them directly via access packages. Resource assignments allow agent identities to request an access package for themselves, or have their owner or sponsor request one on their behalf. With Access packages, you&#39;re able to assign agent identities the following resources:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Security Groups</div><div class="diff-line diff-added">- Application roles and API permissions (including Graph permissions)</div><div class="diff-line diff-context">- Microsoft Entra roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-request-policy.md" target="_blank">docs/id-governance/entitlement-management-access-package-request-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 5:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-request-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add to more articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Guest users refer to external users that have been invited into your directory with [Microsoft Entra B2B](../external-id/what-is-b2b.md). For more information about the differences between member users and guest users, see [What are the default user permissions in Microsoft Entra ID?](../fundamentals/users-default-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If you selected **Specific users and groups**, select **Add users and groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the Select users and groups pane, select the users and groups you want to add.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Guest users refer to external users that have been invited into your directory with [Microsoft Entra B2B](../external-id/what-is-b2b.md). For more information about the differences between member users and guest users, see [What are the default user permissions in Microsoft Entra ID?](../fundamentals/users-default-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    The **All Service principals** and **All agents** preview require Microsoft Entra Agent ID. For more information, see [Governing agent identities (preview)](agent-id-governance-overview.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">1. If you selected **Specific users and groups**, select **Add users and groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the Select users and groups pane, select the users and groups you want to add.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/identity-governance-use-cases.md" target="_blank">docs/id-governance/scenarios/identity-governance-use-cases.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Nov 26, 2025 5:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/identity-governance-use-cases" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add to more articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Understanding least privileged](least-privileged.md)</div><div class="diff-line diff-context">- [Govern the employee and guest lifecycle](govern-the-employee-lifecycle.md)</div><div class="diff-line diff-context">- [Govern access for applications in your environment](../identity-governance-applications-prepare.md)</div><div class="diff-line diff-deleted">- [Governing agent identities in Microsoft Entra Agent ID (preview)](agent-id-governance-overview.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Understanding least privileged](least-privileged.md)</div><div class="diff-line diff-context">- [Govern the employee and guest lifecycle](govern-the-employee-lifecycle.md)</div><div class="diff-line diff-context">- [Govern access for applications in your environment](../identity-governance-applications-prepare.md)</div><div class="diff-line diff-added">- [Governing agent identities in Microsoft Entra Agent ID (preview)](../agent-id-governance-overview.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication.md" target="_blank">docs/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tim Larson on Nov 26, 2025 3:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-plan-prerequisites-phishing-resistant-passwordless-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-plan-prerequisites-phishing-resistant-passwordless-authentication.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  - Platform credential for macOS (preview)</div><div class="diff-line diff-context">  - Microsoft Authenticator app passkeys</div><div class="diff-line diff-context">  - FIDO2 security keys</div><div class="diff-line diff-deleted">  - Other passkeys and providers, such as iCloud Keychain - [**_on roadmap_**](https://techcommunity.microsoft.com/t5/microsoft-entra-blog/public-preview-expanding-passkey-support-in-microsoft-entra-id/ba-p/4062702)</div><div class="diff-line diff-context">- Certificate-based authentication/smart cards</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  - Platform credential for macOS (preview)</div><div class="diff-line diff-context">  - Microsoft Authenticator app passkeys</div><div class="diff-line diff-context">  - FIDO2 security keys</div><div class="diff-line diff-added">  - Synced passkeys (synced via providers such as Google Password Manager or iCloud Keychain)</div><div class="diff-line diff-context">- Certificate-based authentication/smart cards</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
