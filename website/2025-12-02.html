@@ -1,0 +1,803 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since November 30th 2025, 7:24 PM PST</p>
+        <p>Report generated on December 1st 2025, 7:24 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">35</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">3</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-risky-user-report.md" target="_blank">docs/id-protection/identity-risk-management-agent-risky-user-report.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Dec 1, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-risky-user-report" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+83 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> add-back-add-notes</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-settings.md" target="_blank">docs/id-protection/identity-risk-management-agent-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Dec 1, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+71 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> add-back-add-notes</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-get-started.md" target="_blank">docs/id-protection/identity-risk-management-agent-get-started.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Dec 1, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-get-started" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+64 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> add-back-add-notes</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/security-copilot/entra-agents.md" target="_blank">docs/security-copilot/entra-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Dec 1, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/security-copilot/entra-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+30</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add-back-add-notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-deleted">ms.date: 09/22/2025</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Attribute           | Description |</div><div class="diff-line diff-context">|---------------------|------------ |</div><div class="diff-line diff-deleted">| Identity            | A unique agent identity is created when the agent is turned on. Learn more about [agent identities]().&lt;br&gt;&lt;br&gt;The agent uses this identity to scan your tenant for active access reviews, gather additional insights, and save its recommendations and justifications for the reviewer. For more information, see: [How it works](access-review-agent.md#how-it-works).&lt;br&gt;&lt;br&gt;Final decisions, submitted through the Microsoft Teams conversation, use the reviewer&#39;s identity.  |</div><div class="diff-line diff-context">| Licenses            | [Microsoft Entra ID Governance or Microsoft Entra Suite](../id-governance/licensing-fundamentals.md) |</div><div class="diff-line diff-context">| Permissions         | Get details for access reviews&lt;br&gt;Read details and lifecycle workflow history for users, groups, apps, and access packages. Save access review recommendations and justifications |</div><div class="diff-line diff-context">| Plugins             | [Microsoft Entra](/entra/fundamentals/copilot-security-entra) |</div><div class="diff-line diff-context">| Role-based access   | Both [Identity Governance Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator) and [Lifecycle Workflows Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator) are required to configure and use the agent |</div><div class="diff-line diff-context">| Trigger             | Runs every 24 hours or triggered manually |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Conditional Access Optimization Agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The [Conditional Access Optimization Agent](./conditional-access-agent-optimization.md) ensures comprehensive user protection by analyzing your Conditional Access policies and recommending improvements. The agent evaluates your current policy configuration against Microsoft best practices and Zero Trust principles.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-added">ms.date: 12/01/2025</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Attribute           | Description |</div><div class="diff-line diff-context">|---------------------|------------ |</div><div class="diff-line diff-added">| Identity            | Uses [Microsoft Entra Agent ID](../agent-id/identity-professional/authorization-agent-id.md) for authorization. A unique agent identity is created when the agent is turned on. Learn more about [agent identities]().&lt;br&gt;&lt;br&gt;The agent uses this identity to scan your tenant for active access reviews, gather additional insights, and save its recommendations and justifications for the reviewer. For more information, see: [How it works](access-review-agent.md#how-it-works).&lt;br&gt;&lt;br&gt;Final decisions, submitted through the Microsoft Teams conversation, use the reviewer&#39;s identity.  |</div><div class="diff-line diff-context">| Licenses            | [Microsoft Entra ID Governance or Microsoft Entra Suite](../id-governance/licensing-fundamentals.md) |</div><div class="diff-line diff-context">| Permissions         | Get details for access reviews&lt;br&gt;Read details and lifecycle workflow history for users, groups, apps, and access packages. Save access review recommendations and justifications |</div><div class="diff-line diff-context">| Plugins             | [Microsoft Entra](/entra/fundamentals/copilot-security-entra) |</div><div class="diff-line diff-context">| Role-based access   | Both [Identity Governance Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator) and [Lifecycle Workflows Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator) are required to configure and use the agent |</div><div class="diff-line diff-context">| Trigger             | Runs every 24 hours or triggered manually |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Application Lifecycle Management Agent (Preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Identify, onboard, and monitor applications in your environment with the Application Lifecycle Management Agent. This agent uses application discovery capabilities of Microsoft Entra Internet Access and Microsoft Entra Private Access to find unmanaged applications, recommend onboarding actions, and monitor application security posture over time. This agent is currently being deployed and might not be available in all tenants.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/custom-data-resource-access-reviews.md" target="_blank">docs/id-governance/custom-data-resource-access-reviews.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 8:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/custom-data-resource-access-reviews" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update Graph references</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Create**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get Access Review Object and Instance ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After creating the catalog access review, but before uploading your custom data, you must get both the Access Review object ID, and the Access Review instance object ID. To get this information, you&#39;d do the following:</div><div class="diff-line diff-context">## Applying stage</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In the **Applying** stage, you manually get a list of denied users by making the following API call:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` http</div><div class="diff-line diff-deleted">GET /identityGovernance/accessReviews/definitions/{access review object ID}/instances/{access review instance object ID}/decisions?$filter=(decision eq ‘Deny’ and resourceId eq ‘&lt;custom data provided resource ID&gt;’)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For each decision item: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Remove access from your own system and Patch each decision item to indicate success or failure for removal by making the following API call:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` http</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Create**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also create an access review programmatically using Microsoft Graph. For more information, see [Create a single stage access review on a catalog](graph/api/accessreviewset-post-definitions?view=graph-rest-beta&amp;tabs=http#example-6-create-a-single-stage-access-review-on-a-catalog).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Get Access Review Object and Instance ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After creating the catalog access review, but before uploading your custom data, you must get both the Access Review object ID, and the Access Review instance object ID. To get this information, you&#39;d do the following:</div><div class="diff-line diff-context">## Applying stage</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In the **Applying** stage, you can get a list of denied users by making the [list decisions](/graph/api/accessreviewinstance-list-decisions?view=graph-rest-beta&amp;tabs=http) API call:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` http</div><div class="diff-line diff-added">GET https://graph.microsoft.com/beta/identityGovernance/accessReviews/definitions/{access review object ID}/instances/{access review instance object ID}/decisions?$filter=(decision eq &#39;Deny&#39; and resourceId eq &#39;&lt;custom data provided resource ID&gt;&#39;)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For each decision item: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Remove access from your own system and then patch each decision item to indicate success or failure for removal by making the [update accessReviewInstanceDecisionItem](/graph/api/accessreviewinstancedecisionitem-update?view=graph-rest-beta&amp;tabs=http) API call:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/agent-id-governance-overview.md" target="_blank">docs/id-governance/agent-id-governance-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 4:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to inheritance, builder platforms, list of roles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Agent identities basics</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[Microsoft Entra Agent ID](../agent-id/identity-platform/what-is-agent-id.md) includes four new types of object: agent identity blueprint, agent identity blueprint principal, agent identity, and agent user. The agent identity, and optionally the agent user, allows AI agents to take on digital identities within Microsoft Entra. Once a digital identity is established, these agent identities are able to be governed using lifecycle and access features. Sponsors can be assigned to agent identities after creation. Sponsors of agent identities are human users accountable for making decisions about its lifecycle and access. For more information about the role of a sponsor of agent identities, see: [Administrative relationships for agent IDs](../agent-id/identity-platform/agent-owners-sponsors-managers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning access to agent identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Agent identities can have resources assigned to them directly via access packages. Resource assignments allow agent identities to request an access package for themselves, or have their owner or sponsor request one on their behalf. With access packages, you&#39;re able to assign agent identities the following resources:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Security Groups</div><div class="diff-line diff-context">- [Application roles and API permissions](../identity/enterprise-apps/assign-agent-identities-to-applications.md), including Graph permissions</div><div class="diff-line diff-deleted">- Microsoft Entra roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use access packages for agent identities, configure an access package with the required policy settings. When creating an access package assignment policy, in the **Who can get access** section, select **For users, service principals, and agent identities in your directory**, and then select the option of **All agents (preview)**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; If your agents aren&#39;t using Microsoft Entra agent IDs, then also create an access package assignment policy with the option **All Service principals (preview)** to allow service principals in your directory to be able to request this access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For a guide on creating an access package, see: [Create an access package in entitlement management](entitlement-management-access-package-create.md). For a guide on assigning identities to an existing access package, see: [View, add, and remove assignments for an access package in entitlement management](entitlement-management-access-package-assignments.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Agent identities basics</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[Microsoft Entra Agent ID](../agent-id/identity-platform/what-is-agent-id.md) includes four new types of object: agent identity blueprint, agent identity blueprint principal, agent identity, and agent user. These can be created in [Microsoft Foundry](/azure/ai-foundry/agents/concepts/agent-identity), [Microsoft Copilot Studio](/microsoft-copilot-studio/admin-use-entra-agent-identities), or other platforms. The agent identity, and optionally the agent user, allows AI agents to take on digital identities within Microsoft Entra. Once a digital identity is established, these agent identities are able to be governed using lifecycle and access features. Sponsors can be assigned to agent identities after creation. Sponsors of agent identities are human users accountable for making decisions about its lifecycle and access. For more information about the role of a sponsor of agent identities, see: [Administrative relationships for agent IDs](../agent-id/identity-platform/agent-owners-sponsors-managers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning access to agent identities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When created, agent identities have limited permissions, such as OAuth 2 delegated permission scopes [inherited from their parent agent identity blueprint](../agent-id/identity-professional/configure-inheritable-permissions-blueprints.md). In addition, agent identities can have resources assigned to them directly via access packages. Resource assignments allow agent identities to request an access package for themselves, or have their owner or sponsor request one on their behalf. With access packages, you&#39;re able to assign agent identities the following resources:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Security Groups</div><div class="diff-line diff-context">- [Application roles and API permissions](../identity/enterprise-apps/assign-agent-identities-to-applications.md), including Graph permissions</div><div class="diff-line diff-added">- [Microsoft Entra roles](../agent-id/identity-professional/authorization-agent-id.md#role-assignments-for-agent-identities)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use access packages for agent identities, configure an access package with the required policy settings. When creating an access package assignment policy, in the **Who can get access** section, select **For users, service principals, and agent identities in your directory**, and then select the option of **All agents (preview)**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; If your agents aren&#39;t using Microsoft Entra agent IDs, then also create an access package assignment policy with the option **All Service principals (preview)** to allow service principals in your directory to be able to request this access package.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Agents can then be assigned access packages through three different request pathways.</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-applications-existing-users.md" target="_blank">docs/id-governance/identity-governance-applications-existing-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 6:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-applications-existing-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to AR BYO to app integration articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Govern an application&#39;s existing users - Microsoft PowerShell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There are three common scenarios in which it&#39;s necessary to populate Microsoft Entra ID with existing users of an application before you use the application with a Microsoft Entra ID Governance feature such as [access reviews](access-reviews-application-preparation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License requirements</div><div class="diff-line diff-context">[!INCLUDE [active-directory-entra-governance-license.md](~/includes/entra-entra-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">That scenario of an application which does not support provisioning protocols, is covered in a separate article, [Govern the existing users of an application that does not support provisioning](identity-governance-applications-not-provisioned-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Terminology</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article illustrates the process for managing application role assignments by using the [Microsoft Graph PowerShell cmdlets](https://www.powershellgallery.com/packages/Microsoft.Graph). It uses the following Microsoft Graph terminology.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Govern an application&#39;s existing users - Microsoft PowerShell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There are four common scenarios in which it&#39;s necessary to populate Microsoft Entra ID with existing access rights and users of an application before you use the application with a Microsoft Entra ID Governance feature such as [access reviews](access-reviews-application-preparation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License requirements</div><div class="diff-line diff-context">[!INCLUDE [active-directory-entra-governance-license.md](~/includes/entra-entra-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">That scenario of an application which does not support provisioning protocols, is covered in a separate article, [Govern the existing users of an application that does not support provisioning](identity-governance-applications-not-provisioned-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Application uses Microsoft Entra ID as its identity provider and has additional access rights for users</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Using custom data provided resources, you can include access rights from applications in Microsoft Entra ID access reviews by uploading their access data directly into a catalog.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can then run user Access Reviews (UARs) across both Microsoft Entra-connected resources and those access rights. Reviewers can easily review and certify users’ access in the My Access portal, helping ensure consistent governance, improved visibility, and compliance across all resources whether or not they’re connected to Microsoft Entra.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This scenario is covered in a separate article, [include custom data provided resource in the catalog for catalog user Access Reviews (Preview)](custom-data-resource-access-reviews.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Terminology</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-current-known-limitations.md" target="_blank">docs/global-secure-access/reference-current-known-limitations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sumeet Mittal on Dec 1, 2025 8:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-current-known-limitations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Document Global Secure Access Government Cloud limitations</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## B2B guest access (preview) limitations</div><div class="diff-line diff-context">&lt;a name=&quot;b2b-guest-access-limitations&quot;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">- The Global Secure Access client doesn&#39;t support multi-session Azure Virtual Desktop.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## B2B guest access (preview) limitations</div><div class="diff-line diff-context">&lt;a name=&quot;b2b-guest-access-limitations&quot;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">- The Global Secure Access client doesn&#39;t support multi-session Azure Virtual Desktop.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Global Secure Access In Government Cloud limitations</div><div class="diff-line diff-added">Global Secure Access is not available in the US Government community cloud High (GCC-H), Department of Defense cloud and other Govt/Sovereign cloud environments.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">For usage in US Government community (GCC) cloud, known limitations/disclaimers include:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- Non Federal Information Processing Standard (FIPS) 140-2 certified: Note that while the GSA service is FedRAMP High accredited, it is not yet FIPS 140-2 certified. Microsoft is actively working toward achieving FIPS accreditation/certification, and this process is currently underway. Customers should consider this status when evaluating compliance requirements. FIPS 140-2 is a US government standard that defines FedRAMP minimum security requirements for cryptographic modules in products and systems. For more information, see [Federal Information Processisng Standard (FIPS) 140](https://learn.microsoft.com/azure/compliance/offerings/offering-fips-140-2).</div><div class="diff-line diff-added">- Data Residency Requirements: Customers should carefully consider data residency requirements when evaluating the GSA solution for their needs. When using GSA, there is a possibility that your data (up to and including customer content) may be Transport Layer Security (TLS) terminated and processed outside the United States esp. in cases where the users access GSA while traveling outside of the USA and its territories. Additionally, data may also be TLS terminated and processed outside of the USA when GSA routes traffic through the nearest available edge location, which may be outside U.S. borders depending on several factors. Factors for TLS termination and processing outside the US may include but not limited to: user’s physical location, proximity to edge locations, network latency, service availability, performance considerations, customer configurations and so on. As an example, a user near a US border with a non-US country may connect to a non-U.S. edge, where data inspection and policy enforcement take place.    </div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-get-started.md" target="_blank">docs/id-protection/identity-risk-management-agent-get-started.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Dec 1, 2025 6:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-get-started" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> preview-notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id-protection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 11/07/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">manager: pmwongera </div><div class="diff-line diff-context">ms.reviewer: chuqiaoshi</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Identity Risk Management Agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">IT administrators and security analysts face mounting pressure to identify and respond to threats quickly while managing increasingly complex environments. They&#39;re often overwhelmed by the sheer volume of alerts, struggle to prioritize which risks need immediate attention, and find it difficult to connect scattered data points across their organization&#39;s systems. The Identity Risk Management Agent with Security Copilot in Microsoft Entra helps these professionals investigate potential risks, understand their effect, and take decisive action to protect their organization&#39;s critical assets.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id-protection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 12/01/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">manager: pmwongera </div><div class="diff-line diff-context">ms.reviewer: chuqiaoshi</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Identity Risk Management Agent (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">IT administrators and security analysts face mounting pressure to identify and respond to threats quickly while managing increasingly complex environments. They&#39;re often overwhelmed by the sheer volume of alerts, struggle to prioritize which risks need immediate attention, and find it difficult to connect scattered data points across their organization&#39;s systems. The Identity Risk Management Agent with Security Copilot in Microsoft Entra helps these professionals investigate potential risks, understand their effect, and take decisive action to protect their organization&#39;s critical assets. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The Identity Risk Management Agent is currently being deployed and in preview. This information relates to a prerelease product that might be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/deploy-access-reviews.md" target="_blank">docs/id-governance/deploy-access-reviews.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 5:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/deploy-access-reviews" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to AR agent article from AR overview articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| [Self-review your access](../id-governance/privileged-identity-management/pim-perform-roles-and-resource-roles-review.md?toc=/azure/active-directory/governance/toc.json)| If you&#39;re assigned to an administrative role, approve or deny access to your role. |</div><div class="diff-line diff-context">| [Complete an access review](../id-governance/privileged-identity-management/pim-complete-roles-and-resource-roles-review.md?toc=/azure/active-directory/governance/toc.json)| View an access review and apply the results. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Use the Access Reviews API</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To interact with and manage reviewable resources, see [Microsoft Graph API methods](/graph/api/resources/accessreviewsv2-overview) and [role and application permission authorization checks](/graph/api/resources/accessreviewsv2-overview). The access reviews methods in the Microsoft Graph API are available for both application and user contexts. When you run scripts in the application context, the account used to run the API (the service principle) must be granted the AccessReview.Read.All permission to query access reviews information.</div><div class="diff-line diff-context">| | Apply decision |</div><div class="diff-line diff-context">| Date range| Seven days |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more advanced queries and analysis of access reviews, and to track changes and completion of reviews, export your Microsoft Entra audit logs to [Azure Monitor Log Analytics](../identity/monitoring-health/howto-archive-logs-to-storage-account.md) or Azure Event Hubs. When audit logs are stored in Log Analytics, you can use the [powerful analytics language](../identity/monitoring-health/howto-analyze-activity-logs-log-analytics.md) and build your own dashboards. For more information, see [Archive logs and reporting on entitlement management in Azure Monitor](entitlement-management-logs-and-reporting.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| [Self-review your access](../id-governance/privileged-identity-management/pim-perform-roles-and-resource-roles-review.md?toc=/azure/active-directory/governance/toc.json)| If you&#39;re assigned to an administrative role, approve or deny access to your role. |</div><div class="diff-line diff-context">| [Complete an access review](../id-governance/privileged-identity-management/pim-complete-roles-and-resource-roles-review.md?toc=/azure/active-directory/governance/toc.json)| View an access review and apply the results. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Access Review Agent (Preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The Access Review Agent works for your reviewers by automatically gathering insights and generating recommendations. It then guides reviewers through the review process in Microsoft Teams with natural language, with simple summaries and proposed decisions, so they can make the final call with confidence and clarity. For more information, see [Access Review Agent](../security-copilot/access-review-agent.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Use the Access Reviews API</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To interact with and manage reviewable resources, see [Microsoft Graph API methods](/graph/api/resources/accessreviewsv2-overview) and [role and application permission authorization checks](/graph/api/resources/accessreviewsv2-overview). The access reviews methods in the Microsoft Graph API are available for both application and user contexts. When you run scripts in the application context, the account used to run the API (the service principle) must be granted the AccessReview.Read.All permission to query access reviews information.</div><div class="diff-line diff-context">| | Apply decision |</div><div class="diff-line diff-context">| Date range| Seven days |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also use Microsoft Security Copilot to query current and recent access reviews. For more information, see [validate access through access reviews](../security-copilot/entra-governance-optimization.md#validate-access-through-access-reviews).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">For more advanced queries and analysis of access reviews, and to track changes and completion of reviews over time, export your Microsoft Entra audit logs to [Azure Monitor Log Analytics](../identity/monitoring-health/howto-archive-logs-to-storage-account.md) or Azure Event Hubs. When audit logs are stored in Log Analytics, you can use the [powerful analytics language](../identity/monitoring-health/howto-analyze-activity-logs-log-analytics.md) and build your own dashboards. For more information, see [Archive logs and reporting on entitlement management in Azure Monitor](entitlement-management-logs-and-reporting.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/perform-access-review.md" target="_blank">docs/id-governance/perform-access-review.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 5:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/perform-access-review" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> expand</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The Access Review Agent assists you in completing your pending access reviews by guiding you in Microsoft Teams with natural language, insights, and recommendations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Go directly to the Access Review Agent</div><div class="diff-line diff-deleted">1. Select the [Access Review Agent](https://teams.microsoft.com/l/app/b99caf01-1dd7-43cf-981a-0de444e783f3) link to open the agent</div><div class="diff-line diff-deleted">1. Select **Add** or **Open** to access the conversation with the Access Review Agent</div><div class="diff-line diff-context">1. Prompt the agent with **Help me with my access reviews** and the agent will assist you in completing your pending access reviews.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Use email to go to the Access Review Agent</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The Access Review Agent assists you in completing your pending access reviews by guiding you in Microsoft Teams with natural language, insights, and recommendations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Go directly to the Access Review Agent</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">If you are in the middle of reviews, you can go directly to the Access Review agent in Microsoft Teams.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Select the [Access Review Agent](https://teams.microsoft.com/l/app/b99caf01-1dd7-43cf-981a-0de444e783f3) link to open the agent.</div><div class="diff-line diff-added">1. Select **Add** or **Open** to access the conversation with the Access Review Agent.</div><div class="diff-line diff-context">1. Prompt the agent with **Help me with my access reviews** and the agent will assist you in completing your pending access reviews.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Use email to go to the Access Review Agent</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-applications-not-provisioned-users.md" target="_blank">docs/id-governance/identity-governance-applications-not-provisioned-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 6:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-applications-not-provisioned-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> acrolinx</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on those first two scenarios, where the application supports provisioning, or uses an LDAP directory, SQL database, has a SOAP or REST API or relies upon Microsoft Entra ID as its identity provider, see the article [govern an application&#39;s existing users](identity-governance-applications-existing-users.md). That article covers how to use identity governance features for existing users of those categories of applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article covers the third scenario. For some legacy applications it might not be feasible to remove other identity providers or local credential authentication from the application, or enable support for provisioning protocols for those applications. For those applications, if you want to use Microsoft Entra ID to review who has access to that application, or remove someone&#39;s access from that application, you&#39;ll need to create assignments in Microsoft Entra ID that represent application users.  This article covers that scenario of an application that does not use Microsoft Entra ID as its identity provider and does not support provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on the fourth scenario, see [include custom data provided resource in the catalog for catalog user Access Reviews (Preview)](custom-data-resource-access-reviews.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your application has an LDAP directory or SQL database, then see [Collect existing users from an application](identity-governance-applications-existing-users.md#collect-existing-users-from-an-application) for recommendations on how to extract the user collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Otherwise, if the application does not have a directory or database, you will need to contact the owner of the application and have them supply a list of users.  This could be in a format such as a CSV file, with one line per user.  Ensure that one field of each user in the file contains a unique identifier, such as an email address, that is also present on users in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If this system doesn&#39;t have the Microsoft Graph PowerShell cmdlets installed or doesn&#39;t have connectivity to Microsoft Entra ID, transfer the CSV file that contains the list of users to a system that has the [Microsoft Graph PowerShell cmdlets](https://www.powershellgallery.com/packages/Microsoft.Graph) installed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure entitlement management integration with ServiceNow for ticketing (optional)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you have ServiceNow then you can optionally configure automated ServiceNow ticket creation, using the [entitlement management integration](entitlement-management-ticketed-provisioning.md) via Logic Apps.  In that scenario, entitlement management can automatically create ServiceNow tickets for manual provisioning of users who have received access package assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on those first two scenarios, where the application supports provisioning, or uses an LDAP directory, SQL database, has a SOAP or REST API or relies upon Microsoft Entra ID as its identity provider, see the article [govern an application&#39;s existing users](identity-governance-applications-existing-users.md). That article covers how to use identity governance features for existing users of those categories of applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article covers the third scenario. For some legacy applications, it might not be feasible to remove other identity providers or local credential authentication from the application, or enable support for provisioning protocols for those applications. For those applications, if you want to use Microsoft Entra ID to review who has access to that application, or remove someone&#39;s access from that application, you&#39;ll need to create assignments in Microsoft Entra ID that represent application users. This article covers that scenario of an application that does not use Microsoft Entra ID as its identity provider and does not support provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on the fourth scenario, see [include custom data provided resource in the catalog for catalog user Access Reviews (Preview)](custom-data-resource-access-reviews.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your application has an LDAP directory or SQL database, then see [Collect existing users from an application](identity-governance-applications-existing-users.md#collect-existing-users-from-an-application) for recommendations on how to extract the user collection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Otherwise, if the application does not have a directory or database, you will need to contact the owner of the application and have them supply a list of users. This could be in a format such as a CSV file, with one line per user. Ensure that one field of each user in the file contains a unique identifier, such as an email address, that is also present on users in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If this system doesn&#39;t have the Microsoft Graph PowerShell cmdlets installed or doesn&#39;t have connectivity to Microsoft Entra ID, transfer the CSV file that contains the list of users to a system that has the [Microsoft Graph PowerShell cmdlets](https://www.powershellgallery.com/packages/Microsoft.Graph) installed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure entitlement management integration with ServiceNow for ticketing (optional)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you have ServiceNow, then you can optionally configure automated ServiceNow ticket creation, using the [entitlement management integration](entitlement-management-ticketed-provisioning.md) via Logic Apps. In that scenario, entitlement management can automatically create ServiceNow tickets for manual provisioning of users who have received access package assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/concept-risky-user-report.md" target="_blank">docs/id-protection/concept-risky-user-report.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Dec 1, 2025 6:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/concept-risky-user-report" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add-back-add-notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Knowing which users are at risk and *why* they&#39;re at risk is a key responsibility of security and identity administrators. The Risky user report in Microsoft Entra ID Protection provides the full report, along with a risk data summary, and an activity timeline.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article provides an overview of the information and actions available in the Risky user report.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">- Microsoft Entra ID Free, Microsoft Entra ID P1 for limited data on users.</div><div class="diff-line diff-context">- Microsoft Entra ID P2 licenses for full access to the risky user data.</div><div class="diff-line diff-context">- [Security Reader](../identity/role-based-access-control/permissions-reference.md#security-reader) and [Security Operator](../identity/role-based-access-control/permissions-reference.md#security-operator) are the least privileged roles required to use the *standard view* of the report.</div><div class="diff-line diff-context">- [User Administrator](../identity/role-based-access-control/permissions-reference.md#user-administrator) is required to reset passwords.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Risky user report</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The standard view of the Risky user report contains three main sections: The summary chart of risky users at each level, new risky users per day, and the full list of risky users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **Percentage of risky users at each risk level** chart shows a visual representation of your user and their risk levels. This visual summary allows you to quickly see the state of things in your organization. Hover over each segment of the chart to see the percentage of users at each risk level.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Knowing which users are at risk and *why* they&#39;re at risk is a key responsibility of security and identity administrators. The Risky user report in Microsoft Entra ID Protection provides the full report, along with a risk data summary, and an activity timeline.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Risky user report is also integrated with the Identity Risk Management Agent for enhanced agent suggestions and insights. If you have the Identity Risk Management Agent enabled, you can switch between the standard view and the agent view of the report.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">This article provides an overview of the information and actions available in the Risky user report.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">- Microsoft Entra ID Free, Microsoft Entra ID P1 for limited data on users.</div><div class="diff-line diff-context">- Microsoft Entra ID P2 licenses for full access to the risky user data.</div><div class="diff-line diff-context">- [Security Reader](../identity/role-based-access-control/permissions-reference.md#security-reader) and [Security Operator](../identity/role-based-access-control/permissions-reference.md#security-operator) are the least privileged roles required to use the *standard view* of the report.</div><div class="diff-line diff-added">- [Security Administrator](../identity/role-based-access-control/permissions-reference.md#search-administrator) is required to use the *agent view* of the report and access the Risk Management Agent features.</div><div class="diff-line diff-context">- [User Administrator](../identity/role-based-access-control/permissions-reference.md#user-administrator) is required to reset passwords.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Risky user report</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The standard view of the Risky user report contains three main sections: The summary chart of risky users at each level, new risky users per day, and the full list of risky users. If you have the [Identity Risk Management Agent](identity-risk-management-agent-risky-user-report.md) turned on, you can use the **Agent view** to see agent suggestions and insights.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **Percentage of risky users at each risk level** chart shows a visual representation of your user and their risk levels. This visual summary allows you to quickly see the state of things in your organization. Hover over each segment of the chart to see the percentage of users at each risk level.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-risky-user-report.md" target="_blank">docs/id-protection/identity-risk-management-agent-risky-user-report.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Dec 1, 2025 6:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-risky-user-report" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> preview-notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Review agent findings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Identity Risk Management Agent in Microsoft Entra ID Protection provides proactive risk management capabilities by analyzing the risky identities and suggesting actions to remediate them. By using a Large Language Model, the agent helps security administrators review and respond to risky activities before they lead to security incidents.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Review agent findings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Identity Risk Management Agent (Preview) in Microsoft Entra ID Protection provides proactive risk management capabilities by analyzing the risky identities and suggesting actions to remediate them. By using a Large Language Model, the agent helps security administrators review and respond to risky activities before they lead to security incidents.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The Identity Risk Management Agent is currently being deployed and in preview. This information relates to a prerelease product that might be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/identity-risk-management-agent-settings.md" target="_blank">docs/id-protection/identity-risk-management-agent-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Dec 1, 2025 6:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> preview-notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: chuqiaoshi</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Identity Risk Management Agent settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Identity Risk Management Agent in Microsoft Entra ID Protection provides proactive risk management capabilities by analyzing user behavior and suggesting actions to mitigate potential identity risks. You can configure the settings to meet your organization&#39;s needs, such as how often it runs, and email notifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Access the agent settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once the agent is enabled, you can adjust a few settings. To review and adjust the settings:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: chuqiaoshi</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Identity Risk Management Agent (Preview) settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Identity Risk Management Agent in Microsoft Entra ID Protection provides proactive risk management capabilities by analyzing user behavior and suggesting actions to mitigate potential identity risks. You can configure the settings to meet your organization&#39;s needs, such as how often it runs, and email notifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The Identity Risk Management Agent is currently being deployed and in preview. This information relates to a prerelease product that might be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Access the agent settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once the agent is enabled, you can adjust a few settings. To review and adjust the settings:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/licensing.md" target="_blank">docs/fundamentals/licensing.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Barclay Neira on Dec 1, 2025 9:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/licensing" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update licensing date in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-deleted">ms.date: 06/20/2025</div><div class="diff-line diff-context">ms.subservice: fundamentals</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article discusses licensing options for the Microsoft Entra product family. It&#39;s intended for security decision makers, identity and network access administrators, and IT professionals who are considering Microsoft Entra solutions for their organizations. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra licensing options</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-added">ms.date: 12/01/2025</div><div class="diff-line diff-context">ms.subservice: fundamentals</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article discusses licensing options for the Microsoft Entra product family. It&#39;s intended for security decision makers, identity and network access administrators, and IT professionals who are considering Microsoft Entra solutions for their organizations. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt;If you are troubleshooting licensing assignment issues, review [Identify and resolve license assignment problems for a group in the Microsoft 365 Admin Portal](licensing-groups-resolve-problems.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra licensing options</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/access-reviews-overview.md" target="_blank">docs/id-governance/access-reviews-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 5:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to AR agent article from AR overview articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt;Creating a review on inactive users and with [user-to-group affiliation](review-recommendations-access-reviews.md#user-to-group-affiliation) recommendations requires a Microsoft Entra ID Governance license.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Prepare for an access review of users&#39; access to an application](access-reviews-application-preparation.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt;Creating a review on inactive users and with [user-to-group affiliation](review-recommendations-access-reviews.md#user-to-group-affiliation) recommendations requires a Microsoft Entra ID Governance license.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Access Review Agent (Preview)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The Access Review Agent works for your reviewers by automatically gathering insights and generating recommendations. It then guides reviewers through the review process in Microsoft Teams with natural language, with simple summaries and proposed decisions, so they can make the final call with confidence and clarity. For more information, see [Access Review Agent](../security-copilot/access-review-agent.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Prepare for an access review of users&#39; access to an application](access-reviews-application-preparation.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-overview.md" target="_blank">docs/id-governance/identity-governance-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Dec 1, 2025 5:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add links to AR agent article from AR overview articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations that previously had been using an on-premises identity governance product can [migrate their organizational role model](identity-governance-organizational-roles.md) to Microsoft Entra ID Governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Furthermore, IT can delegate access management decisions to business decision makers. For example, employees that wish to access confidential customer data in a company&#39;s marketing application in Europe could need approval from their manager, a department lead or resource owner, and a security risk officer.  [Entitlement management](entitlement-management-overview.md) enables you to define how identities request access across packages of group and team memberships, app roles, and SharePoint Online roles, and enforce separation of duties checks on access requests.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> Organizations can also control which guest identities have access, including to [on-premises applications](../external-id/hybrid-cloud-to-on-premises.md). These access rights can then be regularly reviewed using recurring [Microsoft Entra access reviews](access-reviews-overview.md) for access recertification.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Privileged access lifecycle</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations that previously had been using an on-premises identity governance product can [migrate their organizational role model](identity-governance-organizational-roles.md) to Microsoft Entra ID Governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Furthermore, IT can delegate access management decisions to business decision makers. For example, employees that wish to access confidential customer data in a company&#39;s marketing application in Europe could need approval from their manager, a department lead or resource owner, and a security risk officer.  [Entitlement management](entitlement-management-overview.md) enables you to define how identities request access across packages of group and team memberships, app roles, and SharePoint Online roles, and enforce separation of duties checks on access requests. Access packages can require regular access reviews, and other access rights, such as group memberships, can also be regularly reviewed using recurring [Microsoft Entra access reviews](access-reviews-overview.md) for access recertification.  The [Access Review Agent](../security-copilot/access-review-agent.md) helps reviewers by automatically gathering insights and generating recommendations, and guides reviewers through the review process in Microsoft Teams with natural language, with simple summaries and proposed decisions, so they can make the final call with confidence and clarity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations can also control which guest identities have access, including to [on-premises applications](../external-id/hybrid-cloud-to-on-premises.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Privileged access lifecycle</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/fundamentals/concept-secure-remote-workers.md
+            </div>
+            <div class="file-meta">
+              Deleted by John Flores on Dec 1, 2025 5:35 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/fundamentals/concept-secure-remote-workers</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-137 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> [Fundamentals] Securing Microsoft Entra best practices</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/id-protection/identity-risk-management-agent-risky-user-report.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Dec 1, 2025 5:08 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-risky-user-report</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-81 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> agents-120125</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/id-protection/identity-risk-management-agent-settings.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Dec 1, 2025 5:08 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-settings</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-69 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> agents-120125</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/id-protection/identity-risk-management-agent-get-started.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Dec 1, 2025 5:08 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/id-protection/identity-risk-management-agent-get-started</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-62 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> agents-120125</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
