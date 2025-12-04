@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since December 2nd 2025, 7:25 PM PST</p>
+        <p>Report generated on December 3rd 2025, 7:25 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">56</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">21</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/services-partners.md" target="_blank">docs/verified-id/services-partners.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Dec 3, 2025 5:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/verified-id/services-partners" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+20</span> / 
+              <span class="deletions">-19</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> making updates from November 21</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: barclayn</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 01/17/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You could select a partner from the list and build seamless end-user experiences for onboarding, secure access to critical services, self-service, and custom business application scenarios. If you&#39;re a Services or solution Partner and would like to be considered into Microsoft Entra Verified ID partner documentation, submit your application [request](https://forms.microsoft.com/r/AGVsXmf4EZ).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| **Services and solution partner** | **Website** |</div><div class="diff-line diff-deleted">|:-------------------------|:--------------|</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/affinitiquest.png&quot; alt-text=&quot;Screenshot of Affinitiquest logo.&quot;::: | [Secure personal data | AffinitiQuest](https://affinitiquest.io/) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/avanade.png&quot; alt-text=&quot;Screenshot of Avanade logo.&quot;::: | [Avanade Microsoft Entra Verified ID Consulting Services](https://appsource.microsoft.com/marketplace/consulting-services/avanadeinc.ava_entra_verified_id_fy23?exp=ubp8) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/binaria.png&quot; alt-text=&quot;Screenshot of Binaria logo.&quot;::: | [Azure Marketplace offering - Binaria Key](https://azuremarketplace.microsoft.com/marketplace/apps/binariatechnologies1583779526579.binariakey?tab=Overview) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/credivera.png&quot; alt-text=&quot;Screenshot of Credivera logo.&quot;::: | [Credivera: Digital Identity Solutions | Verifiable Credentials](https://www.credivera.com/) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/condatis.png&quot; alt-text=&quot;Screenshot of Condatis logo.&quot;::: | [Decentralized Identity | Condatis](https://condatis.com/technology/decentralized-identity/) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/dxc.png&quot; alt-text=&quot;Screenshot of DXC logo.&quot;::: | [Digital Identity - Connect with DXC](https://dxc.com/us/en/services/security/digital-identity) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/ctc.png&quot; alt-text=&quot;Screenshot of CTC logo.&quot;::: | [CTC&#39;s SELMID offering](https://ctc-insight.com/selmid) |</div><div class="diff-line diff-deleted">| :::image type=&quot;content&quot; source=&quot;media/services-partners/ey.png&quot; alt-text=&quot;Screenshot of EY logo.&quot;::: | [EY Security Solutions Supported by Microsoft Verified ID](https://azuremarketplace.microsoft.com/marketplace/apps/ey_global.ey_ss_supported_by_msft_verified_id?tab=Overview) |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: barclayn</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 12/03/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You could select a partner from the list and build seamless end-user experiences for onboarding, secure access to critical services, self-service, and custom business application scenarios. If you&#39;re a Services or solution Partner and would like to be considered into Microsoft Entra Verified ID partner documentation, submit your application [request](https://forms.microsoft.com/r/AGVsXmf4EZ).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Partner name | Partner documentation |</div><div class="diff-line diff-added">|--------------|----------------------|</div><div class="diff-line diff-added">| AffinitiQuest | [Secure personal data \| AffinitiQuest](https://affinitiquest.io/) |</div><div class="diff-line diff-added">| Avanade | [Avanade Microsoft Entra Verified ID Consulting Services](https://appsource.microsoft.com/marketplace/consulting-services/avanadeinc.ava_entra_verified_id_fy23?exp=ubp8) |</div><div class="diff-line diff-added">| Binaria | [Azure Marketplace offering - Binaria Key](https://azuremarketplace.microsoft.com/marketplace/apps/binariatechnologies1583779526579.binariakey?tab=Overview) |</div><div class="diff-line diff-added">| Credivera | [Credivera: Digital Identity Solutions \| Verifiable Credentials](https://www.credivera.com/) |</div><div class="diff-line diff-added">| Condatis | [Decentralized Identity \| Condatis](https://condatis.com/technology/decentralized-identity/) |</div><div class="diff-line diff-added">| DXC | [Digital Identity - Connect with DXC](https://dxc.com/us/en/services/security/digital-identity) |</div><div class="diff-line diff-added">| CTC | [CTC&#39;s SELMID offering](https://ctc-insight.com/selmid) |</div><div class="diff-line diff-added">| EY | [EY Security Solutions Supported by Microsoft Verified ID](https://azuremarketplace.microsoft.com/marketplace/apps/ey_global.ey_ss_supported_by_msft_verified_id?tab=Overview) |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/whats-new-docs.md" target="_blank">docs/external-id/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 3, 2025 11:22 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> What's new in November?</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra External ID</div><div class="diff-line diff-context">description: New and updated documentation for the Microsoft Entra External ID.</div><div class="diff-line diff-deleted">ms.date: 10/01/2025</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># [External ID in external tenants](#tab/external-tenants)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## October 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### New article</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Add OpenID Connect as an external identity provider](customers/how-to-custom-oidc-federation-customers.md) - Multiple editorial updates</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## August 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Updated articles</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra External ID</div><div class="diff-line diff-context">description: New and updated documentation for the Microsoft Entra External ID.</div><div class="diff-line diff-added">ms.date: 12/03/2025</div><div class="diff-line diff-context">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">ms.author: cmulligan</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># [External ID in external tenants](#tab/external-tenants)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## November 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### New article</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Configure Akamai WAF with Microsoft Entra External ID](customers/how-to-configure-akamai-integration.md)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Updated articles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Supported features in workforce and external tenants](customers/concept-supported-features-customers.md) - Added Security Store features</div><div class="diff-line diff-added">- [Configure Cloudflare Web Application Firewall with Microsoft Entra External ID](customers/how-to-configure-waf-integration.md) - Updated Cloudflare integration steps</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nuno Alexandre on Dec 3, 2025 9:19 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-password-hash-synchronization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update how-to-connect-password-hash-synchronization.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; A new user created in Active Directory with &quot;User must change password at next logon&quot; flag will always be provisioned in Microsoft Entra ID with a password policy to &quot;Force change password on next sign-in&quot;, irrespective of the *ForcePasswordChangeOnLogOn* feature being true or false. This is a Microsoft Entra internal logic since the new user is provisioned without a password, whereas *ForcePasswordChangeOnLogOn* feature only affects admin password reset scenarios.</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt; If a user was created in Active Directory with &quot;User must change password at next logon&quot; before the feature was enabled, the user will receive an error while signing in. To remediate this issue, un-check and re-check the field &quot;User must change password at next logon&quot; in Active Directory Users and Computers. After synchronizing the user object changes, the user will receive the expected prompt in Microsoft Entra ID to update their password. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-context">&gt; You should only use this feature when Self-Service Password Reset and Password Writeback are enabled on the tenant. This is so that if a user changes their password via SSPR, it will be synchronized to Active Directory.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; When you create a new user in Active Directory with the **User must change password at next logon** option selected, Microsoft Entra ID always configures that user’s cloud account to **force a password change at the first sign-in**. This happens **whether *ForcePasswordChangeOnLogOn* feature is enabled or not**, because initially new synced user objects have no password in Microsoft Entra ID, hence must be forced to set one before sign-in. The *ForcePasswordChangeOnLogOn* feature itself only affects admin-initiated password reset scenarios from on-premises, not the initial user object synchronization.</div><div class="diff-line diff-added">&gt; If a user account was created in Active Directory with **“User must change password at next logon”** while both, the *ForcePasswordChangeOnLogOn* and PasswordHashSync features were disabled, that user receives an error &quot;*Your account or password is incorrect*&quot; when signing in (instead of a password-change prompt). To fix this issue, clear the **“User must change password at next logon”** checkbox for the user in Active Directory, then **select it again**. After the next synchronization, Microsoft Entra ID will prompt the user to update their password at sign-in as expected.</div><div class="diff-line diff-added">When **Password Hash Synchronization (PHS)** is enabled, each new account is still provisioned in Microsoft Entra ID without a password (because the initial object synchronization doesn’t include the user&#39;s password). However, the PHS process runs *frequently* (every 2 minutes) to sync password hashes from on-premises AD to the cloud. The moment a user’s password is synced to Microsoft Entra ID, the service will apply or skip the “*force password change on next sign-in*” flag based on whether the **UserForcePasswordChangeOnLogonEnabled** feature is turned on or off. In other words, *UserForcePasswordChangeOnLogonEnabled* only takes effect when PHS actually synchronizes the password to the cloud. However, when *UserForcePasswordChangeOnLogonEnabled* feature is not enabled, the sync client won&#39;t even attempt to sync any temporary passwords. Also, if PHS is not running, enabling or disabling this feature has no impact on user sign-in behavior. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The following table illustrates the feature combinations and expected behaviors:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">|**Sync Client PasswordHashSync**|**AD “User must change password at next logon”**|**Entra UserForcePasswordChangeOnLogonEnabled**|**Resulting Sign-In Behavior in Entra ID**|</div><div class="diff-line diff-added">| -------- | -------- | -------- | -------- |</div><div class="diff-line diff-added">|False (Disabled)|N/A (no effect in the cloud when PHS is disabled)|N/A (no effect in the cloud when PHS is disabled)|Error: &quot;Your account or password is incorrect&quot; since the account has no password. The cloud admin must set a password for the account.|</div><div class="diff-line diff-added">|True (Enabled)|Enabled|True (Enabled)|User is prompted to change password at first sign-in (temporary password was synced to Entra ID).|</div><div class="diff-line diff-added">|True (Enabled)|Disabled|True (Enabled)|User signs in normally with the synced password (no prompt to change password).|</div><div class="diff-line diff-added">|True (Enabled)|Enabled|False (Disabled)|Temporary password isn’t synced; user can’t sign in to Entra until password is changed on-premises and synced.|</div><div class="diff-line diff-added">|True (Enabled)|Disabled|False (Disabled)|User signs in normally with the synced password (no prompt to change password).|</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-context">&gt; You should only use this feature when Self-Service Password Reset and Password Writeback are enabled on the tenant. This is so that if a user changes their password via SSPR, it will be synchronized to Active Directory.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/idv-partners.md" target="_blank">docs/verified-id/idv-partners.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Dec 3, 2025 5:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/verified-id/idv-partners" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> making updates from November 21</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: barclayn</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/07/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security store integration partners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Partner | Partner documentation | Description |</div><div class="diff-line diff-context">|---------|----------------------|-------------|</div><div class="diff-line diff-deleted">| Au10tix | [Au10tix documentation](https://www.au10tix.com/solutions/verifiable-credentials/) | AU10TIX improves Verifiability While Protecting Privacy For Businesses, Employees, Contractors, Vendors, And Customers. |</div><div class="diff-line diff-deleted">| Idemia | [Idemia documentation](https://na.idemia.com/identity/verifiable-credentials/) | Idemia Integration with Microsoft Entra Verified ID enables &quot;Verify once, use everywhere&quot; functionality. |</div><div class="diff-line diff-deleted">| TrueCredential (LexisNexis) | [TrueCredential documentation](https://whoiam.ai/product/truecredential/) | TrueCredential is a secure identity verification solution powered by LexisNexis Risk Solutions, leveraging Microsoft Entra Verified ID to deliver trusted, decentralized credentials. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Verified ID API based integration partners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Partner | Partner documentation | Description |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: barclayn</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 12/03/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security store integration partners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Partner | Partner offers | Description |</div><div class="diff-line diff-context">|---------|----------------------|-------------|</div><div class="diff-line diff-added">| Au10tix | [Au10tix documentation](https://securitystore.microsoft.com/solutions/au10tix.au10tix-id-one-trust-vc) | AU10TIX improves Verifiability While Protecting Privacy For Businesses, Employees, Contractors, Vendors, And Customers. |</div><div class="diff-line diff-added">| Idemia | [Idemia documentation](https://securitystore.microsoft.com/solutions/idemia.idemia-id-one-trust-vc) | Idemia Integration with Microsoft Entra Verified ID enables &quot;Verify once, use everywhere&quot; functionality. |</div><div class="diff-line diff-added">| TrueCredential (LexisNexis) | [TrueCredential documentation](https://securitystore.microsoft.com/solutions/truecredential.truecredential-oneid-verifed-id) | TrueCredential is a secure identity verification solution powered by LexisNexis Risk Solutions, leveraging Microsoft Entra Verified ID to deliver trusted, decentralized credentials. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Verified ID API based integration partners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Partner | Partner offers | Description |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/cloud-sync-version-history.md" target="_blank">docs/includes/cloud-sync-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 5:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/cloud-sync-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove new versioning provisoning agent</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Get notified about when to revisit this page for updates by copying and pasting this URL: `https://aka.ms/cloudsyncrss` into your ![RSS feed reader icon](media/cloud-sync-version-history/feed-icon-16-x-16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## 1.1.2106.0</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">December 2, 2025: released for download only</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Fixed Issues</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Fixed an issue with OnPremises Self-Service Password Reset integration using provisioning agent in AzureUSGovernment cloud.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## 1.1.2102.0</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sept 22, 2025: released for download only</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Get notified about when to revisit this page for updates by copying and pasting this URL: `https://aka.ms/cloudsyncrss` into your ![RSS feed reader icon](media/cloud-sync-version-history/feed-icon-16-x-16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## 1.1.2102.0</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sept 22, 2025: released for download only</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/apps.md" target="_blank">docs/id-governance/apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 2:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;entra-identity-governance-integrations&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID Governance integrations</div><div class="diff-line diff-deleted">The list below provides key integrations between Microsoft Entra ID Governance and various applications, including both provisioning and SSO integrations. For a full list of applications that Microsoft Entra ID integrates with specifically for SSO, see: [SaaS App configuration guides for Microsoft Entra ID](../identity/saas-apps/tutorial-list.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID Governance can be integrated with many other applications, using standards such as OpenID Connect, SAML, SCIM, SQL and LDAP. If you&#39;re using a SaaS application which isn&#39;t listed, then [ask the SaaS vendor to onboard](../identity/enterprise-apps/v2-howto-app-gallery-listing.md).  For integration with other applications, see [integrating applications with Microsoft Entra ID](identity-governance-applications-integrate.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Application | Automated provisioning | Single Sign On (SSO)|</div><div class="diff-line diff-context">| :--- | :-:  | :-: |</div><div class="diff-line diff-context">| [Zylo](../identity/saas-apps/zylo-tutorial.md) |  | ● |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Partner driven integrations</div><div class="diff-line diff-deleted">There is also a healthy partner ecosystem, further expanding the breadth and depth of integrations available with Microsoft Entra ID Governance. Explore the [partner integrations](../identity/app-provisioning/partner-driven-integrations.md) available, including connectors for:</div><div class="diff-line diff-context">* Epic</div><div class="diff-line diff-context">* Cerner</div><div class="diff-line diff-context">* IBM RACF</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;entra-identity-governance-integrations&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID Governance integrations</div><div class="diff-line diff-added">The following list provides key integrations between Microsoft Entra ID Governance and various applications, including both provisioning and SSO integrations. For a full list of applications that Microsoft Entra ID integrates with specifically for SSO, see: [SaaS App configuration guides for Microsoft Entra ID](../identity/saas-apps/tutorial-list.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID Governance can be integrated with many other applications, using standards such as OpenID Connect, SAML, SCIM, SQL, and LDAP. If you&#39;re using an SaaS application that isn&#39;t listed, then [ask the SaaS vendor to onboard](../identity/enterprise-apps/v2-howto-app-gallery-listing.md). For integration with other applications, see [integrating applications with Microsoft Entra ID](identity-governance-applications-integrate.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Application | Automated provisioning | Single Sign On (SSO)|</div><div class="diff-line diff-context">| :--- | :-:  | :-: |</div><div class="diff-line diff-context">| [Zylo](../identity/saas-apps/zylo-tutorial.md) |  | ● |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Partner driven integrations</div><div class="diff-line diff-added">There&#39;s also a healthy partner ecosystem, further expanding the breadth and depth of integrations available with Microsoft Entra ID Governance. Explore the [partner integrations](../identity/app-provisioning/partner-driven-integrations.md) available, including connectors for:</div><div class="diff-line diff-context">* Epic</div><div class="diff-line diff-context">* Cerner</div><div class="diff-line diff-context">* IBM RACF</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/how-to-dnsbind.md" target="_blank">docs/verified-id/how-to-dnsbind.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sergii Cherkashyn on Dec 3, 2025 2:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/verified-id/how-to-dnsbind" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-dnsbind.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify domain ownership and distribute the did-configuration.json file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The domain you verify ownership of to your DID is defined in the [overview section](verifiable-credentials-configure-tenant.md#set-up-verified-id). The domain needs to be a domain under your control and it should be in the format `https://www.example.com/`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. From the **Microsoft Entra admin center**, choose **Verified ID** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/how-to-dnsbind/verify-download.png&quot; alt-text=&quot;Screenshot that shows downloading the well-known configuration.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Host the `did-configuration.json` file at the location specified. For example, if you specified domain `https://www.example.com`, the file needs to be hosted at `https://www.example.com/.well-known/did-configuration.json`. There can be no other path in the URL except the `.well-known path` name.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. When `did-configuration.json` is publicly available at the `.well-known/did-configuration.json` URL, verify it by selecting **Refresh verification status**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The portal verifies that `did-configuration.json` is reachable over the internet and valid when you select **Refresh verification status**. Authenticator doesn&#39;t honor HTTP redirects. You should also consider verifying that you can request that URL in a browser to avoid errors like not using HTTPS, a bad TLS/SSL certificate, or the URL not being public. If the `did-configuration.json` file can&#39;t be requested anonymously in a browser or via tools such as `curl`, without warnings or errors, the portal can&#39;t complete the **Refresh verification status** step either.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt; If you&#39;re experiencing problems refreshing your verification status, you can troubleshoot it by running `curl -Iv https://yourdomain.com/.well-known/did-configuration.json` on a machine with Ubuntu OS. Windows Subsystem for Linux with Ubuntu also works. If curl fails, refreshing the verification status won&#39;t work.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Why do I need to verify domain ownership of our DID?</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify domain ownership and distribute the did-configuration.json file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The domain you verify ownership of to your DID is defined in the [overview section](verifiable-credentials-configure-tenant.md#set-up-verified-id). The domain needs to be a domain under your control and it should be in the format `https://www.contoso.com/`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. From the **Microsoft Entra admin center**, choose **Verified ID** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   :::image type=&quot;content&quot; source=&quot;media/how-to-dnsbind/verify-download.png&quot; alt-text=&quot;Screenshot that shows downloading the well-known configuration.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Host the `did-configuration.json` file at the location specified. For example, if you specified domain `https://www.contoso.com`, the file needs to be hosted at `https://www.contoso.com/.well-known/did-configuration.json`. There can be no other path in the URL except the `.well-known path` name.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. When `did-configuration.json` is publicly available at the `.well-known/did-configuration.json` URL, verify it by selecting **Refresh verification status**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The portal verifies that `did-configuration.json` is reachable over the internet and valid when you select **Refresh verification status**. Authenticator doesn&#39;t honor HTTP redirects. You should also consider verifying that you can request that URL in a browser to avoid errors like not using HTTPS, a bad TLS/SSL certificate, or the URL not being public. If the `did-configuration.json` file can&#39;t be requested anonymously in a browser or via tools such as `curl`, without warnings or errors, the portal can&#39;t complete the **Refresh verification status** step either.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt; If you&#39;re experiencing problems refreshing your verification status, you can troubleshoot it by running `curl -Iv https://contoso.com/.well-known/did-configuration.json` on a machine with Ubuntu OS. Windows Subsystem for Linux with Ubuntu also works. If curl fails, refreshing the verification status won&#39;t work.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Why do I need to verify domain ownership of our DID?</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/best-practices-secure-id-governance.md" target="_blank">docs/id-governance/best-practices-secure-id-governance.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/best-practices-secure-id-governance" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article provides best practices for securing deploying Microsoft Entra ID Governance.</div><div class="diff-line diff-context">services: entra-id-governance</div><div class="diff-line diff-context">documentationcenter: &#39;&#39;</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-deleted">editor: &#39;&#39;</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.topic: best-practice</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article provides best practices for securing deploying Microsoft Entra ID Governance.</div><div class="diff-line diff-context">services: entra-id-governance</div><div class="diff-line diff-context">documentationcenter: &#39;&#39;</div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.topic: best-practice</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-network-content-filtering.md" target="_blank">docs/global-secure-access/how-to-network-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sumeet Mittal on Dec 3, 2025 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-network-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update content filtering documentation with Purview note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. On the **Review** tab, review your settings.</div><div class="diff-line diff-context">1. Select **Create** to create the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Link the file policy to a security profile</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Secure** &gt; **Security profiles**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md)</div><div class="diff-line diff-context">- [Enable the Internet Access traffic forwarding profile](how-to-manage-internet-access-profile.md) </div><div class="diff-line diff-context">- [Configure Transport Layer Security inspection](how-to-transport-layer-security.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. On the **Review** tab, review your settings.</div><div class="diff-line diff-context">1. Select **Create** to create the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!Note]</div><div class="diff-line diff-added">&gt; If you choose &quot;Scan with Purview&quot; action, please ensure you have configured corresponding data policy through Microsoft Purview.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Link the file policy to a security profile</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Secure** &gt; **Security profiles**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Learn about Microsoft Purview Network Data Security](https://learn.microsoft.com/purview/dlp-network-data-security-learn)</div><div class="diff-line diff-context">- [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md)</div><div class="diff-line diff-context">- [Enable the Internet Access traffic forwarding profile](how-to-manage-internet-access-profile.md) </div><div class="diff-line diff-context">- [Configure Transport Layer Security inspection](how-to-transport-layer-security.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-windows-client-release-history.md" target="_blank">docs/global-secure-access/reference-windows-client-release-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Dec 3, 2025 6:42 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-windows-client-release-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update release date for Windows client v2.24.117</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article tracks the changes in each released version of the Global Secure Access client for Windows.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 11/24/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/reference-windows-client-release-history/client-download-screen.png&quot; alt-text=&quot;Screenshot of the client download screen with the Download Client button highlighted.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 2.24.117</div><div class="diff-line diff-deleted">Released for download on November 26, 2025.</div><div class="diff-line diff-context">### Functional changes</div><div class="diff-line diff-context">- Support for [Intelligent Local Access](enable-intelligent-local-access.md).</div><div class="diff-line diff-context">- Support for [B2B guest access](concept-b2b-guest-access.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article tracks the changes in each released version of the Global Secure Access client for Windows.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 12/03/2025</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/reference-windows-client-release-history/client-download-screen.png&quot; alt-text=&quot;Screenshot of the client download screen with the Download Client button highlighted.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Version 2.24.117</div><div class="diff-line diff-added">Released for download on December 3, 2025.</div><div class="diff-line diff-context">### Functional changes</div><div class="diff-line diff-context">- Support for [Intelligent Local Access](enable-intelligent-local-access.md).</div><div class="diff-line diff-context">- Support for [B2B guest access](concept-b2b-guest-access.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/deploy-sap-netweaver.md" target="_blank">docs/id-governance/scenarios/deploy-sap-netweaver.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/deploy-sap-netweaver" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article describes how to set up a lab environment with SAP ECC for testing.</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: </div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.topic: install-set-up-deploy</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article describes how to set up a lab environment with SAP ECC for testing.</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: </div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.topic: install-set-up-deploy</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/entitlement-management-private-access.md" target="_blank">docs/id-governance/scenarios/entitlement-management-private-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/entitlement-management-private-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Describes how to use Entitlement Management with Private Access</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.workload: identity</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Entra Suite Scenario: Using Entra Private Access with Entitlement Management  </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Describes how to use Entitlement Management with Private Access</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.workload: identity</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Entra Suite Scenario: Using Entra Private Access with Entitlement Management  </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/least-privileged.md" target="_blank">docs/id-governance/scenarios/least-privileged.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/least-privileged" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># The principle of least privilege with Microsoft Entra ID Governance</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># The principle of least privilege with Microsoft Entra ID Governance</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/provision-ldap.md" target="_blank">docs/id-governance/scenarios/provision-ldap.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/provision-ldap" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Govern provisioning to on-premises LDAP based apps</div><div class="diff-line diff-context">description: This document describes how to configure Microsoft Entra ID to provision users into an on-premises LDAP directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Govern provisioning to on-premises LDAP based apps</div><div class="diff-line diff-context">description: This document describes how to configure Microsoft Entra ID to provision users into an on-premises LDAP directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/provision-sap.md" target="_blank">docs/id-governance/scenarios/provision-sap.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 3, 2025 1:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/scenarios/provision-sap" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Govern provisioning cloud users into on-premises SAP ERP Central Component (SAP ECC, formerly SAP R/3) with NetWeaver AS ABAP 7.0 or later.</div><div class="diff-line diff-context">description: This document describes how to provision users into SAP ERP Central Component (SAP ECC, formerly SAP R/3) with NetWeaver AS ABAP 7.0 or later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: billmath</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-deleted">ms.author: billmath</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Govern provisioning cloud users into on-premises SAP ERP Central Component (SAP ECC, formerly SAP R/3) with NetWeaver AS ABAP 7.0 or later.</div><div class="diff-line diff-context">description: This document describes how to provision users into SAP ERP Central Component (SAP ECC, formerly SAP R/3) with NetWeaver AS ABAP 7.0 or later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: owinfreyATL</div><div class="diff-line diff-context">manager: femila</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice:</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/09/2025</div><div class="diff-line diff-added">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: arvinh</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
