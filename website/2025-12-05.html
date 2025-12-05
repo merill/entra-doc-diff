@@ -1,0 +1,368 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since December 3rd 2025, 7:25 PM PST</p>
+        <p>Report generated on December 4th 2025, 7:25 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/workflow-sensitivity-labels.md" target="_blank">docs/id-governance/workflow-sensitivity-labels.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 4, 2025 6:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/workflow-sensitivity-labels" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+21</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: how-to #Required; leave this attribute/value as-is</div><div class="diff-line diff-context">ms.date: 11/04/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#CustomerIntent: As an identity governance administrator, I want to view sensitivity labels of groups so that I can maintain security of groups within my environment.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sensitivity labels in Lifecycle Workflows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Maintaining and classifying data within your environment is an important part in maintaining a secure environment. Sensitivity labels from Microsoft Purview Information Protection let you classify and protect your organization&#39;s data, while making sure that user productivity and their ability to collaborate isn&#39;t hindered. With sensitivity labels in Lifecycle Workflows, administrators are able to quickly view the sensitivity labels of groups during workflow creation, and editing. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with Microsoft Entra licenses required for Lifecycle workflows, you must also have:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [A created sensitivity label](/purview/create-sensitivity-labels?tabs=classic-label-scheme#create-and-configure-sensitivity-labels)</div><div class="diff-line diff-deleted">- [A sensitivity label applied to the group you want to use with a Lifecycle workflow](/purview/sensitivity-labels-teams-groups-sites#using-sensitivity-labels-for-microsoft-teams-microsoft-365-groups-and-sharepoint-sites)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## View assigned groups sensitivity labels during workflow creation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Sensitivity labels of groups can be viewed when adding tasks such as &quot;**Add user to groups**&quot; and &quot;**Remove user from selected groups**&quot; during workflow creation. To view the sensitivity labels of groups using Lifecycle workflows during workflow creation, do the following steps:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: how-to #Required; leave this attribute/value as-is</div><div class="diff-line diff-context">ms.date: 11/04/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#CustomerIntent: As an identity governance administrator, I want to view sensitivity labels of groups or teams so that I can maintain security within my environment.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sensitivity labels in Lifecycle Workflows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Maintaining and classifying data within your environment is an important part in maintaining a secure environment. Sensitivity labels from Microsoft Purview Information Protection let you classify and protect your organization&#39;s data, while making sure that user productivity and their ability to collaborate isn&#39;t hindered. With sensitivity labels in Lifecycle Workflows, administrators are able to quickly view the sensitivity labels of groups and teams during workflow creation, and editing. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The following tasks support sensitivity labels:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Add user to groups](lifecycle-workflow-tasks.md#add-user-to-groups)</div><div class="diff-line diff-added">- [Add user to teams](lifecycle-workflow-tasks.md#add-user-to-teams)</div><div class="diff-line diff-added">- [Remover user from selected groups](lifecycle-workflow-tasks.md#remove-user-from-selected-groups)</div><div class="diff-line diff-added">- [Remove user from selected teams](lifecycle-workflow-tasks.md#remove-user-from-selected-teams)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with Microsoft Entra licenses required for Lifecycle workflows, you must also have:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-network-content-filtering.md" target="_blank">docs/global-secure-access/how-to-network-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sumeet Mittal on Dec 4, 2025 7:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-network-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove service principal provisioning instructions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">        :::image type=&quot;content&quot; source=&quot;media/how-to-network-content-filtering/internet-access-rules.png&quot; alt-text=&quot;Screenshot of the Global Secure Access Advanced Diagnostics window on the Forwarding Profile tab, showing Internet Access rules in the Rules section.&quot; lightbox=&quot;media/how-to-network-content-filtering/internet-access-rules.png&quot;:::</div><div class="diff-line diff-context">1. Confirm access to web applications you plan for file policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Provision a service principal on your tenant</div><div class="diff-line diff-deleted">To enable the integration between Global Secure Access and Microsoft Purview for file scanning, you need to manually provision a service principal on your tenant. You need at least Cloud Application Administrator permission for this configuration setup. </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">You can manually trigger service principal creation through PowerShell, Azure CLI, or Microsoft Graph directly. To provision using Microsoft Graph:</div><div class="diff-line diff-deleted">1. Sign in to [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer) as a [Cloud Application Administrator](../identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-deleted">1. Run the following POST request to create the service principal:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">    ```http</div><div class="diff-line diff-deleted">    POST https://graph.microsoft.com/v1.0/servicePrincipals</div><div class="diff-line diff-deleted">    Content-Type: application/json</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">    {</div><div class="diff-line diff-deleted">      &quot;appId&quot;: &quot;2eba9957-8c82-4bfd-8025-e4a4a97a9110&quot;</div><div class="diff-line diff-deleted">    }</div><div class="diff-line diff-deleted">    ```</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Configure a file policy</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">        :::image type=&quot;content&quot; source=&quot;media/how-to-network-content-filtering/internet-access-rules.png&quot; alt-text=&quot;Screenshot of the Global Secure Access Advanced Diagnostics window on the Forwarding Profile tab, showing Internet Access rules in the Rules section.&quot; lightbox=&quot;media/how-to-network-content-filtering/internet-access-rules.png&quot;:::</div><div class="diff-line diff-context">1. Confirm access to web applications you plan for file policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure a file policy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure a file policy in Global Secure Access, complete the following steps:</div><div class="diff-line diff-context">- Compressed content is detected in zip format (the content isn&#39;t decompressed).</div><div class="diff-line diff-context">- Accuracy of true file type detection might not be 100%.</div><div class="diff-line diff-context">- Destination applications using WebSocket (such as Copilot) aren&#39;t supported.</div><div class="diff-line diff-context">- Top level and second level domains don&#39;t support wildcards (like *, *.com, *contoso.com) while configuring FQDNs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/cloud-sync-version-history.md" target="_blank">docs/includes/cloud-sync-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 4, 2025 12:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/cloud-sync-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updated versioning number</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Get notified about when to revisit this page for updates by copying and pasting this URL: `https://aka.ms/cloudsyncrss` into your ![RSS feed reader icon](media/cloud-sync-version-history/feed-icon-16-x-16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## 1.1.2106.0</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">December 3, 2025: released for download only</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Known issues</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">- If you are an AzueUSGovernment customer and have enabled writing back passwords with Microsoft Entra provisioning agent, the operation may fail. Please upgrade the agent to version 1.1.2106.0 to address this issue.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Get notified about when to revisit this page for updates by copying and pasting this URL: `https://aka.ms/cloudsyncrss` into your ![RSS feed reader icon](media/cloud-sync-version-history/feed-icon-16-x-16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## 1.1.2108.0</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">December 3, 2025: released for download only</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Known issues</div><div class="diff-line diff-context"> </div><div class="diff-line diff-added">- If you are an AzueUSGovernment customer and have enabled writing back passwords with Microsoft Entra provisioning agent, the operation may fail. Please upgrade the agent to version 1.1.2108.0 to address this issue.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-tasks.md" target="_blank">docs/id-governance/lifecycle-workflow-tasks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 4, 2025 6:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-tasks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Remove User from Teams</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Allows a user to be removed from one or multiple static teams. You&#39;re able to customize the task name and description for this task in the Microsoft Entra admin center.</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-task/remove-user-team-task.png&quot; alt-text=&quot;Screenshot of Workflows task: remove user from teams.&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Remove User from selected Teams</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Allows a user to be removed from one or multiple static teams. You&#39;re able to customize the task name and description for this task in the Microsoft Entra admin center.</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-task/remove-user-team-task.png&quot; alt-text=&quot;Screenshot of Workflows task: remove user from teams.&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/lifecycle-workflows-tasks-table.md" target="_blank">docs/includes/lifecycle-workflows-tasks-table.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Dec 4, 2025 6:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/lifecycle-workflows-tasks-table" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| [Disable user account](../id-governance/lifecycle-workflow-tasks.md#disable-user-account)     |   1dfdfcc7-52fa-4c2e-bf3a-e3919cc12950      | Leaver |</div><div class="diff-line diff-context">| [Remove user from selected groups](../id-governance/lifecycle-workflow-tasks.md#remove-user-from-selected-groups)     |   1953a66c-751c-45e5-8bfe-01462c70da3c      | Joiner, Leaver, Mover |</div><div class="diff-line diff-context">| [Remove users from all groups](../id-governance/lifecycle-workflow-tasks.md#remove-users-from-all-groups)     |    b3a31406-2a15-4c9a-b25b-a658fa5f07fc     | Leaver | </div><div class="diff-line diff-deleted">| [Remove user from teams](../id-governance/lifecycle-workflow-tasks.md#remove-user-from-teams)    |    06aa7acb-01af-4824-8899-b14e5ed788d6     | Leaver        | </div><div class="diff-line diff-context">| [Remove user from all teams](../id-governance/lifecycle-workflow-tasks.md#remove-users-from-all-teams)     |    81f7b200-2816-4b3b-8c5d-dc556f07b024     | Leaver        | </div><div class="diff-line diff-context">| [Remove access package assignment for user](../id-governance/lifecycle-workflow-tasks.md#remove-access-package-assignment-for-user)     |    4a0b64f2-c7ec-46ba-b117-18f262946c50     | Leaver, Mover        | </div><div class="diff-line diff-context">| [Remove all access package assignments for user](../id-governance/lifecycle-workflow-tasks.md#remove-all-access-package-assignments-for-user)     |    42ae2956-193d-4f39-be06-691b8ac4fa1d     | Leaver        | </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| [Disable user account](../id-governance/lifecycle-workflow-tasks.md#disable-user-account)     |   1dfdfcc7-52fa-4c2e-bf3a-e3919cc12950      | Leaver |</div><div class="diff-line diff-context">| [Remove user from selected groups](../id-governance/lifecycle-workflow-tasks.md#remove-user-from-selected-groups)     |   1953a66c-751c-45e5-8bfe-01462c70da3c      | Joiner, Leaver, Mover |</div><div class="diff-line diff-context">| [Remove users from all groups](../id-governance/lifecycle-workflow-tasks.md#remove-users-from-all-groups)     |    b3a31406-2a15-4c9a-b25b-a658fa5f07fc     | Leaver | </div><div class="diff-line diff-added">| [Remove user from selected teams](../id-governance/lifecycle-workflow-tasks.md#remove-user-from-selected-teams)    |    06aa7acb-01af-4824-8899-b14e5ed788d6     | Leaver        | </div><div class="diff-line diff-context">| [Remove user from all teams](../id-governance/lifecycle-workflow-tasks.md#remove-users-from-all-teams)     |    81f7b200-2816-4b3b-8c5d-dc556f07b024     | Leaver        | </div><div class="diff-line diff-context">| [Remove access package assignment for user](../id-governance/lifecycle-workflow-tasks.md#remove-access-package-assignment-for-user)     |    4a0b64f2-c7ec-46ba-b117-18f262946c50     | Leaver, Mover        | </div><div class="diff-line diff-context">| [Remove all access package assignments for user](../id-governance/lifecycle-workflow-tasks.md#remove-all-access-package-assignments-for-user)     |    42ae2956-193d-4f39-be06-691b8ac4fa1d     | Leaver        | </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-customize-block-page.md" target="_blank">docs/global-secure-access/how-to-customize-block-page.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Dec 4, 2025 4:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-customize-block-page" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> remove mentions of feedback or future capabilities</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If you need features beyond the preview&#39;s capabilities (richer templates, localization, or analytics), collect feedback and request expanded preview access from the product team.</div><div class="diff-line diff-context">- For guidance on configuring web content filtering, see [Configure web content filtering](./how-to-configure-web-content-filtering.md).</div><div class="diff-line diff-context">- For guidance on configuring threat intelligence, see [Configure threat intelligence](./how-to-configure-threat-intelligence.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- For guidance on configuring web content filtering, see [Configure web content filtering](./how-to-configure-web-content-filtering.md).</div><div class="diff-line diff-context">- For guidance on configuring threat intelligence, see [Configure threat intelligence](./how-to-configure-threat-intelligence.md).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-authentication-external-method-provider.md" target="_blank">docs/identity/authentication/concept-authentication-external-method-provider.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Akul Loomba on Dec 4, 2025 2:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-external-method-provider" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix formatting and clarify metadata table in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Metadata value        | Value  | Comments |</div><div class="diff-line diff-context">|-----------------------|--------|----------|</div><div class="diff-line diff-context">| Issuer                |        | Must be an HTTPS URL.&lt;br&gt;The issuer value **MUST** match character-for-character between the configured issuer, the issuer value in the discovery document, and the `iss` claim in the tokens issued by the provider’s service.&lt;br&gt;The issuer MAY include a port and/or path segment, but MUST NOT contain query parameters or fragment identifiers. |</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">| authorization_endpoint |        | The endpoint that Microsoft Entra ID communicates with for authorization. This endpoint must be present as one of the reply URLs for the allowed applications. |</div><div class="diff-line diff-context">| jwks_uri               |        | Where Microsoft Entra ID can find the public keys needed to verify the signatures issued by the provider. The `jwks_uri` **MUST** be an HTTPS endpoint and **MUST NOT** include query parameters or fragment identifiers.&lt;br&gt;[!NOTE]&lt;br&gt;The JSON Web Key (JWK) **x5c** parameter must be present to provide X.509 representations of keys provided. |</div><div class="diff-line diff-context">| scopes_supported       | openid | Other values may also be included but aren&#39;t required. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Metadata value        | Value  | Comments |</div><div class="diff-line diff-context">|-----------------------|--------|----------|</div><div class="diff-line diff-context">| Issuer                |        | Must be an HTTPS URL.&lt;br&gt;The issuer value **MUST** match character-for-character between the configured issuer, the issuer value in the discovery document, and the `iss` claim in the tokens issued by the provider’s service.&lt;br&gt;The issuer MAY include a port and/or path segment, but MUST NOT contain query parameters or fragment identifiers. |</div><div class="diff-line diff-context">| authorization_endpoint |        | The endpoint that Microsoft Entra ID communicates with for authorization. This endpoint must be present as one of the reply URLs for the allowed applications. |</div><div class="diff-line diff-context">| jwks_uri               |        | Where Microsoft Entra ID can find the public keys needed to verify the signatures issued by the provider. The `jwks_uri` **MUST** be an HTTPS endpoint and **MUST NOT** include query parameters or fragment identifiers.&lt;br&gt;[!NOTE]&lt;br&gt;The JSON Web Key (JWK) **x5c** parameter must be present to provide X.509 representations of keys provided. |</div><div class="diff-line diff-context">| scopes_supported       | openid | Other values may also be included but aren&#39;t required. |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
