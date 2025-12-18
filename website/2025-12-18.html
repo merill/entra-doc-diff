@@ -1,0 +1,575 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since December 16th 2025, 7:27 PM PST</p>
+        <p>Report generated on December 17th 2025, 7:27 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">29</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/reference-error-codes.md" target="_blank">docs/identity/hybrid/cloud-sync/reference-error-codes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Dec 17, 2025 6:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/reference-error-codes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+20</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add error code for duplicate AD group entries</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|AzureActiveDirectoryInvalidCredential|Error Message: We found an issue with the service account that is used to run Microsoft Entra Cloud Sync. You can repair the cloud service account by following the instructions at [here](./how-to-troubleshoot.md). If the error persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: CredentialsInvalid AADSTS50034: The user account {EmailHidden} doesn&#39;t exist in the skydrive365.onmicrosoft.com directory. To sign into this application, the account must be added to the directory. Trace ID: 0000aaaa-11bb-cccc-dd22-eeeeee333333 Correlation ID: aaaa0000-bb11-2222-33cc-444444dddddd Timestamp: 2021-01-12 21:08:29Z |This error is thrown when the sync service account ADToAADSyncServiceAccount doesn&#39;t exist in the tenant. It can be due to accidental deletion of the account.|Use [Repair-AADCloudSyncToolsAccount](reference-powershell.md#repair-aadcloudsynctoolsaccount) to fix the service account.|</div><div class="diff-line diff-context">|AzureActiveDirectoryExpiredCredentials|Error Message: We were unable to process this request at this point. If this issue persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: CredentialsExpired AADSTS50055: The password is expired. Trace ID: 1111bbbb-22cc-dddd-ee33-ffffff444444 Correlation ID: aaaa0000-bb11-2222-33cc-444444dddddd Timestamp: 2021-01-12 20:59:31Z | Response status code doesn&#39;t indicate success: 401 (Unauthorized).&lt;br&gt; Azure AD Sync service account credentials are expired.|You can repair the cloud service account by following the instructions at https://go.microsoft.com/fwlink/?linkid=2150988. If the error persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: Your administrative Microsoft Entra tenant credentials were exchanged for an OAuth token that has since expired.&quot;|</div><div class="diff-line diff-context">|AzureActiveDirectoryAuthenticationFailed|Error Message: We were unable to process this request at this point. If this issue persists, please contact support and provide the following job identifier: AD2AADProvisioning.60b943e88f234db2b887f8cb91dee87c.707be0d2-c6a9-405d-a3b9-de87761dc3ac. Additional details: We were unable to process this request at this point. If this issue persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: UnexpectedError.|Unknown error.|If this issue persists, please contact support with Job ID (from status pane of your configuration).|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|AzureActiveDirectoryInvalidCredential|Error Message: We found an issue with the service account that is used to run Microsoft Entra Cloud Sync. You can repair the cloud service account by following the instructions at [here](./how-to-troubleshoot.md). If the error persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: CredentialsInvalid AADSTS50034: The user account {EmailHidden} doesn&#39;t exist in the skydrive365.onmicrosoft.com directory. To sign into this application, the account must be added to the directory. Trace ID: 0000aaaa-11bb-cccc-dd22-eeeeee333333 Correlation ID: aaaa0000-bb11-2222-33cc-444444dddddd Timestamp: 2021-01-12 21:08:29Z |This error is thrown when the sync service account ADToAADSyncServiceAccount doesn&#39;t exist in the tenant. It can be due to accidental deletion of the account.|Use [Repair-AADCloudSyncToolsAccount](reference-powershell.md#repair-aadcloudsynctoolsaccount) to fix the service account.|</div><div class="diff-line diff-context">|AzureActiveDirectoryExpiredCredentials|Error Message: We were unable to process this request at this point. If this issue persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: CredentialsExpired AADSTS50055: The password is expired. Trace ID: 1111bbbb-22cc-dddd-ee33-ffffff444444 Correlation ID: aaaa0000-bb11-2222-33cc-444444dddddd Timestamp: 2021-01-12 20:59:31Z | Response status code doesn&#39;t indicate success: 401 (Unauthorized).&lt;br&gt; Azure AD Sync service account credentials are expired.|You can repair the cloud service account by following the instructions at https://go.microsoft.com/fwlink/?linkid=2150988. If the error persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: Your administrative Microsoft Entra tenant credentials were exchanged for an OAuth token that has since expired.&quot;|</div><div class="diff-line diff-context">|AzureActiveDirectoryAuthenticationFailed|Error Message: We were unable to process this request at this point. If this issue persists, please contact support and provide the following job identifier: AD2AADProvisioning.60b943e88f234db2b887f8cb91dee87c.707be0d2-c6a9-405d-a3b9-de87761dc3ac. Additional details: We were unable to process this request at this point. If this issue persists, please contact support with Job ID (from status pane of your configuration). Additional Error Details: UnexpectedError.|Unknown error.|If this issue persists, please contact support with Job ID (from status pane of your configuration).|</div><div class="diff-line diff-added">|HybridSynchronizationActiveDirectoryUnexpectedDuplicateEntriesFound|Error Message: </div><div class="diff-line diff-added">An Active Directory query returned multiple objects when one was expected. Clean up duplicate objects in your directory to resolve this issue.|Provisioning is unable to associate the Entra object with a unique object in Active Directory as the LDAP search query returned multiple objects.|If the Group Provisioning to Active Directory job is in quarantine:&lt;br&gt;1. Find groups in Active Directory that have same value starting with &quot;Group_&quot; in the attribute *msDS-ExternalDirectoryObjectId*. You can use the following Powershell to find the groups:&lt;br&gt;</div><div class="diff-line diff-added">```powershell</div><div class="diff-line diff-added">$attributeName = &quot;msDS-ExternalDirectoryObjectId&quot;</div><div class="diff-line diff-added">$prefix = &quot;Group_&quot;</div><div class="diff-line diff-added">$allGroups = Get-ADGroup -LDAPFilter &quot;($attributeName=$prefix*)&quot; -Properties $attributeName</div><div class="diff-line diff-added">$duplicateGroups = $allGroups |</div><div class="diff-line diff-added">    Group-Object -Property $attributeName |</div><div class="diff-line diff-added">    Where-Object { $_.Count -gt 1 }</div><div class="diff-line diff-added">if ($duplicateGroups) {</div><div class="diff-line diff-added">    foreach ($group in $duplicateGroups) {</div><div class="diff-line diff-added">        Write-Host &quot;Value: $($group.Name) (Count: $($group.Count))&quot;</div><div class="diff-line diff-added">        $group.Group | Select-Object Name, DistinguishedName, msDS-ExternalDirectoryObjectId | Format-Table -AutoSize</div><div class="diff-line diff-added">        Write-Host &quot;----&quot;</div><div class="diff-line diff-added">    }</div><div class="diff-line diff-added">} else {</div><div class="diff-line diff-added">    Write-Host &quot;No duplicate groups found&quot;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-assignments.md" target="_blank">docs/id-governance/entitlement-management-access-package-assignments.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Filipin on Dec 17, 2025 7:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-assignments" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removing licensing note as article spans various licenses</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In entitlement management, you can see who is assigned to access packages, their policy, status, and identity lifecycle (preview). If an access package has an appropriate policy, you can also directly assign identities to an access package. This article describes how to view, add, and remove assignments for access packages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Prerequisites</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">To use entitlement management to assign identities to access packages, you must have one of the following licenses:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- Microsoft Entra ID P2</div><div class="diff-line diff-deleted">- Enterprise Mobility + Security (EMS) E5 license</div><div class="diff-line diff-deleted">- Microsoft Entra ID Governance subscription</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [entra-agent-id-license](../includes/entra-agent-id-license-note.md)]</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## View who has an assignment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change request and settings for an access package](entitlement-management-access-package-request-policy.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In entitlement management, you can see who is assigned to access packages, their policy, status, and identity lifecycle (preview). If an access package has an appropriate policy, you can also directly assign identities to an access package. This article describes how to view, add, and remove assignments for access packages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## View who has an assignment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Change request and settings for an access package](entitlement-management-access-package-request-policy.md)</div><div class="diff-line diff-added">- [View reports and logs](entitlement-management-reports.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-governance.md" target="_blank">docs/includes/licensing-governance.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Filipin on Dec 17, 2025 4:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-governance" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update licensing governance features table</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Feature|Free|Microsoft Entra ID P1|Microsoft Entra ID P2|Microsoft Entra ID Governance| Microsoft Entra Suite |</div><div class="diff-line diff-context">|-----|:-----:|:-----:|:-----:|:-----:|:-----:|</div><div class="diff-line diff-deleted">|[Access Review Agent (Preview)](~/id-governance/access-review-agent.md)|| | | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[API-driven provisioning](~/identity/app-provisioning/inbound-provisioning-api-concepts.md)|| :white_check_mark:  | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[HR-driven provisioning](~/identity/app-provisioning/what-is-hr-driven-provisioning.md)|| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Automated user provisioning to SaaS apps](~/identity/saas-apps/tutorial-list.md)| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management with Verified ID](~/id-governance/entitlement-management-verified-id-settings.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Custom Extensions (Logic Apps)](~/id-governance/entitlement-management-logic-apps-integration.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Auto Assignment Policies](~/id-governance/entitlement-management-access-package-auto-assignment-policy.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-deleted">|[Entitlement management - Directly Assign Any Identity (Preview)](~/id-governance/entitlement-management-access-package-assignments.md#directly-assign-an-identity)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Mark guest as governed](~/id-governance/entitlement-management-access-package-manage-lifecycle.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Manage the lifecycle of external users](~/id-governance/entitlement-management-external-users.md#manage-the-lifecycle-of-external-users)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[My Access portal](~/id-governance/my-access-portal-overview.md)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Microsoft Entra Roles (Preview)](~/id-governance/entitlement-management-roles.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Request access packages on-behalf-of](~/id-governance/entitlement-management-request-behalf.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Sponsors Policy](~/id-governance/entitlement-management-access-package-create.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Privileged Identity Management (PIM)](~/id-governance/privileged-identity-management/pim-configure.md)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Access reviews - Inactive Users reviews](~/id-governance/create-access-review.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Access Reviews - Inactive Users recommendations](~/id-governance/review-recommendations-access-reviews.md#inactive-user-recommendations)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Feature|Free|Microsoft Entra ID P1|Microsoft Entra ID P2|Microsoft Entra ID Governance| Microsoft Entra Suite |</div><div class="diff-line diff-context">|-----|:-----:|:-----:|:-----:|:-----:|:-----:|</div><div class="diff-line diff-context">|[API-driven provisioning](~/identity/app-provisioning/inbound-provisioning-api-concepts.md)|| :white_check_mark:  | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[HR-driven provisioning](~/identity/app-provisioning/what-is-hr-driven-provisioning.md)|| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Automated user provisioning to SaaS apps](~/identity/saas-apps/tutorial-list.md)| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management with Verified ID](~/id-governance/entitlement-management-verified-id-settings.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Custom Extensions (Logic Apps)](~/id-governance/entitlement-management-logic-apps-integration.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Auto Assignment Policies](~/id-governance/entitlement-management-access-package-auto-assignment-policy.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-added">|[Entitlement management - Directly assign any identity (Preview) - via email address for identities not yet in your directory](~/id-governance/entitlement-management-access-package-assignments.md#directly-assign-any-identity-preview)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-added">|[Entitlement management - Directly assign an identity - selecting existing identities in your directory (including guests)](~/id-governance/entitlement-management-access-package-assignments.md#directly-assign-an-identity)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Mark guest as governed](~/id-governance/entitlement-management-access-package-manage-lifecycle.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Manage the lifecycle of external users](~/id-governance/entitlement-management-external-users.md#manage-the-lifecycle-of-external-users)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[My Access portal](~/id-governance/my-access-portal-overview.md)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Microsoft Entra Roles (Preview)](~/id-governance/entitlement-management-roles.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-added">|[Entitlement management - PIM for Groups](~/id-governance/entitlement-management-access-package-eligible.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Request access packages on-behalf-of](~/id-governance/entitlement-management-request-behalf.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Entitlement management - Sponsors Policy](~/id-governance/entitlement-management-access-package-create.md)|||| :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Privileged Identity Management (PIM)](~/id-governance/privileged-identity-management/pim-configure.md)||| :white_check_mark: | :white_check_mark: | :white_check_mark: |</div><div class="diff-line diff-context">|[Access reviews - Inactive Users reviews](~/id-governance/create-access-review.md)|||| :white_check_mark: | :white_check_mark: |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/quickstart-get-started-guide.md" target="_blank">docs/external-id/customers/quickstart-get-started-guide.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 17, 2025 1:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/quickstart-get-started-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com). </div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to your external tenant from the **Directories + subscriptions** menu.</div><div class="diff-line diff-deleted">1. Browse to **Home** &gt; **Tenant overview**.</div><div class="diff-line diff-context">1. On the **Get started** tab, select **Start the guide**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/how-to-create-external-tenant-portal/guide-link.png&quot; alt-text=&quot;Screenshot that shows how to start the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you prefer, you can add your company logo, change the background color or adjust the sign-in layout. These optional changes will apply to the look and feel of all your apps in this tenant with external configurations. After you have the created tenant, other branding options are available. You can [customize the default branding](how-to-customize-branding-customers.md) and [add languages](how-to-customize-languages-customers.md). Once you&#39;re finished with the customization, select **Continue**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/quickstart-trial-setup/customize-branding-in-trial-wizard.png&quot; alt-text=&quot;Screenshot of customizing the sign-in experience in the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Try out the sign-up experience and create your first user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Complete the sign-up steps on the screen. Typically, once the user has signed in, they&#39;re redirected back to your app. However, since you haven’t set up an app at this step, you&#39;ll be redirected to JWT.ms instead, where you can view the contents of the token issued during the sign-in process.</div><div class="diff-line diff-context">6. Go back to the guide tab. At this stage, you can either exit the guide and go to the admin center to explore the full range of configuration options for your tenant. Or you can **Continue** and set up a sample app. We recommend setting up the sample app, so that you can use it to test any further configuration changes you make</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    :::image type=&quot;content&quot; source=&quot;media/quickstart-trial-setup/successful-trial-setup.png&quot; alt-text=&quot;Screenshot that shows the successful creation of the sign-up experience.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set up a sample app</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com). </div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to your external tenant from the **Directories + subscriptions** menu.</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Overview**.</div><div class="diff-line diff-context">1. On the **Get started** tab, select **Start the guide**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/how-to-create-external-tenant-portal/guide-link.png&quot; alt-text=&quot;Screenshot that shows how to start the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you prefer, you can add your company logo, change the background color or adjust the sign-in layout. These optional changes will apply to the look and feel of all your apps in this tenant with external configurations. After you have the created tenant, other branding options are available. You can [customize the default branding](how-to-customize-branding-customers.md) and [add languages](how-to-customize-languages-customers.md). Once you&#39;re finished with the customization, select **Continue**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/quickstart-get-started-guide/customize-branding-in-trial-wizard.png&quot; alt-text=&quot;Screenshot of customizing the sign-in experience in the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Try out the sign-up experience and create your first user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Complete the sign-up steps on the screen. Typically, once the user has signed in, they&#39;re redirected back to your app. However, since you haven’t set up an app at this step, you&#39;ll be redirected to JWT.ms instead, where you can view the contents of the token issued during the sign-in process.</div><div class="diff-line diff-context">6. Go back to the guide tab. At this stage, you can either exit the guide and go to the admin center to explore the full range of configuration options for your tenant. Or you can **Continue** and set up a sample app. We recommend setting up the sample app, so that you can use it to test any further configuration changes you make</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;media/quickstart-get-started-guide/successful-trial-setup.png&quot; alt-text=&quot;Screenshot that shows the successful creation of the sign-up experience.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set up a sample app</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/app-provisioning-sql.md" target="_blank">docs/includes/app-provisioning-sql.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Dec 17, 2025 1:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/app-provisioning-sql" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify DSN file encoding note in SQL provisioning docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 12. Select **OK** twice. Close the ODBC Data Source Administrator. The DSN connection file is saved by default to your **Documents** folder.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> &gt;[!NOTE]</div><div class="diff-line diff-deleted"> &gt;The SQL Connector expects the DSN file to be encoded in UTF-8. If the file isn&#39;t encoded in UTF-8, use Notepad to save the file with UTF-8 encoding.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;3-install-and-configure-the-azure-ad-connect-provisioning-agent&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 12. Select **OK** twice. Close the ODBC Data Source Administrator. The DSN connection file is saved by default to your **Documents** folder.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">     &gt;[!NOTE]</div><div class="diff-line diff-added">     &gt;The SQL Connector expects the DSN connection file to be encoded in UTF-8. If the file isn&#39;t encoded in UTF-8, use Notepad to save the file with UTF-8 encoding.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;3-install-and-configure-the-azure-ad-connect-provisioning-agent&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-guide-explained.md" target="_blank">docs/external-id/customers/concept-guide-explained.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 17, 2025 1:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-guide-explained" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/concept-guide-explained/trial-creation.png&quot; alt-text=&quot;Flowchart that shows the trial tenant creation step in the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">An external tenant is the first resource you need to create to get started with Microsoft Entra External ID. If you have an Azure subscription, you can create your new tenant in the Microsoft Entra admin center by following [these steps](how-to-create-external-tenant-portal.md). </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">If you don’t have an Azure subscription, you can sign up for a [free trial](quickstart-trial-setup.md#get-started-with-trying-out-external-id). The trial gives you access to a tenant for 30 days. During the free trial period, you have access to all product features, with few exceptions. For more information, see the [Start a free trial without Azure subscription](quickstart-trial-setup.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## App registration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/concept-guide-explained/trial-creation.png&quot; alt-text=&quot;Flowchart that shows the trial tenant creation step in the guide.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">An external tenant is the first resource you need to create to get started with Microsoft Entra External ID. If you have an Azure subscription, you can create your new tenant in the Microsoft Entra admin center by following [these steps](how-to-create-external-tenant-portal.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## App registration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/visual-studio-code-extension.md" target="_blank">docs/external-id/customers/visual-studio-code-extension.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 17, 2025 1:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/visual-studio-code-extension" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This extension provides a basic setup that automatically creates a tenant for applications and prepares it for users. It also streamlines your workflow by automatically populating values such as application IDs into your configuration file for a smoother setup process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">External ID is a service that can be added to an Azure subscription. If you already have one, you can easily include External ID. Otherwise, set up a [free trial of Microsoft Entra External ID](quickstart-trial-setup.md) within Visual Studio Code and start by configuring a sample app.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Install the extension</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra External ID extension is available in the Visual Studio Code Marketplace.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get started with your External ID setup</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft Entra External ID extension creates a tenant in an external configuration, which contains your app and directory of external users. You can add this new tenant to your existing Azure subscription. Or if you don’t have an Azure subscription, create a trial tenant that doesn&#39;t require one ([learn more](quickstart-trial-setup.md)).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- On the Get Started with Microsoft Entra External ID welcome page, choose an option:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This extension provides a basic setup that automatically creates a tenant for applications and prepares it for users. It also streamlines your workflow by automatically populating values such as application IDs into your configuration file for a smoother setup process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Install the extension</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft Entra External ID extension is available in the Visual Studio Code Marketplace.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get started with your External ID setup</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Microsoft Entra External ID extension creates a tenant in an external configuration, which contains your app and directory of external users. You can add this new tenant to your existing Azure subscription.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- On the Get Started with Microsoft Entra External ID welcome page, choose an option:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/external-identities-pricing.md" target="_blank">docs/external-id/external-identities-pricing.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 17, 2025 1:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/external-identities-pricing" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">   </div><div class="diff-line diff-context">       :::image type=&quot;content&quot; source=&quot;media/external-identities-pricing/billing-section-subscription.png&quot; alt-text=&quot;Screenshot of how to link an external tenant to a subscription.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   - If your tenant isn&#39;t yet linked to a subscription, in the **Billing** section, select the **Click here to upgrade** link, and then select the **Add Subscription** button. Follow the steps in [Upgrade your free trial by adding an Azure subscription](customers/quickstart-trial-setup.md#upgrade-your-free-trial-by-adding-an-azure-subscription).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">       :::image type=&quot;content&quot; source=&quot;media/external-identities-pricing/billing-section-no-subscription.png&quot; alt-text=&quot;Screenshot of how to upgrade and link a subscription.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Change the subscription your external tenant is linked to</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">   </div><div class="diff-line diff-context">       :::image type=&quot;content&quot; source=&quot;media/external-identities-pricing/billing-section-subscription.png&quot; alt-text=&quot;Screenshot of how to link an external tenant to a subscription.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   - If your tenant isn&#39;t yet linked to a subscription, in the **Billing** section, select the **Click here to upgrade** link, and then select the **Add Subscription** button. </div><div class="diff-line diff-added">   </div><div class="diff-line diff-context">       :::image type=&quot;content&quot; source=&quot;media/external-identities-pricing/billing-section-no-subscription.png&quot; alt-text=&quot;Screenshot of how to upgrade and link a subscription.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Change the subscription your external tenant is linked to</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/known-issues.md" target="_blank">docs/identity/app-provisioning/known-issues.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Dec 17, 2025 1:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/known-issues" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Document SQL Connector DSN UTF-8 encoding requirement</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## On-premises application provisioning</div><div class="diff-line diff-context">This is a current list of known limitations with the Microsoft Entra ECMA Connector Host and on-premises application provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Application and directories</div><div class="diff-line diff-context">The following applications and directories aren&#39;t yet supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## On-premises application provisioning</div><div class="diff-line diff-context">This is a current list of known limitations with the Microsoft Entra ECMA Connector Host and on-premises application provisioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### SQL Connector connectivity</div><div class="diff-line diff-added">The SQL Connector expects the DSN file to be encoded in UTF-8. Other encodings might not be read correctly and result in the error &quot;Data source name not found and no default driver specified.&quot;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Application and directories</div><div class="diff-line diff-context">The following applications and directories aren&#39;t yet supported.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/reference-service-limits.md" target="_blank">docs/external-id/customers/reference-service-limits.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Dec 17, 2025 1:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/reference-service-limits" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|Limits based on phone number |15 texts              |20 texts              |30 texts                                             |50 texts           |</div><div class="diff-line diff-context">|Limits based on tenant       |500 texts             |1500 texts            |5,000 texts                                          |No limit           |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Start a free trial without an Azure subscription](quickstart-trial-setup.md)</div><div class="diff-line diff-context">- [Create a tenant with an Azure subscription](quickstart-tenant-setup.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|Limits based on phone number |15 texts              |20 texts              |30 texts                                             |50 texts           |</div><div class="diff-line diff-context">|Limits based on tenant       |500 texts             |1500 texts            |5,000 texts                                          |No limit           |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Create a tenant with an Azure subscription](quickstart-tenant-setup.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-transport-layer-security.md" target="_blank">docs/global-secure-access/concept-transport-layer-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Teresa Yao on Dec 17, 2025 9:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-transport-layer-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar and typos in HTTP/2 limitation description</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- TLS inspection supports up to 100 policies, 1000 rules, and 8000 destinations.</div><div class="diff-line diff-context">- Make sure each certificate signing request (CSR) you generate has a unique certificate name and isn&#39;t reused. The signed certificate must stay valid for at least 6 months.</div><div class="diff-line diff-context">- You can use only one active certificate at a time.</div><div class="diff-line diff-deleted">- TLS inspection doesn&#39;t support HTTP/2 negotiation. Most sites automatically fall back to HTTP/1.1 and continue to work, but sites that require HTTP/2 won&#39;t load under inspection. If you encounter one of these, add a custom TLS bypass rule to allow access.</div><div class="diff-line diff-context">- TLS inspection doesn&#39;t follow Authority Information Access (AIA) and Online Certificate Status Protocol (OCSP) links when validating destination certificates.</div><div class="diff-line diff-context">## Mobile platform</div><div class="diff-line diff-context">- Many mobile applications implement certificate pinning, which prevents successful TLS inspection, resulting in handshake failures or loss of functionality. To reduce risk, enable TLS inspection in a test environment first and validate that critical applications are compatible. For apps that rely on certificate pinning, configure TLS inspection custom rules to bypass these destinations using domain-based or category-based rules.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- TLS inspection supports up to 100 policies, 1000 rules, and 8000 destinations.</div><div class="diff-line diff-context">- Make sure each certificate signing request (CSR) you generate has a unique certificate name and isn&#39;t reused. The signed certificate must stay valid for at least 6 months.</div><div class="diff-line diff-context">- You can use only one active certificate at a time.</div><div class="diff-line diff-added">- TLS inspection doesn&#39;t support HTTP/2 negotiation. Most sites automatically fall back to HTTP/1.1 and continue to work, but sites that require HTTP/2 won&#39;t load if TLS inspection is enabled. Add a custom TLS bypass rule to allow access to HTTP/2 only sites.</div><div class="diff-line diff-context">- TLS inspection doesn&#39;t follow Authority Information Access (AIA) and Online Certificate Status Protocol (OCSP) links when validating destination certificates.</div><div class="diff-line diff-context">## Mobile platform</div><div class="diff-line diff-context">- Many mobile applications implement certificate pinning, which prevents successful TLS inspection, resulting in handshake failures or loss of functionality. To reduce risk, enable TLS inspection in a test environment first and validate that critical applications are compatible. For apps that rely on certificate pinning, configure TLS inspection custom rules to bypass these destinations using domain-based or category-based rules.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-transport-layer-security-settings.md" target="_blank">docs/global-secure-access/how-to-transport-layer-security-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Teresa Yao on Dec 17, 2025 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-transport-layer-security-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add pathLenConstraint requirement to TLS CSR signing instructions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Create CSR**. This step creates a .csr file and saves it to your default download folder.</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-transport-layer-security-settings/create-certificate.png&quot; alt-text=&quot;Screenshot of the Create certificate pane with fields filled and the Create CSR button highlighted.&quot;:::   </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign the CSR using your PKI service. Make sure **Server Auth** is in Extended Key Usage and `certificate authority (CA)=true`, `keyCertSign,cRLSign`, and `basicConstraints=critical,CA:TRUE` in Basic Extension. Save the signed certificate in .pem format. If you&#39;re testing with a self-signed certificate, follow the instructions to [use OpenSSL to sign the CSR](#test-with-a-self-signed-root-certificate-authority-using-openssl). </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">1. Select **+ Upload certificate**.</div><div class="diff-line diff-context">1. In the Upload certificate form, upload the certificate.pem and chain.pem files.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Create CSR**. This step creates a .csr file and saves it to your default download folder.</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-transport-layer-security-settings/create-certificate.png&quot; alt-text=&quot;Screenshot of the Create certificate pane with fields filled and the Create CSR button highlighted.&quot;:::   </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign the CSR using your PKI service. Make sure **Server Auth** is in Extended Key Usage and `certificate authority (CA)=true`, `keyCertSign,cRLSign`, `basicConstraints=critical,CA:TRUE`, and `pathLenConstraint = 1` in Basic Extension. Save the signed certificate in .pem format. If you&#39;re testing with a self-signed certificate, follow the instructions to [use OpenSSL to sign the CSR](#test-with-a-self-signed-root-certificate-authority-using-openssl). </div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">1. Select **+ Upload certificate**.</div><div class="diff-line diff-context">1. In the Upload certificate form, upload the certificate.pem and chain.pem files.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/external-id/customers/quickstart-trial-setup.md
+            </div>
+            <div class="file-meta">
+              Deleted by csmulligan on Dec 17, 2025 1:41 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/external-id/customers/quickstart-trial-setup</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-111 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Removed article.</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
