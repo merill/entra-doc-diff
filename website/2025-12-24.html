@@ -1,0 +1,279 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since December 22nd 2025, 7:39 PM PST</p>
+        <p>Report generated on December 23rd 2025, 7:39 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/microsoft-365-support-engineer.md" target="_blank">docs/identity/role-based-access-control/includes/microsoft-365-support-engineer.md</a>
+            </div>
+            <div class="file-meta">
+              Added by rolyon on Dec 23, 2025 7:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/microsoft-365-support-engineer" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+50 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Microsoft 365 Support Engineer</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/permissions-reference.md" target="_blank">docs/identity/role-based-access-control/permissions-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Dec 23, 2025 7:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Microsoft 365 Support Engineer</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 11/19/2025</div><div class="diff-line diff-context">ms.author: rolyon</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">&gt; | [Message Center Reader](#message-center-reader) | Can read messages and updates for their organization in Office 365 Message Center only. | 790c1fb9-7f7d-4f88-86a1-ef1f95c05c1b |</div><div class="diff-line diff-context">&gt; | [Microsoft 365 Backup Administrator](#microsoft-365-backup-administrator) | Back up and restore content across supported services (SharePoint, OneDrive, and Exchange Online) in Microsoft 365 Backup | 1707125e-0aa2-4d4d-8655-a7c786c76a25 |</div><div class="diff-line diff-context">&gt; | [Microsoft 365 Migration Administrator](#microsoft-365-migration-administrator) | Perform all migration functionality to migrate content to Microsoft 365 using Migration Manager. | 8c8b803f-96e1-4129-9349-20738d9f9652 |</div><div class="diff-line diff-context">&gt; | [Microsoft Entra Joined Device Local Administrator](#microsoft-entra-joined-device-local-administrator) | Users assigned to this role are added to the local administrators group on Microsoft Entra joined devices. | 9f06204d-73c1-4d4c-880a-6edb90606fd8 |</div><div class="diff-line diff-context">&gt; | [Microsoft Graph Data Connect Administrator](#microsoft-graph-data-connect-administrator) | Manage aspects of Microsoft Graph Data Connect service in a tenant. | ee67aa9c-e510-4759-b906-227085a7fd4d |</div><div class="diff-line diff-context">&gt; | [Microsoft Hardware Warranty Administrator](#microsoft-hardware-warranty-administrator) | Create and manage all aspects warranty claims and entitlements for Microsoft manufactured hardware, like Surface and HoloLens. | 1501b917-7653-4ff9-a4b5-203eaf33784f |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [microsoft-365-migration-administrator](includes/microsoft-365-migration-administrator.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra Joined Device Local Administrator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [microsoft-entra-joined-device-local-administrator](includes/microsoft-entra-joined-device-local-administrator.md)]</div><div class="diff-line diff-context">| Device Users | Deprecated | [Deprecated roles documentation](#deprecated-roles) |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 12/23/2025</div><div class="diff-line diff-context">ms.author: rolyon</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">&gt; | [Message Center Reader](#message-center-reader) | Can read messages and updates for their organization in Office 365 Message Center only. | 790c1fb9-7f7d-4f88-86a1-ef1f95c05c1b |</div><div class="diff-line diff-context">&gt; | [Microsoft 365 Backup Administrator](#microsoft-365-backup-administrator) | Back up and restore content across supported services (SharePoint, OneDrive, and Exchange Online) in Microsoft 365 Backup | 1707125e-0aa2-4d4d-8655-a7c786c76a25 |</div><div class="diff-line diff-context">&gt; | [Microsoft 365 Migration Administrator](#microsoft-365-migration-administrator) | Perform all migration functionality to migrate content to Microsoft 365 using Migration Manager. | 8c8b803f-96e1-4129-9349-20738d9f9652 |</div><div class="diff-line diff-added">&gt; | [Microsoft 365 Support Engineer](#microsoft-365-support-engineer) | Do not use - not intended for general use. | 00cf5c54-4693-4f59-a0ac-ab79ef0a974d |</div><div class="diff-line diff-context">&gt; | [Microsoft Entra Joined Device Local Administrator](#microsoft-entra-joined-device-local-administrator) | Users assigned to this role are added to the local administrators group on Microsoft Entra joined devices. | 9f06204d-73c1-4d4c-880a-6edb90606fd8 |</div><div class="diff-line diff-context">&gt; | [Microsoft Graph Data Connect Administrator](#microsoft-graph-data-connect-administrator) | Manage aspects of Microsoft Graph Data Connect service in a tenant. | ee67aa9c-e510-4759-b906-227085a7fd4d |</div><div class="diff-line diff-context">&gt; | [Microsoft Hardware Warranty Administrator](#microsoft-hardware-warranty-administrator) | Create and manage all aspects warranty claims and entitlements for Microsoft manufactured hardware, like Surface and HoloLens. | 1501b917-7653-4ff9-a4b5-203eaf33784f |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [microsoft-365-migration-administrator](includes/microsoft-365-migration-administrator.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Microsoft 365 Support Engineer</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [microsoft-365-support-engineer](includes/microsoft-365-support-engineer.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/whats-new.md" target="_blank">docs/identity/role-based-access-control/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Dec 23, 2025 7:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Microsoft 365 Support Engineer</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-deleted">ms.date: 10/02/2025</div><div class="diff-line diff-context">ms.author: rolyon</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Date | Area | Description |</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-context">| November 2025 | Roles | Added [SharePoint Advanced Management Administrator](permissions-reference.md#sharepoint-advanced-management-administrator) role. |</div><div class="diff-line diff-context">| November 2025 | Roles | Updated [Exchange Backup Administrator](permissions-reference.md#exchange-backup-administrator) role. |</div><div class="diff-line diff-context">| November 2025 | Roles | Updated [SharePoint Backup Administrator](permissions-reference.md#sharepoint-backup-administrator) role. |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-added">ms.date: 12/23/2025</div><div class="diff-line diff-context">ms.author: rolyon</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Date | Area | Description |</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-added">| December 2025 | Roles | Added [Microsoft 365 Support Engineer](permissions-reference.md#microsoft-365-support-engineer) role. |</div><div class="diff-line diff-context">| November 2025 | Roles | Added [SharePoint Advanced Management Administrator](permissions-reference.md#sharepoint-advanced-management-administrator) role. |</div><div class="diff-line diff-context">| November 2025 | Roles | Updated [Exchange Backup Administrator](permissions-reference.md#exchange-backup-administrator) role. |</div><div class="diff-line diff-context">| November 2025 | Roles | Updated [SharePoint Backup Administrator](permissions-reference.md#sharepoint-backup-administrator) role. |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-threat-intelligence.md" target="_blank">docs/global-secure-access/how-to-configure-threat-intelligence.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Dec 23, 2025 7:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-threat-intelligence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edits based on Dhruvin's comments</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; Applying a new security profile can take up to 60-90 minutes because security profiles are enforced via access tokens.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; To expedite Conditional Access configuration changes, revoke user sessions in the Entra Admin Center (select **Revoke sessions** on the user&#39;s overview page). This forces users to obtain new tokens with updated policies. Learn more about [Continuous Access Evaluation](concept-universal-continuous-access-evaluation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify end user policy enforcement</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; Applying a new security profile can take up to 60-90 minutes because security profiles are enforced via access tokens.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; To expedite Conditional Access configuration changes *for testing*, revoke user sessions in the Entra Admin Center (select **Revoke sessions** on the user&#39;s overview page). This forces users to obtain new tokens with updated policies. Learn more about [Continuous Access Evaluation](concept-universal-continuous-access-evaluation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Verify end user policy enforcement</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-web-content-filtering.md" target="_blank">docs/global-secure-access/how-to-configure-web-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Dec 23, 2025 7:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-web-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edits based on Dhruvin's comments</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; Configuration changes in the Global Secure Access experience related to web content filtering typically take effect in less than 5 minutes. Configuration changes in Conditional Access related to web content filtering take effect in approximately one hour.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; To expedite Conditional Access configuration changes, revoke user sessions in the Entra Admin Center (select **Revoke sessions** on the user&#39;s overview page). This forces users to obtain new tokens with updated policies. Learn more about [Continuous Access Evaluation](concept-universal-continuous-access-evaluation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; Configuration changes in the Global Secure Access experience related to web content filtering typically take effect in less than 5 minutes. Configuration changes in Conditional Access related to web content filtering take effect in approximately one hour.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; To expedite Conditional Access configuration changes *for testing*, revoke user sessions in the Entra Admin Center (select **Revoke sessions** on the user&#39;s overview page). This forces users to obtain new tokens with updated policies. Learn more about [Continuous Access Evaluation](concept-universal-continuous-access-evaluation.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
