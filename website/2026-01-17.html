@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since January 15th 2026, 7:37 PM PST</p>
+        <p>Report generated on January 16th 2026, 7:37 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/whats-new-docs.md" target="_blank">docs/identity/enterprise-apps/whats-new-docs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 10:21 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/whats-new-docs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> January whatsnew updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra application management</div><div class="diff-line diff-context">description: This article shows the new and updated documentation for the Microsoft Entra application management.</div><div class="diff-line diff-deleted">ms.date: 12/02/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: enterprise-apps</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in Microsoft Entra application management documentation. This article lists new docs and those articles that had significant updates in the last three months. To learn what&#39;s new with the application management service, see [What&#39;s new in Microsoft Entra ID](~/fundamentals/whats-new.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## November 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### New articles</div><div class="diff-line diff-context">### Updated articles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Integrating Microsoft Entra ID with applications getting started guide](plan-an-application-integration.md) - Revised for technical accuracy</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## September 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### New articles</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra application management</div><div class="diff-line diff-context">description: This article shows the new and updated documentation for the Microsoft Entra application management.</div><div class="diff-line diff-added">ms.date: 01/16/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: enterprise-apps</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Welcome to what&#39;s new in Microsoft Entra application management documentation. This article lists new docs and those articles that had significant updates in the last three months. To learn what&#39;s new with the application management service, see [What&#39;s new in Microsoft Entra ID](~/fundamentals/whats-new.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## December 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### New articles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Deactivate an enterprise application](deactivate-application-portal.md)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## November 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### New articles</div><div class="diff-line diff-context">### Updated articles</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/on-premises-web-services-connector.md" target="_blank">docs/identity/app-provisioning/on-premises-web-services-connector.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Jan 16, 2026 8:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-web-services-connector" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> acrolinx</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- SOAP Discovery: Allows the administrator to enter the WSDL path exposed by the target web service. Discovery produces a tree structure of the application&#39;s hosted web services with their inner  endpoints or operations along with the operation’s Meta data description. There&#39;s no limit to the number of discovery operations that can be done (step by step). The discovered operations  are used later to configure the flow of operations that implement the connector’s operations against the data-source (as Import/Export).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- REST Discovery: Allows the administrator to enter REST service details, including Service Endpoint, Resource Path, Method and Parameter details. The REST services information is stored in the ```discovery.xml``` file of the ```wsconfig``` project. They&#39;ll be used later by the administrator to configure the Rest Web Service activity in the workflow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Schema configuration: Allows the administrator to configure the schema. The schema configuration includes a listing of Object Types and attributes for a specific application. The administrator may choose the attributes are to be part of the schema.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The computer that runs the provisioning agent should have:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Connectivity to application&#39;s REST or SOAP endpoints, as well as with outbound connectivity to login.microsoftonline.com, [other Microsoft Online Services](/microsoft-365/enterprise/urls-and-ip-address-ranges) and [Azure](/azure/azure-portal/azure-portal-safelist-urls) domains. An example is a Windows Server 2016 virtual machine hosted in Azure IaaS or behind a proxy. </div><div class="diff-line diff-context">- At least 3 GB of RAM, to host a provisioning agent. </div><div class="diff-line diff-context">- .NET Framework 4.7.2 </div><div class="diff-line diff-context">- A Windows Server 2016 or a later version. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before configuring provisioning, ensure that you:</div><div class="diff-line diff-deleted">- Expose the necessary SOAP or REST APIs in your application to create, update and delete users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Cloud requirements</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- SOAP Discovery: Allows the administrator to enter the WSDL path exposed by the target web service. Discovery produces a tree structure of the application&#39;s hosted web services with their inner  endpoints or operations along with the operation’s Meta data description. There&#39;s no limit to the number of discovery operations that can be done (step by step). The discovered operations  are used later to configure the flow of operations that implement the connector’s operations against the data-source (as Import/Export).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- REST Discovery: Allows the administrator to enter REST service details, including Service Endpoint, Resource Path, Method, and Parameter details. The REST services information is stored in the ```discovery.xml``` file of the ```wsconfig``` project. They&#39;ll be used later by the administrator to configure the Rest Web Service activity in the workflow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Schema configuration: Allows the administrator to configure the schema. The schema configuration includes a listing of Object Types and attributes for a specific application. The administrator may choose the attributes are to be part of the schema.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The computer that runs the provisioning agent should have:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Connectivity to application&#39;s REST or SOAP endpoints, as well as with outbound connectivity to login.microsoftonline.com, [other Microsoft Online Services](/microsoft-365/enterprise/urls-and-ip-address-ranges), and [Azure](/azure/azure-portal/azure-portal-safelist-urls) domains. An example is a Windows Server 2016 virtual machine hosted in Azure IaaS or behind a proxy. </div><div class="diff-line diff-context">- At least 3 GB of RAM, to host a provisioning agent. </div><div class="diff-line diff-context">- .NET Framework 4.7.2 </div><div class="diff-line diff-context">- A Windows Server 2016 or a later version. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before configuring provisioning, ensure that you:</div><div class="diff-line diff-added">- Expose the necessary SOAP or REST APIs in your application to create, update, and delete users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Cloud requirements</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/apps.md" target="_blank">docs/id-governance/apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Jan 16, 2026 7:11 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add apps.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| HR | [API-driven connector from any HR source](../identity/app-provisioning/inbound-provisioning-api-concepts.md)&lt;br&gt;[Rippling HCM integration with Microsoft Entra ID/Active Directory](../identity/saas-apps/rippling-hcm-microsoft-entra-id-integration-tutorial.md)&lt;br&gt;[Oracle HCM API-driven connector](../identity/saas-apps/oracle-hcm-provisioning-tutorial.md)&lt;br&gt;[Darwinbox to Microsoft Entra ID](../identity/saas-apps/darwinbox-entra-integration-tutorial.md)&lt;br&gt;[SAP HCM to Microsoft Entra ID](../identity/saas-apps/sap-hcm-microsoft-entra-identity-provisioning.md) |</div><div class="diff-line diff-context">| HR | Student information systems via [School Data Sync](/schooldatasync/school-data-sync-overview) |</div><div class="diff-line diff-context">|[LDAP directory](../identity/app-provisioning/on-premises-ldap-connector-configure.md)| OpenLDAP&lt;br&gt;Microsoft Active Directory Lightweight Directory Services&lt;br&gt;389 Directory Server&lt;br&gt;Apache Directory Server&lt;br&gt;IBM Tivoli DS&lt;br&gt;Isode Directory&lt;br&gt;NetIQ eDirectory&lt;br&gt;Novell eDirectory&lt;br&gt;Open DJ&lt;br&gt;Open DS&lt;br&gt;Oracle (previously Sun ONE) Directory Server Enterprise Edition&lt;br&gt;RadiantOne Virtual Directory Server (VDS) |</div><div class="diff-line diff-deleted">| [SQL database](../identity/app-provisioning/tutorial-ecma-sql-connector.md)| Microsoft SQL Server and Azure SQL&lt;br&gt;IBM DB2 10.x&lt;br&gt;IBM DB2 9.x&lt;br&gt;Oracle 10g and 11g&lt;br&gt;Oracle 12c and 18c&lt;br&gt;MySQL 5.x|</div><div class="diff-line diff-context">| Cloud platform| [AWS IAM Identity Center](../identity/saas-apps/aws-single-sign-on-provisioning-tutorial.md) |</div><div class="diff-line diff-context">| Cloud platform| [Google Cloud Platform - User Provisioning](../identity/saas-apps/g-suite-provisioning-tutorial.md) |</div><div class="diff-line diff-context">| Business applications| Multiple. With Microsoft Entra integrations to [Pathlock](https://pathlock.com/applications/microsoft-entra-id-governance/) and to other partner products, customers can take advantage of additional risk and fine-grained separation-of-duties checks enforced in those products, with access packages in Microsoft Entra ID Governance. |</div><div class="diff-line diff-context">| [MIC SAAS Portal](../identity/saas-apps/mic-saas-portal-tutorial.md) |  | ● |</div><div class="diff-line diff-context">| [MicroFocus Novell eDirectory (LDAP connector)](../identity/app-provisioning/on-premises-ldap-connector-configure.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft 365](../fundamentals/concept-group-based-licensing.md) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft Azure SQL (SQL connector)](../identity/app-provisioning/tutorial-ecma-sql-connector.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft Azure](/azure/role-based-access-control/role-assignments-portal) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins)| ● | ● |</div><div class="diff-line diff-context">| [Microsoft Dynamics 365 finance and operations](/dynamics365/guidance/implementation-guide/security-strategy-product-oa)| | ●  |</div><div class="diff-line diff-context">| [Microsoft Entra Domain Services](../identity/domain-services/synchronization.md) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft Intune](/intune/intune-service/fundamentals/role-based-access-control#microsoft-entra-roles-with-intune-access) | ● | ● |</div><div class="diff-line diff-deleted">| [Microsoft Lightweight Directory Server (ADAM) (LDAP connector)](../identity/app-provisioning/on-premises-ldap-connector-configure.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft SharePoint Server on-premises](../identity/saas-apps/sharepoint-on-premises-tutorial.md) | | ●  |</div><div class="diff-line diff-context">| [Microsoft SQL Server (SQL connector)](../identity/app-provisioning/tutorial-ecma-sql-connector.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft Viva Engage](/viva/engage/manage-viva-engage-groups/create-a-dynamic-group) | ● | ● |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| HR | [API-driven connector from any HR source](../identity/app-provisioning/inbound-provisioning-api-concepts.md)&lt;br&gt;[Rippling HCM integration with Microsoft Entra ID/Active Directory](../identity/saas-apps/rippling-hcm-microsoft-entra-id-integration-tutorial.md)&lt;br&gt;[Oracle HCM API-driven connector](../identity/saas-apps/oracle-hcm-provisioning-tutorial.md)&lt;br&gt;[Darwinbox to Microsoft Entra ID](../identity/saas-apps/darwinbox-entra-integration-tutorial.md)&lt;br&gt;[SAP HCM to Microsoft Entra ID](../identity/saas-apps/sap-hcm-microsoft-entra-identity-provisioning.md) |</div><div class="diff-line diff-context">| HR | Student information systems via [School Data Sync](/schooldatasync/school-data-sync-overview) |</div><div class="diff-line diff-context">|[LDAP directory](../identity/app-provisioning/on-premises-ldap-connector-configure.md)| OpenLDAP&lt;br&gt;Microsoft Active Directory Lightweight Directory Services&lt;br&gt;389 Directory Server&lt;br&gt;Apache Directory Server&lt;br&gt;IBM Tivoli DS&lt;br&gt;Isode Directory&lt;br&gt;NetIQ eDirectory&lt;br&gt;Novell eDirectory&lt;br&gt;Open DJ&lt;br&gt;Open DS&lt;br&gt;Oracle (previously Sun ONE) Directory Server Enterprise Edition&lt;br&gt;RadiantOne Virtual Directory Server (VDS) |</div><div class="diff-line diff-added">| [SQL database](../identity/app-provisioning/tutorial-ecma-sql-connector.md)| Microsoft SQL Server and Azure SQL&lt;br&gt;IBM DB2 10.x&lt;br&gt;IBM DB2 9.x&lt;br&gt;Oracle 10g and 11g&lt;br&gt;Oracle 12c and 18c&lt;br&gt;MySQL 5.x|&lt;br&gt;MySQL 8.x&lt;br&gt;Postgres</div><div class="diff-line diff-context">| Cloud platform| [AWS IAM Identity Center](../identity/saas-apps/aws-single-sign-on-provisioning-tutorial.md) |</div><div class="diff-line diff-context">| Cloud platform| [Google Cloud Platform - User Provisioning](../identity/saas-apps/g-suite-provisioning-tutorial.md) |</div><div class="diff-line diff-context">| Business applications| Multiple. With Microsoft Entra integrations to [Pathlock](https://pathlock.com/applications/microsoft-entra-id-governance/) and to other partner products, customers can take advantage of additional risk and fine-grained separation-of-duties checks enforced in those products, with access packages in Microsoft Entra ID Governance. |</div><div class="diff-line diff-context">| [MIC SAAS Portal](../identity/saas-apps/mic-saas-portal-tutorial.md) |  | ● |</div><div class="diff-line diff-context">| [MicroFocus Novell eDirectory (LDAP connector)](../identity/app-provisioning/on-premises-ldap-connector-configure.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft 365](../fundamentals/concept-group-based-licensing.md) | ● | ● |</div><div class="diff-line diff-added">| [Microsoft Active Directory Lightweight Directory Server (ADAM) (LDAP connector)](../identity/app-provisioning/on-premises-ldap-connector-configure.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft Azure SQL (SQL connector)](../identity/app-provisioning/tutorial-ecma-sql-connector.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft Azure](/azure/role-based-access-control/role-assignments-portal) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins)| ● | ● |</div><div class="diff-line diff-context">| [Microsoft Dynamics 365 finance and operations](/dynamics365/guidance/implementation-guide/security-strategy-product-oa)| | ●  |</div><div class="diff-line diff-context">| [Microsoft Entra Domain Services](../identity/domain-services/synchronization.md) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft Intune](/intune/intune-service/fundamentals/role-based-access-control#microsoft-entra-roles-with-intune-access) | ● | ● |</div><div class="diff-line diff-context">| [Microsoft SharePoint Server on-premises](../identity/saas-apps/sharepoint-on-premises-tutorial.md) | | ●  |</div><div class="diff-line diff-context">| [Microsoft SQL Server (SQL connector)](../identity/app-provisioning/tutorial-ecma-sql-connector.md) | ● |  |</div><div class="diff-line diff-context">| [Microsoft Viva Engage](/viva/engage/manage-viva-engage-groups/create-a-dynamic-group) | ● | ● |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-roadmap.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-roadmap.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-roadmap" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; Microsoft doesn&#39;t support modifying or operating Microsoft Entra Connect Sync outside of the actions that are formally documented. Any of these actions might result in an inconsistent or unsupported state of Microsoft Entra Connect Sync. As a result, Microsoft can&#39;t provide technical support for such deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can find the download for Microsoft Entra Connect on [Microsoft Download Center](https://go.microsoft.com/fwlink/?LinkId=615771).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Solution | Scenario |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">### Next steps to Install Microsoft Entra Connect</div><div class="diff-line diff-context">|Topic |Link|  </div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-deleted">|Download Microsoft Entra Connect | [Download Microsoft Entra Connect](https://go.microsoft.com/fwlink/?LinkId=615771)|</div><div class="diff-line diff-context">|Install using Express settings | [Express installation of Microsoft Entra Connect](./how-to-connect-install-express.md)|</div><div class="diff-line diff-context">|Install using Customized settings | [Custom installation of Microsoft Entra Connect](./how-to-connect-install-custom.md)|</div><div class="diff-line diff-context">|Upgrade from DirSync | [Upgrade from Azure AD Sync tool (DirSync)](./how-to-dirsync-upgrade-get-started.md)|</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://go.microsoft.com/fwlink/?LinkID=518973)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for sync</div><div class="diff-line diff-deleted">    * [Download and install the latest version of Microsoft Entra Connect](https://go.microsoft.com/fwlink/?linkid=615771). The Health Agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or higher).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD DS</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD DS](https://go.microsoft.com/fwlink/?LinkID=820540).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; Microsoft doesn&#39;t support modifying or operating Microsoft Entra Connect Sync outside of the actions that are formally documented. Any of these actions might result in an inconsistent or unsupported state of Microsoft Entra Connect Sync. As a result, Microsoft can&#39;t provide technical support for such deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can find the download for Microsoft Entra Connect on [Microsoft Download Center](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Solution | Scenario |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">### Next steps to Install Microsoft Entra Connect</div><div class="diff-line diff-context">|Topic |Link|  </div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-added">|Download Microsoft Entra Connect | [Download Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted)|</div><div class="diff-line diff-context">|Install using Express settings | [Express installation of Microsoft Entra Connect](./how-to-connect-install-express.md)|</div><div class="diff-line diff-context">|Install using Customized settings | [Custom installation of Microsoft Entra Connect](./how-to-connect-install-custom.md)|</div><div class="diff-line diff-context">|Upgrade from DirSync | [Upgrade from Azure AD Sync tool (DirSync)](./how-to-dirsync-upgrade-get-started.md)|</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://go.microsoft.com/fwlink/?LinkID=518973)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for sync</div><div class="diff-line diff-added">    * [Download and install the latest version of Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted). The Health Agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or higher).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD DS</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD DS](https://go.microsoft.com/fwlink/?LinkID=820540).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/cloud-governed-management-for-on-premises.md" target="_blank">docs/identity/hybrid/connect/cloud-governed-management-for-on-premises.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Jan 16, 2026 8:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/cloud-governed-management-for-on-premises" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update HR source and Oracle EBS</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Identity governance helps organizations achieve a balance between *productivity* --- how quickly can a person have access to the resources they need, such as when they join the organization? --- and *security* --- how should their access change over time, such as when that person&#39;s employment status changes? Identity lifecycle management is the foundation for identity governance, and effective governance at scale requires modernizing the identity lifecycle management infrastructure for applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For many organizations, identity lifecycle for employees is tied to the representation of that user in a human capital management (HCM) system. For organizations using Workday as their HCM system, Microsoft Entra ID can ensure user accounts in AD are [automatically provisioned and deprovisioned for workers in Workday](~/identity/saas-apps/workday-inbound-tutorial.md). Doing so leads to improved user productivity through automation of birthright accounts and manages risk by ensuring application access is automatically updated when a user changes roles or leaves the organization. The Workday-driven user provisioning [deployment plan](https://aka.ms/WorkdayDeploymentPlan) is a step-by-step guide that walks organizations through the best practices implementation of Workday to Active Directory User Provisioning solution in a five-step process.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID P1 or P2 also includes Microsoft Identity Manager, which can import records from other on-premises HCM systems, including SAP, Oracle eBusiness, and Oracle PeopleSoft.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Business-to-business collaboration increasingly requires granting access to people outside your organization. [Microsoft Entra B2B](~/external-id/index.yml) collaboration enables organizations to securely share their applications and services with guest users and external partners while maintaining control over their own corporate data.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Identity governance helps organizations achieve a balance between *productivity* --- how quickly can a person have access to the resources they need, such as when they join the organization? --- and *security* --- how should their access change over time, such as when that person&#39;s employment status changes? Identity lifecycle management is the foundation for identity governance, and effective governance at scale requires modernizing the identity lifecycle management infrastructure for applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For many organizations, identity lifecycle for employees is tied to the representation of that user in a human capital management (HCM) system. For organizations using Workday as their HCM system, Microsoft Entra ID can ensure user accounts in AD are [automatically provisioned and deprovisioned for workers in Workday](~/identity/saas-apps/workday-inbound-tutorial.md). Doing so leads to improved user productivity through automation of birthright accounts and manages risk by ensuring application access is automatically updated when a user changes roles or leaves the organization. The Workday-driven user provisioning [deployment plan](https://aka.ms/WorkdayDeploymentPlan) is a step-by-step guide that walks organizations through the best practices implementation of Workday to Active Directory User Provisioning solution in a five-step process. Organizations can also use [SuccessFactors](~/identity/saas-apps/sap-successfactors-inbound-provisioning-tutorial.md), [SAP HCM](~/identity/saas-apps/sap-hcm-microsoft-entra-identity-provisioning.md) , [Oracle HCM](~/saas-apps/oracle-hcm-provisioning-tutorial.md), [Rippling HCM](~/identity/saas-apps/rippling-hcm-microsoft-entra-id-integration-tutorial.md), [Darwinbox](~/identity/saas-apps/darwinbox-entra-integration-tutorial.md), or [other HCM systems](~/identity/app-provisioning/inbound-provisioning-api-concepts.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Business-to-business collaboration increasingly requires granting access to people outside your organization. [Microsoft Entra B2B](~/external-id/index.yml) collaboration enables organizations to securely share their applications and services with guest users and external partners while maintaining control over their own corporate data.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-adfs.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-adfs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-adfs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD FS](https://go.microsoft.com/fwlink/?LinkID=518973).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for sync:</div><div class="diff-line diff-deleted">  - [Download and install the latest version of Microsoft Entra Connect](https://go.microsoft.com/fwlink/?linkid=615771). The health agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or later).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for AD Domain Services:</div><div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD Domain Services](https://go.microsoft.com/fwlink/?LinkID=820540).</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Install the agent for AD FS</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD FS](https://go.microsoft.com/fwlink/?LinkID=518973).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for sync:</div><div class="diff-line diff-added">  - [Download and install the latest version of Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted). The health agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or later).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for AD Domain Services:</div><div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD Domain Services](https://go.microsoft.com/fwlink/?LinkID=820540).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Install the agent for AD FS</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/what-is-provisioning.md" target="_blank">docs/id-governance/what-is-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Mark Wahl on Jan 16, 2026 7:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/what-is-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> clarify which SAP and Oracle</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For organizations with a single subscription to Workday or SuccessFactors, and don&#39;t use Active Directory</div><div class="diff-line diff-context">1. For organizations with a single subscription to Workday or SuccessFactors, and have both Active Directory and Microsoft Entra ID</div><div class="diff-line diff-deleted">1. For organizations with multiple HR systems, or an on-premises HR system such as SAP, Oracle eBusiness or PeopleSoft</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [What is HR driven provisioning?](~/identity/app-provisioning/what-is-hr-driven-provisioning.md)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For organizations with a single subscription to Workday or SuccessFactors, and don&#39;t use Active Directory</div><div class="diff-line diff-context">1. For organizations with a single subscription to Workday or SuccessFactors, and have both Active Directory and Microsoft Entra ID</div><div class="diff-line diff-added">1. For organizations with multiple HR systems, or an on-premises HR system such as SAP HCM, Oracle E-Business Suite or PeopleSoft</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [What is HR driven provisioning?](~/identity/app-provisioning/what-is-hr-driven-provisioning.md)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/add-custom-domain.md" target="_blank">docs/fundamentals/add-custom-domain.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/add-custom-domain" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; If you plan to federate on-premises Windows Server Active Directory with Microsoft Entra ID, then you need to select **I plan to configure this domain for single sign-on with my local Active Directory** when you run the Microsoft Entra Connect tool to synchronize your directories.</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-deleted">&gt; You also need to register the same domain name you select for federating with your on-premises directory in the **Microsoft Entra Domain** step in the wizard. To see what that setup looks like, see [Verify the domain selected for federation](~/identity/hybrid/connect/how-to-connect-install-custom.md#verify-the-azure-ad-domain-selected-for-federation). If you don&#39;t have the Microsoft Entra Connect tool, you can [download it here](https://go.microsoft.com/fwlink/?LinkId=615771).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add your custom domain name</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; If you plan to federate on-premises Windows Server Active Directory with Microsoft Entra ID, then you need to select **I plan to configure this domain for single sign-on with my local Active Directory** when you run the Microsoft Entra Connect tool to synchronize your directories.</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-added">&gt; You also need to register the same domain name you select for federating with your on-premises directory in the **Microsoft Entra Domain** step in the wizard. To see what that setup looks like, see [Verify the domain selected for federation](~/identity/hybrid/connect/how-to-connect-install-custom.md#verify-the-azure-ad-domain-selected-for-federation). If you don&#39;t have the Microsoft Entra Connect tool, you can download the latest version from the [Microsoft Entra Admin Center](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted) under the **Manage** tab of the **Microsoft Entra Connect | Get started** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add your custom domain name</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/troubleshoot-sspr-writeback.md" target="_blank">docs/identity/authentication/troubleshoot-sspr-writeback.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/troubleshoot-sspr-writeback" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-context">&gt; If you customized the out-of-the-box sync rules, *back them up before you proceed with the upgrade, then manually redeploy them after you&#39;re finished.*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Download the latest version of Microsoft Entra Connect from the [Microsoft Download Center](https://go.microsoft.com/fwlink/?LinkId=615771).</div><div class="diff-line diff-context">1. As you already installed Microsoft Entra Connect, perform an in-place upgrade to update your Microsoft Entra Connect installation to the latest version.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Run the downloaded package and follow the on-screen instructions to update Microsoft Entra Connect.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-context">&gt; If you customized the out-of-the-box sync rules, *back them up before you proceed with the upgrade, then manually redeploy them after you&#39;re finished.*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Download the latest version from the [Microsoft Entra Admin Center](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted) under the **Manage** tab of the **Microsoft Entra Connect | Get started** page.</div><div class="diff-line diff-context">1. As you already installed Microsoft Entra Connect, perform an in-place upgrade to update your Microsoft Entra Connect installation to the latest version.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Run the downloaded package and follow the on-screen instructions to update Microsoft Entra Connect.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/migrate-adfs-represent-security-policies.md" target="_blank">docs/identity/enterprise-apps/migrate-adfs-represent-security-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/migrate-adfs-represent-security-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Sync AD FS groups in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When you map authorization rules, apps that authenticate with AD FS may use Active Directory groups for permissions. In such a case, use [Microsoft Entra Connect](https://go.microsoft.com/fwlink/?LinkId=615771) to sync these groups with Microsoft Entra ID before migrating the applications. Make sure that you verify those groups and membership before migration so that you can grant access to the same users when the application is migrated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Prerequisites for using Group attributes synchronized from Active Directory](~/identity/hybrid/connect/how-to-connect-fed-group-claims.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Sync AD FS groups in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you map authorization rules, apps that authenticate with AD FS may use Active Directory groups for permissions. In such a case, use [Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted) to sync these groups with Microsoft Entra ID before migrating the applications. Make sure that you verify those groups and membership before migration so that you can grant access to the same users when the application is migrated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Prerequisites for using Group attributes synchronized from Active Directory](~/identity/hybrid/connect/how-to-connect-fed-group-claims.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-agent-install.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-agent-install.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-agent-install" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD FS](https://download.microsoft.com/download/9577dcd4-71d4-4607-8950-3b2b97f499f4/MicrosoftEntraConnectHealthAgentSetup.exe).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for sync:</div><div class="diff-line diff-deleted">  - [Download and install the latest version of Microsoft Entra Connect](https://go.microsoft.com/fwlink/?linkid=615771). The health agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or later).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for AD Domain Services:</div><div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD Domain Services](https://download.microsoft.com/download/9577dcd4-71d4-4607-8950-3b2b97f499f4/MicrosoftEntraConnectHealthAgentSetup.exe).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-azure-ad-ds).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD FS](https://download.microsoft.com/download/9577dcd4-71d4-4607-8950-3b2b97f499f4/MicrosoftEntraConnectHealthAgentSetup.exe).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for sync:</div><div class="diff-line diff-added">  - [Download and install the latest version of Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted). The health agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or later).</div><div class="diff-line diff-context">- Get started using Microsoft Entra Connect Health for AD Domain Services:</div><div class="diff-line diff-context">  - [Download the Microsoft Entra Connect Health agent for AD Domain Services](https://download.microsoft.com/download/9577dcd4-71d4-4607-8950-3b2b97f499f4/MicrosoftEntraConnectHealthAgentSetup.exe).</div><div class="diff-line diff-context">  - See the [installation instructions](#install-the-agent-for-azure-ad-ds).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-custom.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-custom.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-custom" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Use *custom settings* in Microsoft Entra Connect when you want more options for the installation. Use these settings, for example, if you have multiple forests or if you want to configure optional features. Use custom settings in all cases where [express installation](how-to-connect-install-express.md) doesn&#39;t satisfy your deployment or topology needs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Prerequisites:</div><div class="diff-line diff-deleted">- [Download Microsoft Entra Connect](https://go.microsoft.com/fwlink/?LinkId=615771).</div><div class="diff-line diff-context">- Complete the prerequisite steps in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md). </div><div class="diff-line diff-context">- Make sure you have the accounts described in [Microsoft Entra Connect accounts and permissions](reference-connect-accounts-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Use *custom settings* in Microsoft Entra Connect when you want more options for the installation. Use these settings, for example, if you have multiple forests or if you want to configure optional features. Use custom settings in all cases where [express installation](how-to-connect-install-express.md) doesn&#39;t satisfy your deployment or topology needs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Prerequisites:</div><div class="diff-line diff-added">- [Download Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted).</div><div class="diff-line diff-context">- Complete the prerequisite steps in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md). </div><div class="diff-line diff-context">- Make sure you have the accounts described in [Microsoft Entra Connect accounts and permissions](reference-connect-accounts-permissions.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-express.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-express.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-express" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you have a single-forest topology and use [password hash sync](how-to-connect-password-hash-synchronization.md) for authentication, express settings are a good option to use when you install Microsoft Entra Connect Sync. Express settings  the default option to install Microsoft Entra Connect Sync, and it&#39;s used for the most commonly deployed scenario. It&#39;s only a few short steps to extend your on-premises directory to the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Before you start installing Microsoft Entra Connect Sync, [download Microsoft Entra Connect Sync](https://go.microsoft.com/fwlink/?LinkId=615771), and be sure to complete the prerequisite steps in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the express settings installation doesn&#39;t match your topology, see [Related articles](#related-articles) for information about other scenarios.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you have a single-forest topology and use [password hash sync](how-to-connect-password-hash-synchronization.md) for authentication, express settings are a good option to use when you install Microsoft Entra Connect Sync. Express settings  the default option to install Microsoft Entra Connect Sync, and it&#39;s used for the most commonly deployed scenario. It&#39;s only a few short steps to extend your on-premises directory to the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Before you start installing Microsoft Entra Connect Sync, [download Microsoft Entra Connect Sync](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted), and be sure to complete the prerequisite steps in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the express settings installation doesn&#39;t match your topology, see [Related articles](#related-articles) for information about other scenarios.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-dirsync-upgrade-get-started.md" target="_blank">docs/identity/hybrid/connect/how-to-dirsync-upgrade-get-started.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-dirsync-upgrade-get-started" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">DirSync and Azure AD Sync aren&#39;t supported and no longer work. If you&#39;re still using DirSync or Azure AD Sync, you *must* upgrade to Microsoft Entra Connect to resume your sync process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Before you start installing Microsoft Entra Connect, make sure you [download Microsoft Entra Connect](https://go.microsoft.com/fwlink/?LinkId=615771) and complete the prerequisite steps described in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md). Pay special attention to the following requirements for Microsoft Entra Connect because they&#39;re different from DirSync:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Required versions of .NET and PowerShell**: Newer versions that what are required for DirSync must be on the server for Microsoft Entra Connect.</div><div class="diff-line diff-context">- **Proxy server configuration**: If you use a proxy server to reach the internet, this setting must be configured before you upgrade. DirSync always used the proxy server that was configured for the user who installed it, but Microsoft Entra Connect uses machine settings instead.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">DirSync and Azure AD Sync aren&#39;t supported and no longer work. If you&#39;re still using DirSync or Azure AD Sync, you *must* upgrade to Microsoft Entra Connect to resume your sync process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Before you start installing Microsoft Entra Connect, make sure you [download Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted) and complete the prerequisite steps described in [Microsoft Entra Connect: Hardware and prerequisites](how-to-connect-install-prerequisites.md). Pay special attention to the following requirements for Microsoft Entra Connect because they&#39;re different from DirSync:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Required versions of .NET and PowerShell**: Newer versions that what are required for DirSync must be on the server for Microsoft Entra Connect.</div><div class="diff-line diff-context">- **Proxy server configuration**: If you use a proxy server to reach the internet, this setting must be configured before you upgrade. DirSync always used the proxy server that was configured for the user who installed it, but Microsoft Entra Connect uses machine settings instead.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-accounts-permissions.md" target="_blank">docs/identity/hybrid/connect/reference-connect-accounts-permissions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Jan 16, 2026 11:12 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-accounts-permissions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove references to download center</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Topic |Link|  </div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-deleted">|Download Microsoft Entra Connect | [Download Microsoft Entra Connect](https://go.microsoft.com/fwlink/?LinkId=615771)|</div><div class="diff-line diff-context">|Install by using express settings | [Express installation of Microsoft Entra Connect](how-to-connect-install-express.md)|</div><div class="diff-line diff-context">|Install by using customized settings | [Custom installation of Microsoft Entra Connect](./how-to-connect-install-custom.md)|</div><div class="diff-line diff-context">|Upgrade from DirSync | [Upgrade from Azure AD Sync tool (DirSync)](how-to-dirsync-upgrade-get-started.md)|</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Topic |Link|  </div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-added">|Download Microsoft Entra Connect | [Download Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted)|</div><div class="diff-line diff-context">|Install by using express settings | [Express installation of Microsoft Entra Connect](how-to-connect-install-express.md)|</div><div class="diff-line diff-context">|Install by using customized settings | [Custom installation of Microsoft Entra Connect](./how-to-connect-install-custom.md)|</div><div class="diff-line diff-context">|Upgrade from DirSync | [Upgrade from Azure AD Sync tool (DirSync)](how-to-dirsync-upgrade-get-started.md)|</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
