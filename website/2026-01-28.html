@@ -1,0 +1,294 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since January 26th 2026, 7:51 PM PST</p>
+        <p>Report generated on January 27th 2026, 7:51 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">22</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-cloud-apps.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-cloud-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Jan 27, 2026 3:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pm-updats</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Resource exclusions for a custom enterprise application and Exchange Online</div><div class="diff-line diff-context">- MFA is configured as the grant control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Example scenario 1</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Example scenario | User impact (before → after) | Conditional Access evaluation change |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| A user signs into VSCode desktop client, which requests openid and profile scopes. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-deleted">| A user signs in using Azure CLI, which requests only User.Read. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-deleted">| A user signs in through a custom enterprise application (excluded from the policy) that requests only User.Read and People.Read. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There is no change in behavior when an application requests a scope beyond those listed previously.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In the following example, Conditional Access is not enforced because Exchange Online is excluded from the policy.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">#### Example scenario 2</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Example scenario | User impact | Conditional Access evaluation |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-deleted">| A user signs in to a custom enterprise application (excluded from the policy) that requests offline_access and SharePoint access (Files.Read). | No change in behavior | Conditional Access continues to be enforced based on the SharePoint resource. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Resource exclusions for a custom enterprise application and Exchange Online</div><div class="diff-line diff-context">- MFA is configured as the grant control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### Example scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Example scenario | User impact (before → after) | Conditional Access evaluation |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| A user signs into VSCode desktop client, which requests openid and profile scopes. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-added">| A user signs in using Azure CLI, which requests only `User.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-added">| A user signs in through a custom enterprise application (excluded from the policy) that requests only `User.Read` and `People.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There is no change in behavior when an application requests a scope beyond those listed previously, as illustrated in the following examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### Example scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Example scenario | User impact | Conditional Access evaluation |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-added">| A user signs in to a custom enterprise application (excluded from the policy) that requests offline_access and SharePoint access (`Files.Read`). | No change in behavior | Conditional Access continues to be enforced based on the SharePoint resource. |</div><div class="diff-line diff-added">| A user signs in to the OneDrive desktop sync client. OneDrive requests offline_access and Exchange Online access (`Mail.Read`). | No change in behavior | Conditional Access is not enforced because Exchange Online is excluded from the policy. |</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-rule-member-of.md" target="_blank">docs/identity/users/groups-dynamic-rule-member-of.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Jan 27, 2026 1:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-rule-member-of" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add important note about memberOf behavior when source group is deleted</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: users</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/18/2025</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: krbain</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other operators. For example, you can&#39;t create a rule that states &quot;Members Of group A can&#39;t be in Dynamic group B.&quot;</div><div class="diff-line diff-context">- Users included in `memberOf` dynamic membership groups may cause a slower processing time for your tenant, if the tenant has a large number of groups or frequent dynamic membership groups updates.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get started</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This feature can be used in the Azure portal, Microsoft Graph, and PowerShell. Because `memberOf` isn&#39;t yet supported in the rule builder, you must enter your rule in the rule editor.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: users</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 01/27/2026</div><div class="diff-line diff-context">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: krbain</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other operators. For example, you can&#39;t create a rule that states &quot;Members Of group A can&#39;t be in Dynamic group B.&quot;</div><div class="diff-line diff-context">- Users included in `memberOf` dynamic membership groups may cause a slower processing time for your tenant, if the tenant has a large number of groups or frequent dynamic membership groups updates.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; When a group object that is listed in the rule of a memberOf dynamic group is deleted from the tenant, the users or devices that were members of the deleted group at the time of deletion remain members of the memberOf dynamic group. This behavior continues until the memberOf dynamic group rule is modified.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Get started</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This feature can be used in the Azure portal, Microsoft Graph, and PowerShell. Because `memberOf` isn&#39;t yet supported in the rule builder, you must enter your rule in the rule editor.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/reference-company-branding-css-template.md" target="_blank">docs/fundamentals/reference-company-branding-css-template.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Jan 27, 2026 3:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/reference-company-branding-css-template" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added a note.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra CSS selectors</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Use the following CSS selectors to configure the details of the sign-in experience. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- `.ext-background-image` - Container that includes the background image in the default lightbox template</div><div class="diff-line diff-context">- `.ext-header` - Header at the top of the container</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra CSS selectors</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use the following CSS selectors to configure the details of the sign-in experience.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt;[!Note]</div><div class="diff-line diff-added">&gt;To customize internal navigation links, use the new custom CSS selector: `.ext-link`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- `.ext-background-image` - Container that includes the background image in the default lightbox template</div><div class="diff-line diff-context">- `.ext-header` - Header at the top of the container</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-enable-authenticator-passkey.md" target="_blank">docs/identity/authentication/how-to-enable-authenticator-passkey.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jan 27, 2026 5:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-enable-authenticator-passkey" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-enable-authenticator-passkey.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/24/2025</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">    iOS | `cable.auth.com`&lt;br&gt;`app-site-association.cdn-apple.com`&lt;br&gt;`app-site-association.networking.apple`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-deleted">  &gt; Users can&#39;t use cross-device registration or authentication if you enable attestation. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more about FIDO2 support, see [Support for FIDO2 authentication with Microsoft Entra ID](fido2-compatibility.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 01/27/2026</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">    iOS | `cable.auth.com`&lt;br&gt;`app-site-association.cdn-apple.com`&lt;br&gt;`app-site-association.networking.apple`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-added">  &gt; Users can&#39;t use cross-device registration if you enable attestation. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more about FIDO2 support, see [Support for FIDO2 authentication with Microsoft Entra ID](fido2-compatibility.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-assignments.md" target="_blank">docs/id-governance/entitlement-management-access-package-assignments.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Jan 27, 2026 9:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-assignments" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/id-governance/entitlement-management-access-package-assignments.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Once you select a policy, you are able to add users to select the users you want to assign this access package to, under the chosen policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-deleted">    &gt; If you select a policy with questions, you can only assign one user at a time. Additionally, please note that if the external user already exists in the directory, you will need to use the **Identities in my directory** option and select the existing user. The **External user** option can be used when the user does not exist in the directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Set the date and time you want the selected users&#39; assignment to start and end. If an end date isn&#39;t provided, the policy&#39;s lifecycle settings are used.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Once you select a policy, you are able to add users to select the users you want to assign this access package to, under the chosen policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-added">    &gt; If you select a policy with questions, you can only assign one user at a time. If the external user already exists in the directory, use the **Identities in my directory** option and select the existing user. Use the **External user** option when the user doesn&#39;t exist in the directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Set the date and time you want the selected users&#39; assignment to start and end. If an end date isn&#39;t provided, the policy&#39;s lifecycle settings are used.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
