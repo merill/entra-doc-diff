@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since January 27th 2026, 8:12 PM PST</p>
+        <p>Report generated on January 28th 2026, 8:12 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">40</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">37</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-security-customers.md" target="_blank">docs/external-id/customers/concept-security-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Jan 28, 2026 11:47 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-security-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+45</span> / 
+              <span class="deletions">-45</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> PM updates.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 06/11/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra External ID provides baseline security features for external tenants, offering immediate protection against threats like brute force and network layer attacks. These default settings serve as a foundation for developing your own identity security plan. From this starting point, you can implement real-time and offline protection through Microsoft Entra premium security features.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following diagram shows the layered security approach. Use the implementation recommendations as a prioritized roadmap to strengthen your external tenant’s security posture.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/concept-security-customers/security-layers.png&quot; alt-text=&quot;Security layers diagram&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> &lt;!---## Core protection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Every external tenant starts with core protection. This foundational layer provides baseline security features from the moment the tenant is created, ensuring essential safeguards against common threats.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 01/28/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">External-facing identity systems support a wide range of customer experiences. That wide range also makes them attractive targets for common customer identity and access management (CIAM) attack patterns such as credential stuffing, automated bot sign-ups, account takeover attempts, and high-volume traffic spikes. Understanding these threats helps explain why a clear, layered security approach is essential. Microsoft Entra External ID provides foundational capabilities you can build on. This guide helps you understand how to strengthen that foundation with recommended controls and integrations based on common CIAM threat patterns.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This guide outlines:</div><div class="diff-line diff-added">- The attack vectors that commonly target CIAM systems. </div><div class="diff-line diff-added">- The security controls that can help you address them.</div><div class="diff-line diff-added">- A prioritized roadmap to guide implementation.</div><div class="diff-line diff-added">- Available third‑party integrations for fraud, bot, and DDoS protection.</div><div class="diff-line diff-added">- Known limitations specific to external tenants.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Our goal is to offer a practical, actionable roadmap that helps you make informed decisions about how to secure your customer-facing experiences.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/configure-security.md" target="_blank">docs/fundamentals/configure-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Jan 28, 2026 3:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/configure-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [ZT Assesment] Fix headings issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| [Applications don&#39;t have client secrets configured](zero-trust-protect-identities.md#applications-dont-have-client-secrets-configured) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Service principals don&#39;t have certificates or credentials associated with them](zero-trust-protect-identities.md#service-principals-dont-have-certificates-or-credentials-associated-with-them) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Applications don&#39;t have certificates with expiration longer than 180 days](zero-trust-protect-identities.md#applications-dont-have-certificates-with-expiration-longer-than-180-days) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-deleted">| [Application Certificates need to be rotated on a regular basis](zero-trust-protect-identities.md#application-certificates-need-to-be-rotated-on-a-regular-basis) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Enforce standards for app secrets and certificates](zero-trust-protect-identities.md#enforce-standards-for-app-secrets-and-certificates) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Microsoft services applications don&#39;t have credentials configured](zero-trust-protect-identities.md#microsoft-services-applications-dont-have-credentials-configured) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [User consent settings are restricted](zero-trust-protect-identities.md#user-consent-settings-are-restricted) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Privileged accounts have phishing-resistant methods registered](zero-trust-protect-identities.md#privileged-accounts-have-phishing-resistant-methods-registered) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Privileged Microsoft Entra built-in roles are targeted with Conditional Access policies to enforce phishing-resistant methods](zero-trust-protect-identities.md#privileged-microsoft-entra-built-in-roles-are-targeted-with-conditional-access-policies-to-enforce-phishing-resistant-methods) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Require password reset notifications for administrator roles](zero-trust-protect-identities.md#require-password-reset-notifications-for-administrator-roles) | Microsoft Entra ID P1 |</div><div class="diff-line diff-deleted">| [Block legacy authentication](zero-trust-protect-identities.md#block-legacy-authentication) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Temporary access pass is enabled](zero-trust-protect-identities.md#temporary-access-pass-is-enabled) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Restrict Temporary Access Pass to Single Use](zero-trust-protect-identities.md#restrict-temporary-access-pass-to-single-use) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Migrate from legacy MFA and SSPR policies](zero-trust-protect-identities.md#migrate-from-legacy-mfa-and-sspr-policies) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Entra Connect Sync is configured with Service Principal Credentials](zero-trust-protect-identities.md#entra-connect-sync-is-configured-with-service-principal-credentials) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [No usage of ADAL in the tenant](zero-trust-protect-identities.md#no-usage-of-adal-in-the-tenant) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Block legacy Azure AD PowerShell module](zero-trust-protect-identities.md#block-legacy-azure-ad-powershell-module) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-deleted">| [Enable Microsoft Entra ID security defaults](zero-trust-protect-identities.md#enable-microsoft-entra-id-security-defaults) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Protect tenants and isolation production systems</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| [Applications don&#39;t have client secrets configured](zero-trust-protect-identities.md#applications-dont-have-client-secrets-configured) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Service principals don&#39;t have certificates or credentials associated with them](zero-trust-protect-identities.md#service-principals-dont-have-certificates-or-credentials-associated-with-them) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Applications don&#39;t have certificates with expiration longer than 180 days](zero-trust-protect-identities.md#applications-dont-have-certificates-with-expiration-longer-than-180-days) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-added">| [Application certificates must be rotated on a regular basis](zero-trust-protect-identities.md#application-certificates-must-be-rotated-on-a-regular-basis) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Enforce standards for app secrets and certificates](zero-trust-protect-identities.md#enforce-standards-for-app-secrets-and-certificates) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Microsoft services applications don&#39;t have credentials configured](zero-trust-protect-identities.md#microsoft-services-applications-dont-have-credentials-configured) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [User consent settings are restricted](zero-trust-protect-identities.md#user-consent-settings-are-restricted) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Privileged accounts have phishing-resistant methods registered](zero-trust-protect-identities.md#privileged-accounts-have-phishing-resistant-methods-registered) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Privileged Microsoft Entra built-in roles are targeted with Conditional Access policies to enforce phishing-resistant methods](zero-trust-protect-identities.md#privileged-microsoft-entra-built-in-roles-are-targeted-with-conditional-access-policies-to-enforce-phishing-resistant-methods) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Require password reset notifications for administrator roles](zero-trust-protect-identities.md#require-password-reset-notifications-for-administrator-roles) | Microsoft Entra ID P1 |</div><div class="diff-line diff-added">| [Block legacy authentication policy is configured](zero-trust-protect-identities.md#block-legacy-authentication-policy-is-configured) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Temporary access pass is enabled](zero-trust-protect-identities.md#temporary-access-pass-is-enabled) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Restrict Temporary Access Pass to Single Use](zero-trust-protect-identities.md#restrict-temporary-access-pass-to-single-use) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Migrate from legacy MFA and SSPR policies](zero-trust-protect-identities.md#migrate-from-legacy-mfa-and-sspr-policies) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [Entra Connect Sync is configured with Service Principal Credentials](zero-trust-protect-identities.md#entra-connect-sync-is-configured-with-service-principal-credentials) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [No usage of ADAL in the tenant](zero-trust-protect-identities.md#no-usage-of-adal-in-the-tenant) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">| [Block legacy Azure AD PowerShell module](zero-trust-protect-identities.md#block-legacy-azure-ad-powershell-module) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-added">| [Enable Microsoft Entra ID security defaults for free tenants](zero-trust-protect-identities.md#enable-microsoft-entra-id-security-defaults-for-free-tenants) | None (included with Microsoft Entra ID) |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Protect tenants and isolate production systems</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-identities.md" target="_blank">docs/fundamentals/zero-trust-protect-identities.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Jan 28, 2026 3:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-identities" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [ZT Assesment] Fix headings issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### Applications don&#39;t have certificates with expiration longer than 180 days </div><div class="diff-line diff-context">[!INCLUDE [21773](../includes/secure-recommendations/21773.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Application Certificates need to be rotated on a regular basis</div><div class="diff-line diff-context">[!INCLUDE [21992](../includes/secure-recommendations/21992.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Enforce standards for app secrets and certificates</div><div class="diff-line diff-context">[!INCLUDE [21816](../includes/secure-recommendations/21816.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Passkey authentication method enabled</div><div class="diff-line diff-deleted">[!INCLUDE [21815](../includes/secure-recommendations/21815.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security key attestation is enforced</div><div class="diff-line diff-context">[!INCLUDE [21840](../includes/secure-recommendations/21840.md)]</div><div class="diff-line diff-context">### Require password reset notifications for administrator roles</div><div class="diff-line diff-context">[!INCLUDE [21891](../includes/secure-recommendations/21891.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Block legacy authentication</div><div class="diff-line diff-context">[!INCLUDE [21796](../includes/secure-recommendations/21796.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### Applications don&#39;t have certificates with expiration longer than 180 days </div><div class="diff-line diff-context">[!INCLUDE [21773](../includes/secure-recommendations/21773.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Application certificates must be rotated on a regular basis</div><div class="diff-line diff-context">[!INCLUDE [21992](../includes/secure-recommendations/21992.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Enforce standards for app secrets and certificates</div><div class="diff-line diff-context">[!INCLUDE [21816](../includes/secure-recommendations/21816.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Passkey authentication method enabled</div><div class="diff-line diff-added">[!INCLUDE [21839](../includes/secure-recommendations/21839.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security key attestation is enforced</div><div class="diff-line diff-context">[!INCLUDE [21840](../includes/secure-recommendations/21840.md)]</div><div class="diff-line diff-context">### Require password reset notifications for administrator roles</div><div class="diff-line diff-context">[!INCLUDE [21891](../includes/secure-recommendations/21891.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Block legacy authentication policy is configured</div><div class="diff-line diff-context">[!INCLUDE [21796](../includes/secure-recommendations/21796.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-cloud-apps.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-cloud-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Jan 28, 2026 8:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> ca-fix-012826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In the following example, the tenant has a Conditional Access policy with the following details:</div><div class="diff-line diff-context">- Targeting All users and All resources</div><div class="diff-line diff-deleted">- Resource exclusions for a custom enterprise application and Exchange Online</div><div class="diff-line diff-context">- MFA is configured as the grant control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Example scenarios</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| A user signs into VSCode desktop client, which requests openid and profile scopes. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">| A user signs in using Azure CLI, which requests only `User.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-deleted">| A user signs in through a custom enterprise application (excluded from the policy) that requests only `User.Read` and `People.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There is no change in behavior when an application requests a scope beyond those listed previously, as illustrated in the following examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Example scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Example scenario | User impact | Conditional Access evaluation |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-deleted">| A user signs in to a custom enterprise application (excluded from the policy) that requests offline_access and SharePoint access (`Files.Read`). | No change in behavior | Conditional Access continues to be enforced based on the SharePoint resource. |</div><div class="diff-line diff-context">| A user signs in to the OneDrive desktop sync client. OneDrive requests offline_access and Exchange Online access (`Mail.Read`). | No change in behavior | Conditional Access is not enforced because Exchange Online is excluded from the policy. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In the following example, the tenant has a Conditional Access policy with the following details:</div><div class="diff-line diff-context">- Targeting All users and All resources</div><div class="diff-line diff-added">- Resource exclusions for a confidential client application and Exchange Online</div><div class="diff-line diff-context">- MFA is configured as the grant control</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Example scenarios</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| A user signs into VSCode desktop client, which requests openid and profile scopes. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">| A user signs in using Azure CLI, which requests only `User.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-added">| A user signs in through a confidential client application (excluded from the policy) that requests only `User.Read` and `People.Read`. | **Before**: User not prompted for MFA&lt;/br&gt;**After**: User is prompted for MFA | Conditional Access is now evaluated using Windows Azure Active Directory as the enforcement audience. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There is no change in behavior when a client application requests a scope beyond those listed previously, as illustrated in the following examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Example scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Example scenario | User impact | Conditional Access evaluation |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-added">| A user signs in to a confidential client application (excluded from the policy) that requests offline_access and SharePoint access (`Files.Read`). | No change in behavior | Conditional Access continues to be enforced based on the SharePoint resource. |</div><div class="diff-line diff-context">| A user signs in to the OneDrive desktop sync client. OneDrive requests offline_access and Exchange Online access (`Mail.Read`). | No change in behavior | Conditional Access is not enforced because Exchange Online is excluded from the policy. |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-assign-sensitivity-labels.md" target="_blank">docs/identity/users/groups-assign-sensitivity-labels.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 10:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-assign-sensitivity-labels" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview portal name and links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Assign sensitivity labels to Microsoft 365 groups in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID supports applying [sensitivity labels](/purview/sensitivity-labels) to Microsoft 365 groups when those labels are published in the [Microsoft Purview portal](/purview/purview-portal) or the [Microsoft Purview compliance portal](/purview/purview-compliance-portal) and the labels are configured for groups and sites. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sensitivity labels can be applied to groups across apps and services such as Outlook, Microsoft Teams, and SharePoint. For more information, see [Support for sensitivity labels](/purview/sensitivity-labels-teams-groups-sites#support-for-the-sensitivity-labels) from the Purview documentation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. The organization has an active Microsoft Entra ID P1 license.</div><div class="diff-line diff-context">1. The feature is enabled and `EnableMIPLabels` is set to **True** in the Microsoft Graph PowerShell module.</div><div class="diff-line diff-deleted">1. The sensitivity labels are published in the Microsoft Purview portal or the Microsoft Purview compliance portal for this Microsoft Entra organization.</div><div class="diff-line diff-context">1. Labels are synchronized to Microsoft Entra ID with the `Execute-AzureAdLabelSync` cmdlet in the Security &amp; Compliance PowerShell module. It can take up to 24 hours after synchronization for the label to be available to Microsoft Entra ID.</div><div class="diff-line diff-context">1. The [sensitivity label scope](/purview/sensitivity-labels?preserve-view=true&amp;view=o365-worldwide#label-scopes) must be configured for Groups &amp; Sites.</div><div class="diff-line diff-context">1. The group is a Microsoft 365 group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the label you&#39;re looking for isn&#39;t in the list:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- The label might not be published in the Microsoft Purview portal or the Microsoft Purview compliance portal. Also, the label might no longer be published. Check with your administrator for more information.</div><div class="diff-line diff-context">- The label might be published, but it isn&#39;t available to the user who is signed in. Check with your administrator for more information on how to get access to the label.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Assign sensitivity labels to Microsoft 365 groups in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID supports applying [sensitivity labels](/purview/sensitivity-labels) to Microsoft 365 groups when those labels are published in the [Microsoft Purview portal](/purview/purview-portal) and the labels are configured for groups and sites. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sensitivity labels can be applied to groups across apps and services such as Outlook, Microsoft Teams, and SharePoint. For more information, see [Support for sensitivity labels](/purview/sensitivity-labels-teams-groups-sites#support-for-the-sensitivity-labels) from the Purview documentation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. The organization has an active Microsoft Entra ID P1 license.</div><div class="diff-line diff-context">1. The feature is enabled and `EnableMIPLabels` is set to **True** in the Microsoft Graph PowerShell module.</div><div class="diff-line diff-added">1. The sensitivity labels are published in the Microsoft Purview portal or the Microsoft Purview portal for this Microsoft Entra organization.</div><div class="diff-line diff-context">1. Labels are synchronized to Microsoft Entra ID with the `Execute-AzureAdLabelSync` cmdlet in the Security &amp; Compliance PowerShell module. It can take up to 24 hours after synchronization for the label to be available to Microsoft Entra ID.</div><div class="diff-line diff-context">1. The [sensitivity label scope](/purview/sensitivity-labels?preserve-view=true&amp;view=o365-worldwide#label-scopes) must be configured for Groups &amp; Sites.</div><div class="diff-line diff-context">1. The group is a Microsoft 365 group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the label you&#39;re looking for isn&#39;t in the list:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- The label might not be published in the Microsoft Purview portal. Also, the label might no longer be published. Check with your administrator for more information.</div><div class="diff-line diff-context">- The label might be published, but it isn&#39;t available to the user who is signed in. Check with your administrator for more information on how to get access to the label.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-mandatory-multifactor-authentication.md" target="_blank">docs/identity/authentication/concept-mandatory-multifactor-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jan 28, 2026 5:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update MFA enforcement postponement instructions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-deleted">ms.date: 01/27/2026</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Request more time to prepare for Phase 2 MFA enforcement </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft allows customers with complex environments or technical barriers to postpone the enforcement of Phase 2 for their tenants until July 1st, 2026. You can request more time to prepare for Phase 2 MFA enforcement at [https://aka.ms/postponePhase2MFA](https://aka.ms/postponePhase2MFA). Choose another start date, and click **Apply**. After Phase 2 enforcement begins, your tenant admin must submit a request to Microsoft Help and Support to temporarily lift enforcement due to the security implications. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt; If you postponed the start of Phase 1, the start of Phase 2 is also postponed to the same date. You can choose a later start date for Phase 2. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Question**: Which accounts are affected by Phase 2 MFA enforcement? </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Answer**: Azure Phase 2 enforcement applies to all user accounts that make Azure resource management actions through any Azure client, including PowerShell, CLI, SDKs, or even REST APIs. This enforcement is on the Azure Resource Manager server side, so any requests that target `https://management.azure.com` are under scope of enforcement. Automation accounts are not in scope as long as they use a managed identity or service principle. Any automation accounts that is set up as a user identity will be enforced upon. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Question**: How can I understand the impact of MFA enforcement without Conditional Access? </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-added">ms.date: 01/28/2026</div><div class="diff-line diff-context">ms.author: justinha</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Request more time to prepare for Phase 2 MFA enforcement </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft allows customers with complex environments or technical barriers to postpone the enforcement of Phase 2 for their tenants until July 1st, 2026. You can request more time to prepare for Phase 2 MFA enforcement at [https://aka.ms/postponePhase2MFA](https://aka.ms/postponePhase2MFA). Choose another start date, and click **Apply**. After Phase 2 enforcement begins, you can submit a request to Microsoft Help and Support to temporarily lift enforcement. The request must be done by a Global Administrator due to the security implications. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt; If you postponed the start of Phase 1, the start of Phase 2 is also postponed to the same date. You can choose a later start date for Phase 2. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Question**: Which accounts are affected by Phase 2 MFA enforcement? </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Answer**: Azure Phase 2 enforcement applies to all user accounts that make Azure resource management actions through any Azure client, including PowerShell, CLI, SDKs, or even REST APIs. This enforcement is on the Azure Resource Manager server side, so any requests that target `https://management.azure.com` are under scope of enforcement. Automation accounts are not in scope as long as they use a managed identity or service principal. Any automation accounts that are set up as user identities will be enforced upon. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Question**: How can I understand the impact of MFA enforcement without Conditional Access? </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/github-enterprise-managed-user-tutorial.md" target="_blank">docs/identity/saas-apps/github-enterprise-managed-user-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Jan 28, 2026 9:54 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/github-enterprise-managed-user-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typos and improve clarity in tutorial</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure a GitHub enterprise with Enterprise Managed Users for SAML Single sign-on with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this article, you learn how to setup a SAML integration for a GitHub enterprise with Enterprise Managed Users with Microsoft Entra ID. Setting up a SAML or [OIDC](https://docs.github.com/enterprise-cloud@latest/admin/managing-iam/configuring-authentication-for-enterprise-managed-users/configuring-oidc-for-enterprise-managed-users) authentication integration, in addition to setting up [SCIM provisioning](./github-enterprise-managed-user-provisioning-tutorial.md), is required for a GitHub enterprise with Enterprise Managed Users. Setting up authentication and [SCIM provisioning](./github-enterprise-managed-user-provisioning-tutorial.md) for a GitHub enterprise with Enterprise Managed Users allows an admin to:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Control in Microsoft Entra ID who has access to a GitHub enterprise with Enterprise Managed Users.</div><div class="diff-line diff-context">* Enable your users to log into a GitHub Enterprise Managed User account via SSO.</div><div class="diff-line diff-deleted">* Provision users and groups to the enterprise (once both the authentication and SCIM provisioning integrations have been setup). GitHub teams can be mapped to SCIM-provisioned groups. </div><div class="diff-line diff-context">* Manage your accounts and groups in one central location, Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; A GitHub.com enterprise account with Enterprise Managed Users is a specific type of enterprise. This is determined with you request or [create a new GitHub enterprise account](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-your-enterprise-account/creating-an-enterprise-account) on GitHub.com. You can read more about the different types of GitHub enterprises in [this GitHub article](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/choosing-an-enterprise-type-for-github-enterprise-cloud). If you do not have an enterprise that is setup for Enterprise Managed Users, please see [this GitHub article](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/about-identity-and-access-management#authentication-through-githubcom-with-additional-saml-access-restriction) for more details and links. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]</div><div class="diff-line diff-context">* GitHub Enterprise Managed User single sign-on (SSO) enabled subscription.</div><div class="diff-line diff-deleted">* A GitHub enterprise that is setup for Enterprise Managed Users.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure a GitHub enterprise with Enterprise Managed Users for SAML Single sign-on with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this article, you learn how to set up a SAML integration for a GitHub enterprise with Enterprise Managed Users with Microsoft Entra ID. Setting up a SAML or [OIDC](https://docs.github.com/enterprise-cloud@latest/admin/managing-iam/configuring-authentication-for-enterprise-managed-users/configuring-oidc-for-enterprise-managed-users) authentication integration, in addition to setting up [SCIM provisioning](./github-enterprise-managed-user-provisioning-tutorial.md), is required for a GitHub enterprise with Enterprise Managed Users. Setting up authentication and [SCIM provisioning](./github-enterprise-managed-user-provisioning-tutorial.md) for a GitHub enterprise with Enterprise Managed Users allows an admin to:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Control in Microsoft Entra ID who has access to a GitHub enterprise with Enterprise Managed Users.</div><div class="diff-line diff-context">* Enable your users to log into a GitHub Enterprise Managed User account via SSO.</div><div class="diff-line diff-added">* Provision users and groups to the enterprise (once both the authentication and SCIM provisioning integrations have been set up). GitHub teams can be mapped to SCIM-provisioned groups. </div><div class="diff-line diff-context">* Manage your accounts and groups in one central location, Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; A GitHub.com enterprise account with Enterprise Managed Users is a specific type of enterprise. This is determined with you request or [create a new GitHub enterprise account](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-your-enterprise-account/creating-an-enterprise-account) on GitHub.com. You can read more about the different types of GitHub enterprises in [this GitHub article](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/choosing-an-enterprise-type-for-github-enterprise-cloud). If you do not have an enterprise that is set up for Enterprise Managed Users, please see [this GitHub article](https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/about-identity-and-access-management#authentication-through-githubcom-with-additional-saml-access-restriction) for more details and links. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]</div><div class="diff-line diff-context">* GitHub Enterprise Managed User single sign-on (SSO) enabled subscription.</div><div class="diff-line diff-added">* A GitHub enterprise that is set up for Enterprise Managed Users.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/compliance-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/compliance-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 9:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/compliance-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview name and link updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Users with this role have permissions to manage compliance-related features in the Microsoft Purview compliance portal, Microsoft 365 admin center, Azure, and Microsoft 365 Defender portal. Assignees can also manage all features within the Exchange admin center and create support tickets for Azure and Microsoft 365. For more information, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-deleted">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | Protect and manage your organization&#39;s data across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-deleted">| [Microsoft Purview Compliance Manager](/microsoft-365/compliance/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft 365 Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Users with this role have permissions to manage compliance-related features in the Microsoft Purview portal, Microsoft 365 admin center, Azure, and Microsoft 365 Defender portal. Assignees can also manage all features within the Exchange admin center and create support tickets for Azure and Microsoft 365. For more information, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-added">| [Microsoft Purview portal](/purview/purview-portal) | Protect and manage your organization&#39;s data across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-added">| [Microsoft Purview Compliance Manager](/purview/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft 365 Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/compliance-data-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/compliance-data-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 9:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/compliance-data-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview name and link updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Users with this role have permissions to track data in the Microsoft Purview compliance portal, Microsoft 365 admin center, and Azure. Users can also track compliance data within the Exchange admin center, Compliance Manager, and Teams &amp; Skype for Business admin center and create support tickets for Azure and Microsoft 365. For more information about the differences between Compliance Administrator and Compliance Data Administrator, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-deleted">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | Monitor compliance-related policies across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-deleted">| [Microsoft Purview Compliance Manager](/microsoft-365/compliance/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Data Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft 365 Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Users with this role have permissions to track data in the Microsoft Purview portal, Microsoft 365 admin center, and Azure. Users can also track compliance data within the Exchange admin center, Compliance Manager, and Teams &amp; Skype for Business admin center and create support tickets for Azure and Microsoft 365. For more information about the differences between Compliance Administrator and Compliance Data Administrator, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-added">| [Microsoft Purview portal](/purview/purview-portal) | Monitor compliance-related policies across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-added">| [Microsoft Purview Compliance Manager](/purview/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Data Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft 365 Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/8-secure-access-sensitivity-labels.md" target="_blank">docs/architecture/8-secure-access-sensitivity-labels.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 10:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/8-secure-access-sensitivity-labels" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview portal name and links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Team members who need to create sensitivity labels require permissions to:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Microsoft 365 Defender portal,</div><div class="diff-line diff-deleted">- Microsoft Purview compliance portal, or</div><div class="diff-line diff-deleted">- [Microsoft Purview compliance portal](/purview/microsoft-365-compliance-center?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">By default, [Global Administrators](../identity/role-based-access-control/permissions-reference.md#global-administrator) have access to admin centers and can provide access, without granting tenant Admin permissions. For this delegated limited admin access, add users to the following role groups:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Team members who need to create sensitivity labels require permissions to:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Microsoft 365 Defender portal or</div><div class="diff-line diff-added">- [Microsoft Purview compliance portal](/purview/purview-portal?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">By default, [Global Administrators](../identity/role-based-access-control/permissions-reference.md#global-administrator) have access to admin centers and can provide access, without granting tenant Admin permissions. For this delegated limited admin access, add users to the following role groups:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-session.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-session.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by csmulligan on Jan 28, 2026 5:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-session" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> CA session control in external tenants.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of a Conditional Access policy with a grant control requiring multifactor authentication.](./media/concept-conditional-access-session/conditional-access-session.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Application enforced restrictions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations can use this control to require Microsoft Entra ID to pass device information to the selected cloud apps. The device information allows cloud apps to know if a connection is from a compliant or domain-joined device and update the session experience. When selected, the cloud app uses the device information to provide users with a limited or full experience. Limited if the device isn&#39;t managed or compliant, and full if the device is managed and compliant.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of a Conditional Access policy with a grant control requiring multifactor authentication.](./media/concept-conditional-access-session/conditional-access-session.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In a Microsoft Entra External ID [external tenant](/entra/external-id/customers/concept-supported-features-customers#conditional-access), you can use the following session controls:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- Sign-in frequency</div><div class="diff-line diff-added">- Persistent browser session</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Application enforced restrictions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations can use this control to require Microsoft Entra ID to pass device information to the selected cloud apps. The device information allows cloud apps to know if a connection is from a compliant or domain-joined device and update the session experience. When selected, the cloud app uses the device information to provide users with a limited or full experience. Limited if the device isn&#39;t managed or compliant, and full if the device is managed and compliant.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/concept-pim-for-groups.md" target="_blank">docs/id-governance/privileged-identity-management/concept-pim-for-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 10:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/concept-pim-for-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview portal name and links</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Make active assignments of users to the group, and then assign the group to a role as eligible for activation.</div><div class="diff-line diff-context">2. Make active assignment of a role to a group and assign users to be eligible to group membership.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To provide a group of users with just-in-time access to Microsoft Entra roles with permissions in SharePoint, Exchange, or Microsoft Purview compliance portal (for example, Exchange Administrator role), be sure to make active assignments of users to the group, and then assign the group to a role as eligible for activation (Option #1 above). If you choose to make active assignment of a group to a role and assign users to be eligible to group membership instead, it may take significant time to have all permissions of the role activated and ready to use.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In other words, to avoid activation delays, use [PIM for Microsoft Entra roles](pim-how-to-add-role-to-user.md) instead of PIM for Groups to provide just-in-time access to SharePoint, Exchange, or Microsoft Purview compliance portal. For more information, see [Error when accessing SharePoint or OneDrive after role activation in PIM](/sharepoint/troubleshoot/administration/access-denied-to-pim-user-accounts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Privileged Identity Management and group nesting</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Make active assignments of users to the group, and then assign the group to a role as eligible for activation.</div><div class="diff-line diff-context">2. Make active assignment of a role to a group and assign users to be eligible to group membership.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To provide a group of users with just-in-time access to Microsoft Entra roles with permissions in SharePoint, Exchange, or Microsoft Purview portal (for example, Exchange Administrator role), be sure to make active assignments of users to the group, and then assign the group to a role as eligible for activation (Option #1 above). If you choose to make active assignment of a group to a role and assign users to be eligible to group membership instead, it may take significant time to have all permissions of the role activated and ready to use.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In other words, to avoid activation delays, use [PIM for Microsoft Entra roles](pim-how-to-add-role-to-user.md) instead of PIM for Groups to provide just-in-time access to SharePoint, Exchange, or Microsoft Purview portal. For more information, see [Error when accessing SharePoint or OneDrive after role activation in PIM](/sharepoint/troubleshoot/administration/access-denied-to-pim-user-accounts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Privileged Identity Management and group nesting</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-reader.md" target="_blank">docs/identity/role-based-access-control/includes/global-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 9:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview name and link updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users in this role can read settings and administrative information across Microsoft 365 services but can&#39;t take management actions. Global Reader is the read-only counterpart to Global Administrator. Assign Global Reader instead of Global Administrator for planning, audits, or investigations. Use Global Reader in combination with other limited admin roles like Exchange Administrator to make it easier to get work done without the assigning the Global Administrator role. Global Reader works with Microsoft 365 admin center, Exchange admin center, SharePoint admin center, Teams admin center, Microsoft 365 Defender portal, Microsoft Purview compliance portal, Azure portal, and Device Management admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Users with this role **cannot** do the following:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;- OneDrive admin center - OneDrive admin center does not support the Global Reader role</div><div class="diff-line diff-context">&gt;- [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) - Global Reader can&#39;t do content search or see Secure Score.</div><div class="diff-line diff-context">&gt;- [Teams admin center](/microsoftteams/manage-teams-in-modern-portal) - Global Reader cannot read **Teams lifecycle**, **Analytics &amp; reports**, **IP phone device management**, and **App catalog**. For more information, see [Use Microsoft Teams administrator roles to manage Teams](/microsoftteams/using-admin-roles).</div><div class="diff-line diff-deleted">&gt;- [Privileged Access Management](/microsoft-365/compliance/privileged-access-management) doesn&#39;t support the Global Reader role.</div><div class="diff-line diff-context">&gt;- [Azure Information Protection](/azure/information-protection/what-is-information-protection) - Global Reader is supported [for central reporting](/azure/information-protection/reports-aip) only, and when your Microsoft Entra organization isn&#39;t on the [unified labeling platform](/azure/information-protection/faqs#how-can-i-determine-if-my-tenant-is-on-the-unified-labeling-platform).</div><div class="diff-line diff-context">&gt; - [SharePoint](/sharepoint/get-started-new-admin-center) - Global Reader has read access to SharePoint Online PowerShell cmdlets and Read APIs.</div><div class="diff-line diff-context">&gt; - [Power Platform admin center](/power-platform/admin/admin-documentation) - Global Reader is not yet supported in the Power Platform admin center.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users in this role can read settings and administrative information across Microsoft 365 services but can&#39;t take management actions. Global Reader is the read-only counterpart to Global Administrator. Assign Global Reader instead of Global Administrator for planning, audits, or investigations. Use Global Reader in combination with other limited admin roles like Exchange Administrator to make it easier to get work done without the assigning the Global Administrator role. Global Reader works with Microsoft 365 admin center, Exchange admin center, SharePoint admin center, Teams admin center, Microsoft 365 Defender portal, Microsoft Purview portal, Azure portal, and Device Management admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Users with this role **cannot** do the following:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;- OneDrive admin center - OneDrive admin center does not support the Global Reader role</div><div class="diff-line diff-context">&gt;- [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) - Global Reader can&#39;t do content search or see Secure Score.</div><div class="diff-line diff-context">&gt;- [Teams admin center](/microsoftteams/manage-teams-in-modern-portal) - Global Reader cannot read **Teams lifecycle**, **Analytics &amp; reports**, **IP phone device management**, and **App catalog**. For more information, see [Use Microsoft Teams administrator roles to manage Teams](/microsoftteams/using-admin-roles).</div><div class="diff-line diff-added">&gt;- [Privileged Access Management](/purview/privileged-access-management) doesn&#39;t support the Global Reader role.</div><div class="diff-line diff-context">&gt;- [Azure Information Protection](/azure/information-protection/what-is-information-protection) - Global Reader is supported [for central reporting](/azure/information-protection/reports-aip) only, and when your Microsoft Entra organization isn&#39;t on the [unified labeling platform](/azure/information-protection/faqs#how-can-i-determine-if-my-tenant-is-on-the-unified-labeling-platform).</div><div class="diff-line diff-context">&gt; - [SharePoint](/sharepoint/get-started-new-admin-center) - Global Reader has read access to SharePoint Online PowerShell cmdlets and Read APIs.</div><div class="diff-line diff-context">&gt; - [Power Platform admin center](/power-platform/admin/admin-documentation) - Global Reader is not yet supported in the Power Platform admin center.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/security-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 9:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview name and link updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have permissions to manage security-related features in the Microsoft 365 Defender portal, Microsoft Entra ID Protection, Microsoft Entra Authentication, Azure Information Protection, and Microsoft Purview compliance portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Monitor security-related policies across Microsoft 365 services&lt;br&gt;Manage security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for resetting passwords |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role&lt;br&gt;**Cannot** manage Microsoft Entra role assignments or settings |</div><div class="diff-line diff-deleted">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | Manage security policies&lt;br&gt;View, investigate, and respond to security threats&lt;br&gt;View reports |</div><div class="diff-line diff-context">| Azure Advanced Threat Protection | Monitor and respond to suspicious security activity |</div><div class="diff-line diff-context">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | Assign roles&lt;br&gt;Manage machine groups&lt;br&gt;Configure endpoint threat detection and automated remediation&lt;br&gt;View, investigate, and respond to alerts&lt;br/&gt;View machines/device inventory |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | Maps to the [Intune Endpoint Security Manager role](/mem/intune/fundamentals/role-based-access-control-reference) |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have permissions to manage security-related features in the Microsoft 365 Defender portal, Microsoft Entra ID Protection, Microsoft Entra Authentication, Azure Information Protection, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Monitor security-related policies across Microsoft 365 services&lt;br&gt;Manage security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for resetting passwords |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role&lt;br&gt;**Cannot** manage Microsoft Entra role assignments or settings |</div><div class="diff-line diff-added">| [Microsoft Purview portal](/purview/purview-portal) | Manage security policies&lt;br&gt;View, investigate, and respond to security threats&lt;br&gt;View reports |</div><div class="diff-line diff-context">| Azure Advanced Threat Protection | Monitor and respond to suspicious security activity |</div><div class="diff-line diff-context">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | Assign roles&lt;br&gt;Manage machine groups&lt;br&gt;Configure endpoint threat detection and automated remediation&lt;br&gt;View, investigate, and respond to alerts&lt;br/&gt;View machines/device inventory |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | Maps to the [Intune Endpoint Security Manager role](/mem/intune/fundamentals/role-based-access-control-reference) |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-operator.md" target="_blank">docs/identity/role-based-access-control/includes/security-operator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jan 28, 2026 9:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-operator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Purview name and link updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and Microsoft Purview compliance portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft 365 Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-deleted">| [Microsoft Purview compliance portal](/microsoft-365/compliance/microsoft-365-compliance-center) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-context">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they&#39;re assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft 365 Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-added">| [Microsoft Purview portal](/purview/purview-portal) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div><div class="diff-line diff-context">| [Microsoft Defender for Endpoint](/microsoft-365/security/defender-endpoint/prepare-deployment) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security alerts&lt;br/&gt;When you turn on role-based access control in Microsoft Defender for Endpoint, users with read-only permissions such as the Security Reader role lose access until they&#39;re assigned a Microsoft Defender for Endpoint role. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
