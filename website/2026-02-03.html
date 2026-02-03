@@ -1,0 +1,427 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 1st 2026, 8:21 PM PST</p>
+        <p>Report generated on February 2nd 2026, 8:21 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-ticketed-provisioning.md" target="_blank">docs/id-governance/entitlement-management-ticketed-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Feb 2, 2026 1:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-ticketed-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Scenario: In this scenario you learn how to use custom extensibility, and a Logic App, to automatically generate ServiceNow tickets for manual provisioning of users who have received assignments and need access to apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this tutorial, you&#39;ll learn:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt; * Adding a Logic App Workflow to an existing catalog.</div><div class="diff-line diff-context">- SSO integration with ServiceNow. If this isn&#39;t already configured, see:[Tutorial: Microsoft Entra single sign-on (SSO) integration with ServiceNow](~/identity/saas-apps/servicenow-tutorial.md) before continuing.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; It is recommended to use a least privilege role when completing these steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Adding Logic App Workflow to an existing Catalog for Entitlement Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-behavior.png&quot; alt-text=&quot;Screenshot of entitlement management custom extension behavior actions tab.&quot; lightbox=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-behavior.png&quot;:::</div><div class="diff-line diff-context">1. Select **Launch and wait** in the **Extension Configuration** which will pause the associated access package action until after the Logic App linked to the extension completes its task, and a resume action is sent by the admin to continue the process. For more information on this process, see:  [Configuring custom extensions that pause entitlement management processes](entitlement-management-logic-apps-integration.md#configuring-custom-extensions-that-pause-entitlement-management-processes).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1.  In the **Details** tab, choose No in the &quot;*Create new logic App*&quot; field as the Logic App has already been created in the previous steps. However, you need to provide the Azure subscription and resource group details, along with the Logic App name.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-details.png&quot; alt-text=&quot;Screenshot of the entitlement management custom extension details tab.&quot; lightbox=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-details.png&quot;:::</div><div class="diff-line diff-context">1. In **Review and Create**, review the summary of your custom extension and make sure the details for your Logic App call-out are correct. Then select **Create**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Scenario: In this scenario you learn how to use custom extensibility, and a Logic App, to automatically generate ServiceNow tickets for manual provisioning of users who have received assignments and need access to apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this tutorial, you learn:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt; * Adding a Logic App Workflow to an existing catalog.</div><div class="diff-line diff-context">- SSO integration with ServiceNow. If this isn&#39;t already configured, see:[Tutorial: Microsoft Entra single sign-on (SSO) integration with ServiceNow](~/identity/saas-apps/servicenow-tutorial.md) before continuing.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; It&#39;s recommended to use a least privilege role when completing these steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Adding Logic App Workflow to an existing Catalog for Entitlement Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-behavior.png&quot; alt-text=&quot;Screenshot of entitlement management custom extension behavior actions tab.&quot; lightbox=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-behavior.png&quot;:::</div><div class="diff-line diff-context">1. Select **Launch and wait** in the **Extension Configuration** which will pause the associated access package action until after the Logic App linked to the extension completes its task, and a resume action is sent by the admin to continue the process. For more information on this process, see:  [Configuring custom extensions that pause entitlement management processes](entitlement-management-logic-apps-integration.md#configuring-custom-extensions-that-pause-entitlement-management-processes).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1.  In the **Details** tab, choose No in the &quot;*Create new logic App*&quot; field as the Logic App was created in the previous steps. However, you need to provide the Azure subscription and resource group details, along with the Logic App name.</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-details.png&quot; alt-text=&quot;Screenshot of the entitlement management custom extension details tab.&quot; lightbox=&quot;media/entitlement-management-servicenow-integration/entitlement-management-custom-extension-details.png&quot;:::</div><div class="diff-line diff-context">1. In **Review and Create**, review the summary of your custom extension and make sure the details for your Logic App call-out are correct. Then select **Create**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-install-windows-client.md" target="_blank">docs/global-secure-access/how-to-install-windows-client.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 2, 2026 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-windows-client" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Copyedits to Windows client install doc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the Windows client.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 01/27/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Deploy Global Secure Access client with Intune</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Reference detailed guidance to [Add and assign Win32 apps to Microsoft Intune](/mem/intune/apps/apps-win32-add#add-a-win32-app-to-intune).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to [https://intune.microsoft.com](https://intune.microsoft.com/).</div><div class="diff-line diff-context">1. Select **Apps** &gt; **All apps** &gt; **Add**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure settings for Microsoft Entra Internet Access with Intune</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra Internet Access doesn&#39;t yet support DNS over HTTPS or Quick UDP Internet Connections (QUIC) traffic. To mitigate this, disable these protocols in users&#39; browsers. The following instructions provide guidance on how to enforce these controls using Intune.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Disable QUIC in Microsoft Edge and Chrome with Intune </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the Windows client.</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 02/02/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Deploy Global Secure Access client with Intune</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For detailed guidance, see [Add and assign Win32 apps to Microsoft Intune](/mem/intune/apps/apps-win32-add#add-a-win32-app-to-intune).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to [https://intune.microsoft.com](https://intune.microsoft.com/).</div><div class="diff-line diff-context">1. Select **Apps** &gt; **All apps** &gt; **Add**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure settings for Microsoft Entra Internet Access with Intune</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra Internet Access doesn&#39;t yet support DNS over HTTPS or Quick UDP Internet Connections (QUIC) traffic. To mitigate this limitation, disable these protocols in users&#39; browsers. The following instructions provide guidance on how to enforce these controls using Intune.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Disable QUIC in Microsoft Edge and Chrome with Intune </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/salesforce-sandbox-tutorial.md" target="_blank">docs/identity/saas-apps/salesforce-sandbox-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jeevan Desarda on Feb 2, 2026 10:25 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/salesforce-sandbox-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating Salesforce article with the device activation note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/20/2025</div><div class="diff-line diff-deleted">ms.author: gideonkiratu</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Salesforce Sandbox so that I can control who has access to Salesforce Sandbox, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* Manage your accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!Note]</div><div class="diff-line diff-deleted">&gt;   We are aware that Salesforce will enforce the [device activation changes for Single Sign-On (SSO) Logins](https://help.salesforce.com/s/articleView?id=005237070&amp;type=1) starting **February 3, 2026**. We have worked closely with the Salesforce team, and beginning February 3, Salesforce will start accepting the **authnmethodreferences** claim included by default in the SAML token issued by Entra ID. If the **authnmethodreferences** claim contains the value **multipleauthn**, Salesforce will treat the device as trusted. Please ensure that your Conditional Access policy is configured to enforce this requirement. You can read more about this claim [here](~/identity-platform/single-sign-on-saml-protocol#authnmethodreferences).</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-deleted">&gt;  For customers using AD FS as the federation provider with Entra ID, please follow the guidance published [here](~/identity/authentication/how-to-mfa-expected-inbound-assertions#using-saml-20-federated-idp) so that Entra ID will have this claim in the SAML token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/20/2025</div><div class="diff-line diff-added">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Salesforce Sandbox so that I can control who has access to Salesforce Sandbox, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* Manage your accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!Note]</div><div class="diff-line diff-added">&gt;   We are aware that Salesforce will enforce the [device activation changes for Single Sign-On (SSO) Logins](https://help.salesforce.com/s/articleView?id=005237070&amp;type=1) starting **February 3, 2026**. We have worked closely with the Salesforce team, and beginning February 3, Salesforce will start accepting the **authnmethodreferences** claim included by default in the SAML token issued by Entra ID. If the **authnmethodreferences** claim contains the value **multipleauthn**, Salesforce will treat the device as trusted. Please ensure that your Conditional Access policy is configured to enforce this requirement. You can read more about this claim [here](~/identity-platform/single-sign-on-saml-protocol.md#authnmethodreferences).</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-added">&gt;  For customers using AD FS as the federation provider with Entra ID, please follow the guidance published [here](~/identity/authentication/how-to-mfa-expected-inbound-assertions.md#using-saml-20-federated-idp) so that Entra ID will have this claim in the SAML token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/salesforce-tutorial.md" target="_blank">docs/identity/saas-apps/salesforce-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jeevan Desarda on Feb 2, 2026 10:25 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/salesforce-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating Salesforce article with the device activation note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-deleted">ms.author: gideonkiratu</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Salesforce so that I can control who has access to Salesforce, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* Manage your accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!Note]</div><div class="diff-line diff-deleted">&gt;   We are aware that Salesforce will enforce the [device activation changes for Single Sign-On (SSO) Logins](https://help.salesforce.com/s/articleView?id=005237070&amp;type=1) starting **February 3, 2026**. We have worked closely with the Salesforce team, and beginning February 3, Salesforce will start accepting the **authnmethodreferences** claim included by default in the SAML token issued by Entra ID. If the **authnmethodreferences** claim contains the value **multipleauthn**, Salesforce will treat the device as trusted. Please ensure that your Conditional Access policy is configured to enforce this requirement. You can read more about this claim [here](~/identity-platform/single-sign-on-saml-protocol#authnmethodreferences).</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-deleted">&gt;  For customers using AD FS as the federation provider with Entra ID, please follow the guidance published [here](~/identity/authentication/how-to-mfa-expected-inbound-assertions#using-saml-20-federated-idp) so that Entra ID will have this claim in the SAML token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: saas-apps</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/25/2025</div><div class="diff-line diff-added">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Salesforce so that I can control who has access to Salesforce, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* Manage your accounts in one central location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!Note]</div><div class="diff-line diff-added">&gt;   We are aware that Salesforce will enforce the [device activation changes for Single Sign-On (SSO) Logins](https://help.salesforce.com/s/articleView?id=005237070&amp;type=1) starting **February 3, 2026**. We have worked closely with the Salesforce team, and beginning February 3, Salesforce will start accepting the **authnmethodreferences** claim included by default in the SAML token issued by Entra ID. If the **authnmethodreferences** claim contains the value **multipleauthn**, Salesforce will treat the device as trusted. Please ensure that your Conditional Access policy is configured to enforce this requirement. You can read more about this claim [here](~/identity-platform/single-sign-on-saml-protocol.md#authnmethodreferences).</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-added">&gt;  For customers using AD FS as the federation provider with Entra ID, please follow the guidance published [here](~/identity/authentication/how-to-mfa-expected-inbound-assertions.md#using-saml-20-federated-idp) so that Entra ID will have this claim in the SAML token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-version-history.md" target="_blank">docs/identity/hybrid/connect/reference-connect-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by copilot-swe-agent[bot] on Feb 2, 2026 10:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update release date from 01/30/2026 to 02/02/2026</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|[2.5.3.0](#2530)|31 July 2026 (12 months after release of 2.5.76.0)|</div><div class="diff-line diff-context">|[2.5.76.0](#25760)|01 September 2026 (12 months after release of 2.5.79.0)|</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-deleted">|[2.5.190.0](#251900)|30 Jan 2026 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Release status</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">01/30/2026: Released for download via the Microsoft Entra admin center. Existing installations will be auto-upgraded to this build starting February 9th, 2026, and will be done in multiple phases.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Bug Fixes</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|[2.5.3.0](#2530)|31 July 2026 (12 months after release of 2.5.76.0)|</div><div class="diff-line diff-context">|[2.5.76.0](#25760)|01 September 2026 (12 months after release of 2.5.79.0)|</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-added">|[2.5.190.0](#251900)|02 Feb 2026 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Release status</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">02/02/2026: Released for download via the Microsoft Entra admin center. Existing installations will be auto-upgraded to this build starting February 9th, 2026, and will be done in multiple phases.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Bug Fixes</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/single-sign-on-saml-protocol.md" target="_blank">docs/identity-platform/single-sign-on-saml-protocol.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jeevan Desarda on Feb 2, 2026 4:30 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/single-sign-on-saml-protocol" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Adding authnmethodreferences claim details</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| `ID` | Required | Microsoft Entra ID uses this attribute to populate the `InResponseTo` attribute of the returned response. ID must not begin with a number, so a common strategy is to prepend a string like &quot;ID&quot; to the string representation of a GUID. For example, `id6c1c178c166d486687be4aaf5e482730` is a valid ID. |</div><div class="diff-line diff-context">| `Version` | Required | This parameter should be set to `2.0`. |</div><div class="diff-line diff-context">| `IssueInstant` | Required | This is a DateTime string with a UTC value and [round-trip format (&quot;o&quot;)](/dotnet/standard/base-types/standard-date-and-time-format-strings). Microsoft Entra ID expects a DateTime value of this type, but doesn&#39;t evaluate or use the value. |</div><div class="diff-line diff-deleted">| `AssertionConsumerServiceURL` | Optional | If provided, this parameter must match the `RedirectUri` of the cloud service in Microsoft Entra ID. Entra ID will honors the ACS URL if it&#39;s present in the SAML Request.|</div><div class="diff-line diff-context">| `ForceAuthn` | Optional | This is a boolean value. If true, it means that the user will be forced to reauthenticate, even if they have a valid session with Microsoft Entra ID. |</div><div class="diff-line diff-context">| `IsPassive` | Optional | This is a boolean value that specifies whether Microsoft Entra ID should authenticate the user silently, without user interaction, using the session cookie if one exists. If this is true, Microsoft Entra ID attempts to authenticate the user using  the session cookie. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* The `authnmethodsreferences` attribute specifies the way the user authenticated with Microsoft Entra ID.</div><div class="diff-line diff-context">* The `http://schemas.microsoft.com/ws/2008/06/identity/authenticationmethod/password` claim value specifies the user has done username and password authentication with Entra ID.</div><div class="diff-line diff-deleted">* The `http://schemas.microsoft.com/claims/multipleauthn` claim value specifies the user has done username and password and also performed a strong authentication with Entra ID such as MFA with Authenticator app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```xml</div><div class="diff-line diff-context">  &lt;Attribute Name=&quot;http://schemas.microsoft.com/claims/authnmethodsreferences&quot;&gt;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| `ID` | Required | Microsoft Entra ID uses this attribute to populate the `InResponseTo` attribute of the returned response. ID must not begin with a number, so a common strategy is to prepend a string like &quot;ID&quot; to the string representation of a GUID. For example, `id6c1c178c166d486687be4aaf5e482730` is a valid ID. |</div><div class="diff-line diff-context">| `Version` | Required | This parameter should be set to `2.0`. |</div><div class="diff-line diff-context">| `IssueInstant` | Required | This is a DateTime string with a UTC value and [round-trip format (&quot;o&quot;)](/dotnet/standard/base-types/standard-date-and-time-format-strings). Microsoft Entra ID expects a DateTime value of this type, but doesn&#39;t evaluate or use the value. |</div><div class="diff-line diff-added">| `AssertionConsumerServiceURL` | Optional | If provided, this parameter must match the `RedirectUri` of the cloud service in Microsoft Entra ID. Entra ID will honor the ACS URL if it&#39;s present in the SAML Request.|</div><div class="diff-line diff-context">| `ForceAuthn` | Optional | This is a boolean value. If true, it means that the user will be forced to reauthenticate, even if they have a valid session with Microsoft Entra ID. |</div><div class="diff-line diff-context">| `IsPassive` | Optional | This is a boolean value that specifies whether Microsoft Entra ID should authenticate the user silently, without user interaction, using the session cookie if one exists. If this is true, Microsoft Entra ID attempts to authenticate the user using  the session cookie. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* The `authnmethodsreferences` attribute specifies the way the user authenticated with Microsoft Entra ID.</div><div class="diff-line diff-context">* The `http://schemas.microsoft.com/ws/2008/06/identity/authenticationmethod/password` claim value specifies the user has done username and password authentication with Entra ID.</div><div class="diff-line diff-added">* The `http://schemas.microsoft.com/claims/multipleauthn` claim value specifies the user has done username and password and also performed multiple factor authentication resulting in MFA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```xml</div><div class="diff-line diff-context">  &lt;Attribute Name=&quot;http://schemas.microsoft.com/claims/authnmethodsreferences&quot;&gt;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/overview-recommendations.md" target="_blank">docs/identity/monitoring-health/overview-recommendations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Feb 2, 2026 4:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/overview-recommendations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> adal-msal-recommendation-020226</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-deleted">ms.date: 08/22/2025</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">| Group Policy Object (GPO) assigns unprivileged identities to local groups with elevated privileges | Users | Preview | Yes | N/A |</div><div class="diff-line diff-context">| [Migrate applications from AD FS to Microsoft Entra ID](recommendation-migrate-apps-from-adfs-to-azure-ad.md) | Applications | Generally available | No | Application Administrator, Authentication Administrator Hybrid Identity Administrator |</div><div class="diff-line diff-context">| [Migrate applications from the retiring Azure AD Graph APIs to Microsoft Graph](recommendation-migrate-to-microsoft-graph-api.md) | Applications | Preview | No | Application Administrator |</div><div class="diff-line diff-deleted">| [Migrate from ADAL to MSAL](recommendation-migrate-from-adal-to-msal.md) | Applications | Generally available | No | Application Administrator |</div><div class="diff-line diff-context">| [Migrate from MFA server to Microsoft Entra MFA](recommendation-migrate-to-microsoft-entra-mfa.md) | Tenant | Generally Available | No | Global Administrator |</div><div class="diff-line diff-context">| [Migrate service principals from the retiring Azure AD Graph APIs to Microsoft Graph](recommendation-migrate-to-microsoft-graph-api.md) | Applications | Preview | No | Application Administrator |</div><div class="diff-line diff-context">| [Migrate to Microsoft Authenticator](recommendation-migrate-to-authenticator.md) | Users | Preview | No | Global Administrator | </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.subservice: monitoring-health</div><div class="diff-line diff-added">ms.date: 02/02/2026</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">| Group Policy Object (GPO) assigns unprivileged identities to local groups with elevated privileges | Users | Preview | Yes | N/A |</div><div class="diff-line diff-context">| [Migrate applications from AD FS to Microsoft Entra ID](recommendation-migrate-apps-from-adfs-to-azure-ad.md) | Applications | Generally available | No | Application Administrator, Authentication Administrator Hybrid Identity Administrator |</div><div class="diff-line diff-context">| [Migrate applications from the retiring Azure AD Graph APIs to Microsoft Graph](recommendation-migrate-to-microsoft-graph-api.md) | Applications | Preview | No | Application Administrator |</div><div class="diff-line diff-context">| [Migrate from MFA server to Microsoft Entra MFA](recommendation-migrate-to-microsoft-entra-mfa.md) | Tenant | Generally Available | No | Global Administrator |</div><div class="diff-line diff-context">| [Migrate service principals from the retiring Azure AD Graph APIs to Microsoft Graph](recommendation-migrate-to-microsoft-graph-api.md) | Applications | Preview | No | Application Administrator |</div><div class="diff-line diff-context">| [Migrate to Microsoft Authenticator](recommendation-migrate-to-authenticator.md) | Users | Preview | No | Global Administrator | </div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Feb 2, 2026 4:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> adal-msal-recommendation-020226</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For guidance, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">*   [Recommendation: Migrate from Microsoft Authentication Library to MSAL](../identity/monitoring-health/recommendation-migrate-from-adal-to-msal.md)</div><div class="diff-line diff-context">*   [Analyze a sign-in with Microsoft Graph API](/azure/azure-monitor/reference/tables/aadnoninteractiveusersigninlogs)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">No action is required to disable the API.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For guidance, see:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">*   [Analyze a sign-in with Microsoft Graph API](/azure/azure-monitor/reference/tables/aadnoninteractiveusersigninlogs)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">No action is required to disable the API.</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/monitoring-health/recommendation-migrate-from-adal-to-msal.md
+            </div>
+            <div class="file-meta">
+              Deleted by Sarah Lipsey on Feb 2, 2026 4:51 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-migrate-from-adal-to-msal</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-129 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> adal-msal-recommendation-020226</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
