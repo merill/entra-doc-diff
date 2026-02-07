@@ -1,0 +1,708 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 5th 2026, 8:14 PM PST</p>
+        <p>Report generated on February 6th 2026, 8:14 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">31</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">181</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tokens-overview.md" target="_blank">docs/identity-platform/tokens-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Gearoid O'Donnell on Feb 6, 2026 3:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tokens-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+830 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> First draft</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tokens-overview.md" target="_blank">docs/identity-platform/tokens-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Gearoid O'Donnell on Feb 6, 2026 4:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tokens-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+123</span> / 
+              <span class="deletions">-123</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> docs: Consolidate token documentation into single comprehensive guide</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID supports two tenant configurations: A workforce configuration that&#39;s intended for internal use and manages employees and business guests, and a [customer configuration](/entra/external-id/customers/concept-supported-features-customers) which is optimized for isolating consumers and partners in a restricted external-facing directory. While the underlying identity service is identical for both tenant configurations, the sign in domains and token issuing authority for external tenants is different. This allows applications to keep workforce and external ID workflows separated if needed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra workforce tenants authenticate at login.microsoftonline.com with tokens issued by *sts.windows.net*. Workforce tenant tokens are interchangeable across tenants and multitenant applications so long as underlying trust relationships permit this interoperability. Microsoft Entra external tenants use endpoints of the form `{tenantname}.ciamlogin.com`. Applications registered to external tenants must be aware of this separation to receive and validate tokens correctly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Every Microsoft Entra tenant publishes a standards-compliant well-known metadata document. This document contains information about the issuer name, the authentication and authorization endpoints, supported scopes and claims. For external tenants, the document is publicly available at: `https://{tenantname}.ciamlogin.com/{tenantid}/v2.0/.well-known/openid-configuration`. This endpoint returns an issuer value `https://{tenantid}.ciamlogin.com/{tenantid}/v2.0`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Both access tokens and ID tokens contain header claims that provide information for token validation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Claim | Format | Description |</div><div class="diff-line diff-deleted">|-------|--------|-------------|</div><div class="diff-line diff-deleted">| `typ` | String - always `JWT` | Indicates that the token is a JWT. |</div><div class="diff-line diff-deleted">| `alg` | String | Indicates the algorithm used to sign the token, for example, `RS256`. |</div><div class="diff-line diff-deleted">| `kid` | String | Specifies the thumbprint for the public key used for validating the signature of the token. Emitted in both v1.0 and v2.0 tokens. |</div><div class="diff-line diff-deleted">| `x5t` | String | Functions the same (in use and value) as `kid`. `x5t` is a legacy claim emitted only in v1.0 tokens for compatibility purposes. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Access token claims</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID supports two tenant configurations: A workforce configuration that&#39;s intended for internal use and manages employees and business guests, and a [customer configuration](/entra/external-id/customers/concept-supported-features-customers) which is optimized for isolating consumers and partners in a restricted external-facing directory. While the underlying identity service is identical for both tenant configurations, the sign in domains and token issuing authority for external tenants is different. This allows applications to keep workforce and external ID workflows separated if needed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra workforce tenants authenticate at login.microsoftonline.com with tokens issued by *sts.windows.NET*. Workforce tenant tokens are interchangeable across tenants and multitenant applications so long as underlying trust relationships permit this interoperability. Microsoft Entra external tenants use endpoints of the form `{tenantname}.ciamlogin.com`. Applications registered to external tenants must be aware of this separation to receive and validate tokens correctly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Every Microsoft Entra tenant publishes a standards-compliant well-known metadata document. This document contains information about the issuer name, the authentication and authorization endpoints, supported scopes and claims. For external tenants, the document is publicly available at: `https://{tenantname}.ciamlogin.com/{tenantid}/v2.0/.well-known/openid-configuration`. This endpoint returns an issuer value `https://{tenantid}.ciamlogin.com/{tenantid}/v2.0`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Both access tokens and ID tokens contain header claims that provide information for token validation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Claim| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Format| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Description| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-added">| -------| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | --------| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | -------------| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-added">| `typ`| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | String - always `JWT`| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Indicates that the token is a JWT.| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-added">| `alg`| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | String| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Indicates the algorithm used to sign the token, for example, `RS256`.| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-added">| `kid`| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | String| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Specifies the thumbprint for the public key used for validating the signature of the token. Emitted in both v1.0 and v2.0 tokens.| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-added">| `x5t`| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | String| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | | Functions the same (in use and value) as `kid`. `x5t` is a legacy claim emitted only in v1.0 tokens for compatibility purposes.| [Hybrid OIDC flow](v2-protocols-oidc.md#protocol-diagram-access-token-acquisition) | |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Access token claims</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/allow-deny-list.md" target="_blank">docs/external-id/allow-deny-list.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/allow-deny-list" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Allow or Block Invitations</div><div class="diff-line diff-context">description: Learn how an administrator creates a list to allow or block B2B collaboration with specific domains by using the Microsoft Entra admin center.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/16/2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As an IT admin managing B2B collaboration, I want to configure an allowlist or blocklist for specific organizations, so that I can control  where B2B invitations can be sent by users in my organization.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Allow or Block Invitations</div><div class="diff-line diff-context">description: Learn how an administrator creates a list to allow or block B2B collaboration with specific domains by using the Microsoft Entra admin center.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As an IT admin managing B2B collaboration, I want to configure an allowlist or blocklist for specific organizations, so that I can control  where B2B invitations can be sent by users in my organization.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/code-samples.md" target="_blank">docs/external-id/code-samples.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/code-samples" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: B2B collaboration code and PowerShell samples</div><div class="diff-line diff-context">description: Code and PowerShell samples for Microsoft Entra B2B collaboration</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-context">ms.date: 04/15/2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-context">ms.custom: it-pro, has-adal-ref, devx-track-linux, has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As an IT admin managing B2B collaboration, I want to bulk-invite external users to my organization by using PowerShell or by uploading a .csv file to the admin center or portal, so that I can streamline the onboarding process and save time.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: B2B collaboration code and PowerShell samples</div><div class="diff-line diff-context">description: Code and PowerShell samples for Microsoft Entra B2B collaboration</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-context">ms.date: 04/15/2025</div><div class="diff-line diff-context">ms.custom: it-pro, has-adal-ref, devx-track-linux, has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As an IT admin managing B2B collaboration, I want to bulk-invite external users to my organization by using PowerShell or by uploading a .csv file to the admin center or portal, so that I can streamline the onboarding process and save time.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/current-limitations.md" target="_blank">docs/external-id/current-limitations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/current-limitations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Limitations of B2B collaboration</div><div class="diff-line diff-context">description: Current limitations for Microsoft Entra B2B collaboration</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/15/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.collection: content-health, M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a user of Microsoft Entra B2B collaboration, I want to understand the limitations and potential issues with the platform, so that I can effectively manage and troubleshoot any authentication or replication problems that may arise.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Limitations of B2B collaboration</div><div class="diff-line diff-context">description: Current limitations for Microsoft Entra B2B collaboration</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/15/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: content-health, M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As a user of Microsoft Entra B2B collaboration, I want to understand the limitations and potential issues with the platform, so that I can effectively manage and troubleshoot any authentication or replication problems that may arise.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-custom-extensions.md" target="_blank">docs/external-id/customers/concept-custom-extensions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-custom-extensions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Custom authentication extensions</div><div class="diff-line diff-context">description: Learn how to use custom authentication extensions in Microsoft Entra External ID. Integrate with external systems, add custom logic to authentication flows, and enhance user experiences.</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Custom authentication extensions</div><div class="diff-line diff-context">description: Learn how to use custom authentication extensions in Microsoft Entra External ID. Integrate with external systems, add custom logic to authentication flows, and enhance user experiences.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-guide-explained.md" target="_blank">docs/external-id/customers/concept-guide-explained.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-guide-explained" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Get started guide features</div><div class="diff-line diff-context">description: Learn about the features you set up with the get started guide. </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date:  02/06/2025</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As an it admin, I want to know about the functions I set up with the get started guide so that I can understand the value of the features and how to use them.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Get started guide features</div><div class="diff-line diff-context">description: Learn about the features you set up with the get started guide. </div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date:  02/06/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#Customer intent: As an it admin, I want to know about the functions I set up with the get started guide so that I can understand the value of the features and how to use them.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-multifactor-authentication-customers.md" target="_blank">docs/external-id/customers/concept-multifactor-authentication-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-multifactor-authentication-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: MFA in external tenants</div><div class="diff-line diff-context">description: Learn about using MFA to secure apps in your external tenant and enabling email one-time passcodes (EOTP) or SMS as a second verification method for sign-up and sign-in.</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 11/20/2024</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: MFA in external tenants</div><div class="diff-line diff-context">description: Learn about using MFA to secure apps in your external tenant and enabling email one-time passcodes (EOTP) or SMS as a second verification method for sign-up and sign-in.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 11/20/2024</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-planning-your-solution.md" target="_blank">docs/external-id/customers/concept-planning-your-solution.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-planning-your-solution" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Plan a CIAM Deployment</div><div class="diff-line diff-context">description: Discover the steps for setting up a customer identity and access management (CIAM) solution in an external tenant, including creating a tenant, registering apps, and setting up user flows for sign-in.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 10/02/2025</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Plan a CIAM Deployment</div><div class="diff-line diff-context">description: Discover the steps for setting up a customer identity and access management (CIAM) solution in an external tenant, including creating a tenant, registering apps, and setting up user flows for sign-in.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 10/02/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-security-customers.md" target="_blank">docs/external-id/customers/concept-security-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-security-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Features in External Tenants</div><div class="diff-line diff-context">description: Learn about security features and fundamentals for Microsoft Entra External ID customer identity and access management (CIAM) in external tenant configurations. </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 01/28/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Features in External Tenants</div><div class="diff-line diff-context">description: Learn about security features and fundamentals for Microsoft Entra External ID customer identity and access management (CIAM) in external tenant configurations. </div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 01/28/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/faq-customers.md" target="_blank">docs/external-id/customers/faq-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/faq-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Frequently asked questions</div><div class="diff-line diff-context">description: Find answers to frequently asked questions about Microsoft Entra External ID. Learn about pricing, features, and the future of Azure AD B2C and External Identities. </div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.date: 01/06/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Frequently asked questions</div><div class="diff-line diff-context">description: Find answers to frequently asked questions about Microsoft Entra External ID. Learn about pricing, features, and the future of Azure AD B2C and External Identities. </div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.date: 01/06/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-b2c-federation-customers.md" target="_blank">docs/external-id/customers/how-to-b2c-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-b2c-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add Azure AD B2C for customer sign-in</div><div class="diff-line diff-context">description: Learn how to configure an Azure AD B2C tenant as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/20/2025</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add Azure AD B2C for customer sign-in</div><div class="diff-line diff-context">description: Learn how to configure an Azure AD B2C tenant as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/20/2025</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-custom-oidc-federation-customers.md" target="_blank">docs/external-id/customers/how-to-custom-oidc-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-custom-oidc-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add OIDC for customer sign-in</div><div class="diff-line diff-context">description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 09/15/2025</div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add OIDC for customer sign-in</div><div class="diff-line diff-context">description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 09/15/2025</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-manage-admin-accounts.md" target="_blank">docs/external-id/customers/how-to-manage-admin-accounts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-manage-admin-accounts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add and manage admin accounts</div><div class="diff-line diff-context">description: Learn how to add and manage admin accounts in your external tenant with Microsoft Entra External ID.</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add and manage admin accounts</div><div class="diff-line diff-context">description: Learn how to add and manage admin accounts in your external tenant with Microsoft Entra External ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-manage-customer-accounts.md" target="_blank">docs/external-id/customers/how-to-manage-customer-accounts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-manage-customer-accounts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add and manage customer accounts</div><div class="diff-line diff-context">description: Learn how to add and manage customer accounts in Microsoft Entra External ID.</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add and manage customer accounts</div><div class="diff-line diff-context">description: Learn how to add and manage customer accounts in Microsoft Entra External ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/10/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-user-flow-add-application.md" target="_blank">docs/external-id/customers/how-to-user-flow-add-application.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 6, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-user-flow-add-application" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata and moves from individual files to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an application to a user flow</div><div class="diff-line diff-context">description: Learn how to add an application to a user flow to associate the application with a sign-up and sign-in user experience. Get guidance for updating the application configuration with application registration and tenant information.</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.author: cmulligan</div><div class="diff-line diff-deleted">author: csmulligan</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">ms.service: entra-external-id</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-deleted">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an application to a user flow</div><div class="diff-line diff-context">description: Learn how to add an application to a user flow to associate the application with a sign-up and sign-in user experience. Get guidance for updating the application configuration with application registration and tenant information.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity-platform/tokens-overview.md
+            </div>
+            <div class="file-meta">
+              Deleted by Gearoid O'Donnell on Feb 6, 2026 5:13 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity-platform/tokens-overview</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-816 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Delete docs/identity-platform/tokens-overview.md</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
