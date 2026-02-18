@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 16th 2026, 8:27 PM PST</p>
+        <p>Report generated on February 17th 2026, 8:27 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">50</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">29</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/configure-app-management-policies.md" target="_blank">docs/identity/enterprise-apps/configure-app-management-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-app-management-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+22</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Restriction name            | Description                                                             | Security value | Availability                                                                                                                                    |</div><div class="diff-line diff-context">| :-------------------------- | :---------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |</div><div class="diff-line diff-deleted">| asymmetricKeyLifetime       | Enforce a max lifetime range for an asymmetric key (certificate).       | Reduces security risk from long-lived credentials                               |  Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Restrict max certificate lifetime` in the Microsoft Entra admin center. |</div><div class="diff-line diff-deleted">| audiences                   | Restricts creation or promotion of apps based on signInAudience values. | Prevents unsanctioned multitenant or consumer-facing applications | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) |</div><div class="diff-line diff-deleted">| customPasswordAddition      | Restrict a custom password secret on application or service principal.  | Prevents new user-provided app passwords, which are more easily compromised than system-generated ones  | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block custom passwords` in the Microsoft Entra admin center. |</div><div class="diff-line diff-deleted">| nonDefaultUriAddition       | Block new identifier URIs for apps unless they&#39;re one of the default formats `api://{appId}` or `api://{tenantId}/{appId}`.      | Reduces security risk from improper audience validation                            | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block custom identifier URIs` in the Microsoft Entra admin center. |</div><div class="diff-line diff-deleted">| uriAdditionWithoutUniqueTenantIdentifier       | Block new identifier URIs for apps unless they&#39;re one of the [secure formats](https://aka.ms/identifier-uri-policy).     | Reduces security risk from audience overlap                        | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block identifier URIs without unique tenant identifier` in the Microsoft Entra admin center. |</div><div class="diff-line diff-deleted">| passwordAddition            | Block the addition of new passwords (also referred to as secrets) on applications altogether.                   | Prevents new passwords, which are the most easily compromised form of credential                                                                        | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `symmetricKeyAddition` restriction under the `Block password addition` setting. |</div><div class="diff-line diff-deleted">| passwordLifetime            | Enforce a max lifetime range for a password secret.                     | Reduces security risk from long-lived credentials | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `symmetricKeyLifetime` restriction under the `Restrict max password lifetime` setting. |</div><div class="diff-line diff-deleted">| symmetricKeyAddition        | Restrict symmetric keys on applications.                                | Prevents new symmetric keys, which are effectively passwords - the most easily compromised form of credential                                                                      | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `passwordAddition` restriction under the `Block password addition` setting. |</div><div class="diff-line diff-deleted">| symmetricKeyLifetime        | Enforce a max lifetime range for a symmetric key.                       | Reduces security risk from long-lived credentials                                         | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `passwordLifetime` restriction under the `Restrict max password lifetime` setting.  |</div><div class="diff-line diff-deleted">| trustedCertificateAuthority | Block new certificate credentials if the issuer isn&#39;t listed in the trusted certificate authority list.                    | Ensures only trusted CAs are used by apps in your tenant                             | Can be configured through [app management policy APIs](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta). |</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">To learn more about how the app management policy API works, visit the [API documentation](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure app management policies, you need:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Restriction name            | Description                                                             | Security value | Availability                                                                                                                                    |</div><div class="diff-line diff-context">| :-------------------------- | :---------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |</div><div class="diff-line diff-added">| asymmetricKeyLifetime       | Enforce a max lifetime range for an asymmetric key (certificate).       | Reduces security risk from long-lived credentials                               |  Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Restrict max certificate lifetime` in the Microsoft Entra admin center. |</div><div class="diff-line diff-added">| audiences                   | Restricts creation or promotion of apps based on signInAudience values. | Prevents unsanctioned multitenant or consumer-facing applications | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) |</div><div class="diff-line diff-added">| customPasswordAddition      | Restrict a custom password secret on application or service principal.  | Prevents new user-provided app passwords, which are more easily compromised than system-generated ones  | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block custom passwords` in the Microsoft Entra admin center. |</div><div class="diff-line diff-added">| nonDefaultUriAddition       | Block new identifier URIs for apps unless they&#39;re one of the default formats `api://{appId}` or `api://{tenantId}/{appId}`.      | Reduces security risk from improper audience validation                            | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block custom identifier URIs` in the Microsoft Entra admin center. |</div><div class="diff-line diff-added">| uriAdditionWithoutUniqueTenantIdentifier       | Block new identifier URIs for apps unless they&#39;re one of the [secure formats](https://aka.ms/identifier-uri-policy).     | Reduces security risk from audience overlap                        | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). Referred to as `Block identifier URIs without unique tenant identifier` in the Microsoft Entra admin center. |</div><div class="diff-line diff-added">| passwordAddition            | Block the addition of new passwords (also referred to as secrets) on applications altogether.                   | Prevents new passwords, which are the most easily compromised form of credential                                                                        | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `symmetricKeyAddition` restriction under the `Block password addition` setting. |</div><div class="diff-line diff-added">| passwordLifetime            | Enforce a max lifetime range for a password secret.                     | Reduces security risk from long-lived credentials | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `symmetricKeyLifetime` restriction under the `Restrict max password lifetime` setting. |</div><div class="diff-line diff-added">| symmetricKeyAddition        | Restrict symmetric keys on applications.                                | Prevents new symmetric keys, which are effectively passwords - the most easily compromised form of credential                                                                      | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `passwordAddition` restriction under the `Block password addition` setting. |</div><div class="diff-line diff-added">| symmetricKeyLifetime        | Enforce a max lifetime range for a symmetric key.                       | Reduces security risk from long-lived credentials                                         | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true) and the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). In the Microsoft Entra admin center, combined with the `passwordLifetime` restriction under the `Restrict max password lifetime` setting.  |</div><div class="diff-line diff-added">| trustedCertificateAuthority | Block new certificate credentials if the issuer isn&#39;t listed in the trusted certificate authority list.                    | Ensures only trusted CAs are used by apps in your tenant                             | Can be configured through [app management policy APIs](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true). |</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To learn more about how the app management policy API works, visit the [API documentation](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure app management policies, you need:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/deactivate-app-registration.md" target="_blank">docs/identity/enterprise-apps/deactivate-app-registration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Feb 17, 2026 10:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/deactivate-app-registration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> add more code review feedback</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- One of the following Microsoft Entra roles:</div><div class="diff-line diff-context">    - [Cloud Application Administrator](../role-based-access-control/permissions-reference.md#cloud-application-administrator)  </div><div class="diff-line diff-context">    - [Application Administrator](../role-based-access-control/permissions-reference.md#application-administrator)</div><div class="diff-line diff-deleted">- Both of these Role-based access control actions:</div><div class="diff-line diff-deleted">    -  `microsoft.directory/applications/disablement/update`</div><div class="diff-line diff-context">- The following API permissions if using Microsoft Graph:</div><div class="diff-line diff-context">    - `Application.ReadWrite.All` (delegated or application)</div><div class="diff-line diff-context">    - `Application.ReadWrite.OwnedBy` (application, for owned apps only)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## [Microsoft Graph API](#tab/graph-api)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Get the application ID if you don&#39;t have it</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```http</div><div class="diff-line diff-deleted">    GET https://graph.microsoft.com/v1.0/applications?$filter=displayName eq &#39;Your App Name&#39;</div><div class="diff-line diff-deleted">    ```</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1. Deactivate the application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```http</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- One of the following Microsoft Entra roles:</div><div class="diff-line diff-context">    - [Cloud Application Administrator](../role-based-access-control/permissions-reference.md#cloud-application-administrator)  </div><div class="diff-line diff-context">    - [Application Administrator](../role-based-access-control/permissions-reference.md#application-administrator)</div><div class="diff-line diff-context">- The following API permissions if using Microsoft Graph:</div><div class="diff-line diff-context">    - `Application.ReadWrite.All` (delegated or application)</div><div class="diff-line diff-context">    - `Application.ReadWrite.OwnedBy` (application, for owned apps only)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## [Microsoft Graph API](#tab/graph-api)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Deactivate the application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```http</div><div class="diff-line diff-added">    PATCH https://graph.microsoft.com/beta/applications/{applicationObjectId}</div><div class="diff-line diff-added">    Content-Type: application/json</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    {</div><div class="diff-line diff-added">        &quot;isDisabled&quot;: true</div><div class="diff-line diff-added">    }</div><div class="diff-line diff-added">    ```</div><div class="diff-line diff-context">    ```http</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 8:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more, see: </div><div class="diff-line diff-deleted">- [Microsoft Entra documentation](https://learn.microsoft.com/entra/) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Entra Global Secure Access](https://learn.microsoft.com/entra/global-secure-access/) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Defender for Cloud Apps overview](https://learn.microsoft.com/defender-cloud-apps/)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Introduction**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Starting Oct 28, 2026, all applications and scripts making calls to Microsoft Entra Privileged Identity Management (PIM) [Iteration 2](/graph/api/resources/privilegedidentitymanagement-root?view=graph-rest-beta) (beta) APIs for Azure resources, Microsoft Entra roles and Groups will fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**How this will affect your organization**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Learn more: </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more, see: </div><div class="diff-line diff-added">- [Microsoft Entra documentation](/entra/) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Microsoft Entra Global Secure Access](/entra/global-secure-access/) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Microsoft Defender for Cloud Apps overview](/defender-cloud-apps/)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Introduction**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Starting Oct 28, 2026, all applications and scripts making calls to Microsoft Entra Privileged Identity Management (PIM) [Iteration 2](/graph/api/resources/privilegedidentitymanagement-root?view=graph-rest-beta&amp;preserve-view=true) (beta) APIs for Azure resources, Microsoft Entra roles and Groups will fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**How this will affect your organization**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Learn more: </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/10-secure-local-guest.md" target="_blank">docs/architecture/10-secure-local-guest.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Gearoid O'Donnell on Feb 17, 2026 3:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/10-secure-local-guest" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating post migration considerations</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Learn more: [Invite internal users to B2B collaboration](~/external-id/invite-internal-users.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Post-migration considerations</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">If external user local accounts were synced from on-premises, reduce their on-premises footprint and use B2B guest accounts. You can:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">- Transition external user local accounts to Microsoft Entra B2B and stop creating local accounts</div><div class="diff-line diff-context">  - Invite external users in Microsoft Entra ID</div><div class="diff-line diff-deleted">- Randomize external user&#39;s local-account passwords to prevent authentication to on-premises resources</div><div class="diff-line diff-context">  - This action ensures authentication and user lifecycle is connected to the external user home identity</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Learn more: [Invite internal users to B2B collaboration](~/external-id/invite-internal-users.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Post-migration considerations</div><div class="diff-line diff-added">After you verify external authentication is working, complete the transition:</div><div class="diff-line diff-added"> </div><div class="diff-line diff-context">- Transition external user local accounts to Microsoft Entra B2B and stop creating local accounts</div><div class="diff-line diff-context">  - Invite external users in Microsoft Entra ID</div><div class="diff-line diff-added">- Change or randomize local account passwords to phase out legacy authentication</div><div class="diff-line diff-context">  - This action ensures authentication and user lifecycle is connected to the external user home identity</div><div class="diff-line diff-added">  - For on-premises accounts, coordinate with your directory services team to disable local credentials.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; During conversion, both local and external credentials work simultaneously. This dual authentication period is necessary because external authentication isn&#39;t available until invitation acceptance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/custom-data-resource-access-reviews.md" target="_blank">docs/id-governance/custom-data-resource-access-reviews.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/custom-data-resource-access-reviews" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Create**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can also create an access review programmatically using Microsoft Graph. For more information, see [Create a single stage access review on a catalog](/graph/api/accessreviewset-post-definitions?view=graph-rest-beta&amp;tabs=http#example-6-create-a-single-stage-access-review-on-a-catalog).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get Access Review Object and Instance ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|PermissionType     |   Indicates the category of permission.      |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can also upload custom data via Graph by creating an upload session and then uploading a CSV file. For more information, see [customDataProvidedResourceUploadSession](/graph/api/resources/customdataprovidedresourceuploadsession?view=graph-rest-beta).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Active review state</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Applying stage</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In the **Applying** stage, you can get a list of denied users by making the [list decisions](/graph/api/accessreviewinstance-list-decisions?view=graph-rest-beta&amp;tabs=http) API call:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` http</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Create**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also create an access review programmatically using Microsoft Graph. For more information, see [Create a single stage access review on a catalog](/graph/api/accessreviewset-post-definitions?view=graph-rest-beta&amp;tabs=http&amp;preserve-view=true#example-6-create-a-single-stage-access-review-on-a-catalog).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Get Access Review Object and Instance ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|PermissionType     |   Indicates the category of permission.      |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also upload custom data via Graph by creating an upload session and then uploading a CSV file. For more information, see [customDataProvidedResourceUploadSession](/graph/api/resources/customdataprovidedresourceuploadsession?view=graph-rest-beta&amp;preserve-view=true).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Active review state</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Applying stage</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In the **Applying** stage, you can get a list of denied users by making the [list decisions](/graph/api/accessreviewinstance-list-decisions?view=graph-rest-beta&amp;tabs=http&amp;preserve-view=true) API call:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` http</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-compliant-network.md" target="_blank">docs/global-secure-access/how-to-compliant-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 8:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-compliant-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Enhance documentation with mobile app support details</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; * Internet resources with Global Secure Access </div><div class="diff-line diff-context">&gt; * Microsoft apps with Global Secure Access </div><div class="diff-line diff-context">&gt; * All private resources with Global Secure Access </div><div class="diff-line diff-deleted">&gt; * ZTNA Policy Service </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### User exclusions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; * Internet resources with Global Secure Access </div><div class="diff-line diff-context">&gt; * Microsoft apps with Global Secure Access </div><div class="diff-line diff-context">&gt; * All private resources with Global Secure Access </div><div class="diff-line diff-added">&gt; * ZTNA Policy Service</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Mobile app support</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The Global Secure Access mobile app is part of the Defender app. Exclusions are required to ensure the Defender client isn&#39;t blocked from accessing the resources it needs. To exclude Defender resources from Conditional Access policies, see [Microsoft Defender mobile app exclusion from Conditional Access policies](/defender-endpoint/mobile-resources-defender-endpoint#microsoft-defender-mobile-app-exclusion-from-conditional-access-ca-policies).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">For more information, see [Mobile resources for Microsoft Defender for Endpoint](/defender-endpoint/mobile-resources-defender-endpoint).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### User exclusions</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-dynamic-approval.md" target="_blank">docs/id-governance/entitlement-management-dynamic-approval.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-dynamic-approval" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/entitlement-management-dynamic-approval/native-support-diagram.png&quot; alt-text=&quot;Screenshot of native support of approvers in Entitlement management.&quot; lightbox=&quot;media/entitlement-management-dynamic-approval/native-support-diagram.png&quot;:::</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">With the introduction of [custom extensions](entitlement-management-logic-apps-integration.md) calling out to [Azure Logic Apps](/azure/logic-apps/logic-apps-overview) you are now able to dynamically determine approval requirements for each access package assignment request based on your organizations specific business logic. The access package assignment request process will pause until your business logic hosted in Azure Logic Apps returns a [approval stage](/graph/api/resources/accesspackageapprovalstage?view=graph-rest-1.0) which will then be leveraged in the subequent approval process via the [My Access portal](https://myaccess.microsoft.com). For example, if access requests must be approved by the department head of the person requesting an access package this feature allows you to query an external system, such as your human resources (HR) system, to on-the-fly look up the current department head and assign them as the approver for the given access request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/entitlement-management-dynamic-approval/dynamic-extensibility-diagram.png&quot; alt-text=&quot;Screenshot of example of determining approvers using custom extensions.&quot; lightbox=&quot;media/entitlement-management-dynamic-approval/dynamic-extensibility-diagram.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Although the example uses a user ID, the primaryApprovers and escalationApprovers section can contain valid [subjectSets](/graph/api/resources/subjectset) supported by Entitlement Management. In Public Preview the resume call must be performed against Microsoft Graph&#39;s beta endpoint. However, the [approval stage](/graph/api/resources/accesspackageapprovalstage?view=graph-rest-1.0) provided in the resume call body must follow the [v1.0 convention](/graph/api/resources/accesspackageapprovalstage?view=graph-rest-1.0) and not the [beta convention](/graph/api/resources/approvalstage?view=graph-rest-beta).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/entitlement-management-dynamic-approval/native-support-diagram.png&quot; alt-text=&quot;Screenshot of native support of approvers in Entitlement management.&quot; lightbox=&quot;media/entitlement-management-dynamic-approval/native-support-diagram.png&quot;:::</div><div class="diff-line diff-context"> </div><div class="diff-line diff-added">With the introduction of [custom extensions](entitlement-management-logic-apps-integration.md) calling out to [Azure Logic Apps](/azure/logic-apps/logic-apps-overview) you are now able to dynamically determine approval requirements for each access package assignment request based on your organizations specific business logic. The access package assignment request process will pause until your business logic hosted in Azure Logic Apps returns a [approval stage](/graph/api/resources/accesspackageapprovalstage) which will then be leveraged in the subequent approval process via the [My Access portal](https://myaccess.microsoft.com). For example, if access requests must be approved by the department head of the person requesting an access package this feature allows you to query an external system, such as your human resources (HR) system, to on-the-fly look up the current department head and assign them as the approver for the given access request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/entitlement-management-dynamic-approval/dynamic-extensibility-diagram.png&quot; alt-text=&quot;Screenshot of example of determining approvers using custom extensions.&quot; lightbox=&quot;media/entitlement-management-dynamic-approval/dynamic-extensibility-diagram.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Although the example uses a user ID, the primaryApprovers and escalationApprovers section can contain valid [subjectSets](/graph/api/resources/subjectset) supported by Entitlement Management. In Public Preview the resume call must be performed against Microsoft Graph&#39;s beta endpoint. However, the [approval stage](/graph/api/resources/accesspackageapprovalstage) provided in the resume call body must follow the [v1.0 convention](/graph/api/resources/accesspackageapprovalstage) and not the [beta convention](/graph/api/resources/approvalstage?view=graph-rest-beta&amp;preserve-view=true).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-roles.md" target="_blank">docs/id-governance/entitlement-management-roles.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-roles" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Add a Microsoft Entra role as a resource in an access package using Graph</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">First, call [Create accessPackageResourceRequest](/graph/api/entitlementmanagement-post-resourcerequests?view=graph-rest-1.0&amp;tabs=http) to add the Microsoft Entra role as a resource to the catalog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Then, to add that Microsoft Entra role to an access package as a resource role, use the following payload for [Create resourceRoleScope](/graph/api/accesspackage-post-resourcerolescopes?view=graph-rest-1.0&amp;tabs=http):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```json</div><div class="diff-line diff-context">{</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Add a Microsoft Entra role as a resource in an access package using Graph</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">First, call [Create accessPackageResourceRequest](/graph/api/entitlementmanagement-post-resourcerequests?tabs=http) to add the Microsoft Entra role as a resource to the catalog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Then, to add that Microsoft Entra role to an access package as a resource role, use the following payload for [Create resourceRoleScope](/graph/api/accesspackage-post-resourcerolescopes?tabs=http):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```json</div><div class="diff-line diff-context">{</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/identifier-uri-restrictions.md" target="_blank">docs/identity-platform/identifier-uri-restrictions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/identifier-uri-restrictions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">There are three possible ways that you can add an identifier URI to your app. We recommend them in the following order:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.  Use one of the [secure URI patterns](#secure-patterns)</div><div class="diff-line diff-deleted">1. If you encountered this error, it means your API currently uses v1.0 tokens. You can unblock yourself by updating your service to accept v2.0 tokens. V2.0 tokens are similar to v1.0, but there are some [differences](https://learn.microsoft.com/entra/identity-platform/access-token-claims-reference). Once your service is able to handle v2.0 tokens, you can update your app configuration so that Microsoft Entra sends them v2.0 tokens. An easy way to do this is through the manifest editor in the [Microsoft Entra admin center App registrations experience](https://aka.ms/ra/prod):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/identifier-uri-restrictions/update-access-token-version-cropped.png&quot; alt-text=&quot;Screenshot of update token version experience.&quot; lightbox=&quot;media/identifier-uri-restrictions/update-access-token-version.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How do these policies work?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The enforcements are turned on by configuring an organization&#39;s [app management policies](https://learn.microsoft.com/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta). A tenant administrator can turn it on or off.   Microsoft is enabling it by default in some organizations during the months of June and July 2025.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Learn how to check if the protection has been enabled in your organization](https://aka.ms/check-identifier-uri-protection-state)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">There are three possible ways that you can add an identifier URI to your app. We recommend them in the following order:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.  Use one of the [secure URI patterns](#secure-patterns)</div><div class="diff-line diff-added">1. If you encountered this error, it means your API currently uses v1.0 tokens. You can unblock yourself by updating your service to accept v2.0 tokens. V2.0 tokens are similar to v1.0, but there are some [differences](/entra/identity-platform/access-token-claims-reference). Once your service is able to handle v2.0 tokens, you can update your app configuration so that Microsoft Entra sends them v2.0 tokens. An easy way to do this is through the manifest editor in the [Microsoft Entra admin center App registrations experience](https://aka.ms/ra/prod):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/identifier-uri-restrictions/update-access-token-version-cropped.png&quot; alt-text=&quot;Screenshot of update token version experience.&quot; lightbox=&quot;media/identifier-uri-restrictions/update-access-token-version.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How do these policies work?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The enforcements are turned on by configuring an organization&#39;s [app management policies](/graph/api/resources/applicationauthenticationmethodpolicy?view=graph-rest-beta&amp;preserve-view=true). A tenant administrator can turn it on or off.   Microsoft is enabling it by default in some organizations during the months of June and July 2025.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Learn how to check if the protection has been enabled in your organization](https://aka.ms/check-identifier-uri-protection-state)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/security-copilot/conditional-access-agent-optimization.md" target="_blank">docs/security-copilot/conditional-access-agent-optimization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Feb 17, 2026 4:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/security-copilot/conditional-access-agent-optimization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> link-fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.reviewer: jodah</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">ms.date: 02/13/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">- Allow the agent to [send notifications](conditional-access-agent-optimization-settings.md#notifications) through Microsoft Teams</div><div class="diff-line diff-context">- Allow the agent to create [phased rollout plans](conditional-access-agent-optimization-phased-rollout.md)</div><div class="diff-line diff-context">- Enable [integration with ServiceNow](conditional-access-agent-optimization-settings.md#servicenow-integration-preview) for automatic ticket creation</div><div class="diff-line diff-deleted">- Provide [instructions](conditional-access-agent-optimization-settings.md#custom-instructions) and [knowledge artifacts]() to the agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Remove agent</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.reviewer: jodah</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">ms.date: 02/17/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.update-cycle: 180-days</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">- Allow the agent to [send notifications](conditional-access-agent-optimization-settings.md#notifications) through Microsoft Teams</div><div class="diff-line diff-context">- Allow the agent to create [phased rollout plans](conditional-access-agent-optimization-phased-rollout.md)</div><div class="diff-line diff-context">- Enable [integration with ServiceNow](conditional-access-agent-optimization-settings.md#servicenow-integration-preview) for automatic ticket creation</div><div class="diff-line diff-added">- Provide [instructions](conditional-access-agent-optimization-settings.md#custom-instructions) and [knowledge base files](conditional-access-agent-optimization-knowledge-base.md) to the agent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Remove agent</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-quick-access.md" target="_blank">docs/global-secure-access/how-to-configure-quick-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Feb 17, 2026 8:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-quick-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Enhance Private DNS support section in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; You can add up to 500 application segments to your Quick Access app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Add private DNS suffixes</div><div class="diff-line diff-deleted">Private DNS support for Microsoft Entra Private Access lets you query your own internal DNS servers to resolve IP addresses for internal domain names. Let’s look at an example. Let’s say you have an internal IP range of `10.8.0.0` to `10.8.255.255`. You configure this range in your Quick Access application definition. You want users to access a web application responding on IP `10.8.0.5` when they type</div><div class="diff-line diff-context">`https://benefits` in their web browser. But you don’t want to configure a FQDN for the application. Using Private DNS, you configure a corresponding DNS Suffix so that the Global Secure Access client knows how to route the request correctly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, you can provide a single sign-on (SSO) experience for Kerberos resources by configuring Kerberos Authentication to domain controllers using Private DNS. To learn more about creating an SSO experience, see [Use Kerberos for single sign-on (SSO) to your resources with Microsoft Entra Private Access](how-to-configure-kerberos-sso.md).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; You can add up to 500 application segments to your Quick Access app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Add private DNS suffixes</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[Private DNS support for Microsoft Entra Private Access](concept-private-name-resolution.md) lets you query your own internal DNS servers to resolve IP addresses for internal domain names. Let’s look at an example. Let’s say you have an internal IP range of `10.8.0.0` to `10.8.255.255`. You configure this range in your Quick Access application definition. You want users to access a web application responding on IP `10.8.0.5` when they type</div><div class="diff-line diff-context">`https://benefits` in their web browser. But you don’t want to configure a FQDN for the application. Using Private DNS, you configure a corresponding DNS Suffix so that the Global Secure Access client knows how to route the request correctly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, you can provide a single sign-on (SSO) experience for Kerberos resources by configuring Kerberos Authentication to domain controllers using Private DNS. To learn more about creating an SSO experience, see [Use Kerberos for single sign-on (SSO) to your resources with Microsoft Entra Private Access](how-to-configure-kerberos-sso.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-owners-sponsors-managers.md" target="_blank">docs/agent-id/identity-platform/agent-owners-sponsors-managers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-owners-sponsors-managers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Administrative relationships in Microsoft Entra Agent ID (Owners, sponsors, and managers) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft agent identity platform introduces an administrative model that separates technical administration from business accountability, ensuring operational control and compliance oversight without excessive permissions. This document explains the administrative relationships for Microsoft Entra Agent ID identity types. This guidance applies to [agent identities](/graph/api/resources/agentidentity?view=graph-rest-beta), [agent identity blueprints](/graph/api/resources/agentidentityblueprint?view=graph-rest-beta), [agent identity blueprint principals](/graph/api/resources/agentidentityblueprintprincipal?view=graph-rest-beta), and [agent users](/graph/api/resources/agentuser?view=graph-rest-beta). The article covers owners, sponsors, and managers and their importance in maintaining secure operations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The administrative relationships available in Agent ID include:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Administrative relationships in Microsoft Entra Agent ID (Owners, sponsors, and managers) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Microsoft agent identity platform introduces an administrative model that separates technical administration from business accountability, ensuring operational control and compliance oversight without excessive permissions. This document explains the administrative relationships for Microsoft Entra Agent ID identity types. This guidance applies to [agent identities](/graph/api/resources/agentidentity?view=graph-rest-beta&amp;preserve-view=true), [agent identity blueprints](/graph/api/resources/agentidentityblueprint?view=graph-rest-beta&amp;preserve-view=true), [agent identity blueprint principals](/graph/api/resources/agentidentityblueprintprincipal?view=graph-rest-beta&amp;preserve-view=true), and [agent users](/graph/api/resources/agentuser?view=graph-rest-beta&amp;preserve-view=true). The article covers owners, sponsors, and managers and their importance in maintaining secure operations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The administrative relationships available in Agent ID include:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-professional/agent-access-packages.md" target="_blank">docs/agent-id/identity-professional/agent-access-packages.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-professional/agent-access-packages" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Agents can then be assigned access packages through three different request pathways.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- The agent identity itself can programmatically request an access package when needed for its operations, by creating an [accessPackageAssignmentRequest](/graph/api/entitlementmanagement-post-assignmentrequests?view=graph-rest-1.0&amp;tabs=http).</div><div class="diff-line diff-context">- The agent&#39;s sponsor can request access on behalf of the agent ID, providing human oversight in the access request process. For more information, see [Request an access package on behalf of an agent identity (Preview)](/entra/id-governance/entitlement-management-request-behalf#request-an-access-package-on-behalf-of-an-agent-identity-preview).</div><div class="diff-line diff-context">- An administrator can [directly assign the agent identity or agent user to the access package](/entra/id-governance/entitlement-management-access-package-assignments#directly-assign-an-identity).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Agents can then be assigned access packages through three different request pathways.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- The agent identity itself can programmatically request an access package when needed for its operations, by creating an [accessPackageAssignmentRequest](/graph/api/entitlementmanagement-post-assignmentrequests?tabs=http).</div><div class="diff-line diff-context">- The agent&#39;s sponsor can request access on behalf of the agent ID, providing human oversight in the access request process. For more information, see [Request an access package on behalf of an agent identity (Preview)](/entra/id-governance/entitlement-management-request-behalf#request-an-access-package-on-behalf-of-an-agent-identity-preview).</div><div class="diff-line diff-context">- An administrator can [directly assign the agent identity or agent user to the access package](/entra/id-governance/entitlement-management-access-package-assignments#directly-assign-an-identity).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/guide-for-independent-software-developers.md" target="_blank">docs/architecture/guide-for-independent-software-developers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/guide-for-independent-software-developers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">Applications often need more than authentication and authorization (such as access to the tenant&#39;s directory data). Access may include getting attributes of the user, groups, group members, applications, and governance.</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">[Microsoft Graph](https://developer.microsoft.com/graph) provides access to the tenant&#39;s [identity and access](/graph/api/resources/identity-network-access-overview?view=graph-rest-1.0), [users](/graph/api/resources/users?view=graph-rest-1.0&amp;preserve-view=true), [groups](/graph/api/resources/groups-overview?view=graph-rest-1.0&amp;tabs=http&amp;preserve-view=true), and [applications](/graph/api/resources/application?view=graph-rest-1.0&amp;preserve-view=true). Microsoft Graph is the gateway to data and intelligence in Microsoft 365. You can use its unified programmability model to access the tremendous amount of data in Microsoft 365, Windows, and Enterprise Mobility + Security (EMS).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context"></div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">Applications often need more than authentication and authorization (such as access to the tenant&#39;s directory data). Access may include getting attributes of the user, groups, group members, applications, and governance.</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">[Microsoft Graph](https://developer.microsoft.com/graph) provides access to the tenant&#39;s [identity and access](/graph/api/resources/identity-network-access-overview), [users](/graph/api/resources/users?view=graph-rest-1.0&amp;preserve-view=true), [groups](/graph/api/resources/groups-overview?view=graph-rest-1.0&amp;tabs=http&amp;preserve-view=true), and [applications](/graph/api/resources/application?view=graph-rest-1.0&amp;preserve-view=true). Microsoft Graph is the gateway to data and intelligence in Microsoft 365. You can use its unified programmability model to access the tremendous amount of data in Microsoft 365, Windows, and Enterprise Mobility + Security (EMS).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context"></div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/access-reviews-faqs.md" target="_blank">docs/id-governance/access-reviews-faqs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 17, 2026 9:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-faqs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes build issues.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I see which reviewers were notified for an access review?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Once an access review starts, you can use the [contactedReviewers](/graph/api/resources/accessreviewreviewer?view=graph-rest-1.0) API to retrieve the list of all users who were, or would have been, notified via email to perform reviews. Even in scenarios where notifications were turned off, the API still provides the list of reviewers along with timestamps indicating when notification would happen.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I see which reviewers were notified for an access review?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Once an access review starts, you can use the [contactedReviewers](/graph/api/resources/accessreviewreviewer) API to retrieve the list of all users who were, or would have been, notified via email to perform reviews. Even in scenarios where notifications were turned off, the API still provides the list of reviewers along with timestamps indicating when notification would happen.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
