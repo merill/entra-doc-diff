@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 18th 2026, 8:21 PM PST</p>
+        <p>Report generated on February 19th 2026, 8:21 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">55</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">83</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-version-history.md" target="_blank">docs/identity/hybrid/connect/reference-connect-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Feb 19, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+45</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt;If you&#39;re unable to upgrade before the deadline, all synchronization services will fail until you upgrade to the latest version. The Microsoft Entra Connect Sync .msi installation file is exclusively available on [Microsoft Entra Admin Center](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/%7E/GetStarted). Make sure you meet the minimum requirements including .NET Framework 4.7.2 and TLS 1.2.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Looking for the latest versions?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can upgrade your Microsoft Entra Connect server from all supported versions with the latest versions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To read more about autoupgrade, see [Microsoft Entra Connect: Automatic upgrade](how-to-connect-install-automatic-upgrade.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## 2.6.1.0</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Release status</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">11/19/2025: Released for download via the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Added features</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **AAD Connector V2 API Enforcement**: The default connector API version is now V2. Using the previous V1 connector API is no longer supported.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt;If you&#39;re unable to upgrade before the deadline, all synchronization services will fail until you upgrade to the latest version. The Microsoft Entra Connect Sync .msi installation file is exclusively available on [Microsoft Entra Admin Center](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/%7E/GetStarted). Make sure you meet the minimum requirements including .NET Framework 4.7.2 and TLS 1.2.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Known issue: Synchronization fails after upgrade if miiserver.exe.config was previously modified</div><div class="diff-line diff-added">Applies to</div><div class="diff-line diff-added">- Microsoft Entra Connect 2.5.190.0</div><div class="diff-line diff-added">-	Microsoft Entra Connect 2.6.1.0</div><div class="diff-line diff-added">### Issue</div><div class="diff-line diff-added">After upgrading Microsoft Entra Connect, synchronization may fail if the `miiserver.exe.config` file was previously modified.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Symptom</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">`Synchronization fails after upgrade with the following error: System.IO.FileLoadException: Could not load file or assembly &#39;System.Diagnostics.DiagnosticSource, Version=6.0.0.1&#39;</div><div class="diff-line diff-added">or one of its dependencies. The located assembly&#39;s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)`</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Cause</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">During upgrade, Microsoft Entra Connect detects that `miiserver.exe.config` has been modified and does not update the file. This results in a missing dependency binding required for synchronization.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/create-blueprint.md" target="_blank">docs/agent-id/identity-platform/create-blueprint.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sarah Lipsey on Feb 19, 2026 5:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pm-updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Create an agent identity blueprint</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">An [agent identity blueprint](agent-blueprint.md) is used to create agent identities and request tokens using those agent identities. During the process for creating an agent identity blueprint, you set the [owner and sponsor](agent-owners-sponsors-managers.md) of that blueprint, to establish accountability and administrative relationships. You also establish the scope and authorization for agents created from this blueprint to receive incoming requests from other agents and users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide walks you through creating an agent identity blueprint using the Microsoft Graph REST API and Microsoft Graph PowerShell.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Privileged Role Administrator](../../identity/role-based-access-control/permissions-reference.md#privileged-role-administrator) role is required to grant Microsoft Graph permissions.</div><div class="diff-line diff-context">- [Agent ID Developer](../../identity/role-based-access-control/permissions-reference.md#agent-id-developer) or [Agent ID Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-id-administrator) roles are required to create agent identity blueprints.</div><div class="diff-line diff-deleted">- If using PowerShell, version 7 is required for Microsoft Entra PowerShell modules.</div><div class="diff-line diff-deleted">- In preview, all operations with the agent identity blueprint require the beta version. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prepare your environment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Authorize a client to create agent identity blueprints</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this article, you use Microsoft Graph PowerShell or another client to create your agent identity blueprint. You must authorize this client to create an agent identity blueprint. The client requires the following Microsoft Graph permissions:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Create an agent identity blueprint</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">An [agent identity blueprint](agent-blueprint.md) is used to create agent identities and request tokens using those agent identities. During the process for creating an agent identity blueprint, you set the [owner and sponsor](agent-owners-sponsors-managers.md) of that blueprint, to establish accountability and administrative relationships. You also configure an identifier URI and define a scope for agents created from this blueprint if the agent is designed to receive incoming requests from other agents and users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide walks you through creating an agent identity blueprint using the Microsoft Graph REST API and Microsoft Graph PowerShell.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Privileged Role Administrator](../../identity/role-based-access-control/permissions-reference.md#privileged-role-administrator) role is required to grant Microsoft Graph Application permissions.</div><div class="diff-line diff-added">- [Cloud Application Administrator](../../identity/role-based-access-control/permissions-reference.md#cloud-application-administrator) or [Application Administrator](../../identity/role-based-access-control/permissions-reference.md#application-administrator) is required to grant Microsoft Graph delegated permissions.</div><div class="diff-line diff-context">- [Agent ID Developer](../../identity/role-based-access-control/permissions-reference.md#agent-id-developer) or [Agent ID Administrator](../../identity/role-based-access-control/permissions-reference.md#agent-id-administrator) roles are required to create agent identity blueprints.</div><div class="diff-line diff-added">- If using PowerShell, version 7 is required.</div><div class="diff-line diff-added">- In preview, all operations with the agent identity blueprint require the beta version for both Microsoft Graph and PowerShell. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prepare your environment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Authorize a client to create agent identity blueprints</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this article, you use Microsoft Graph PowerShell or another client to create your agent identity blueprint. You must authorize this client to create and configure an agent identity blueprint and create an agent identity blueprint principal. The client requires the following Microsoft Graph permissions:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/clarizen-one-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/clarizen-one-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/clarizen-one-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Step 2: Configure Clarizen One to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select one of the four following Tenant URLs according to your Clarizen One environment and data center:</div><div class="diff-line diff-deleted">      * US Production data center: https://servicesapp2.clarizen.com/scim/v2</div><div class="diff-line diff-deleted">      * EU Production data center: https://serviceseu1.clarizen.com/scim/v2</div><div class="diff-line diff-deleted">      * US Sandbox data center: https://servicesapp.clarizentb.com/scim/v2</div><div class="diff-line diff-deleted">      * EU Sandbox data center: https://serviceseu.clarizentb.com/scim/v2</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Generate an [API key](https://success.clarizen.com/hc/articles/360011833079-API-Keys-Support). This value is entered in the **Secret Token** box on the **Provisioning** tab of your Clarizen One application.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Step 2: Configure Clarizen One to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select one of the four following Tenant URLs according to your Clarizen One environment and data center:</div><div class="diff-line diff-added">      * US Production data center: `https://servicesapp2.clarizen.com/scim/v2`</div><div class="diff-line diff-added">      * EU Production data center: `https://serviceseu1.clarizen.com/scim/v2`</div><div class="diff-line diff-added">      * US Sandbox data center: `https://servicesapp.clarizentb.com/scim/v2`</div><div class="diff-line diff-added">      * EU Sandbox data center: `https://serviceseu.clarizentb.com/scim/v2`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Generate an [API key](https://success.clarizen.com/hc/articles/360011833079-API-Keys-Support). This value is entered in the **Secret Token** box on the **Provisioning** tab of your Clarizen One application.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity.md" target="_blank">docs/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 4:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-view-associated-resources-for-an-identity" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Metadata only. Moves metadata out of individual files and to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: View associated resources for a user-assigned managed identity</div><div class="diff-line diff-context">description: Step-by-step instructions for viewing the Azure resources that are associated with a user-assigned managed identity</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: SHERMANOUKO</div><div class="diff-line diff-deleted">manager: CelesteDG</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: managed-identities</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 03/15/2025</div><div class="diff-line diff-deleted">ms.author: shermanouko</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: View associated resources for a user-assigned managed identity</div><div class="diff-line diff-context">description: Step-by-step instructions for viewing the Azure resources that are associated with a user-assigned managed identity</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 03/15/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/how-to-view-managed-identity-service-principal.md" target="_blank">docs/identity/managed-identities-azure-resources/how-to-view-managed-identity-service-principal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 4:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-view-managed-identity-service-principal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Metadata only. Moves metadata out of individual files and to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: View service principal for a managed identity</div><div class="diff-line diff-context">description: Step-by-step instructions for viewing the service principal of a managed identity.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">author: SHERMANOUKO</div><div class="diff-line diff-deleted">manager: CelesteDG</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: managed-identities</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 03/14/2025</div><div class="diff-line diff-deleted">ms.author: shermanouko</div><div class="diff-line diff-context">ms.custom: devx-track-azurecli, devx-track-azurepowershell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">appliesto:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: View service principal for a managed identity</div><div class="diff-line diff-context">description: Step-by-step instructions for viewing the service principal of a managed identity.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 03/14/2025</div><div class="diff-line diff-context">ms.custom: devx-track-azurecli, devx-track-azurepowershell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">appliesto:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/abstract-tutorial.md" target="_blank">docs/identity/saas-apps/abstract-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/abstract-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt;[!Note]</div><div class="diff-line diff-context">&gt;you need to authenticate with an organization Admin account to access the SSO settings on Abstract.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Open the [Abstract web app](https://app.abstract.com/).</div><div class="diff-line diff-context">2. Go to the **Permissions** page in the left side bar.</div><div class="diff-line diff-context">3. In the **Configure SSO** section, enter your **Metadata URL** and **Entity ID**.</div><div class="diff-line diff-context">4. Enter any manual exceptions you might have. Emails listed in the manual exceptions section bypass SSO and be able to log in with email and password. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To test SSO on Abstract:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Open the [Abstract web app](https://app.abstract.com/).</div><div class="diff-line diff-context">2. Go to the **Permissions** page in the left side bar.</div><div class="diff-line diff-deleted">3. Select **Test with my Account**. If the test fails, please [contact our support team](https://help.abstract.com/hc/).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!Note]</div><div class="diff-line diff-context">&gt;you need to authenticate with an organization Admin account to access the SSO settings on Abstract. This organization Admin account needs to be assigned to Abstract.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt;[!Note]</div><div class="diff-line diff-context">&gt;you need to authenticate with an organization Admin account to access the SSO settings on Abstract.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Open the Abstract web app.</div><div class="diff-line diff-context">2. Go to the **Permissions** page in the left side bar.</div><div class="diff-line diff-context">3. In the **Configure SSO** section, enter your **Metadata URL** and **Entity ID**.</div><div class="diff-line diff-context">4. Enter any manual exceptions you might have. Emails listed in the manual exceptions section bypass SSO and be able to log in with email and password. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To test SSO on Abstract:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Open the Abstract web app.</div><div class="diff-line diff-context">2. Go to the **Permissions** page in the left side bar.</div><div class="diff-line diff-added">3. Select **Test with my Account**. If the test fails, please contact the Abstract support team.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!Note]</div><div class="diff-line diff-context">&gt;you need to authenticate with an organization Admin account to access the SSO settings on Abstract. This organization Admin account needs to be assigned to Abstract.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/achieve3000-tutorial.md" target="_blank">docs/identity/saas-apps/achieve3000-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/achieve3000-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    `https://saml.achieve3000.com/district/&lt;District Identifier&gt;`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; The Sign-On URL value isn&#39;t  real. Update the value with the actual Sign-On URL. Contact [Achieve3000 Client support team](https://www.achieve3000.com/contact-us/) to get the value. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Achieve3000 application expects the SAML assertions in a specific format, which requires you to add custom attribute mappings to your SAML token attributes configuration. The following screenshot shows the list of default attributes..</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Achieve3000 SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on **Achieve3000** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to [Achieve3000 support team](https://www.achieve3000.com/contact-us/). They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Achieve3000 test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this section, you create a user called B.Simon in Achieve3000. Work with [Achieve3000 support team](https://www.achieve3000.com/contact-us/) to add the users in the Achieve3000 platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    `https://saml.achieve3000.com/district/&lt;District Identifier&gt;`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; The Sign-On URL value isn&#39;t  real. Update the value with the actual Sign-On URL. Contact Achieve3000 Client support team to get the value. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Achieve3000 application expects the SAML assertions in a specific format, which requires you to add custom attribute mappings to your SAML token attributes configuration. The following screenshot shows the list of default attributes..</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Achieve3000 SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on **Achieve3000** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to Achieve3000 support team. They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Achieve3000 test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this section, you create a user called B.Simon in Achieve3000. Work with Achieve3000 support team to add the users in the Achieve3000 platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/concur-tutorial.md" target="_blank">docs/identity/saas-apps/concur-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/concur-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    | `https://&lt;customer-domain&gt;.concursolutions.com` | </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-deleted">    &gt; These values aren&#39;t real. Update these values with the actual Sign-on URL, Identifier and Reply URL. Contact [Concur Client support team](https://www.concur.co.in/contact) to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section,  find **Federation Metadata XML** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Concur SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on **Concur** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to [Concur support team](https://www.concur.co.in/contact). They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-deleted">  &gt; The configuration of your Concur subscription for federated SSO via SAML is a separate task, which you must contact [Concur Client support team](https://www.concur.co.in/contact) to perform.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Concur test user</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    | `https://&lt;customer-domain&gt;.concursolutions.com` | </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-added">    &gt; These values aren&#39;t real. Update these values with the actual Sign-on URL, Identifier and Reply URL. Contact Concur Client support team to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section,  find **Federation Metadata XML** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Concur SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on **Concur** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to Concur support team. They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-added">  &gt; The configuration of your Concur subscription for federated SSO via SAML is a separate task, which you must contact Concur Client support team to perform.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Concur test user</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/formcom-tutorial.md" target="_blank">docs/identity/saas-apps/formcom-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/formcom-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; These values aren&#39;t real. Update these values with the actual Sign-On URL, Identifier and Reply URL. Contact [Form.com Client support team](https://form.com/about/company/contact-us/) to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select **Download** to download the **Certificate (Base64)** and select the copy **icon** to copy **App Federation Metadata Url** from the given options as per your requirement and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Form.com SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on **Form.com** side, you need to send the downloaded **Certificate (Base64)**, **App Federation Metadata Url** and appropriate copied URLs from the application configuration to [Form.com support team](https://form.com/about/company/contact-us/). They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Form.com test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this section, you create a user called Britta Simon in Form.com. Work with [Form.com support team](https://form.com/about/company/contact-us/) to add the users in the Form.com platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; These values aren&#39;t real. Update these values with the actual Sign-On URL, Identifier and Reply URL. Contact Form.com Client support team to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select **Download** to download the **Certificate (Base64)** and select the copy **icon** to copy **App Federation Metadata Url** from the given options as per your requirement and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Form.com SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on **Form.com** side, you need to send the downloaded **Certificate (Base64)**, **App Federation Metadata Url** and appropriate copied URLs from the application configuration to Form.com support team. They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Form.com test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this section, you create a user called Britta Simon in Form.com. Work with Form.com support team to add the users in the Form.com platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/lensesio-tutorial.md" target="_blank">docs/identity/saas-apps/lensesio-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/lensesio-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    c. **Sign on URL**: Enter a URL that has the following pattern: `https://&lt;CUSTOMER_LENSES_BASE_URL&gt;`. An example is `https://lenses.my.company.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-deleted">    &gt; These values aren&#39;t real. Update them with the actual Identifier,Reply URL and Sign on URL of the base URL of your Lenses portal instance. See the [Lenses.io SSO documentation](https://docs.lenses.io/install_setup/configuration/security.html#single-sign-on-sso-saml-2-0) for more information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, go to the **SAML Signing Certificate** section. Find **Federation Metadata XML**, and then select **Download** to download and save the certificate on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Lenses.io SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure SSO on the **Lenses.io** portal, install the downloaded **Federation Metadata XML** on your Lenses instance and [configure Lenses to enable SSO](https://docs.lenses.io/install_setup/configuration/security.html#configure-lenses).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Lenses.io test group permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To create a group in Lenses, use the **Object ID** of the **LensesUsers** group. This is the ID that you copied in the user [creation section](#create-an-azure-ad-test-user-and-group).</div><div class="diff-line diff-context">1. Assign the desired permissions for B.Simon.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information, see [Azure - Lenses group mapping](https://docs.lenses.io/install_setup/configuration/security.html#azure-groups).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    c. **Sign on URL**: Enter a URL that has the following pattern: `https://&lt;CUSTOMER_LENSES_BASE_URL&gt;`. An example is `https://lenses.my.company.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-added">    &gt; These values aren&#39;t real. Update them with the actual Identifier,Reply URL and Sign on URL of the base URL of your Lenses portal instance. See the Lenses.io SSO documentation for more information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, go to the **SAML Signing Certificate** section. Find **Federation Metadata XML**, and then select **Download** to download and save the certificate on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Lenses.io SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure SSO on the **Lenses.io** portal, install the downloaded **Federation Metadata XML** on your Lenses instance and configure Lenses to enable SSO.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Lenses.io test group permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To create a group in Lenses, use the **Object ID** of the **LensesUsers** group. This is the ID that you copied in the user [creation section](#create-an-azure-ad-test-user-and-group).</div><div class="diff-line diff-context">1. Assign the desired permissions for B.Simon.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For more information, see Azure - Lenses group mapping.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/predictixordering-tutorial.md" target="_blank">docs/identity/saas-apps/predictixordering-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/predictixordering-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    `https://&lt;companyname-pricing&gt;.ordering.predictix.com/sso/request`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; These values are placeholders. Update these values with the actual Identifier and Sign on URL. Contact the [Predictix Ordering support team](https://www.predix.io/support/) to get the values. You can also refer to the patterns shown in the **Basic SAML Configuration** dialog box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select the **Download** link next to **Certificate (Base64)**, per your requirements, and save the certificate on your computer:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Predictix Ordering SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on the Predictix Ordering side, you need to send the certificate that you downloaded and the URLs that you copied to the [Predictix Ordering support team](https://www.predix.io/support/). This team ensures the SAML SSO connection is set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create a Predictix Ordering test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Next, you need to create a user named Britta Simon in Predictix Ordering. Work with the [Predictix Ordering support team](https://www.predix.io/support/) to add users. Users need to be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    `https://&lt;companyname-pricing&gt;.ordering.predictix.com/sso/request`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; These values are placeholders. Update these values with the actual Identifier and Sign on URL. Contact the Predictix Ordering support team to get the values. You can also refer to the patterns shown in the **Basic SAML Configuration** dialog box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select the **Download** link next to **Certificate (Base64)**, per your requirements, and save the certificate on your computer:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Predictix Ordering SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on the Predictix Ordering side, you need to send the certificate that you downloaded and the URLs that you copied to the Predictix Ordering support team. This team ensures the SAML SSO connection is set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create a Predictix Ordering test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Next, you need to create a user named Britta Simon in Predictix Ordering. Work with the Predictix Ordering support team to add users. Users need to be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/workplace-from-meta-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/workplace-from-meta-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 8:19 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/workplace-from-meta-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixes broken links.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Provisioning Mode dropdown list with the Automatic option called out.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Ensure the &quot;Tenant URL&quot; section is populated with the correct endpoint: https://scim.workplace.com/. Under the **Admin Credentials** section, select **Authorize**. You&#39;re redirected to Workplace from Meta&#39;s authorization page. Input your Workplace from Meta username and select the **Continue** button. Select **Test Connection** to ensure Microsoft Entra ID can connect to Workplace from Meta. If the connection fails, ensure your Workplace from Meta account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 	![Screenshot shows Admin Credentials dialog box with an Authorize option.](./media/workplace-by-facebook-provisioning-tutorial/provisionings.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 	![Authorize](./media/workplace-by-facebook-provisioning-tutorial/workplace-login.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-deleted">   &gt; Failure to change the URL to https://scim.workplace.com/ results in a failure when trying to save the configuration </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person or group who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Return to the first web browser window and select the Provisioning tab for your application. Your configuration is reset. You can confirm the upgrade is successful by confirming the Job ID starts with &quot;FacebookWorkplace.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Update the tenant URL in the Admin Credentials section to the following URL: https://scim.workplace.com/  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Admin Credentials in the Workplace from Meta app in the Azure portal](./media/workplace-by-facebook-provisioning-tutorial/provisionings.png)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Provisioning Mode dropdown list with the Automatic option called out.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Ensure the &quot;Tenant URL&quot; section is populated with the correct endpoint: `https://scim.workplace.com/`. Under the **Admin Credentials** section, select **Authorize**. You&#39;re redirected to Workplace from Meta&#39;s authorization page. Input your Workplace from Meta username and select the **Continue** button. Select **Test Connection** to ensure Microsoft Entra ID can connect to Workplace from Meta. If the connection fails, ensure your Workplace from Meta account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 	![Screenshot shows Admin Credentials dialog box with an Authorize option.](./media/workplace-by-facebook-provisioning-tutorial/provisionings.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> 	![Authorize](./media/workplace-by-facebook-provisioning-tutorial/workplace-login.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-added">   &gt; Failure to change the URL to `https://scim.workplace.com/` results in a failure when trying to save the configuration </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person or group who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Return to the first web browser window and select the Provisioning tab for your application. Your configuration is reset. You can confirm the upgrade is successful by confirming the Job ID starts with &quot;FacebookWorkplace.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Update the tenant URL in the Admin Credentials section to the following URL: `https://scim.workplace.com/`  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Admin Credentials in the Workplace from Meta app in the Azure portal](./media/workplace-by-facebook-provisioning-tutorial/provisionings.png)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/groups-concept.md" target="_blank">docs/identity/role-based-access-control/groups-concept.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 6:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/groups-concept" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata only. Moves values to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Use Microsoft Entra groups to manage role assignments</div><div class="diff-line diff-context">description: Use Microsoft Entra groups to simplify role assignment management in Microsoft Entra ID.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">manager: pmwongera</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-context">ms.date: 01/03/2025</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Use Microsoft Entra groups to manage role assignments</div><div class="diff-line diff-context">description: Use Microsoft Entra groups to simplify role assignment management in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: article</div><div class="diff-line diff-context">ms.date: 01/03/2025</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/groups-create-eligible.md" target="_blank">docs/identity/role-based-access-control/groups-create-eligible.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 6:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/groups-create-eligible" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata only. Moves values to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Create a role-assignable group in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to a role-assignable group in Microsoft Entra ID using the Microsoft Entra admin center, Microsoft Graph PowerShell, or Microsoft Graph API.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">manager: pmwongera</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 01/03/2025</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, no-azure-ad-ps-ref</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Create a role-assignable group in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to a role-assignable group in Microsoft Entra ID using the Microsoft Entra admin center, Microsoft Graph PowerShell, or Microsoft Graph API.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 01/03/2025</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, no-azure-ad-ps-ref</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/groups-remove-assignment.md" target="_blank">docs/identity/role-based-access-control/groups-remove-assignment.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 19, 2026 6:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/groups-remove-assignment" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE] Updates metadata only. Moves values to folder level in docfx.json.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Remove Microsoft Entra role assignments</div><div class="diff-line diff-context">description: Remove role assignments in Microsoft Entra ID using the Microsoft Entra admin center, Microsoft Graph PowerShell, or Microsoft Graph API.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">manager: pmwongera</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/25/2025</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Remove Microsoft Entra role assignments</div><div class="diff-line diff-context">description: Remove role assignments in Microsoft Entra ID using the Microsoft Entra admin center, Microsoft Graph PowerShell, or Microsoft Graph API.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/25/2025</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, azure-ad-ref-level-one-done</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
