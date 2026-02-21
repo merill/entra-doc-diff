@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 19th 2026, 8:12 PM PST</p>
+        <p>Report generated on February 20th 2026, 8:12 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/managed-policies.md" target="_blank">docs/identity/conditional-access/managed-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by anksridhar on Feb 20, 2026 4:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/managed-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add section on blocking access for high-risk users</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Multifactor authentication for all users](#multifactor-authentication-for-all-users)</div><div class="diff-line diff-context">- [Multifactor authentication for per-user multifactor authentication users](#multifactor-authentication-for-per-user-multifactor-authentication-users)</div><div class="diff-line diff-context">- [Multifactor authentication and reauthentication for risky sign-ins](#multifactor-authentication-and-reauthentication-for-risky-sign-ins)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Block all high risk agents from accessing all resources (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To prevent attackers from taking over accounts, Microsoft blocks risky users from registering for multifactor authentication.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Security defaults policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following policies are available for when you upgrade from using security defaults.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Multifactor authentication for all users](#multifactor-authentication-for-all-users)</div><div class="diff-line diff-context">- [Multifactor authentication for per-user multifactor authentication users](#multifactor-authentication-for-per-user-multifactor-authentication-users)</div><div class="diff-line diff-context">- [Multifactor authentication and reauthentication for risky sign-ins](#multifactor-authentication-and-reauthentication-for-risky-sign-ins)</div><div class="diff-line diff-added">- [Block access for high-risk users](#block-access-for-high-risk-users)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Block all high risk agents from accessing all resources (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To prevent attackers from taking over accounts, Microsoft blocks risky users from registering for multifactor authentication.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Block access for high-risk users</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This policy helps protect your organization by restricting access for users identified as high risk by Microsoft Entra ID Protection. User risk represents the likelihood that a user account has been compromised, based on signals such as leaked credentials or other risk detections.When enabled, this policy blocks access for users who meet the configured high user risk level until the risk is remediated. Remediation follows existing Microsoft Entra ID Protection processes and guidance.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This policy targets:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- Organizations with Microsoft Entra ID P2 licenses</div><div class="diff-line diff-added">- Organizations where security defaults aren&#39;t enabled</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-install-windows-client.md" target="_blank">docs/global-secure-access/how-to-install-windows-client.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 20, 2026 6:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-windows-client" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix Windows client doc: registry key table formatting and ARM64 guidance</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">   - Azure Virtual Desktop single-session is supported.</div><div class="diff-line diff-context">   - Azure Virtual Desktop multi-session isn&#39;t supported.</div><div class="diff-line diff-context">   - Windows 365 is supported.</div><div class="diff-line diff-context">- You need local admin credentials to install or upgrade the Global Secure Access client.</div><div class="diff-line diff-context">- The Global Secure Access client requires a license. For details, see the licensing section of [What is Global Secure Access](overview-what-is-global-secure-access.md). If needed, you can [buy licenses or get trial licenses](https://aka.ms/azureadlicense).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Restrict nonprivileged users</div><div class="diff-line diff-context">Administrators can prevent nonprivileged users on the Windows device from disabling or enabling the client by setting the following registry key:   </div><div class="diff-line diff-deleted">`Computer\HKEY_LOCAL_MACHINE\Software\Microsoft\Global Secure Access Client`   </div><div class="diff-line diff-deleted">`RestrictNonPrivilegedUsers REG_DWORD`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">|Data|Description|</div><div class="diff-line diff-deleted">|--|--|</div><div class="diff-line diff-deleted">| 0x0 | Nonprivileged users on the Windows device can disable and enable the client. |</div><div class="diff-line diff-deleted">| 0x1 | Nonprivileged users on the Windows device are restricted from disabling and enabling the client. A UAC prompt requires local administrator credentials for disable and enable options. The administrator can also hide the disable button (see [Hide or unhide system tray menu buttons](#hide-or-unhide-system-tray-menu-buttons)). |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Disable or enable Private Access on the client</div><div class="diff-line diff-context">This registry value controls whether Private Access is enabled or disabled for the client. If a user is connected to the corporate network, they can choose to bypass Global Secure Access and directly access private applications.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">   - Azure Virtual Desktop single-session is supported.</div><div class="diff-line diff-context">   - Azure Virtual Desktop multi-session isn&#39;t supported.</div><div class="diff-line diff-context">   - Windows 365 is supported.</div><div class="diff-line diff-added">   - Windows on Arm devices (such as Surface Pro and Surface Laptop with Snapdragon processors) require a separate client installer, available at **aka.ms/GlobalSecureAccess-WindowsOnArm**. Don&#39;t use the standard x64 installer on Arm64 devices.</div><div class="diff-line diff-context">- You need local admin credentials to install or upgrade the Global Secure Access client.</div><div class="diff-line diff-context">- The Global Secure Access client requires a license. For details, see the licensing section of [What is Global Secure Access](overview-what-is-global-secure-access.md). If needed, you can [buy licenses or get trial licenses](https://aka.ms/azureadlicense).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Restrict nonprivileged users</div><div class="diff-line diff-context">Administrators can prevent nonprivileged users on the Windows device from disabling or enabling the client by setting the following registry key:   </div><div class="diff-line diff-added">`Computer\HKEY_LOCAL_MACHINE\Software\Microsoft\Global Secure Access Client`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">|Value  |Type  |Data  |Description  |</div><div class="diff-line diff-added">|---------|---------|---------|---------|</div><div class="diff-line diff-added">|RestrictNonPrivilegedUsers  |REG_DWORD  |0x0  |Nonprivileged users on the Windows device can disable and enable the client.  |</div><div class="diff-line diff-added">|RestrictNonPrivilegedUsers  |REG_DWORD  |0x1  |Nonprivileged users on the Windows device are restricted from disabling and enabling the client. A UAC prompt requires local administrator credentials for disable and enable options. The administrator can also hide the disable button (see [Hide or unhide system tray menu buttons](#hide-or-unhide-system-tray-menu-buttons)).  |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Disable or enable Private Access on the client</div><div class="diff-line diff-context">This registry value controls whether Private Access is enabled or disabled for the client. If a user is connected to the corporate network, they can choose to bypass Global Secure Access and directly access private applications.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-kerberos-sso.md" target="_blank">docs/global-secure-access/how-to-configure-kerberos-sso.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 20, 2026 9:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-kerberos-sso" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix Kerberos SSO: correct klist flag to KEYLIST in nltest output</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">`nltest /dsgetdc:contoso /keylist /kdc`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Verify the DC locator returns a Domain Controller that is a participant of cloud Kerberos trust operations. The returned DC should have the `klist` flag.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How to avoid Kerberos Negative Caching on Windows Machines</div><div class="diff-line diff-context">Kerberos is the preferred authentication method for services in Windows that verify user or host identities. Kerberos negative caching causes a delay in Kerberos tickets.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">`nltest /dsgetdc:contoso /keylist /kdc`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Verify the DC locator returns a Domain Controller that is a participant of cloud Kerberos trust operations. The returned DC should have the `KEYLIST` flag.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How to avoid Kerberos Negative Caching on Windows Machines</div><div class="diff-line diff-context">Kerberos is the preferred authentication method for services in Windows that verify user or host identities. Kerberos negative caching causes a delay in Kerberos tickets.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-service-limits-include.md" target="_blank">docs/includes/entra-service-limits-include.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Feb 20, 2026 5:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-service-limits-include" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> making changes to service limits</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Category | Limit |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| Tenants | &lt;ul&gt;&lt;li&gt;A single user can belong to a maximum of 500 Microsoft Entra tenants as a member or a guest.&lt;/li&gt;&lt;li&gt;Create a maximum of 200 tenants. This limit only applies to the legacy add-on tenant creation experience in the Microsoft Entra admin center.&lt;/li&gt;&lt;li&gt;Limit of 300 [license-based subscriptions](/microsoft-365/commerce/licenses/subscriptions-and-licenses) (such as Microsoft 365 subscriptions) per tenant.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-deleted">| Domains | &lt;ul&gt;&lt;li&gt;You can add no more than 5,000 managed domain names.&lt;/li&gt;&lt;li&gt;If you set up all of your domains for federation with on-premises Active Directory, you can add no more than 2,500 domain names in each tenant.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Resources | &lt;ul&gt;&lt;li&gt;By default, a maximum of 50,000 Microsoft Entra resources can be created in a single tenant by users of the Microsoft Entra ID Free edition. If you have at least one verified domain, the default Microsoft Entra service quota for your organization is extended to 300,000 Microsoft Entra resources.&lt;br&gt;The Microsoft Entra service quota for organizations created by self-service sign-up remains 50,000 Microsoft Entra resources, even after you perform an internal admin takeover and the organization is converted to a managed tenant with at least one verified domain. This service limit is unrelated to the pricing tier limit of 500,000 resources on the Microsoft Entra pricing page.&lt;br&gt;To go beyond the default quota, you must contact Microsoft Support.&lt;/li&gt;&lt;li&gt;A non-admin user can create no more than 250 Microsoft Entra resources. Both active resources and deleted resources that are available to restore count toward this quota. Only deleted Microsoft Entra resources that were deleted fewer than 30 days ago are available to restore. Deleted Microsoft Entra resources that are no longer available to restore count toward this quota at a value of one-quarter for 30 days.&lt;br&gt;If you have developers who are likely to repeatedly exceed this quota in the course of their regular duties, you can [create and assign a custom role](~/identity/role-based-access-control/quickstart-app-registration-limits.md) with permission to create a limitless number of app registrations.&lt;/li&gt;&lt;li&gt;Resource limitations apply to all directory objects in a given Microsoft Entra tenant, including users, groups, applications, and service principals.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Schema extensions |&lt;ul&gt;&lt;li&gt;String-type extensions can have a maximum of 256 characters. &lt;/li&gt;&lt;li&gt;Binary-type extensions are limited to 256 bytes.&lt;/li&gt;&lt;li&gt;Only 100 extension values, across *all* types and *all* applications, can be written to any single Microsoft Entra resource.&lt;/li&gt;&lt;li&gt;Only User, Group, TenantDetail, Device, Application, and ServicePrincipal entities can be extended with string-type or binary-type single-valued attributes.&lt;/li&gt;&lt;li&gt; Only the &quot;equals&quot; operator is supported for DateTime-type extensions. Range operators like &quot;greater than&quot; or &quot;less than&quot; are not supported.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Applications | &lt;ul&gt;&lt;li&gt;A maximum of 100 users and service principals can be owners of a single application.&lt;/li&gt;&lt;li&gt;A user, group, or service principal can have a maximum of 1,500 app role assignments. The limitation is on the assigned service principal, user, or group across all app roles and not on the number of assignments of a single app role. This limit includes app role assignments where the resource service principal has been soft-deleted.&lt;/li&gt;&lt;li&gt;A user can have credentials configured for a maximum of 48 apps using password-based single sign-on. This limit only applies for credentials configured when the user is directly assigned the app, not when the user is a member of a group that is assigned.&lt;/li&gt;&lt;li&gt;A group can have credentials configured for a maximum of 48 apps using password-based single sign-on.&lt;/li&gt;&lt;li&gt;See additional limits in [Validation differences by supported account types](~/identity-platform/supported-accounts-validation.md).&lt;/li&gt;&lt;/ul&gt; |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Category | Limit |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| Tenants | &lt;ul&gt;&lt;li&gt;A single user can belong to a maximum of 500 Microsoft Entra tenants as a member or a guest.&lt;/li&gt;&lt;li&gt;Create a maximum of 200 tenants. This limit only applies to the legacy add-on tenant creation experience in the Microsoft Entra admin center.&lt;/li&gt;&lt;li&gt;Limit of 300 [license-based subscriptions](/microsoft-365/commerce/licenses/subscriptions-and-licenses) (such as Microsoft 365 subscriptions) per tenant.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-added">| Domains | &lt;ul&gt;&lt;li&gt;You can add no more than 5,000 managed domain names.&lt;/li&gt;&lt;li&gt;If you set up all of your domains for federation with on-premises Active Directory, we strongly recommend limiting to 300 domain names in each tenant for optimal performance. The maximum supported limit is 2,500 domain names.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Resources | &lt;ul&gt;&lt;li&gt;By default, a maximum of 50,000 Microsoft Entra resources can be created in a single tenant by users of the Microsoft Entra ID Free edition. If you have at least one verified domain, the default Microsoft Entra service quota for your organization is extended to 300,000 Microsoft Entra resources.&lt;br&gt;The Microsoft Entra service quota for organizations created by self-service sign-up remains 50,000 Microsoft Entra resources, even after you perform an internal admin takeover and the organization is converted to a managed tenant with at least one verified domain. This service limit is unrelated to the pricing tier limit of 500,000 resources on the Microsoft Entra pricing page.&lt;br&gt;To go beyond the default quota, you must contact Microsoft Support.&lt;/li&gt;&lt;li&gt;A non-admin user can create no more than 250 Microsoft Entra resources. Both active resources and deleted resources that are available to restore count toward this quota. Only deleted Microsoft Entra resources that were deleted fewer than 30 days ago are available to restore. Deleted Microsoft Entra resources that are no longer available to restore count toward this quota at a value of one-quarter for 30 days.&lt;br&gt;If you have developers who are likely to repeatedly exceed this quota in the course of their regular duties, you can [create and assign a custom role](~/identity/role-based-access-control/quickstart-app-registration-limits.md) with permission to create a limitless number of app registrations.&lt;/li&gt;&lt;li&gt;Resource limitations apply to all directory objects in a given Microsoft Entra tenant, including users, groups, applications, and service principals.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Schema extensions |&lt;ul&gt;&lt;li&gt;String-type extensions can have a maximum of 256 characters. &lt;/li&gt;&lt;li&gt;Binary-type extensions are limited to 256 bytes.&lt;/li&gt;&lt;li&gt;Only 100 extension values, across *all* types and *all* applications, can be written to any single Microsoft Entra resource.&lt;/li&gt;&lt;li&gt;Only User, Group, TenantDetail, Device, Application, and ServicePrincipal entities can be extended with string-type or binary-type single-valued attributes.&lt;/li&gt;&lt;li&gt; Only the &quot;equals&quot; operator is supported for DateTime-type extensions. Range operators like &quot;greater than&quot; or &quot;less than&quot; are not supported.&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Applications | &lt;ul&gt;&lt;li&gt;A maximum of 100 users and service principals can be owners of a single application.&lt;/li&gt;&lt;li&gt;A user, group, or service principal can have a maximum of 1,500 app role assignments. The limitation is on the assigned service principal, user, or group across all app roles and not on the number of assignments of a single app role. This limit includes app role assignments where the resource service principal has been soft-deleted.&lt;/li&gt;&lt;li&gt;A user can have credentials configured for a maximum of 48 apps using password-based single sign-on. This limit only applies for credentials configured when the user is directly assigned the app, not when the user is a member of a group that is assigned.&lt;/li&gt;&lt;li&gt;A group can have credentials configured for a maximum of 48 apps using password-based single sign-on.&lt;/li&gt;&lt;li&gt;See additional limits in [Validation differences by supported account types](~/identity-platform/supported-accounts-validation.md).&lt;/li&gt;&lt;/ul&gt; |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
