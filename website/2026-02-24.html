@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 22nd 2026, 8:25 PM PST</p>
+        <p>Report generated on February 23rd 2026, 8:25 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-traffic-manager.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-traffic-manager.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jodi Martis on Feb 23, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-traffic-manager" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix formatting and grammar in Traffic Manager integration doc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use Traffic Manager, you must configure application proxy. The configuration steps that follow refer to these URL definitions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Regional URL**. The application proxy endpoints for each app. For example, `nam.contoso.com` and `india.contoso.com`.</div><div class="diff-line diff-context">- **Alternate URL**: The URL configured for the Traffic Manager solution. For example, `contoso.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure application proxy for Traffic Manager:</div><div class="diff-line diff-context">   1. Assign each app to its respective connector group.</div><div class="diff-line diff-context">   1. If you prefer the alternate URL to be maintained throughout the user session, register each app and add the URL as a reply URL. This step is optional.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the Traffic Manager solution, add the regional URLs for application proxy that you created for each app as an endpoint.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Configure the Traffic Manager solution&#39;s load-balancing rules with a standard license.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| **Internal URL** | `contoso.com` | `contoso.com` | If the apps are hosted in different regions, you can use the same internal URL for each app. |</div><div class="diff-line diff-context">| **External URL** | `nam.contoso.com` | `india.contoso.com` | Configure a custom domain for each app. |</div><div class="diff-line diff-context">| **Custom domain certificate** | Domain Name System (DNS): `nam.contoso.com`&lt;br&gt; SAN: `www.contoso.com` | DNS: `india.contoso.com`&lt;br&gt; SAN: `www.contoso.com` | In the certificate that you upload for each app, set the SAN value to the alternate URL. The alternate URL is the URL that all users use to reach the app. |</div><div class="diff-line diff-deleted">| **Connector group** | North America Geo Group | India Geo Group | Ensure you that assign each app to the correct connector group by using the geo-routing functionality. |</div><div class="diff-line diff-context">| **Redirects** | (Optional) To maintain redirects for the alternate URL, add the application registration for the app. | (Optional) To maintain redirects for the alternate URL, add the application registration for the app. | This step is required if the alternate URL `www.contoso.com` will be maintained for all redirections. |</div><div class="diff-line diff-context">| **Reply URL** | `www.contoso.com` | `www.contoso.com` | |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use Traffic Manager, you must configure application proxy. The configuration steps that follow refer to these URL definitions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Regional URL**: The application proxy endpoints for each app. For example, `nam.contoso.com` and `india.contoso.com`.</div><div class="diff-line diff-context">- **Alternate URL**: The URL configured for the Traffic Manager solution. For example, `contoso.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To configure application proxy for Traffic Manager:</div><div class="diff-line diff-context">   1. Assign each app to its respective connector group.</div><div class="diff-line diff-context">   1. If you prefer the alternate URL to be maintained throughout the user session, register each app and add the URL as a reply URL. This step is optional.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the Traffic Manager solution, add the regional URLs for application proxy that you created for each app as endpoints.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Configure the Traffic Manager solution&#39;s load-balancing rules with a standard license.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| **Internal URL** | `contoso.com` | `contoso.com` | If the apps are hosted in different regions, you can use the same internal URL for each app. |</div><div class="diff-line diff-context">| **External URL** | `nam.contoso.com` | `india.contoso.com` | Configure a custom domain for each app. |</div><div class="diff-line diff-context">| **Custom domain certificate** | Domain Name System (DNS): `nam.contoso.com`&lt;br&gt; SAN: `www.contoso.com` | DNS: `india.contoso.com`&lt;br&gt; SAN: `www.contoso.com` | In the certificate that you upload for each app, set the SAN value to the alternate URL. The alternate URL is the URL that all users use to reach the app. |</div><div class="diff-line diff-added">| **Connector group** | North America Geo Group | India Geo Group | Ensure that you assign each app to the correct connector group by using the geo-routing functionality. |</div><div class="diff-line diff-context">| **Redirects** | (Optional) To maintain redirects for the alternate URL, add the application registration for the app. | (Optional) To maintain redirects for the alternate URL, add the application registration for the app. | This step is required if the alternate URL `www.contoso.com` will be maintained for all redirections. |</div><div class="diff-line diff-context">| **Reply URL** | `www.contoso.com` | `www.contoso.com` | |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-single-page-app-javascript-prepare-app.md" target="_blank">docs/identity-platform/tutorial-single-page-app-javascript-prepare-app.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 23, 2026 4:01 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-single-page-app-javascript-prepare-app" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove /en-us/ locale from learn.microsoft.com URLs in identity-platform docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    * Scopes you add here will be prompted for user consent during sign-in.</div><div class="diff-line diff-context">    * By default, MSAL.js will add OIDC scopes (openid, profile, email) to any login request.</div><div class="diff-line diff-context">    * For more information about OIDC scopes, visit: </div><div class="diff-line diff-deleted">    * https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview#openid-connect-scopes</div><div class="diff-line diff-context">    */</div><div class="diff-line diff-context">    const loginRequest = {</div><div class="diff-line diff-context">        scopes: [&quot;User.Read&quot;],</div><div class="diff-line diff-context">    * Scopes you add here will be prompted for user consent during sign-in.</div><div class="diff-line diff-context">    * By default, MSAL.js will add OIDC scopes (openid, profile, email) to any login request.</div><div class="diff-line diff-context">    * For more information about OIDC scopes, visit: </div><div class="diff-line diff-deleted">    * https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview#openid-connect-scopes</div><div class="diff-line diff-context">    */</div><div class="diff-line diff-context">    const loginRequest = {</div><div class="diff-line diff-context">        scopes: [&quot;User.Read&quot;],</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    * Scopes you add here will be prompted for user consent during sign-in.</div><div class="diff-line diff-context">    * By default, MSAL.js will add OIDC scopes (openid, profile, email) to any login request.</div><div class="diff-line diff-context">    * For more information about OIDC scopes, visit: </div><div class="diff-line diff-added">    * https://learn.microsoft.com/entra/identity-platform/permissions-consent-overview#openid-connect-scopes</div><div class="diff-line diff-context">    */</div><div class="diff-line diff-context">    const loginRequest = {</div><div class="diff-line diff-context">        scopes: [&quot;User.Read&quot;],</div><div class="diff-line diff-context">    * Scopes you add here will be prompted for user consent during sign-in.</div><div class="diff-line diff-context">    * By default, MSAL.js will add OIDC scopes (openid, profile, email) to any login request.</div><div class="diff-line diff-context">    * For more information about OIDC scopes, visit: </div><div class="diff-line diff-added">    * https://learn.microsoft.com/entra/identity-platform/permissions-consent-overview#openid-connect-scopes</div><div class="diff-line diff-context">    */</div><div class="diff-line diff-context">    const loginRequest = {</div><div class="diff-line diff-context">        scopes: [&quot;User.Read&quot;],</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-web-content-filtering.md" target="_blank">docs/global-secure-access/how-to-configure-web-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 23, 2026 10:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-web-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Use contoso.com in wildcard example</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Enter a name, select a [web category](reference-web-content-filtering-categories.md), a valid URL (Preview), or a valid FQDN, and then select **Add**.</div><div class="diff-line diff-context">     - Valid URLs and FQDNs in this feature can also include wildcards using the asterisk symbol, *, and can be comma-separated lists.</div><div class="diff-line diff-context">     - When entering FQDNs, use the domain name only. Don&#39;t include protocols (such as `https://`), port numbers, or URL paths. For example, enter `contoso.com` instead of `https://contoso.com:443/path`.</div><div class="diff-line diff-deleted">     - To match all subdomains of a domain, use the wildcard format `*.domain.com`. Note that the wildcard `*.domain.com` matches subdomains like `www.domain.com` but doesn&#39;t match the root domain `domain.com` itself. To cover both the domain and all its subdomains, include both entries as a comma-separated list (for example, `*.google.com,google.com`).</div><div class="diff-line diff-context">     - When entering multiple FQDNs in a comma-separated list, don&#39;t include spaces between entries (for example, `contoso.com,fabrikam.com,*.example.com`).</div><div class="diff-line diff-context">     - Note, the URL filtering Preview supports a maximum of 1,000 URLs per tenant.</div><div class="diff-line diff-context">1. Select **Next** to review the policy and then select **Create policy**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Enter a name, select a [web category](reference-web-content-filtering-categories.md), a valid URL (Preview), or a valid FQDN, and then select **Add**.</div><div class="diff-line diff-context">     - Valid URLs and FQDNs in this feature can also include wildcards using the asterisk symbol, *, and can be comma-separated lists.</div><div class="diff-line diff-context">     - When entering FQDNs, use the domain name only. Don&#39;t include protocols (such as `https://`), port numbers, or URL paths. For example, enter `contoso.com` instead of `https://contoso.com:443/path`.</div><div class="diff-line diff-added">     - To match all subdomains of a domain, use the wildcard format `*.domain.com`. Note that the wildcard `*.domain.com` matches subdomains like `www.domain.com` but doesn&#39;t match the root domain `domain.com` itself. To cover both the domain and all its subdomains, include both entries as a comma-separated list (for example, `*.contoso.com,contoso.com`).</div><div class="diff-line diff-context">     - When entering multiple FQDNs in a comma-separated list, don&#39;t include spaces between entries (for example, `contoso.com,fabrikam.com,*.example.com`).</div><div class="diff-line diff-context">     - Note, the URL filtering Preview supports a maximum of 1,000 URLs per tenant.</div><div class="diff-line diff-context">1. Select **Next** to review the policy and then select **Create policy**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-secure-web-ai-gateway-agents.md" target="_blank">docs/global-secure-access/how-to-secure-web-ai-gateway-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Feb 23, 2026 7:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-secure-web-ai-gateway-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update custom connector guidance for save and create new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; After enabling GSA for Agents in a given environment or environment group, you need to create or update any existing custom connectors for them to route traffic through Global Secure Access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create security policies for Copilot Studio agents</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; After enabling Global Secure Access for Agents in the environment or environment group, any existing Copilot Studio custom connector must be edited and saved to ensure its traffic is routed through Global Secure Access. Custom connectors created afterward automatically use this configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create security policies for Copilot Studio agents</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/overview-what-is-app-proxy.md" target="_blank">docs/identity/app-proxy/overview-what-is-app-proxy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jodi Martis on Feb 23, 2026 7:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar in application proxy overview</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Another major benefit of implementing application proxy is extending Microsoft Entra ID to your on-premises environment. Implementing application proxy can be a key step in moving your organization and apps to the cloud. By moving to the cloud and away from on-premises authentication, you reduce your on-premises footprint and use Microsoft Entra identity management capabilities as your control plane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">With minimal or no updates to existing applications, you have access to cloud capabilities such as SSO, multifactor authentication, and central management. Installing the necessary components to application proxy is a simple process for establishing a remote access framework. And by moving to the cloud, you have access to the latest Microsoft Entra features, updates, and functionality, such as high availability and the disaster recovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more about migrating your apps to Microsoft Entra ID, see [Resources for migrating applications to Microsoft Entra ID](~/identity/enterprise-apps/migration-resources.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Another major benefit of implementing application proxy is extending Microsoft Entra ID to your on-premises environment. Implementing application proxy can be a key step in moving your organization and apps to the cloud. By moving to the cloud and away from on-premises authentication, you reduce your on-premises footprint and use Microsoft Entra identity management capabilities as your control plane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">With minimal or no updates to existing applications, you have access to cloud capabilities such as SSO, multifactor authentication, and central management. Installing the necessary components to application proxy is a simple process for establishing a remote access framework. And by moving to the cloud, you have access to the latest Microsoft Entra features, updates, and functionality, such as high availability and disaster recovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To learn more about migrating your apps to Microsoft Entra ID, see [Resources for migrating applications to Microsoft Entra ID](~/identity/enterprise-apps/migration-resources.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/how-to-web-app-node-edit-profile-update-profile.md" target="_blank">docs/identity-platform/how-to-web-app-node-edit-profile-update-profile.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Feb 23, 2026 4:01 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/how-to-web-app-node-edit-profile-update-profile" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove /en-us/ locale from learn.microsoft.com URLs in identity-platform docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">    const GRAPH_API_ENDPOINT = process.env.GRAPH_API_ENDPOINT || &quot;graph_end_point&quot;;</div><div class="diff-line diff-context">    // Refers to the user that is single user singed in.</div><div class="diff-line diff-deleted">    // https://learn.microsoft.com/en-us/graph/api/user-update?tabs=http</div><div class="diff-line diff-context">    const GRAPH_ME_ENDPOINT = GRAPH_API_ENDPOINT + &quot;v1.0/me&quot;;</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">    module.exports = {</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">    const GRAPH_API_ENDPOINT = process.env.GRAPH_API_ENDPOINT || &quot;graph_end_point&quot;;</div><div class="diff-line diff-context">    // Refers to the user that is single user singed in.</div><div class="diff-line diff-added">    // https://learn.microsoft.com/graph/api/user-update?tabs=http</div><div class="diff-line diff-context">    const GRAPH_ME_ENDPOINT = GRAPH_API_ENDPOINT + &quot;v1.0/me&quot;;</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">    module.exports = {</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
