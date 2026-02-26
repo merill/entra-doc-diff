@@ -1,0 +1,479 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since February 24th 2026, 8:23 PM PST</p>
+        <p>Report generated on February 25th 2026, 8:23 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">31</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/25537.md" target="_blank">docs/includes/secure-recommendations/25537.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 25, 2026 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/25537" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Azure network security docs & wording</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-deleted"># minimumlicense: Azure Firewall Standard</div><div class="diff-line diff-context"># sfipillar: Protect networks</div><div class="diff-line diff-context"># category: Azure Network Security</div><div class="diff-line diff-context"># risklevel: High</div><div class="diff-line diff-context"># userimpact: Low</div><div class="diff-line diff-context"># implementationcost: Low</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Azure Firewall threat intelligence-based filtering alerts on and denies traffic to and from known malicious IP addresses, fully qualified domain names (FQDNs), and URLs sourced from the Microsoft Threat Intelligence feed. When threat intelligence isn&#39;t enabled in Alert and Deny mode, Azure Firewall doesn&#39;t actively block traffic to known malicious destinations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Without threat intelligence enabled in Deny mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can communicate with known malicious infrastructure, enabling data exfiltration and command-and-control communication without active blocking.</div><div class="diff-line diff-deleted">- Organizations that use Alert-only mode can see threat activity in logs but can&#39;t prevent connections to known bad destinations.</div><div class="diff-line diff-deleted">- All firewall policy tiers remain exposed to threats that the Microsoft Threat Intelligence feed has already identified.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-added"># minimumlicense: Azure Firewall Premium</div><div class="diff-line diff-context"># sfipillar: Protect networks</div><div class="diff-line diff-context"># category: Azure Network Security</div><div class="diff-line diff-context"># risklevel: High</div><div class="diff-line diff-context"># userimpact: Low</div><div class="diff-line diff-context"># implementationcost: Low</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Azure Firewall threat intelligence-based filtering alerts on and denies traffic to and from known malicious IP addresses, fully qualified domain names (FQDNs), and URLs sourced from the Microsoft Threat Intelligence feed. When you don&#39;t enable threat intelligence in `Alert and deny` mode, Azure Firewall doesn&#39;t actively block traffic to known malicious destinations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you don&#39;t enable threat intelligence in `Alert and deny` mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can communicate with known malicious infrastructure, enabling data exfiltration and command-and-control communication without active blocking.</div><div class="diff-line diff-added">- Organizations that use `Alert only` mode can see threat activity in logs but can&#39;t prevent connections to known bad destinations.</div><div class="diff-line diff-added">- All firewall policy tiers remain exposed to threats that the Microsoft Threat Intelligence feed already identified.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-health-version-history.md" target="_blank">docs/identity/hybrid/connect/reference-connect-health-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Feb 25, 2026 11:57 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-health-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates on the latest version and metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health Version History</div><div class="diff-line diff-context">description: This document describes the releases for Microsoft Entra Connect Health and what has been included in those releases.</div><div class="diff-line diff-deleted">author: zhiweiwangmsft</div><div class="diff-line diff-context">manager: mwongerapk</div><div class="diff-line diff-context">ms.assetid: 8dd4e998-747b-4c52-b8d3-3900fe77d88f</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For feature feedback, vote at [Connect Health User Voice channel](https://feedback.azure.com/d365community/forum/22920db1-ad25-ec11-b6e6-000d3a4f0789)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## September 2025</div><div class="diff-line diff-context">**Agent Updates**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health Version History</div><div class="diff-line diff-context">description: This document describes the releases for Microsoft Entra Connect Health and what has been included in those releases.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-context">manager: mwongerapk</div><div class="diff-line diff-context">ms.assetid: 8dd4e998-747b-4c52-b8d3-3900fe77d88f</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For feature feedback, vote at [Connect Health User Voice channel](https://feedback.azure.com/d365community/forum/22920db1-ad25-ec11-b6e6-000d3a4f0789)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## February 2026</div><div class="diff-line diff-added">**Agent Updates**</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/25539.md" target="_blank">docs/includes/secure-recommendations/25539.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 25, 2026 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/25539" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Azure network security docs & wording</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Firewall Premium</div><div class="diff-line diff-context"># userimpact: Low</div><div class="diff-line diff-context"># implementationcost: Low</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">Azure Firewall Premium provides signature-based intrusion detection and prevention (IDPS) that identifies attacks by detecting specific patterns in network traffic, such as byte sequences and known malicious instruction sequences used by malware. IDPS applies to inbound, east-west (spoke-to-spoke), and outbound traffic across Layers 3-7. When IDPS isn&#39;t configured in Alert and Deny mode, Azure Firewall only logs detected threats without blocking them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Without IDPS enabled in Deny mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can send traffic that matches known attack signatures without being blocked.</div><div class="diff-line diff-deleted">- Organizations running IDPS in Alert-only mode gain visibility into threats but can&#39;t prevent intrusion attempts from reaching their workloads.</div><div class="diff-line diff-context">- Lateral movement and exfiltration traffic that matches known attack signatures passes through the firewall without active intervention.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Firewall Premium</div><div class="diff-line diff-context"># userimpact: Low</div><div class="diff-line diff-context"># implementationcost: Low</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added">Azure Firewall Premium provides signature-based intrusion detection and prevention (IDPS) that identifies attacks by detecting specific patterns in network traffic, such as byte sequences and known malicious instruction sequences used by malware. IDPS applies to inbound, east-west (spoke-to-spoke), and outbound traffic across Layers 3-7. When IDPS isn&#39;t configured in `Alert and deny` mode, Azure Firewall only logs detected threats without blocking them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Without IDPS enabled in `Alert and deny` mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can send traffic that matches known attack signatures without being blocked.</div><div class="diff-line diff-added">- Organizations running IDPS in `Alert only` mode gain visibility into threats but can&#39;t prevent intrusion attempts from reaching their workloads.</div><div class="diff-line diff-context">- Lateral movement and exfiltration traffic that matches known attack signatures passes through the firewall without active intervention.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/25543.md" target="_blank">docs/includes/secure-recommendations/25543.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 25, 2026 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/25543" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Azure network security docs & wording</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Front Door Standard</div><div class="diff-line diff-context">Without WAF in Prevention mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can exploit web application vulnerabilities because matched requests are only logged, not blocked.</div><div class="diff-line diff-deleted">- Organizations lose active protection at the global edge that managed and custom WAF rules provide, which reduces WAF to an observability tool rather than a security control.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Configure WAF for Azure Front Door](/azure/web-application-firewall/afds/afds-overview) to switch the WAF policy mode from **Detection** to **Prevention**.</div><div class="diff-line diff-deleted">- [Configure WAF policy settings for Azure Front Door](/azure/web-application-firewall/afds/waf-front-door-policy-settings#waf-mode) to enable Prevention mode in the policy settings.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Front Door Standard</div><div class="diff-line diff-context">Without WAF in Prevention mode:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Threat actors can exploit web application vulnerabilities because matched requests are only logged, not blocked.</div><div class="diff-line diff-added">- Organizations lose active protection at the global edge that managed and custom WAF rules provide, which reduces WAF to an observation tool rather than a security control.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Configure WAF for Azure Front Door](/azure/web-application-firewall/afds/afds-overview) to switch the WAF policy from **Detection mode** to **Prevention mode**.</div><div class="diff-line diff-added">- [Configure WAF policy settings for Azure Front Door](/azure/web-application-firewall/afds/waf-front-door-policy-settings#waf-mode) to enable **Prevention mode** in the policy settings.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/25541.md" target="_blank">docs/includes/secure-recommendations/25541.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 25, 2026 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/25541" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Azure network security docs & wording</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Application Gateway WAF_v2</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Configure WAF on Azure Application Gateway](/azure/web-application-firewall/ag/ag-overview#waf-modes) to switch the WAF policy mode from **Detection** to **Prevention**.</div><div class="diff-line diff-context">- [Create and manage WAF policies for Application Gateway](/azure/web-application-firewall/ag/create-waf-policy-ag) to apply Prevention mode settings across all Application Gateway instances.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Azure Application Gateway WAF_v2</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Configure WAF on Azure Application Gateway](/azure/web-application-firewall/ag/ag-overview#waf-modes) to switch the WAF policy from **Detection mode** to **Prevention mode**.</div><div class="diff-line diff-context">- [Create and manage WAF policies for Application Gateway](/azure/web-application-firewall/ag/create-waf-policy-ag) to apply Prevention mode settings across all Application Gateway instances.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/manage-device-identities.md" target="_blank">docs/identity/devices/manage-device-identities.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by emilykelsey on Feb 25, 2026 5:47 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/manage-device-identities" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity/devices/manage-device-identities.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, columns can be managed by selecting **Manage view &gt; Columns** to toggle which columns you would like to export.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!Note]</div><div class="diff-line diff-deleted">&gt;Selecting &quot;Owner&quot; or &quot;User principal name&quot; will make processing take longer. If you prefer faster results, leave these options unchecked; enable them when you need the extra information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure device settings</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, columns can be managed by selecting **Manage view &gt; Columns** to toggle which columns you would like to export.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt;Selecting **Owner** or **User principal name** can make processing take longer. If you prefer faster results, leave these options unchecked; enable them when you need the extra information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure device settings</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Feb 25, 2026 5:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolve issue of lost meaning in localization</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Installation prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra Connect must be installed on a domain-joined server that runs Windows Server 2025 or Windows Server 2022. You can deploy Microsoft Entra Connect on older Windows Server versions in extended support; however, support for this configuration may require [a paid support program](/lifecycle/policies/fixed#extended-support).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; There is a [known issue](/windows/release-health/resolved-issues-windows-server-2025#directory-synchronization-fails-for-ad-groups-exceeding-10-000-members) on Windows Server 2025 that can cause Microsoft Entra Connect Sync to encounter synchronization problems. If you upgraded to Windows Server 2025, make sure you have installed [October 20, 2025 - KB5070773](https://support.microsoft.com/topic/october-20-2025-kb5070773-os-build-26100-6901-out-of-band-f8effaa1-1c73-41e5-bcb3-e58a46c7601e) update, or later. After installing this update, restart the server for the changes to take effect. </div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Installation prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra Connect must be installed on a domain-joined server.</div><div class="diff-line diff-added">We recommend using Windows Server 2025 or Windows Server 2022. You can also deploy Microsoft Entra Connect on older Windows Server versions that are in extended support; however, support for this configuration may require [a paid support program](/lifecycle/policies/fixed#extended-support).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; There is a [known issue](/windows/release-health/resolved-issues-windows-server-2025#directory-synchronization-fails-for-ad-groups-exceeding-10-000-members) on Windows Server 2025 that can cause Microsoft Entra Connect Sync to encounter synchronization problems. If you upgraded to Windows Server 2025, make sure you have installed [October 20, 2025 - KB5070773](https://support.microsoft.com/topic/october-20-2025-kb5070773-os-build-26100-6901-out-of-band-f8effaa1-1c73-41e5-bcb3-e58a46c7601e) update, or later. After installing this update, restart the server for the changes to take effect. </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-web-app-node-sign-in-prepare-app.md" target="_blank">docs/identity-platform/tutorial-web-app-node-sign-in-prepare-app.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kenga Derdus on Feb 25, 2026 11:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-web-app-node-sign-in-prepare-app" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update Metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: kengaderdus</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 01/03/2025</div><div class="diff-line diff-deleted">#Customer intent: As a developer, devops, I want to learn about how to build a Node.js/Express web app that signs in users into customer facing app by in an external tenant or employees in a workforce tenant by using Microsoft identity platform&#39;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Set up a Node.js web app to sign in users by using Microsoft identity platform</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: kengaderdus</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 02/25/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Set up a Node.js web app to sign in users by using Microsoft identity platform</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/configure-security.md" target="_blank">docs/fundamentals/configure-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Feb 25, 2026 7:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/configure-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Azure network security docs & wording</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| [Quick Access has user or group assignments](zero-trust-protect-networks.md#quick-access-has-user-or-group-assignments) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [All Private Access apps have user or group assignments](zero-trust-protect-networks.md#all-private-access-apps-have-user-or-group-assignments) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Outbound traffic from VNet integrated workloads is routed through Azure Firewall](zero-trust-protect-networks.md#outbound-traffic-from-vnet-integrated-workloads-is-routed-through-azure-firewall) | Azure Firewall Basic |</div><div class="diff-line diff-deleted">| [Threat intelligence is enabled in deny mode on Azure Firewall](zero-trust-protect-networks.md#threat-intelligence-is-enabled-in-deny-mode-on-azure-firewall) | Azure Firewall Standard |</div><div class="diff-line diff-context">| [IDPS inspection is enabled in deny mode on Azure Firewall](zero-trust-protect-networks.md#idps-inspection-is-enabled-in-deny-mode-on-azure-firewall) | Azure Firewall Premium |</div><div class="diff-line diff-context">| [Application Gateway WAF is enabled in prevention mode](zero-trust-protect-networks.md#application-gateway-waf-is-enabled-in-prevention-mode) | Azure Application Gateway WAF_v2 |</div><div class="diff-line diff-context">| [Azure Front Door WAF is enabled in prevention mode](zero-trust-protect-networks.md#azure-front-door-waf-is-enabled-in-prevention-mode) | Azure Front Door Standard |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| [Quick Access has user or group assignments](zero-trust-protect-networks.md#quick-access-has-user-or-group-assignments) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [All Private Access apps have user or group assignments](zero-trust-protect-networks.md#all-private-access-apps-have-user-or-group-assignments) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Outbound traffic from VNet integrated workloads is routed through Azure Firewall](zero-trust-protect-networks.md#outbound-traffic-from-vnet-integrated-workloads-is-routed-through-azure-firewall) | Azure Firewall Basic |</div><div class="diff-line diff-added">| [Threat intelligence is enabled in deny mode on Azure Firewall](zero-trust-protect-networks.md#threat-intelligence-is-enabled-in-deny-mode-on-azure-firewall) | Azure Firewall Premium |</div><div class="diff-line diff-context">| [IDPS inspection is enabled in deny mode on Azure Firewall](zero-trust-protect-networks.md#idps-inspection-is-enabled-in-deny-mode-on-azure-firewall) | Azure Firewall Premium |</div><div class="diff-line diff-context">| [Application Gateway WAF is enabled in prevention mode](zero-trust-protect-networks.md#application-gateway-waf-is-enabled-in-prevention-mode) | Azure Application Gateway WAF_v2 |</div><div class="diff-line diff-context">| [Azure Front Door WAF is enabled in prevention mode](zero-trust-protect-networks.md#azure-front-door-waf-is-enabled-in-prevention-mode) | Azure Front Door Standard |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/microsoft-entra-id-governance-licensing-for-guest-users.md" target="_blank">docs/id-governance/microsoft-entra-id-governance-licensing-for-guest-users.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Feb 25, 2026 10:16 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/microsoft-entra-id-governance-licensing-for-guest-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> update date</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn how Microsoft Entra ID is licensed for guest users.</div><div class="diff-line diff-context">ms.subservice: entitlement-management</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 02/03/2026</div><div class="diff-line diff-context">ms.reviewer: jercon</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn how Microsoft Entra ID is licensed for guest users.</div><div class="diff-line diff-context">ms.subservice: entitlement-management</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 02/25/2026</div><div class="diff-line diff-context">ms.reviewer: jercon</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
