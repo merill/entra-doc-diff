@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 4th 2026, 8:15 PM PST</p>
+        <p>Report generated on March 5th 2026, 8:15 PM PST</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">27</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">22</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-archive.md" target="_blank">docs/fundamentals/whats-new-archive.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Mar 5, 2026 2:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-archive" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+140</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Move July 2025 release notes to archive</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: owinfreyATL</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-deleted">ms.date: 02/03/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-adal-ref, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## June 2025</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">### General Availability – Update to Microsoft Entra Work or School Default Background Image </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: owinfreyATL</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-adal-ref, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## July 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### General Availability - Microsoft Entra External ID: Custom 3rd party email OTP provider</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** B2C - Consumer Identity Management   </div><div class="diff-line diff-added">**Product capability:** 3rd Party Integration </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Use a 3rd Party Email OTP Provider to customize the Email OTP notifications for sign-in and sign-up flows for Microsoft Entra External ID. A new &quot;Custom Email OTP Provider&quot; Custom Authentication Extension allows you to use Azure Communication Service (ACS) or a 3rd party provider, such as SendGrid, to maintain branding consistency through your end user authentication experiences. For more information, see: [Configure a custom email provider for one time passcode send events](../identity-platform/custom-extension-email-otp-get-started.md).</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Mar 5, 2026 2:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-130</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Move July 2025 release notes to archive</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">**Note:** Currently, the new Bulk Operations service supports **Groups**, **Devices**, and **User Export** only. Support for additional entities, such as **Enterprise Applications**, is coming soon. For more information, see: [Bulk operations in Microsoft Entra ID (Preview)](../fundamentals/bulk-operations.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">##  July 2025</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### General Availability - Microsoft Entra External ID: Custom 3rd party email OTP provider</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">**Type:** New feature  </div><div class="diff-line diff-deleted">**Service category:** B2C - Consumer Identity Management   </div><div class="diff-line diff-deleted">**Product capability:** 3rd Party Integration </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Use a 3rd Party Email OTP Provider to customize the Email OTP notifications for sign-in and sign-up flows for Microsoft Entra External ID. A new &quot;Custom Email OTP Provider&quot; Custom Authentication Extension allows you to use Azure Communication Service (ACS) or a 3rd party provider, such as SendGrid, to maintain branding consistency through your end user authentication experiences. For more information, see: [Configure a custom email provider for one time passcode send events](../identity-platform/custom-extension-email-otp-get-started.md).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### General Availability - Application Based Authentication on Microsoft Entra Connect Sync</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">**Note:** Currently, the new Bulk Operations service supports **Groups**, **Devices**, and **User Export** only. Support for additional entities, such as **Enterprise Applications**, is coming soon. For more information, see: [Bulk operations in Microsoft Entra ID (Preview)](../fundamentals/bulk-operations.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/cybsafe-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/cybsafe-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 5, 2026 10:35 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/cybsafe-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-23</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating the provisioning docs template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to CybSafe so that I can streamline the user management process and ensure that users have the appropriate access to CybSafe.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">4. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Provisioning tab automatic](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">5. Under the **Admin Credentials** section, input your CybSafe Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to CybSafe. If the connection fails, ensure your CybSafe account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Token](common/provisioning-testconnection-tenanturltoken.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">6. In the **Notification Email** field, enter the email address of a person or group who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to CybSafe so that I can streamline the user management process and ensure that users have the appropriate access to CybSafe.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, input your CybSafe Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to CybSafe. If the connection fails, ensure your CybSafe account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/dagster-cloud-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/dagster-cloud-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 5, 2026 10:35 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/dagster-cloud-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating the provisioning docs template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Dagster Cloud so that I can streamline the user management process and ensure that users have the appropriate access to Dagster Cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab automatic.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Under the **Admin Credentials** section, input your Dagster Cloud Tenant URL and Secret Token. The Tenant URL is `https://*your-org-name*.dagster.cloud/scim/v2` and the Secret Token is the SCIM token you created in step 2 above. Select **Test Connection** to ensure Microsoft Entra ID can connect to Dagster Cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> 	![Screenshot of Token.](common/provisioning-testconnection-tenanturltoken.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Notification Email** field, enter the email address of a person or group who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Dagster Cloud so that I can streamline the user management process and ensure that users have the appropriate access to Dagster Cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, input your Dagster Cloud Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Dagster Cloud. If the connection fails, ensure your Dagster Cloud account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/datadog-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/datadog-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 5, 2026 10:35 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/datadog-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating the provisioning docs template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Datadog so that I can streamline the user management process and ensure that users have the appropriate access to Datadog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab automatic.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Under the **Admin Credentials** section, input your Datadog Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Datadog. If the connection fails, ensure your Datadog account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> 	![Screenshot of Token.](common/provisioning-testconnection-tenanturltoken.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Datadog so that I can streamline the user management process and ensure that users have the appropriate access to Datadog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, input your Datadog Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Datadog. If the connection fails, ensure your Datadog account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/dialpad-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/dialpad-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 5, 2026 10:35 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/dialpad-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-20</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating the provisioning docs template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Dialpad.</div><div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Dialpad so that I can streamline the user management process and ensure that users have the appropriate access to Dialpad.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Manage options with the Provisioning option called out.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">4. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of the Provisioning Mode dropdown list with the Automatic option called out.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Under the **Admin Credentials** section, input `https://dialpad.com/scim` in **Tenant URL**. Input the value that you retrieved and saved earlier from Dialpad in **Secret Token**. Select **Test Connection** to ensure Microsoft Entra ID can connect to Dialpad. If the connection fails, ensure your Dialpad account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Tenant URL + Token](common/provisioning-testconnection-tenanturltoken.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">6. In the **Notification Email** field, enter the email address of a person or group who should receive the provisioning error notifications and check the checkbox - **Send an email notification when a failure occurs**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Dialpad.</div><div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Dialpad so that I can streamline the user management process and ensure that users have the appropriate access to Dialpad.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Manage options with the Provisioning option called out.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Under the **Admin Credentials** section, input `https://dialpad.com/scim` in **Tenant URL**. Input the value that you retrieved and saved earlier from Dialpad in **Secret Token**. Select **Test Connection** to ensure Microsoft Entra ID can connect to Dialpad. If the connection fails, ensure your Dialpad account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/diffchecker-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/diffchecker-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 5, 2026 10:35 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/diffchecker-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-21</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating the provisioning docs template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Diffchecker so that I can streamline the user management process and ensure that users have the appropriate access to Diffchecker.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab automatic.](common/provisioning-automatic.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Under the **Admin Credentials** section, input your Diffchecker Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Diffchecker. If the connection fails, ensure your Diffchecker account has Admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> 	![Screenshot of Token.](common/provisioning-testconnection-tenanturltoken.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Diffchecker so that I can streamline the user management process and ensure that users have the appropriate access to Diffchecker.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, input your Diffchecker Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Diffchecker. If the connection fails, ensure your Diffchecker account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/peoplecart-tutorial.md" target="_blank">docs/identity/saas-apps/peoplecart-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/peoplecart-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    `https://&lt;tenantname&gt;.peoplecart.com/SignIn.aspx`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; These values aren&#39;t real. Update these values with the actual Identifier and Sign on URL. Contact [Peoplecart Client support team](https://peoplecart.com/ContactUs.aspx) to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select **Download** to download the **Federation Metadata XML** from the given options as per your requirement and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Peoplecart SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on **Peoplecart** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to [Peoplecart support team](https://peoplecart.com/ContactUs.aspx). They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Peoplecart test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In this section, you create a user called Britta Simon in Peoplecart. Work with [Peoplecart support team](https://peoplecart.com/ContactUs.aspx) to add the users in the Peoplecart platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    `https://&lt;tenantname&gt;.peoplecart.com/SignIn.aspx`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; These values aren&#39;t real. Update these values with the actual Identifier and Sign on URL. Contact the Peoplecart Client support team to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up Single Sign-On with SAML** page, in the **SAML Signing Certificate** section, select **Download** to download the **Federation Metadata XML** from the given options as per your requirement and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Peoplecart SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on **Peoplecart** side, you need to send the downloaded **Federation Metadata XML** and appropriate copied URLs from the application configuration to the Peoplecart support team. They set this setting to have the SAML SSO connection set properly on both sides.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Peoplecart test user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In this section, you create a user called Britta Simon in Peoplecart. Work with the Peoplecart support team to add the users in the Peoplecart platform. Users must be created and activated before you use single sign-on.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Test SSO</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-bulk-delete.md" target="_blank">docs/identity/users/users-bulk-delete.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Barclay Neira on Mar 5, 2026 8:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-bulk-delete" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update date and add note in bulk delete users doc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Bulk delete users in Microsoft Entra ID</div><div class="diff-line diff-context">description: Delete users in bulk in Microsoft Entra ID</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">ms.reviewer: jeffsta</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## To bulk delete users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [User Administrator](~/identity/role-based-access-control/permissions-reference.md#user-administrator).</div><div class="diff-line diff-context">1. Select Microsoft Entra ID.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Bulk delete users in Microsoft Entra ID</div><div class="diff-line diff-context">description: Delete users in bulk in Microsoft Entra ID</div><div class="diff-line diff-added">ms.date: 03/05/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">ms.reviewer: jeffsta</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## To bulk delete users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!IMPORTANT]</div><div class="diff-line diff-added">&gt; We are making updates to bulk operations. While we address the issue, you may experience problems deleting users assigned to privileged roles. This problem is temporary and we are working to address it as soon as possible.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [User Administrator](~/identity/role-based-access-control/permissions-reference.md#user-administrator).</div><div class="diff-line diff-context">1. Select Microsoft Entra ID.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/blackboard-learn-tutorial.md" target="_blank">docs/identity/saas-apps/blackboard-learn-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/blackboard-learn-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    `https://&lt;subdomain&gt;.blackboard.com/auth-saml/saml/SSO/entity-id/SAML_AD`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; These values aren&#39;t real. Update these values with the actual Sign on URL and Identifier. Contact [Blackboard Learn Client support team](https://www.blackboard.com/support/index.aspx) to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, in the **SAML Signing Certificate** section,  find **Federation Metadata XML** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Blackboard Learn SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To configure single sign-on on **Blackboard Learn** side, follow the [link](https://help.blackboard.com/Learn/Administrator/SaaS/Authentication/Implement_Authentication/SAML_Authentication_Provider_Type). If you&#39;re facing any problem while configuring, contact [Blackboard Learn support team](https://www.blackboard.com/support/index.aspx).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Blackboard Learn test user</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    `https://&lt;subdomain&gt;.blackboard.com/auth-saml/saml/SSO/entity-id/SAML_AD`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; These values aren&#39;t real. Update these values with the actual Sign on URL and Identifier. Contact [Blackboard Learn Client support team](https://www.blackboard.com/support) to get these values. You can also refer to the patterns shown in the **Basic SAML Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, in the **SAML Signing Certificate** section,  find **Federation Metadata XML** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure Blackboard Learn SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To configure single sign-on on **Blackboard Learn** side, follow the [link](https://help.blackboard.com/Learn/Administrator/SaaS/Authentication/Implement_Authentication/SAML_Authentication_Provider_Type). If you&#39;re facing any problem while configuring, contact [Blackboard Learn support team](https://www.blackboard.com/support).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create Blackboard Learn test user</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-token-protection.md" target="_blank">docs/identity/conditional-access/concept-token-protection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Mar 5, 2026 7:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> final-edits</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- For detailed steps on how to register your device, see [Register your personal device on your work or school network](https://support.microsoft.com/account-billing/register-your-personal-device-on-your-work-or-school-network-8803dd61-a613-45e3-ae6c-bd1ab25bf8a8).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Apple (Preview)**:</div><div class="diff-line diff-deleted">- macOS 11.0 or later. Requires the Microsoft Enterprise SSO plug-in. Alternatively, you can also use Platform SSO. Only MDM-managed devices are supported.</div><div class="diff-line diff-deleted">- iOS / iPadOS 14.0 or later. Requires the Microsoft Enterprise SSO plug-in. Only MDM-managed devices are supported.</div><div class="diff-line diff-context">- For detailed steps on how to setup, see [Enabling Microsoft Enterprise SSO plug-in](../../identity-platform/apple-sso-plugin.md) and configuring [Platform SSO for macOS](/intune/intune-service/configuration/platform-sso-macos).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Deployment</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- For detailed steps on how to register your device, see [Register your personal device on your work or school network](https://support.microsoft.com/account-billing/register-your-personal-device-on-your-work-or-school-network-8803dd61-a613-45e3-ae6c-bd1ab25bf8a8).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Apple (Preview)**:</div><div class="diff-line diff-added">- macOS 14.0 or later. Requires the Microsoft Enterprise single sign-on (SSO) plug-in. Alternatively, you can also use Platform SSO. Only MDM-managed devices are supported.</div><div class="diff-line diff-added">- iOS / iPadOS 16.0 or later. Requires the Microsoft Enterprise SSO plug-in. Only MDM-managed devices are supported.</div><div class="diff-line diff-context">- For detailed steps on how to setup, see [Enabling Microsoft Enterprise SSO plug-in](../../identity-platform/apple-sso-plugin.md) and configuring [Platform SSO for macOS](/intune/intune-service/configuration/platform-sso-macos).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Deployment</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/cross-cloud-settings.md" target="_blank">docs/external-id/cross-cloud-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/cross-cloud-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The following scenarios are supported when collaborating with an organization from a different Microsoft cloud:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Use B2B collaboration to invite a user in the partner tenant to access resources in your organization, including web line-of-business apps, SaaS apps, and SharePoint Online sites, documents, and files.</div><div class="diff-line diff-deleted">- Use B2B collaboration to [share Power BI content to a user in the partner tenant](/power-bi/enterprise/service-admin-azure-ad-b2b#cross-cloud-b2b).</div><div class="diff-line diff-context">- Apply Conditional Access policies to the B2B collaboration user and opt to trust multifactor authentication or device claims (compliant claims and Microsoft Entra hybrid joined claims) from the user’s home tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The following scenarios are supported when collaborating with an organization from a different Microsoft cloud:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Use B2B collaboration to invite a user in the partner tenant to access resources in your organization, including web line-of-business apps, SaaS apps, and SharePoint Online sites, documents, and files.</div><div class="diff-line diff-added">- Use B2B collaboration to [share Power BI content to a user in the partner tenant](/fabric/enterprise/powerbi/service-admin-entra-b2b).</div><div class="diff-line diff-context">- Apply Conditional Access policies to the B2B collaboration user and opt to trust multifactor authentication or device claims (compliant claims and Microsoft Entra hybrid joined claims) from the user’s home tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/msal-compare-msal-js-and-adal-js.md" target="_blank">docs/identity-platform/msal-compare-msal-js-and-adal-js.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/msal-compare-msal-js-and-adal-js" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Yet another common error you might face is `consent_required`, which occurs when permissions required for obtaining an access token for a protected resource aren&#39;t consented by the user. As in `interaction_required`, the solution for `consent_required` error is often initiating an interactive token acquisition prompt, using either `acquireTokenPopup` or `acquireTokenRedirect`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">See for more: [Common MSAL.js errors and how to handle them](https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/errors.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Use the Events API</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Yet another common error you might face is `consent_required`, which occurs when permissions required for obtaining an access token for a protected resource aren&#39;t consented by the user. As in `interaction_required`, the solution for `consent_required` error is often initiating an interactive token acquisition prompt, using either `acquireTokenPopup` or `acquireTokenRedirect`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">See for more: [Common MSAL.js errors and how to handle them](~/identity-platform/msal-error-handling-js.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Use the Events API</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/msal-node-migration.md" target="_blank">docs/identity-platform/msal-node-migration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/msal-node-migration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">});</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information, please refer to the [ADAL Node to MSAL Node migration sample](https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/samples/msal-node-samples/refresh-token).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; We recommend you to destroy the older ADAL Node token cache once you utilize the still valid refresh tokens to get a new set of tokens using the MSAL Node&#39;s `acquireTokenByRefreshToken` method as shown above.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">});</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For more information, please refer to the [MSAL Node samples](https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/samples/msal-node-samples).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; We recommend you to destroy the older ADAL Node token cache once you utilize the still valid refresh tokens to get a new set of tokens using the MSAL Node&#39;s `acquireTokenByRefreshToken` method as shown above.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/known-issues.md" target="_blank">docs/identity/app-provisioning/known-issues.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 5, 2026 10:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/known-issues" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken links across multiple docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- B2B users are unable to manage certain Microsoft 365 services in remote tenants (such as Exchange Online), as there&#39;s no directory picker.</div><div class="diff-line diff-context">- To learn about Azure Virtual Desktop support for B2B users, see [Prerequisites for Azure Virtual Desktop](/azure/virtual-desktop/prerequisites?tabs=portal).</div><div class="diff-line diff-deleted">- For the latest status on Power BI support for external member users, see [Distribute Power BI content to external guest users with Microsoft Entra B2B](/power-bi/enterprise/service-admin-azure-ad-b2b#who-can-you-invite)</div><div class="diff-line diff-context">::: zone-end</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Authorization </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- B2B users are unable to manage certain Microsoft 365 services in remote tenants (such as Exchange Online), as there&#39;s no directory picker.</div><div class="diff-line diff-context">- To learn about Azure Virtual Desktop support for B2B users, see [Prerequisites for Azure Virtual Desktop](/azure/virtual-desktop/prerequisites?tabs=portal).</div><div class="diff-line diff-added">- For the latest status on Power BI support for external member users, see [Distribute Power BI content to external guest users with Microsoft Entra B2B](/fabric/enterprise/powerbi/service-admin-entra-b2b)</div><div class="diff-line diff-context">::: zone-end</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Authorization </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
