@@ -1,0 +1,39 @@
+{
+  "newFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/users/directory-delete-howto.md",
+      "status": "modified",
+      "additions": 10,
+      "deletions": 15,
+      "changes": 25,
+      "patch": "diff --git a/docs/identity/users/directory-delete-howto.md b/docs/identity/users/directory-delete-howto.md\nindex 04ce4454a32..78a79867512 100644\n--- a/docs/identity/users/directory-delete-howto.md\n+++ b/docs/identity/users/directory-delete-howto.md\n@@ -119,14 +119,14 @@ Use the following PowerShell code to remove those applications:\n \n 3. Create or use a managed administrative account from the tenant that you want to delete. For example: `newAdmin@tenanttodelete.onmicrosoft.com`.\n \n-4. Open PowerShell and connect to Microsoft Entra ID by using admin credentials with the following command: `Connect-MgGraph -Scopes \"Application.ReadWrite.All\", \"Directory.ReadWrite.All\"`\n+4. Open PowerShell and connect to Microsoft Entra ID by using admin credentials with the following command: `Connect-MgGraph -Scopes \"Application.ReadWrite.All\"`\n \n    >[!WARNING]\n    > You must run PowerShell by using admin credentials for the tenant that you're trying to delete. Only homed-in admins have access to manage the directory via Powershell. You can't use guest user admins, Microsoft accounts, or multiple directories. \n    >\n    > Before you proceed, verify that you're connected to the tenant that you want to delete with the Microsoft Graph PowerShell module. We recommend that you run the `Get-MgDomain` command to confirm that you're connected to the correct tenant ID and `onmicrosoft.com` domain.\n \n-5. Run the following commands to set the tenant context. The `Connect-AzAccount` command authenticates to the Az PowerShell module, which is separate from the Microsoft Graph connection established in step 4. Both connections are needed for the remaining steps. **Don't skip these steps or you risk deleting enterprise apps from the wrong tenant.**\n+5. Run the following commands to verify your tenant context with the Az PowerShell module. This step is a safety check to confirm you're connected to the correct tenant. **Don't skip these steps or you risk deleting enterprise apps from the wrong tenant.**\n \n    ```powershell\n    Clear-AzContext -Scope CurrentUser\n@@ -137,29 +137,24 @@ Use the following PowerShell code to remove those applications:\n    >[!WARNING]\n    > Before you proceed, verify that you're connected to the tenant that you want to delete with the Az PowerShell module. We recommend that you run the `Get-AzContext` command to check the connected tenant ID and `onmicrosoft.com` domain.  Do NOT skip the above steps or you run the risk of deleting enterprise apps from the wrong tenant.\n \n-6. Run the following command to remove any enterprise apps that you can't delete:\n+6. Run the following command to remove service principals. Run the command multiple times until all service principals are removed, since some might fail on the first attempt due to dependencies.\n \n    ```powershell\n-   Get-MgServicePrincipal | ForEach-Object { Remove-MgServicePrincipal -ServicePrincipalId $_.Id }\n+   Get-MgServicePrincipal -All | ForEach-Object { Remove-MgServicePrincipal -ServicePrincipalId $_.Id }\n    ```\n \n-7. Run the following command to remove applications and service principals:\n+7. If some service principals can't be deleted, disable them so they don't block tenant deletion, and then retry the removal:\n \n    ```powershell\n-   Get-MgServicePrincipal | ForEach-Object { Remove-MgServicePrincipal -ServicePrincipalId $_.Id }\n-   ```\n-\n-8. Run the following command to disable any blocking service principals:\n-\n-   ```powershell\n-   $ServicePrincipalUpdate =@{ \"accountEnabled\" = \"false\" }\n+   $ServicePrincipalUpdate = @{ \"accountEnabled\" = \"false\" }\n \n-   Get-MgServicePrincipal | ForEach-Object { Update-MgServicePrincipal -ServicePrincipalId $_.Id -BodyParameter $ServicePrincipalUpdate }\n+   Get-MgServicePrincipal -All | ForEach-Object { Update-MgServicePrincipal -ServicePrincipalId $_.Id -BodyParameter $ServicePrincipalUpdate }\n+   Get-MgServicePrincipal -All | ForEach-Object { Remove-MgServicePrincipal -ServicePrincipalId $_.Id }\n    ```\n \n-9. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator), and remove any new admin account that you created in step 3.\n+8. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator), and remove any new admin account that you created in step 3.\n \n-10. Retry tenant deletion from the Microsoft Entra admin center.\n+9. Retry tenant deletion from the Microsoft Entra admin center.\n \n ## Handle a trial subscription that blocks deletion\n \n",
+      "commitSha": "b1238748a4cc535e5d70387cf6f07f9a4f2d9dda",
+      "commitMessage": "Address audit: fix scopes, -All flag, deduplicate steps",
+      "commitAuthor": "Ken Withee",
+      "commitDate": "2026-03-08 14:59:42 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/directory-delete-howto.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/users/directory-delete-howto"
+    },
+    {
+      "filename": "docs/identity/users/licensing-powershell-graph-examples.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/users/licensing-powershell-graph-examples.md b/docs/identity/users/licensing-powershell-graph-examples.md\nindex 8c63cc7af1b..dc859a81f63 100644\n--- a/docs/identity/users/licensing-powershell-graph-examples.md\n+++ b/docs/identity/users/licensing-powershell-graph-examples.md\n@@ -198,8 +198,8 @@ foreach ($group in $groups) {\n     $groupInfo | Add-Member -MemberType NoteProperty -Name \"Group ID\" -Value $group.Id\n     $groupInfo | Add-Member -MemberType NoteProperty -Name \"License Types\" -Value ($group.AssignedLicenses | Select-Object -ExpandProperty SkuId)\n     $groupInfo | Add-Member -MemberType NoteProperty -Name \"Total User Count\" -Value (Get-MgGroupMember -GroupId $group.Id -All | Measure-Object).Count\n-    $groupInfo | Add-Member -MemberType NoteProperty -Name \"Licensed User Count\" -Value (Get-MgGroupMember -GroupId $group.Id -All | Measure-Object).Count\n-    $groupInfo | Add-Member -MemberType NoteProperty -Name \"License Error Count\" -Value (Get-MgGroup -GroupId $group.Id -Property LicenseProcessingState).LicenseProcessingState.State\n+    $groupInfo | Add-Member -MemberType NoteProperty -Name \"License Error Count\" -Value (Get-MgGroupMemberWithLicenseError -GroupId $group.Id -All | Measure-Object).Count\n+    $groupInfo | Add-Member -MemberType NoteProperty -Name \"Licensed User Count\" -Value ((Get-MgGroupMember -GroupId $group.Id -All | Measure-Object).Count - (Get-MgGroupMemberWithLicenseError -GroupId $group.Id -All | Measure-Object).Count)\n     $groupInfoArray += $groupInfo\n }\n \n",
+      "commitSha": "c5862ce4632281a6def60b9fb5ab2724b6e753ff",
+      "commitMessage": "Fix licensed/error counts using Get-MgGroupMemberWithLicenseError",
+      "commitAuthor": "Ken Withee",
+      "commitDate": "2026-03-08 13:29:49 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/licensing-powershell-graph-examples.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/users/licensing-powershell-graph-examples"
+    }
+  ],
+  "deletedFiles": [],
+  "summary": {
+    "totalCommits": 13,
+    "totalFiles": 5,
+    "authors": {}
+  }
+}
