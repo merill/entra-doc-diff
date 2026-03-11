@@ -1,0 +1,516 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 9th 2026, 9:16 PM PDT</p>
+        <p>Report generated on March 10th 2026, 9:16 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">46</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/conceptual-deployment-plan.md" target="_blank">docs/identity/app-proxy/conceptual-deployment-plan.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 4:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/conceptual-deployment-plan" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+41</span> / 
+              <span class="deletions">-41</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: conceptual-deployment-plan.md (47 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Plan a Microsoft Entra application proxy deployment</div><div class="diff-line diff-context">description: An end-to-end guide for planning the deployment of application proxy within your organization</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy is a secure and cost-effective remote access solution for on-premises applications. It provides an immediate transition path for &quot;Cloud First&quot; organizations to manage access to legacy on-premises applications that aren’t yet capable of using modern protocols. For more introductory information, see [What is application proxy](overview-what-is-app-proxy.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Application proxy is recommended for giving remote users access to internal resources. Application proxy replaces the need for a VPN or reverse proxy for these remote access use cases. It isn&#39;t intended for users who are on the corporate network. These users who use application proxy for intranet access might experience undesirable performance issues.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article includes the resources you need to plan, operate, and manage Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* **Connectors**: Connectors are lightweight agents that you can deploy onto:</div><div class="diff-line diff-context">   * Physical hardware on-premises</div><div class="diff-line diff-deleted">   * A Virtual Machine (VM) hosted within any hypervisor solution</div><div class="diff-line diff-context">   * A VM hosted in Azure to enable outbound connection to the application proxy service.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Plan a Microsoft Entra application proxy deployment</div><div class="diff-line diff-context">description: An end-to-end guide for planning the deployment of application proxy within your organization</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy is a secure and cost-effective remote access solution for on-premises applications. It provides an immediate transition path for &quot;Cloud First&quot; organizations to manage access to legacy on-premises applications that aren’t yet capable of using modern protocols. For more introductory information, see [What is application proxy](overview-what-is-app-proxy.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Application proxy is recommended for giving remote users access to internal resources. Application proxy replaces the need for a VPN or reverse proxy for these remote access use cases. It isn&#39;t intended for users who are on the corporate network. Users who access application proxy on the intranet might experience performance issues.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article includes the resources you need to plan, operate, and manage Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* **Connectors**: Connectors are lightweight agents that you can deploy onto:</div><div class="diff-line diff-context">   * Physical hardware on-premises</div><div class="diff-line diff-added">   * A virtual machine (VM) hosted within any hypervisor solution</div><div class="diff-line diff-context">   * A VM hosted in Azure to enable outbound connection to the application proxy service.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-security.md" target="_blank">docs/identity/app-proxy/application-proxy-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+40</span> / 
+              <span class="deletions">-40</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: application-proxy-security.md (41 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security considerations for Microsoft Entra application proxy</div><div class="diff-line diff-deleted">description: Covers security considerations for using Microsoft Entra application proxy</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram shows how Microsoft Entra ID enables secure remote access to your on-premises applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"> ![Diagram of secure remote access through Microsoft Entra application proxy](./media/application-proxy-security/secure-remote-access.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Security benefits</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra application proxy offers many security benefits. The list of benefits are:</div><div class="diff-line diff-context">- Authenticated access</div><div class="diff-line diff-context">- Conditional Access</div><div class="diff-line diff-context">- Traffic termination</div><div class="diff-line diff-context">- Remote access as a service</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security considerations for Microsoft Entra application proxy</div><div class="diff-line diff-added">description: Learn about security considerations and architecture for using Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram shows how Microsoft Entra ID enables secure remote access to your on-premises applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Diagram of secure remote access through Microsoft Entra application proxy](./media/application-proxy-security/secure-remote-access.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Security benefits</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra application proxy offers many security benefits. The benefits include:</div><div class="diff-line diff-context">- Authenticated access</div><div class="diff-line diff-context">- Conditional Access</div><div class="diff-line diff-context">- Traffic termination</div><div class="diff-line diff-context">- Remote access as a service</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/overview-what-is-app-proxy.md" target="_blank">docs/identity/app-proxy/overview-what-is-app-proxy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 2:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/overview-what-is-app-proxy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+38</span> / 
+              <span class="deletions">-37</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: overview-what-is-app-proxy.md (30 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Publish On-Premises Apps with Microsoft Entra Application Proxy</div><div class="diff-line diff-context">description: Learn about the architecture, connectors, authentication methods, and security benefits of Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra application proxy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra application proxy provides secure remote access for publishing on-premises web applications externally to remote users. After single sign-on (SSO) to Microsoft Entra ID, users can access both cloud and on-premises applications through an external URL or an internal application portal. For example, application proxy can provide remote access and SSO to Remote Desktop, SharePoint, Teams, Tableau, Qlik, and line-of-business (LOB) applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy is:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Simple to use**. Users can access your on-premises applications the same way that they access Microsoft 365 and other software-as-a-service (SaaS) apps integrated with Microsoft Entra ID. You don&#39;t need to change or update your applications to work with application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Secure**. On-premises applications can use the authorization controls and security analytics in Azure. For example, on-premises applications can use Microsoft Entra Conditional Access and two-step verification. Application proxy doesn&#39;t require you to open inbound connections through your firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Cost-effective**. On-premises solutions typically require you to set up and maintain perimeter networks (also known as demilitarized zones or DMZs), edge servers, or other complex infrastructures. Application proxy runs in the cloud. To use it, you don&#39;t need to change the network infrastructure or install more appliances in your on-premises environment.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Publish on-premises apps with Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Learn about the architecture, connectors, authentication methods, and security benefits of Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: conceptual</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra application proxy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra application proxy provides secure remote access to on-premises web applications for remote users. After single sign-on (SSO) to Microsoft Entra ID, users can access both cloud and on-premises applications through an external URL or an internal application portal. For example, application proxy can provide remote access and SSO to Remote Desktop, SharePoint, Teams, Tableau, Qlik, and line-of-business (LOB) applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy is:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Simple to use**. Users can access your on-premises applications the same way that they access Microsoft 365 and other software-as-a-service (SaaS) apps integrated with Microsoft Entra ID. You don&#39;t need to change or update your applications to work with application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Secure**. On-premises applications can use the authorization controls and security analytics in Microsoft Entra. For example, on-premises applications can use Microsoft Entra Conditional Access and multifactor authentication. Application proxy doesn&#39;t require you to open inbound connections through your firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Cost-effective**. On-premises solutions typically require you to set up and maintain perimeter networks (also known as demilitarized zones or DMZs), edge servers, or other complex infrastructures. Application proxy runs in the cloud. To use it, you don&#39;t need to change the network infrastructure or install more appliances in your on-premises environment.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-add-on-premises-application.md" target="_blank">docs/identity/app-proxy/application-proxy-add-on-premises-application.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 3:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-add-on-premises-application" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+30</span> / 
+              <span class="deletions">-28</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: application-proxy-add-on-premises-application.md (33 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an on-premises application for remote access through application proxy in Microsoft Entra ID</div><div class="diff-line diff-deleted">description: Microsoft Entra ID has an application proxy service that enables users to access on-premises applications by signing in with their Microsoft Entra account. This tutorial shows you how to prepare your environment for use with application proxy. Then, it uses the Microsoft Entra admin center to add an on-premises application to your Microsoft Entra tenant.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 02/25/2026</div><div class="diff-line diff-context">ms.author: ashishj</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Add an on-premises application for remote access through application proxy in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID has an application proxy service that enables users to access on-premises applications by signing in with their Microsoft Entra account. To learn more about application proxy, see [What is application proxy?](overview-what-is-app-proxy.md). This tutorial prepares your environment for use with application proxy. Once your environment is ready, use the Microsoft Entra admin center to add an on-premises application to your tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;./media/application-proxy-add-on-premises-application/app-proxy-diagram.png&quot; alt-text=&quot;Application proxy Overview Diagram&quot; lightbox=&quot;./media/application-proxy-add-on-premises-application/app-proxy-diagram.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this tutorial, you:</div><div class="diff-line diff-deleted">- Install and verify the connector on your Windows server, and registers it with application proxy.</div><div class="diff-line diff-context">- Add an on-premises application to your Microsoft Entra tenant.</div><div class="diff-line diff-deleted">- Verify a test user can sign on to the application by using a Microsoft Entra account.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Add an on-premises application for remote access through application proxy in Microsoft Entra ID</div><div class="diff-line diff-added">description: Learn how to prepare your environment for application proxy and add an on-premises application to your Microsoft Entra tenant.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.author: ashishj</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Add an on-premises application for remote access through application proxy in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID has an application proxy service that enables users to access on-premises applications by signing in with their Microsoft Entra account. To learn more about application proxy, see [What is application proxy?](overview-what-is-app-proxy.md). This tutorial prepares your environment for use with application proxy. After your environment is ready, use the Microsoft Entra admin center to add an on-premises application to your tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;./media/application-proxy-add-on-premises-application/app-proxy-diagram.png&quot; alt-text=&quot;Application proxy overview diagram&quot; lightbox=&quot;./media/application-proxy-add-on-premises-application/app-proxy-diagram.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this tutorial, you:</div><div class="diff-line diff-added">- Install and verify the connector on your Windows server, and register it with application proxy.</div><div class="diff-line diff-context">- Add an on-premises application to your Microsoft Entra tenant.</div><div class="diff-line diff-added">- Verify a test user can sign in to the application by using a Microsoft Entra account.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-troubleshoot.md" target="_blank">docs/identity/app-proxy/application-proxy-troubleshoot.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-troubleshoot" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+29</span> / 
+              <span class="deletions">-29</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: application-proxy-troubleshoot.md (32 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Troubleshoot Application Proxy</div><div class="diff-line diff-deleted">description: Learn how to troubleshoot errors in Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Troubleshoot application proxy issues and errors</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes steps you can take to troubleshoot issues and error messages in Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Before you begin</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The first thing to check is the connector. To learn how to debug a private network connector, see [Debug private network connector issues](application-proxy-debug-connectors.md). If you still have issues connecting to your application, return to this article to troubleshoot the application.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If a user encounters an error while accessing or publishing an application, use these steps to verify that Microsoft Entra application proxy is functioning properly:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Open the Windows Services console. Verify that the **Microsoft Entra private network connector** service is enabled and running. Look at the application proxy service properties page.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Troubleshoot Application Proxy</div><div class="diff-line diff-added">description: Learn how to troubleshoot common errors and configuration problems with Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: troubleshooting</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Troubleshoot application proxy issues and errors</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use these steps to troubleshoot issues and error messages in Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Before you begin</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Start by checking the connector. To learn how to debug a private network connector, see [Debug private network connector issues](../../global-secure-access/troubleshoot-connectors.md). If you still have issues connecting to your application, return to this article to troubleshoot the application.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If a user encounters an error while accessing or publishing an application, use these steps to verify that Microsoft Entra application proxy works correctly:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Open the Windows Services console. Verify that the **Microsoft Entra private network connector** service is enabled and running. Look at the application proxy service properties page.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/how-to-configure-custom-domain.md" target="_blank">docs/identity/app-proxy/how-to-configure-custom-domain.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 6:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/how-to-configure-custom-domain" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+23</span> / 
+              <span class="deletions">-23</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: how-to-configure-custom-domain.md (27 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Custom domains in Microsoft Entra application proxy</div><div class="diff-line diff-deleted">description: Configure and manage custom domains in Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You can control your branding and create the URLs you want. A custom domain can help build your users&#39; confidence, because users see and use a familiar name instead of *`msappproxy.net`*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Some configurations only work with custom domains. For example, you need custom domains for apps that use Security Assertion Markup Language (SAML). SAML is used when you’re using Active Directory Federation Services (ADFS) but are unable to use WS-Federation. For more information, see [Work with claims-aware apps in application proxy](application-proxy-configure-for-claims-aware-applications.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you&#39;re not able to make the internal and external URLs match, it&#39;s not as important to use custom domains. But you can still take advantage of the other benefits. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Same internal and external URL, but different behavior </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you don&#39;t want your internal users to be directed through the application proxy, you can set up a *split-brain DNS*. A split DNS infrastructure directs name resolution based on host location. Internal hosts are directed to an internal domain name server, and external hosts to an external domain name server.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Custom domains in Microsoft Entra application proxy</div><div class="diff-line diff-added">description: Configure and manage custom domains in Microsoft Entra application proxy to use your own domain name.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You can control your branding and create the URLs you want. A custom domain can help build your users&#39; confidence, because users see and use a familiar name instead of *`msappproxy.net`*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Some configurations only work with custom domains. For example, you need custom domains for apps that use Security Assertion Markup Language (SAML). You use SAML when you’re using Active Directory Federation Services (AD FS) but can’t use WS-Federation. For more information, see [Work with claims-aware apps in application proxy](application-proxy-configure-for-claims-aware-applications.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you&#39;re not able to make the internal and external URLs match, it&#39;s not as important to use custom domains. But you can still take advantage of the other benefits. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Same internal and external URL, but different behavior </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you don&#39;t want your internal users to be directed through the application proxy, you can set up a *split-brain DNS*. A split DNS infrastructure directs name resolution based on host location. It directs internal hosts to an internal domain name server and external hosts to an external domain name server.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/how-to-configure-sso.md" target="_blank">docs/identity/app-proxy/how-to-configure-sso.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/how-to-configure-sso" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+21</span> / 
+              <span class="deletions">-20</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: how-to-configure-sso.md (26 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Understand single sign-on with an on-premises app using application proxy</div><div class="diff-line diff-deleted">description: Understand single sign-on with an on-premises app using application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj, asteen</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to configure single sign-on to an application proxy application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Single sign-on (SSO) allows your users to access an application without authenticating multiple times. It allows the single authentication to occur in the cloud, against Microsoft Entra ID, and allows the service or Connector to impersonate the user to complete any more authentication challenges from the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## How to configure single-sign on</div><div class="diff-line diff-deleted">To configure SSO, first make sure that your application is configured for Pre-Authentication through Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).</div><div class="diff-line diff-context">1. Select your username in the upper-right corner. Verify you&#39;re signed in to a directory that uses application proxy. If you need to change directories, select **Switch directory** and choose a directory that uses application proxy.</div><div class="diff-line diff-deleted">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **Application proxy**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Understand single sign-on with an on-premises app using application proxy</div><div class="diff-line diff-added">description: Learn how to configure single sign-on for on-premises apps published through Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj, asteen</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to configure single sign-on to an application proxy application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Single sign-on (SSO) lets your users access an application without authenticating multiple times. The authentication occurs in the cloud, against Microsoft Entra ID, and the service or connector impersonates the user to complete additional authentication challenges from the application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## How to configure single sign-on</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To configure SSO, first make sure that your application is configured for preauthentication through Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).</div><div class="diff-line diff-context">1. Select your username in the upper-right corner. Verify you&#39;re signed in to a directory that uses application proxy. If you need to change directories, select **Switch directory** and choose a directory that uses application proxy.</div><div class="diff-line diff-added">1. Browse to **Identity** &gt; **Applications** &gt; **Enterprise applications** &gt; **Application proxy**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-configure-custom-home-page.md" target="_blank">docs/identity/app-proxy/application-proxy-configure-custom-home-page.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 10, 2026 6:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-configure-custom-home-page" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: application-proxy-configure-custom-home-page.md (15 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Custom Home Page for Published Apps Using Microsoft Entra Application Proxy</div><div class="diff-line diff-context">description: Learn how to set a custom home page for published apps using Microsoft Entra application proxy to ensure users land on the correct page.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to set a custom home page for published apps using Microsoft Entra application proxy so that users are directed to the correct page when accessing the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article discusses how to configure an app to direct a user to a custom home page. When you publish an app with application proxy, you set an internal URL, but sometimes that&#39;s not the page a user should see first. Set a custom home page so users get the correct page when accessing the app. Users see the custom home page you set, regardless of whether they access the app from Microsoft Entra My Apps or the Microsoft 365 app launcher.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When a user launches the app, they&#39;re directed to the root domain URL for the published app by default. The landing page is typically set as the home page URL. Use the Microsoft Entra PowerShell module to define a custom home page URL when you want an app user to land on a specific page within the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Here&#39;s one scenario that explains why your company would set a custom home page:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You want to set `https://ExpenseApp-contoso.msappproxy.net/login/login.aspx` as the home page URL instead, so an external user sees the sign-in page first.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; When you give users access to published apps, the apps appear in [My Apps](https://support.microsoft.com/account-billing/sign-in-and-start-apps-from-the-my-apps-portal-2f3b1bae-0e5a-4a86-a33e-876fbd2a4510) and the [Office 365 app launcher](https://www.microsoft.com/microsoft-365/blog/2016/09/27/introducing-the-new-office-365-app-launcher/).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Custom home page for published apps using Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Learn how to set a custom home page for published apps using Microsoft Entra application proxy to ensure users land on the correct page.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to set a custom home page for published apps using Microsoft Entra application proxy so that users are directed to the correct page when accessing the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article discusses how to configure an app to direct a user to a custom home page. When you publish an app with application proxy, you set an internal URL, but sometimes that&#39;s not the page a user should see first. Set a custom home page so users get the correct page when accessing the app. Users see the custom home page you set, regardless of whether they access the app from Microsoft Entra My Apps or the Microsoft 365 app launcher.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When a user launches the app, the app directs them to the root domain URL by default. The landing page typically serves as the home page URL. Use the Microsoft Entra PowerShell module to define a custom home page URL when you want an app user to land on a specific page within the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Here&#39;s one scenario that explains why your company would set a custom home page:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You want to set `https://ExpenseApp-contoso.msappproxy.net/login/login.aspx` as the home page URL instead, so an external user sees the sign-in page first.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; When you give users access to published apps, the apps appear in [My Apps](https://support.microsoft.com/account-billing/sign-in-and-start-apps-from-the-my-apps-portal-2f3b1bae-0e5a-4a86-a33e-876fbd2a4510) and the [Microsoft 365 app launcher](https://www.microsoft.com/microsoft-365/blog/2016/09/27/introducing-the-new-office-365-app-launcher/).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/simulate-workflow-execution.md" target="_blank">docs/id-governance/simulate-workflow-execution.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Mar 10, 2026 8:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/simulate-workflow-execution" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn how to use the What-if tool in Lifecycle Workflows to simulate workflow execution and preview results without impacting actual users.</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 02/24/2026</div><div class="diff-line diff-context">ms.custom: template-how-to</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn how to use the What-if tool in Lifecycle Workflows to simulate workflow execution and preview results without impacting actual users.</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/10/2026</div><div class="diff-line diff-context">ms.custom: template-how-to</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-authentication-passwordless-security-key-windows.md" target="_blank">docs/identity/authentication/howto-authentication-passwordless-security-key-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Mar 10, 2026 1:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-passwordless-security-key-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change 'running' to 'requires' for device unlock version</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- OOBE sign-in with a passkey is supported. You can use Web sign-in to unlock a Windows device. For more information, see [Use Web Sign-In To Enable Passwordless Sign-In In Windows](/windows/security/identity-protection/web-sign-in).</div><div class="diff-line diff-context">- When signing in or unlocking a Windows device using a security key that contains multiple Microsoft Entra accounts, the device defaults to the last account added to the key. However, WebAuthn allows users to select the specific account they wish to use for authentication.</div><div class="diff-line diff-deleted">- Unlocking a device running Windows 10 version 1809. For the best experience, use Windows 10 version 1903 or higher.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prepare devices</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- OOBE sign-in with a passkey is supported. You can use Web sign-in to unlock a Windows device. For more information, see [Use Web Sign-In To Enable Passwordless Sign-In In Windows](/windows/security/identity-protection/web-sign-in).</div><div class="diff-line diff-context">- When signing in or unlocking a Windows device using a security key that contains multiple Microsoft Entra accounts, the device defaults to the last account added to the key. However, WebAuthn allows users to select the specific account they wish to use for authentication.</div><div class="diff-line diff-added">- Unlocking a device requires Windows 10 version 1809. For the best experience, use Windows 10 version 1903 or higher.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prepare devices</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/reference-sla-performance.md" target="_blank">docs/identity/monitoring-health/reference-sla-performance.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by YalingQing on Mar 10, 2026 5:16 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-sla-performance" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update reference-sla-performance.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Month     | 2021    | 2022    | 2023    | 2024    | 2025    | 2026    |</div><div class="diff-line diff-context">| ---       | ---     | ---     | ---     | ---     | ---     | ---     |</div><div class="diff-line diff-context">| January   |         | 99.998% | 99.998% | 99.999% | 99.998% | 99.999% |</div><div class="diff-line diff-deleted">| February  | 99.999% | 99.999% | 99.999% | 99.999% | 99.998% |         |</div><div class="diff-line diff-context">| March     | 99.568% | 99.998% | 99.999% | 99.999% | 99.996% |         |</div><div class="diff-line diff-context">| April     | 99.999% | 99.999% | 99.999% | 99.999% | 99.999%*|         |</div><div class="diff-line diff-context">| May       | 99.999% | 99.999% | 99.999% | 99.999% | 99.999% |         |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Month     | 2021    | 2022    | 2023    | 2024    | 2025    | 2026    |</div><div class="diff-line diff-context">| ---       | ---     | ---     | ---     | ---     | ---     | ---     |</div><div class="diff-line diff-context">| January   |         | 99.998% | 99.998% | 99.999% | 99.998% | 99.999% |</div><div class="diff-line diff-added">| February  | 99.999% | 99.999% | 99.999% | 99.999% | 99.998% | 99.999% |</div><div class="diff-line diff-context">| March     | 99.568% | 99.998% | 99.999% | 99.999% | 99.996% |         |</div><div class="diff-line diff-context">| April     | 99.999% | 99.999% | 99.999% | 99.999% | 99.999%*|         |</div><div class="diff-line diff-context">| May       | 99.999% | 99.999% | 99.999% | 99.999% | 99.999% |         |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
