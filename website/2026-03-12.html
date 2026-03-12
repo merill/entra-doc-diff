@@ -1,0 +1,762 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 10th 2026, 9:20 PM PDT</p>
+        <p>Report generated on March 11th 2026, 9:20 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">71</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">35</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-id-setup-instructions.md" target="_blank">docs/agent-id/identity-platform/agent-id-setup-instructions.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Arturo Lucatero on Mar 11, 2026 5:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-id-setup-instructions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+367 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Create agent ID AI instructions document</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-id-ai-guided-setup.md" target="_blank">docs/agent-id/identity-platform/agent-id-ai-guided-setup.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Arturo Lucatero on Mar 11, 2026 5:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-id-ai-guided-setup" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+304 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Added AI-guided setup doc</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/27014.md" target="_blank">docs/includes/secure-recommendations/27014.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jay on Mar 11, 2026 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/27014" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+46 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add includes 27003, 27004, 27014</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/27003.md" target="_blank">docs/includes/secure-recommendations/27003.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jay on Mar 11, 2026 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/27003" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+25 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add includes 27003, 27004, 27014</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/27004.md" target="_blank">docs/includes/secure-recommendations/27004.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jay on Mar 11, 2026 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/27004" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+24 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add includes 27003, 27004, 27014</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-id-ai-guided-setup.md" target="_blank">docs/agent-id/identity-platform/agent-id-ai-guided-setup.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Arturo Lucatero on Mar 11, 2026 5:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-id-ai-guided-setup" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-19</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refine language in AI-guided setup documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: arlucaID</div><div class="diff-line diff-context">ms.author: arluca</div><div class="diff-line diff-context">ms.date: 03/11/2026</div><div class="diff-line diff-deleted">ms.topic: how-to</div><div class="diff-line diff-context">ms.reviewer: rolyon</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; [Microsoft Entra Agent ID](https://www.microsoft.com/security/business/identity-access/microsoft-entra-agent-id) is currently in PREVIEW. This information relates to a prerelease product that may be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Agent ID [developer workflow](../identity-platform/index.md) involves multiple steps: creating an agent identity blueprint, configuring credentials, setting up identifier URIs and scopes, creating blueprint principals, and provisioning agent identities. Each step has its own prerequisites, validation checks, and decision points.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The AI-guided setup automates this entire workflow by using an AI coding agent (such as GitHub Copilot in VS Code) to execute the steps on your behalf. Instead of navigating between multiple documentation pages and running commands manually, you provide the AI agent with a single instruction file and it walks you through the process interactively.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Benefits</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Required tools</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Visual Studio Code](https://code.visualstudio.com/) with [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions installed. The AI-guided setup requires an AI coding agent with terminal access.</div><div class="diff-line diff-deleted">- [PowerShell 7](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) or later — Required for the Microsoft Graph PowerShell module.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: arlucaID</div><div class="diff-line diff-context">ms.author: arluca</div><div class="diff-line diff-context">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: rolyon</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; [Microsoft Entra Agent ID](https://www.microsoft.com/security/business/identity-access/microsoft-entra-agent-id) is currently in PREVIEW. This information relates to a prerelease product that may be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Agent ID integration involves multiple steps: creating an agent identity blueprint, configuring credentials, setting up identifier URIs and scopes, creating blueprint principals, and provisioning agent identities. Each step has its own prerequisites, validation checks, and decision points.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This AI-guided setup automates this entire workflow by using an AI coding agent (such as GitHub Copilot in VS Code) to execute the steps on your behalf. Instead of navigating between multiple documentation pages and running commands manually, you provide the AI agent with a single instruction file and it walks you through the process interactively.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Benefits</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Required tools</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Visual Studio Code](https://code.visualstudio.com/) with [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions installed. The AI-guided setup requires an AI coding agent with terminal access.</div><div class="diff-line diff-added">- [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) or later — Required for the Microsoft Graph PowerShell module.</div><div class="diff-line diff-added">- [Microsoft Graph PowerShell SDK (beta)](https://learn.microsoft.com/powershell/microsoftgraph/installation) — Install with `Install-Module Microsoft.Graph.Beta.Applications -Scope CurrentUser -Force`.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-id-setup-instructions.md" target="_blank">docs/agent-id/identity-platform/agent-id-setup-instructions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Robert Lyon on Mar 11, 2026 6:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-id-setup-instructions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Acrolinx updates for agent-id-setup-instructions.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## IMPORTANT: Read before executing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Execute each step **sequentially** — do not skip ahead.</div><div class="diff-line diff-context">- **Always include `OData-Version: 4.0`** in any Microsoft Graph request that uses `@odata.type`.</div><div class="diff-line diff-deleted">- All Agent ID APIs are under the `/beta` endpoint — never use `/v1.0` for Agent ID operations.</div><div class="diff-line diff-context">- **Do not use Azure CLI tokens** (`az account get-access-token`) to call Agent ID APIs. Azure CLI tokens contain `Directory.AccessAsUser.All`, which is explicitly rejected by Agent ID APIs (403 Forbidden).</div><div class="diff-line diff-context">- After granting admin consent, permissions may take **30–120 seconds** to propagate. Implement retry with backoff on 403 errors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 1.3 Verify Entra roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Ask the user which role they have:</div><div class="diff-line diff-deleted">- **Agent ID Developer** — can create blueprints and agent identities.</div><div class="diff-line diff-deleted">- **Agent ID Administrator** — full administrative access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">They also need **Privileged Role Administrator** if granting application permissions, or **Cloud Application Administrator** / **Application Administrator** for delegated permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Connect-MgGraph -Scopes &quot;AgentIdentityBlueprint.Create&quot;, &quot;AgentIdentityBlueprint.AddRemoveCreds.All&quot;, &quot;AgentIdentityBlueprint.ReadWrite.All&quot;, &quot;AgentIdentityBlueprintPrincipal.Create&quot;, &quot;User.Read&quot;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## IMPORTANT: Read before executing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Execute each step **sequentially** and don&#39;t skip ahead.</div><div class="diff-line diff-context">- **Always include `OData-Version: 4.0`** in any Microsoft Graph request that uses `@odata.type`.</div><div class="diff-line diff-added">- All Agent ID APIs are under the `/beta` endpoint. Never use `/v1.0` for Agent ID operations.</div><div class="diff-line diff-context">- **Do not use Azure CLI tokens** (`az account get-access-token`) to call Agent ID APIs. Azure CLI tokens contain `Directory.AccessAsUser.All`, which is explicitly rejected by Agent ID APIs (403 Forbidden).</div><div class="diff-line diff-context">- After granting admin consent, permissions may take **30–120 seconds** to propagate. Implement retry with backoff on 403 errors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 1.3 Verify Entra roles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Ask the user which role they have:</div><div class="diff-line diff-added">- **Agent ID Developer** can create blueprints and agent identities.</div><div class="diff-line diff-added">- **Agent ID Administrator** has full administrative access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">They also need **Privileged Role Administrator** if granting application permissions, or **Cloud Application Administrator** / **Application Administrator** for delegated permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Connect-MgGraph -Scopes &quot;AgentIdentityBlueprint.Create&quot;, &quot;AgentIdentityBlueprint.AddRemoveCreds.All&quot;, &quot;AgentIdentityBlueprint.ReadWrite.All&quot;, &quot;AgentIdentityBlueprintPrincipal.Create&quot;, &quot;User.Read&quot;</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Integrate SharePoint (SAML) with application proxy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Publish an on premises SharePoint farm with Microsoft Entra application proxy</div><div class="diff-line diff-deleted">description: Learn how to integrate an on premises SharePoint farm with Microsoft Entra application proxy using Security Assertion Markup Language (SAML).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Integrate Microsoft Entra application proxy with SharePoint using Security Assertion Markup Language (SAML)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This step-by-step guide explains how to secure the access to the [Microsoft Entra integrated on premises SharePoint (SAML)](~/identity/saas-apps/sharepoint-on-premises-tutorial.md) using Microsoft Entra application proxy, where users in your organization (Microsoft Entra ID, B2B) connect to SharePoint through the Internet.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; If you&#39;re new to Microsoft Entra application proxy and want to learn more, see [Remote access to on premises applications through Microsoft Entra application proxy](overview-what-is-app-proxy.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are three primary advantages of this setup:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Your users can access SharePoint sites as usual without using VPN.</div><div class="diff-line diff-context">- You can control the access by user assignment on the Microsoft Entra application proxy level and you can increase the security with Microsoft Entra features like Conditional Access and multifactor authentication (MFA).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Publish an on-premises SharePoint farm with Microsoft Entra application proxy</div><div class="diff-line diff-added">description: Learn how to integrate an on-premises SharePoint farm with Microsoft Entra application proxy using Security Assertion Markup Language (SAML).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Integrate Microsoft Entra application proxy with SharePoint using Security Assertion Markup Language (SAML)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This step-by-step guide explains how to secure the access to the [Microsoft Entra integrated on-premises SharePoint (SAML)](~/identity/saas-apps/sharepoint-on-premises-tutorial.md) using Microsoft Entra application proxy, where users in your organization (Microsoft Entra ID, B2B) connect to SharePoint through the Internet.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; If you&#39;re new to Microsoft Entra application proxy and want to learn more, see [Remote access to on-premises applications through Microsoft Entra application proxy](overview-what-is-app-proxy.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are three primary advantages of this setup:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Your users can access SharePoint sites as usual without using VPN.</div><div class="diff-line diff-context">- You can control the access by user assignment on the Microsoft Entra application proxy level and you can increase the security with Microsoft Entra features like Conditional Access and multifactor authentication (MFA).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/27014.md" target="_blank">docs/includes/secure-recommendations/27014.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 11, 2026 8:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/27014" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Convert layer headings to inline bold</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">The Global Secure Access Secure Web Gateway (SWG) implements defense-in-depth through five security layers that together create a comprehensive inspection chain for internet-bound traffic. Each layer serves a distinct protective function:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Layer 1: Context-aware network security</div><div class="diff-line diff-deleted">This layer routes internet traffic through the SWG and applies identity- and context-aware policy enforcement. Without this layer, traffic bypasses all downstream inspection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Layer 2: Web content, threat intelligence filtering, and AI Gateway</div><div class="diff-line diff-deleted">This layer blocks access to malicious, inappropriate, or policy-violating destinations and governs interactions with generative AI services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Layer 3: Content filtering and network DLP</div><div class="diff-line diff-deleted">This layer inspects file transfers and content payloads to prevent sensitive data exfiltration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Layer 4: Cloud firewall</div><div class="diff-line diff-deleted">This layer applies network-level firewall rules that protect branch office internet traffic routed through remote networks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Layer 5: Advanced threat protection</div><div class="diff-line diff-deleted">This layer uses TLS inspection to decrypt encrypted traffic so that you can scan payloads for malware, data exfiltration, and command-and-control communications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When any layer is missing, threat actors can exploit the gap to download tools, exfiltrate data, or maintain persistent command-and-control channels.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">The Global Secure Access Secure Web Gateway (SWG) implements defense-in-depth through five security layers that together create a comprehensive inspection chain for internet-bound traffic. Each layer serves a distinct protective function:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 1: Context-aware network security** This layer routes internet traffic through the SWG and applies identity- and context-aware policy enforcement. Without this layer, traffic bypasses all downstream inspection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 2: Web content, threat intelligence filtering, and AI Gateway** This layer blocks access to malicious, inappropriate, or policy-violating destinations and governs interactions with generative AI services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 3: Content filtering and network DLP** This layer inspects file transfers and content payloads to prevent sensitive data exfiltration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 4: Cloud firewall** This layer applies network-level firewall rules that protect branch office internet traffic routed through remote networks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 5: Advanced threat protection** This layer uses TLS inspection to decrypt encrypted traffic so that you can scan payloads for malware, data exfiltration, and command-and-control communications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When any layer is missing, threat actors can exploit the gap to download tools, exfiltrate data, or maintain persistent command-and-control channels.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-power-bi.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-power-bi.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-power-bi" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Enable remote access to Power BI</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Enable remote access to Power BI with Microsoft Entra application proxy</div><div class="diff-line diff-deleted">description: Covers the basics about how to integrate an on-premises Power BI with Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ms.custom: has-adal-ref</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Deploy Reporting Services in your environment.</div><div class="diff-line diff-context">- Enable [Microsoft Entra application proxy](application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-deleted">- When possible, use the same internal and external domains for Power BI. To learn more about custom domains, see [Working with custom domains in application proxy](how-to-configure-custom-domain.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Configure Kerberos Constrained Delegation (KCD)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For on-premises applications that use Windows authentication, you can achieve single sign-on (SSO) with the Kerberos authentication protocol and a feature called Kerberos constrained delegation (KCD). The private network connector uses KCD to obtain a Windows token for a user, even if the user isn&#39;t signed into Windows directly. To learn more about KCD, see [Kerberos Constrained Delegation Overview](/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/jj553400(v=ws.11)) and [Kerberos Constrained Delegation for single sign-on to your apps with application proxy](how-to-configure-sso-with-kcd.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There isn’t much to configure on the Reporting Services side. A valid Service Principal Name (SPN) is required for proper Kerberos authentication to occur. Enable the Reporting Services server for `Negotiate` authentication.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure the Service Principal Name (SPN)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Enable remote access to Power BI with Microsoft Entra application proxy</div><div class="diff-line diff-added">description: Learn how to integrate an on-premises Power BI with Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ms.custom: has-adal-ref</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Deploy Reporting Services in your environment.</div><div class="diff-line diff-context">- Enable [Microsoft Entra application proxy](application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-added">- When possible, use the same internal and external domains for Power BI. For more information about custom domains, see [Working with custom domains in application proxy](how-to-configure-custom-domain.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Configure Kerberos Constrained Delegation (KCD)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For on-premises applications that use Windows authentication, you can achieve single sign-on (SSO) with the Kerberos authentication protocol and a feature called Kerberos constrained delegation (KCD). The private network connector uses KCD to obtain a Windows token for a user, even if the user isn&#39;t signed into Windows directly. For more information about KCD, see [Kerberos Constrained Delegation Overview](/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/jj553400(v=ws.11)) and [Kerberos Constrained Delegation for single sign-on to your apps with application proxy](how-to-configure-sso-with-kcd.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There isn’t much to configure on the Reporting Services side. A valid Service Principal Name (SPN) is required for proper Kerberos authentication to occur. Enable the Reporting Services server for `Negotiate` authentication.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure the Service Principal Name (SPN)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-networks.md" target="_blank">docs/fundamentals/zero-trust-protect-networks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 11, 2026 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-networks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add includes 27003, 27004, 27014</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">### TLS inspection certificates have a sufficient validity period</div><div class="diff-line diff-context">[!INCLUDE [27002](../includes/secure-recommendations/27002.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Threat intelligence filtering protects internet traffic</div><div class="diff-line diff-context">[!INCLUDE [25412](../includes/secure-recommendations/25412.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Global Secure Access cloud firewall protects branch office internet traffic</div><div class="diff-line diff-context">[!INCLUDE [25416](../includes/secure-recommendations/25416.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Microsoft 365 traffic is actively flowing through Global Secure Access</div><div class="diff-line diff-context">[!INCLUDE [25376](../includes/secure-recommendations/25376.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">### TLS inspection certificates have a sufficient validity period</div><div class="diff-line diff-context">[!INCLUDE [27002](../includes/secure-recommendations/27002.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### TLS inspection failure rate is below 1%</div><div class="diff-line diff-added">[!INCLUDE [27003](../includes/secure-recommendations/27003.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### TLS inspection custom bypass rules don&#39;t duplicate system bypass destinations</div><div class="diff-line diff-added">[!INCLUDE [27004](../includes/secure-recommendations/27004.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Threat intelligence filtering protects internet traffic</div><div class="diff-line diff-context">[!INCLUDE [25412](../includes/secure-recommendations/25412.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Global Secure Access cloud firewall protects branch office internet traffic</div><div class="diff-line diff-context">[!INCLUDE [25416](../includes/secure-recommendations/25416.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Internet traffic is inspected across all Secure Web Gateway defense layers</div><div class="diff-line diff-added">[!INCLUDE [27014](../includes/secure-recommendations/27014.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### Microsoft 365 traffic is actively flowing through Global Secure Access</div><div class="diff-line diff-context">[!INCLUDE [25376](../includes/secure-recommendations/25376.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-application-gateway-waf.md" target="_blank">docs/identity/app-proxy/application-proxy-application-gateway-waf.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-application-gateway-waf" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Application Gateway WAF with application proxy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Using Application Gateway WAF to protect your application</div><div class="diff-line diff-context">description: How to add Web Application Firewall (WAF) protection for apps published with Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj, besilvei</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Using Application Gateway WAF to protect your applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add Web Application Firewall (WAF) protection for apps published with Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To learn more about Web Application Firewall, see  [What is Azure Web Application Firewall on Azure Application Gateway?][waf-overview].</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Deployment steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Use Application Gateway WAF to protect your application</div><div class="diff-line diff-context">description: How to add Web Application Firewall (WAF) protection for apps published with Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj, besilvei</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Use Application Gateway WAF to protect your applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add Web Application Firewall (WAF) protection for apps published with Microsoft Entra application proxy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For more information about Web Application Firewall, see [What is Azure Web Application Firewall on Azure Application Gateway?][waf-overview].</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Deployment steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-qlik.md" target="_blank">docs/identity/app-proxy/application-proxy-qlik.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-qlik" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Application proxy and Qlik Sense</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra application proxy and Qlik Sense</div><div class="diff-line diff-deleted">description:  Integrate Microsoft Entra application proxy with Qlik Sense.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">   - **Internal URL**: This application should have an internal URL that is the Qlik Sense URL itself. For example, `https//demo.qlikemm.com:4244`. </div><div class="diff-line diff-context">   - **Pre-authentication method**: Microsoft Entra ID (recommended but not required).</div><div class="diff-line diff-context">1. Select **Add** at the bottom of the page. Your application is added, and the quick start menu opens. </div><div class="diff-line diff-deleted">2. In the quick start menu, select **Assign a user for testing**, and add at least one user to the application. Make sure this test account has access to the on premises application. </div><div class="diff-line diff-context">3. Select **Assign** to save the test user assignment. </div><div class="diff-line diff-context">4. (Optional) On the app management page, select single sign-on. Choose **Kerberos Constrained Delegation** from the drop-down menu, and fill out the required fields based on your Qlik Sense configuration. Select **Save**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Your application is now ready to test. Access the external URL you used to publish Qlik Sense in Application #1, and sign in as a user assigned to both applications.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## References</div><div class="diff-line diff-deleted">For more information about publishing Qlik Sense with application proxy, see following the Qlik Community Articles: </div><div class="diff-line diff-context">- [Microsoft Entra ID with integrated Windows authentication using a Kerberos Constrained Delegation with Qlik Sense](https://community.qlik.com/docs/DOC-20183)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra application proxy and Qlik Sense</div><div class="diff-line diff-added">description: Integrate Microsoft Entra application proxy with Qlik Sense.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">   - **Internal URL**: This application should have an internal URL that is the Qlik Sense URL itself. For example, `https//demo.qlikemm.com:4244`. </div><div class="diff-line diff-context">   - **Pre-authentication method**: Microsoft Entra ID (recommended but not required).</div><div class="diff-line diff-context">1. Select **Add** at the bottom of the page. Your application is added, and the quick start menu opens. </div><div class="diff-line diff-added">2. In the quick start menu, select **Assign a user for testing**, and add at least one user to the application. Make sure this test account has access to the on-premises application. </div><div class="diff-line diff-context">3. Select **Assign** to save the test user assignment. </div><div class="diff-line diff-context">4. (Optional) On the app management page, select single sign-on. Choose **Kerberos Constrained Delegation** from the drop-down menu, and fill out the required fields based on your Qlik Sense configuration. Select **Save**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Your application is now ready to test. Access the external URL you used to publish Qlik Sense in Application #1, and sign in as a user assigned to both applications.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## References</div><div class="diff-line diff-added">For more information about publishing Qlik Sense with application proxy, see the following Qlik Community Articles: </div><div class="diff-line diff-context">- [Microsoft Entra ID with integrated Windows authentication using a Kerberos Constrained Delegation with Qlik Sense](https://community.qlik.com/docs/DOC-20183)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-remote-desktop-services.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-remote-desktop-services.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-remote-desktop-services" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Publish Remote Desktop with application proxy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Publish Remote Desktop with Microsoft Entra application proxy</div><div class="diff-line diff-deleted">description: Covers how to configure application proxy with Remote Desktop Services (RDS)</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">- When publishing RD Web, use the same internal and external Fully Qualified Domain Name (FQDN) when possible. If the internal and external Fully Qualified Domain Names (FQDNs) are different, disable Request Header Translation to avoid the client receiving invalid links.</div><div class="diff-line diff-context">- If you&#39;re using the RD Web client, you *must* use the same internal and external FQDN. If the internal and external FQDNs are different, you encounter websocket errors when making a RemoteApp connection through the RD Web client.</div><div class="diff-line diff-context">- If you&#39;re using RD Web on Internet Explorer, you need to enable the RDS ActiveX add-on.</div><div class="diff-line diff-deleted">- If you&#39;re using the RD Web client, you&#39;ll need to use the application proxy [connector version 1.5.1975 or later](./application-proxy-release-version-history.md).</div><div class="diff-line diff-context">- For the Microsoft Entra pre authentication flow, users can only connect to resources published to them in the **RemoteApp and Desktops** pane. Users can&#39;t connect to a desktop using the **Connect to a remote PC** pane.</div><div class="diff-line diff-context">- If you&#39;re using Windows Server 2019, you need to disable HTTP2 protocol. For more information, see [Tutorial: Add an on-premises application for remote access through application proxy in Microsoft Entra ID](~/identity/app-proxy/application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Publish Remote Desktop with Microsoft Entra application proxy</div><div class="diff-line diff-added">description: Learn how to configure application proxy with Remote Desktop Services (RDS)</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">- When publishing RD Web, use the same internal and external Fully Qualified Domain Name (FQDN) when possible. If the internal and external Fully Qualified Domain Names (FQDNs) are different, disable Request Header Translation to avoid the client receiving invalid links.</div><div class="diff-line diff-context">- If you&#39;re using the RD Web client, you *must* use the same internal and external FQDN. If the internal and external FQDNs are different, you encounter websocket errors when making a RemoteApp connection through the RD Web client.</div><div class="diff-line diff-context">- If you&#39;re using RD Web on Internet Explorer, you need to enable the RDS ActiveX add-on.</div><div class="diff-line diff-added">- If you&#39;re using the RD Web client, you need to use the application proxy [connector version 1.5.1975 or later](./application-proxy-release-version-history.md).</div><div class="diff-line diff-context">- For the Microsoft Entra pre authentication flow, users can only connect to resources published to them in the **RemoteApp and Desktops** pane. Users can&#39;t connect to a desktop using the **Connect to a remote PC** pane.</div><div class="diff-line diff-context">- If you&#39;re using Windows Server 2019, you need to disable HTTP2 protocol. For more information, see [Tutorial: Add an on-premises application for remote access through application proxy in Microsoft Entra ID](~/identity/app-proxy/application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-ping-access-publishing-guide.md" target="_blank">docs/identity/app-proxy/application-proxy-ping-access-publishing-guide.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-ping-access-publishing-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Header-based auth with PingAccess</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Header based authentication with PingAccess for Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Support header-based authentication with PingAccess and Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Header based authentication for single sign-on with application proxy and PingAccess</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft partnered with PingAccess to provide more access applications. PingAccess provides another option beyond integrated [header-based single sign-on](application-proxy-configure-single-sign-on-with-headers.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Header-based authentication with PingAccess for Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Support header-based authentication with PingAccess and Microsoft Entra application proxy.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Header-based authentication for single sign-on with application proxy and PingAccess</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft partnered with PingAccess to provide more access applications. PingAccess provides another option beyond integrated [header-based single sign-on](application-proxy-configure-single-sign-on-with-headers.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-restore-deleted.md" target="_blank">docs/identity/users/groups-restore-deleted.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by barclayn on Mar 11, 2026 8:42 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-restore-deleted" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add cloud security groups to user restore permissions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Restore a deleted Microsoft 365 group or cloud security group</div><div class="diff-line diff-context">description: Learn how to restore a deleted group, view restorable groups, and permanently delete a group in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-deleted">ms.date: 11/03/2025</div><div class="diff-line diff-context">ms.reviewer: krbain</div><div class="diff-line diff-context">ms.custom: it-pro, mode-other, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">--------- | ---------</div><div class="diff-line diff-context">Global Administrator, Group Administrator, Partner Tier 2 Support, and Intune Administrator | Can restore any deleted Microsoft 365 group or cloud security group</div><div class="diff-line diff-context">User Administrator and Partner Tier 1 Support | Can restore any deleted Microsoft 365 group or cloud security group except those groups assigned to the Global Administrator role</div><div class="diff-line diff-deleted">User | Can restore any deleted Microsoft 365 group that they own</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt; Soft delete is available for Microsoft 365 groups with assigned membership, Microsoft 365 groups with dynamic membership, and cloud security groups.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Restore a deleted Microsoft 365 group or cloud security group</div><div class="diff-line diff-context">description: Learn how to restore a deleted group, view restorable groups, and permanently delete a group in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: krbain</div><div class="diff-line diff-context">ms.custom: it-pro, mode-other, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">--------- | ---------</div><div class="diff-line diff-context">Global Administrator, Group Administrator, Partner Tier 2 Support, and Intune Administrator | Can restore any deleted Microsoft 365 group or cloud security group</div><div class="diff-line diff-context">User Administrator and Partner Tier 1 Support | Can restore any deleted Microsoft 365 group or cloud security group except those groups assigned to the Global Administrator role</div><div class="diff-line diff-added">User | Can restore any deleted Microsoft 365 or cloud security group that they own</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt;[!NOTE]</div><div class="diff-line diff-context">&gt; Soft delete is available for Microsoft 365 groups with assigned membership, Microsoft 365 groups with dynamic membership, and cloud security groups.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-powershell-samples.md" target="_blank">docs/identity/app-proxy/application-proxy-powershell-samples.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 6:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-powershell-samples" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: PowerShell samples and scripts (16 files)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: PowerShell samples for Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Use these PowerShell samples for Microsoft Entra application proxy to get information about application proxy apps and connectors in your directory, assign users and groups to apps, and get certificate information.</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">|**Application proxy apps**||</div><div class="diff-line diff-context">| [List basic information for all application proxy apps](scripts/powershell-get-all-app-proxy-apps-basic.md) | Lists basic information (AppId, DisplayName, ObjId) about all the application proxy apps in your directory. |</div><div class="diff-line diff-deleted">| [List extended information for all application proxy apps](scripts/powershell-get-all-app-proxy-apps-extended.md) | Lists extended information  (AppId, DisplayName, ExternalUrl, InternalUrl, ExternalAuthenticationType) about all the application proxy apps in your directory.  |</div><div class="diff-line diff-context">| [List all application proxy apps by connector group](scripts/powershell-get-all-app-proxy-apps-by-connector-group.md) | Lists information about all the application proxy apps in your directory and which connector groups the apps are assigned to. |</div><div class="diff-line diff-context">| [Get all application proxy apps with a token lifetime policy](scripts/powershell-get-all-app-proxy-apps-with-policy.md) | Lists all application proxy apps in your directory with a token lifetime policy and its details.|</div><div class="diff-line diff-context">|**Connector groups**||</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: PowerShell samples for Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Use these PowerShell samples for Microsoft Entra application proxy to get information about application proxy apps and connectors in your directory, assign users and groups to apps, and get certificate information.</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">|**Application proxy apps**||</div><div class="diff-line diff-context">| [List basic information for all application proxy apps](scripts/powershell-get-all-app-proxy-apps-basic.md) | Lists basic information (AppId, DisplayName, ObjId) about all the application proxy apps in your directory. |</div><div class="diff-line diff-added">| [List extended information for all application proxy apps](scripts/powershell-get-all-app-proxy-apps-extended.md) | Lists extended information (AppId, DisplayName, ExternalUrl, InternalUrl, ExternalAuthenticationType) about all the application proxy apps in your directory.  |</div><div class="diff-line diff-context">| [List all application proxy apps by connector group](scripts/powershell-get-all-app-proxy-apps-by-connector-group.md) | Lists information about all the application proxy apps in your directory and which connector groups the apps are assigned to. |</div><div class="diff-line diff-context">| [Get all application proxy apps with a token lifetime policy](scripts/powershell-get-all-app-proxy-apps-with-policy.md) | Lists all application proxy apps in your directory with a token lifetime policy and its details.|</div><div class="diff-line diff-context">|**Connector groups**||</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/app-proxy-protect-ndes.md" target="_blank">docs/identity/app-proxy/app-proxy-protect-ndes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 3:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/app-proxy-protect-ndes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: Integrate NDES with application proxy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Use Microsoft Entra application proxy with a Network Device Enrollment Service (NDES) server</div><div class="diff-line diff-context">description: Learn how to use Microsoft Entra application proxy to protect your Network Device Enrollment Service (NDES).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">    **Internal Url**: Enter the internal URL/FQDN of your NDES server on which you installed the connector.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    **Pre Authentication**: Select **Passthrough**. It’s not possible to use any form of pre authentication. The protocol used for certificate requests, Simple Certificate Enrollment Protocol (SCEP), doesn&#39;t provide such option.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Copy the provided **External URL** to your clipboard.</div><div class="diff-line diff-context">1. Select **+Add** to save your application.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Use Microsoft Entra application proxy with a Network Device Enrollment Service (NDES) server</div><div class="diff-line diff-context">description: Learn how to use Microsoft Entra application proxy to protect your Network Device Enrollment Service (NDES).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">   </div><div class="diff-line diff-context">    **Internal Url**: Enter the internal URL/FQDN of your NDES server on which you installed the connector.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    **Pre Authentication**: Select **Passthrough**. It’s not possible to use any form of preauthentication. The protocol used for certificate requests, Simple Certificate Enrollment Protocol (SCEP), doesn&#39;t provide such option.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    Copy the provided **External URL** to your clipboard.</div><div class="diff-line diff-context">1. Select **+Add** to save your application.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/configure-security.md" target="_blank">docs/fundamentals/configure-security.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 11, 2026 8:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/configure-security" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add includes 27003, 27004, 27014</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| [TLS inspection is enabled and correctly configured for outbound traffic](zero-trust-protect-networks.md#tls-inspection-is-enabled-and-correctly-configured-for-outbound-traffic) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [TLS inspection bypass rules are regularly reviewed](zero-trust-protect-networks.md#tls-inspection-bypass-rules-are-regularly-reviewed) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [TLS inspection certificates have a sufficient validity period](zero-trust-protect-networks.md#tls-inspection-certificates-have-a-sufficient-validity-period) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Threat intelligence filtering protects internet traffic](zero-trust-protect-networks.md#threat-intelligence-filtering-protects-internet-traffic) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [File transfer policies are configured to prevent data exfiltration](zero-trust-protect-networks.md#file-transfer-policies-are-configured-to-prevent-data-exfiltration) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [AI Gateway protects enterprise generative AI applications from prompt injection attacks](zero-trust-protect-networks.md#ai-gateway-protects-enterprise-generative-ai-applications-from-prompt-injection-attacks) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access cloud firewall protects branch office internet traffic](zero-trust-protect-networks.md#global-secure-access-cloud-firewall-protects-branch-office-internet-traffic) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Network validation is configured through Universal Continuous Access Evaluation](zero-trust-protect-networks.md#network-validation-is-configured-through-universal-continuous-access-evaluation) | Microsoft Entra ID P1 or Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access client is deployed on all managed endpoints](zero-trust-protect-networks.md#global-secure-access-client-is-deployed-on-all-managed-endpoints) | Microsoft Entra ID P1 or Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access licenses are available in the tenant and assigned to users](zero-trust-protect-networks.md#global-secure-access-licenses-are-available-in-the-tenant-and-assigned-to-users) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| [TLS inspection is enabled and correctly configured for outbound traffic](zero-trust-protect-networks.md#tls-inspection-is-enabled-and-correctly-configured-for-outbound-traffic) | Microsoft Entra ID P1 |</div><div class="diff-line diff-context">| [TLS inspection bypass rules are regularly reviewed](zero-trust-protect-networks.md#tls-inspection-bypass-rules-are-regularly-reviewed) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [TLS inspection certificates have a sufficient validity period](zero-trust-protect-networks.md#tls-inspection-certificates-have-a-sufficient-validity-period) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-added">| [TLS inspection failure rate is below 1%](zero-trust-protect-networks.md#tls-inspection-failure-rate-is-below-1) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-added">| [TLS inspection custom bypass rules don&#39;t duplicate system bypass destinations](zero-trust-protect-networks.md#tls-inspection-custom-bypass-rules-dont-duplicate-system-bypass-destinations) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Threat intelligence filtering protects internet traffic](zero-trust-protect-networks.md#threat-intelligence-filtering-protects-internet-traffic) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [File transfer policies are configured to prevent data exfiltration](zero-trust-protect-networks.md#file-transfer-policies-are-configured-to-prevent-data-exfiltration) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [AI Gateway protects enterprise generative AI applications from prompt injection attacks](zero-trust-protect-networks.md#ai-gateway-protects-enterprise-generative-ai-applications-from-prompt-injection-attacks) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access cloud firewall protects branch office internet traffic](zero-trust-protect-networks.md#global-secure-access-cloud-firewall-protects-branch-office-internet-traffic) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-added">| [Internet traffic is inspected across all Secure Web Gateway defense layers](zero-trust-protect-networks.md#internet-traffic-is-inspected-across-all-secure-web-gateway-defense-layers) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Network validation is configured through Universal Continuous Access Evaluation](zero-trust-protect-networks.md#network-validation-is-configured-through-universal-continuous-access-evaluation) | Microsoft Entra ID P1 or Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access client is deployed on all managed endpoints](zero-trust-protect-networks.md#global-secure-access-client-is-deployed-on-all-managed-endpoints) | Microsoft Entra ID P1 or Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div><div class="diff-line diff-context">| [Global Secure Access licenses are available in the tenant and assigned to users](zero-trust-protect-networks.md#global-secure-access-licenses-are-available-in-the-tenant-and-assigned-to-users) | Microsoft Entra Suite Add-on for Microsoft Entra ID P2 |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/scripts/powershell-assign-group-to-app.md" target="_blank">docs/identity/app-proxy/scripts/powershell-assign-group-to-app.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 11, 2026 6:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/scripts/powershell-assign-group-to-app" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: PowerShell samples and scripts (16 files)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: PowerShell example that assigns a group to a Microsoft Entra application proxy application.</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-deleted">ms.date: 05/01/2025</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Assign a group to a specific Microsoft Entra application proxy application</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: PowerShell example that assigns a group to a Microsoft Entra application proxy application.</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-added">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: ashishj</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Assign a group to a specific Microsoft Entra application proxy application</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
