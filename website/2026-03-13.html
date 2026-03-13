@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 11th 2026, 9:19 PM PDT</p>
+        <p>Report generated on March 12th 2026, 9:19 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Mar 12, 2026 12:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+34</span> / 
+              <span class="deletions">-23</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Microsoft Entra Connect security hardening updated release notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">**Service category:** Entra Connect  </div><div class="diff-line diff-context">**Product capability:** Access Control  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">As part of ongoing security hardening, Microsoft has implemented new safeguards to block account takeover attempts via hard match abuse in Microsoft Entra Connect (known as SyncJacking). Enforcement of this change begins in March 2026. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">What’s Changing: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Enforcement logic now checks OnPremisesObjectIdentifier to detect and block remapping attempts. </div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-deleted">- Audit logs have been enhanced to capture changes to OnPremisesObjectIdentifier and DirSyncEnabled. </div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-deleted">- Admin capability added to clear OnPremisesObjectIdentifier for legitimate recovery scenarios. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Customer Action Required: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Upgrade to the latest Microsoft Entra Connect version. </div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-deleted">- Review updated hardening guidance and enable recommended flags:  </div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-deleted">- Disable [hard match takeover](/powershell/module/microsoft.entra.directorymanagement/set-entradirsyncfeature?view=entra-powershell&amp;preserve-view=true) </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">**Service category:** Entra Connect  </div><div class="diff-line diff-context">**Product capability:** Access Control  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When Microsoft Entra Connect adds new objects from Active Directory, the Microsoft Entra ID service tries to match the incoming object with an Entra object by looking up the incoming object’s [sourceAnchor value against the OnPremisesImmutableId attribute](../identity/hybrid/connect/how-to-connect-install-existing-tenant?source=recommendations.md#hard-match-vs-soft-match) of existing cloud managed objects in Microsoft Entra ID. If there&#39;s a match, Microsoft Entra Connect Sync takes over the source or authority (SoA) of that object and updates it with the properties of the incoming Active Directory object in what is known as &quot;hard-match.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">As part of ongoing security hardening, Microsoft is going to introduce enforcement changes in Microsoft Entra Connect to mitigate the risk of account takeover via hard match abuse. Enforcement of this change will begin on **July 1, 2026**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**What’s Changing:**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Microsoft Entra will block attempts by Entra Connect to modify the OnPremisesObjectIdentifier attribute after it has already been set on a synced user object. This prevents re‑mapping an existing Entra ID user to a different on‑premises identity.</div><div class="diff-line diff-added">- [Audit logs](../identity/monitoring-health/reference-audit-activities.md#core-directory) have been enhanced to capture changes to OnPremisesObjectIdentifier and DirSyncEnabled, enabling better visibility into synchronization behavior.</div><div class="diff-line diff-added">- To support [legitimate](../identity/hybrid/connect/how-to-connect-migrate-groups.md) scenarios where an existing hard match must be corrected, Microsoft has introduced a Microsoft Graph API that allows controlled recovery actions, without re‑enabling hard‑match abuse or unauthorized re‑mapping.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**What&#39;s Not Changing:**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- This enforcement applies only to scenarios where OnPremisesObjectIdentifier is being modified after it has already been set. Hard match functionality using [onPremisesImmutableId](../identity/hybrid/connect/plan-connect-design-concepts.md#sourceanchor) remains supported and unchanged. Customers can continue to perform initial hard matches as before.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Customer Action Required:** </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/concept-native-authentication.md" target="_blank">docs/identity-platform/concept-native-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kenga Derdus on Mar 12, 2026 2:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/concept-native-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update concept-native-authentication.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following table shows the availability of features for browser-delegated and native authentication. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">|   | Browser-delegated authentication | Native authentication | </div><div class="diff-line diff-context">| ---- | --- |  --- |</div><div class="diff-line diff-context">| **Sign up and sign in with email one-time passcode (OTP)** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Sign up and sign in with email and password** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-deleted">| **Sign in with email and password can use username and password** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Self-service password reset (SSPR)**  | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Custom claims provider** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Multifactor authentication with email one-time passcode (OTP)**| :heavy_check_mark:  | :heavy_check_mark:  |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following table shows the availability of features for browser-delegated and native authentication. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">|   | Browser-delegated authentication | Native authentication |</div><div class="diff-line diff-context">| ---- | --- |  --- |</div><div class="diff-line diff-context">| **Sign up and sign in with email one-time passcode (OTP)** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Sign up and sign in with email and password** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-added">| **Sign in with email and password can use username (alias) and password** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Self-service password reset (SSPR)**  | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Custom claims provider** | :heavy_check_mark:  | :heavy_check_mark:  |</div><div class="diff-line diff-context">| **Multifactor authentication with email one-time passcode (OTP)**| :heavy_check_mark:  | :heavy_check_mark:  |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Mar 12, 2026 10:10 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update github-enterprise-managed-user-oidc-provisioning-tutorial.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">This article describes the steps you need to perform in both GitHub Enterprise Managed User (OIDC) and Microsoft Entra ID to configure automatic user provisioning. When configured, Microsoft Entra ID automatically provisions and de-provisions users and groups to GitHub Enterprise Managed User (OIDC) using the Microsoft Entra provisioning service. For important details on what this service does, how it works, and frequently asked questions, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; [GitHub Enterprise Managed User (EMU)](https://docs.github.com/enterprise-cloud@latest/admin/authentication/managing-your-enterprise-users-with-your-identity-provider/about-enterprise-managed-users) is a different type of [GitHub Enterprise Account](https://docs.github.com/enterprise-cloud@latest/admin/overview/about-enterprise-accounts). If you haven&#39;t specifically requested EMU instance, you have a standard GitHub Enterprise Account. In that case, please refer to [the documentation](./github-provisioning-tutorial.md) to configure user provisioning in your non-EMU organisation. User provisioning isn&#39;t supported for [standard GitHub Enterprise Accounts](https://docs.github.com/enterprise-cloud@latest/admin/overview/about-enterprise-accounts), but is supported for organisations under standard GitHub Enterprise Account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Capabilities Supported</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">This article describes the steps you need to perform in both GitHub Enterprise Managed User (OIDC) and Microsoft Entra ID to configure automatic user provisioning. When configured, Microsoft Entra ID automatically provisions and de-provisions users and groups to GitHub Enterprise Managed User (OIDC) using the Microsoft Entra provisioning service. For important details on what this service does, how it works, and frequently asked questions, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; [GitHub Enterprise Managed User (EMU)](https://docs.github.com/enterprise-cloud@latest/admin/authentication/managing-your-enterprise-users-with-your-identity-provider/about-enterprise-managed-users) is a different type of [GitHub Enterprise Account](https://docs.github.com/enterprise-cloud@latest/admin/overview/about-enterprise-accounts). If you haven&#39;t specifically requested EMU instance, you have a standard GitHub Enterprise Account. In that case, please refer to [the documentation](./github-provisioning-tutorial.md) to configure user provisioning in your non-EMU organization. User provisioning isn&#39;t supported for [standard GitHub Enterprise Accounts](https://docs.github.com/enterprise-cloud@latest/admin/overview/about-enterprise-accounts), but is supported for organizations under standard GitHub Enterprise Account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Capabilities Supported</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/g-suite-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/g-suite-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Mar 12, 2026 10:00 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/g-suite-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typo in G Suite provisioning tutorial</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To configure scoping filters, refer to the following instructions provided in the [Scoping filter article](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Use [on-demand provisioning](~/identity/app-provisioning/provision-on-demand.md) to validate sync witha few users before deploying more broadly in your organization.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. When you&#39;re ready to provision, select **Start Provisioning** from the **Overview** page.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To configure scoping filters, refer to the following instructions provided in the [Scoping filter article](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Use [on-demand provisioning](~/identity/app-provisioning/provision-on-demand.md) to validate sync with a few users before deploying more broadly in your organization.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. When you&#39;re ready to provision, select **Start Provisioning** from the **Overview** page.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
