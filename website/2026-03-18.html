@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 16th 2026, 9:30 PM PDT</p>
+        <p>Report generated on March 17th 2026, 9:30 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">40</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">42</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-naming-policy.md" target="_blank">docs/identity/users/groups-naming-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-naming-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+60</span> / 
+              <span class="deletions">-60</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: groups naming, quickstarts, and misc articles (41 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can use attributes that can help you and your users identify which department, office, or geographic region for which the group was created. For example, if you define your naming policy as `PrefixSuffixNamingRequirement = &quot;GRP [GroupName] [Department]&quot;` and `User&#39;s department = Engineering`, then an enforced group name might be `&quot;GRP My Group Engineering.&quot;` Supported Microsoft Entra attributes are `\[Department\]`, `\[Company\]`, `\[Office\]`, `\[StateOrProvince\]`, `\[CountryOrRegion\]`, and `\[Title\]`. Unsupported user attributes are treated as fixed strings. An example is `&quot;\[postalCode\]&quot;`. Extension attributes and custom attributes aren&#39;t supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">We recommend that you use attributes that have values filled in for all users in your organization and don&#39;t use attributes that have long values.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Custom blocked words</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **All groups** &gt; **Groups**, and then select **Naming policy** to open the **Naming policy** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-naming-policy/policy.png&quot; alt-text=&quot;Screenshot that shows opening the Naming policy page in the admin center.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### View or edit the prefix-suffix naming policy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Naming policy** page, select **Blocked words**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-naming-policy/blockedwords.png&quot; alt-text=&quot;Screenshot that shows editing and uploading a blocked words list for a naming policy.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. View or edit the current list of custom blocked words by selecting **Download**. You must add new entries to the existing entries.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can use attributes that can help you and your users identify which department, office, or geographic region for which the group was created. For example, if you define your naming policy as `PrefixSuffixNamingRequirement = &quot;GRP [GroupName] [Department]&quot;` and `User&#39;s department = Engineering`, then an enforced group name might be `&quot;GRP My Group Engineering.&quot;` Supported Microsoft Entra attributes are `\[Department\]`, `\[Company\]`, `\[Office\]`, `\[StateOrProvince\]`, `\[CountryOrRegion\]`, and `\[Title\]`. Unsupported user attributes are treated as fixed strings. An example is `&quot;\[postalCode\]&quot;`. Extension attributes and custom attributes aren&#39;t supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use attributes that have values filled in for all users in your organization and don&#39;t use attributes that have long values.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Custom blocked words</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **All groups** &gt; **Groups**, and then select **Naming policy** to open the **Naming policy** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-naming-policy/policy.png&quot; alt-text=&quot;Screenshot that shows opening the Naming policy page in the admin center.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### View or edit the prefix-suffix naming policy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Naming policy** page, select **Blocked words**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-naming-policy/blockedwords.png&quot; alt-text=&quot;Screenshot that shows editing and uploading a blocked words list for a naming policy.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. View or edit the current list of custom blocked words by selecting **Download**. You must add new entries to the existing entries.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-lifecycle.md" target="_blank">docs/identity/users/groups-lifecycle.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-lifecycle" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+40</span> / 
+              <span class="deletions">-40</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: bulk ops and groups articles (46 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- **Teams**: Visit a Teams channel.</div><div class="diff-line diff-context">- **Viva Engage**: View a post within a Viva Engage community or an interactive email in Outlook.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Auditing and reporting</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Administrators can get a list of automatically renewed groups from the activity audit logs in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set group expiration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator).</div><div class="diff-line diff-context">1. Select **Identity**.</div><div class="diff-line diff-context">1. Select **Groups** &gt; **All groups**, and then select **Expiration** to open the expiration settings.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-lifecycle/expiration-settings.png&quot; alt-text=&quot;Screenshot that shows expiration settings for groups.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Expiration** page, you can:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      - **None** to restrict expiration for all groups.</div><div class="diff-line diff-context">    - Save your settings when you&#39;re done by selecting **Save**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- **Teams**: Visit a Teams channel.</div><div class="diff-line diff-context">- **Viva Engage**: View a post within a Viva Engage community or an interactive email in Outlook.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Audit and report</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Administrators can get a list of automatically renewed groups from the activity audit logs in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set group expiration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-context">1. Select **Identity**.</div><div class="diff-line diff-context">1. Select **Groups** &gt; **All groups**, and then select **Expiration** to open the expiration settings.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-lifecycle/expiration-settings.png&quot; alt-text=&quot;Screenshot that shows expiration settings for groups.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Expiration** page, you can:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      - **None** to restrict expiration for all groups.</div><div class="diff-line diff-context">    - Save your settings when you&#39;re done by selecting **Save**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-bulk-download.md" target="_blank">docs/identity/users/users-bulk-download.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-bulk-download" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+40</span> / 
+              <span class="deletions">-40</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: users bulk, misc, and light articles (90 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Users** &gt; **All users** &gt; **Download users**. By default, all user profiles are exported.</div><div class="diff-line diff-context">1. On the **Download users** page, select **Start** to receive a CSV file listing user profile properties. If there are errors, you can download and view the results file on the **Bulk operation results** page. The file contains the reason for each error.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/users-bulk-download/bulk-download.png&quot; alt-text=&quot;Screenshot of selecting where you want the list the users you want to download.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The download file will contain the filtered list of users based on the scope of the filters applied.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [Bulk operations limitations](~/includes/bulk-operations-limitations.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Improved Bulk user download in Entra admin center (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The enhanced bulk user download experience includes: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Customizable Columns for Export**: Previously, user exports included only a fixed set of predefined attributes. With this update, admins can customize their User List View columns, and the export will mirror those selected columns. This gives IT admins greater control and relevance in the data they download.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Expanded Attribute Coverage**: 27 new user attributes are now added to the exportable list, enabling deeper insights and more tailored exports. See full list of these newly exportable attributes:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Assigned licenses</div><div class="diff-line diff-deleted">2. Authorization info</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Users** &gt; **All users** &gt; **Download users**. By default, all user profiles are exported.</div><div class="diff-line diff-context">1. On the **Download users** page, select **Start** to receive a CSV file listing user profile properties. If there are errors, you can download and view the results file on the **Bulk operation results** page. The file contains the reason for each error.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/users-bulk-download/bulk-download.png&quot; alt-text=&quot;Screenshot of selecting where you want to list the users you want to download.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The download file will contain the filtered list of users based on the scope of the filters applied.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [Bulk operations limitations](~/includes/bulk-operations-limitations.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Improved bulk user download in Microsoft Entra admin center (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The enhanced bulk user download experience includes: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Customizable columns for export**: Previously, user exports included only a fixed set of predefined attributes. With this update, admins can customize their User List View columns, and the export will mirror those selected columns. This gives IT admins greater control and relevance in the data they download.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Expanded attribute coverage**: 27 new user attributes are now added to the exportable list, enabling deeper insights and more tailored exports. See full list of these newly exportable attributes:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Assigned licenses</div><div class="diff-line diff-added">1. Authorization info</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 17, 2026 6:18 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+43</span> / 
+              <span class="deletions">-31</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Authentication Extensibility Password Admin to what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> - clicktale</div><div class="diff-line diff-context">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; Get notified about when to revisit this page for updates by copying and pasting this URL: `https://learn.microsoft.com/api/search/rss?search=%22Release+notes+-+Azure+Active+Directory%22&amp;locale=en-us` into your ![RSS feed reader icon](./media/whats-new/feed-icon-16x16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## February 2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### General Availability - Expanded attribute support in Lifecycle Workflows attribute changes trigger</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**What is Hard-matching in Microsoft Entra Connect Sync and Cloud Sync?**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When Microsoft Entra Connect or Cloud Sync adds new objects from Active Directory, the Microsoft Entra ID service tries to match the incoming object with an Microsoft Entra object by looking up the incoming object’s sourceAnchor value against the OnPremisesImmutableId attribute of existing cloud managed objects in Microsoft Entra ID. If there&#39;s a match, Microsoft Entra Connect or Cloud Sync takes over the source or authority (SoA) of that object and updates it with the properties of the incoming Active Directory object in what is known as &quot;hard-match.&quot; </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To strengthen the security posture of your Microsoft Entra ID environment, we&#39;re introducing a change that restricts certain types of hard-match operations by default.   </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> - clicktale</div><div class="diff-line diff-context">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 03/17/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; Get notified about when to revisit this page for updates by copying and pasting this URL: `https://learn.microsoft.com/api/search/rss?search=%22Release+notes+-+Azure+Active+Directory%22&amp;locale=en-us` into your ![RSS feed reader icon](./media/whats-new/feed-icon-16x16.png) feed reader.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## March 2026</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### General Availability - Authentication Extensibility Password Administrator role</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature</div><div class="diff-line diff-added">**Service category:** Role-Based Access Control</div><div class="diff-line diff-added">**Product capability:** Microsoft Entra Built-in Roles</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The [Authentication Extensibility Password Administrator](../identity/role-based-access-control/permissions-reference.md#authentication-extensibility-password-administrator) role is the least-privileged role that enables you to trigger password submit events for custom authentication extensions, making it easier to migrate user passwords from external identity systems to Microsoft Entra External ID.</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-troubleshooting.md" target="_blank">docs/identity/users/groups-troubleshooting.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-troubleshooting" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+26</span> / 
+              <span class="deletions">-26</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: groups naming, quickstarts, and misc articles (41 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">To disable group creation for nonadmin users in PowerShell:</div><div class="diff-line diff-context">1. Verify that nonadmin users are allowed to create groups:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ```powershell</div><div class="diff-line diff-deleted">   Get-MgBetaDirectorySetting | select -ExpandProperty values</div><div class="diff-line diff-deleted">   ```</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">2. If it returns `EnableGroupCreation : True`, then nonadmin users can create groups. To disable this feature:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">   ```powershell</div><div class="diff-line diff-deleted">   Install-Module Microsoft.Graph.Beta.Identity.DirectoryManagement</div><div class="diff-line diff-deleted">   Import-Module Microsoft.Graph.Beta.Identity.DirectoryManagement</div><div class="diff-line diff-deleted">   $params = @{</div><div class="diff-line diff-deleted">   TemplateId = &quot;62375ab9-6b52-47ed-826b-58e47e0e304b&quot;</div><div class="diff-line diff-deleted">   Values = @(    </div><div class="diff-line diff-deleted">    @{</div><div class="diff-line diff-deleted">      Name = &quot;EnableGroupCreation&quot;</div><div class="diff-line diff-deleted">      Value = &quot;false&quot;</div><div class="diff-line diff-deleted">    }    </div><div class="diff-line diff-deleted">   )</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">To disable group creation for nonadmin users in PowerShell:</div><div class="diff-line diff-context">1. Verify that nonadmin users are allowed to create groups:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ```powershell</div><div class="diff-line diff-added">    Get-MgBetaDirectorySetting | select -ExpandProperty values</div><div class="diff-line diff-added">    ```</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. If it returns `EnableGroupCreation : True`, then nonadmin users can create groups. To disable this feature:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">    ```powershell</div><div class="diff-line diff-added">    Install-Module Microsoft.Graph.Beta.Identity.DirectoryManagement</div><div class="diff-line diff-added">    Import-Module Microsoft.Graph.Beta.Identity.DirectoryManagement</div><div class="diff-line diff-added">    $params = @{</div><div class="diff-line diff-added">    TemplateId = &quot;62375ab9-6b52-47ed-826b-58e47e0e304b&quot;</div><div class="diff-line diff-added">    Values = @(    </div><div class="diff-line diff-added">     @{</div><div class="diff-line diff-added">       Name = &quot;EnableGroupCreation&quot;</div><div class="diff-line diff-added">       Value = &quot;false&quot;</div><div class="diff-line diff-added">     }    </div><div class="diff-line diff-added">    )</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-custom-security-attributes.md" target="_blank">docs/identity/users/users-custom-security-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-custom-security-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+21</span> / 
+              <span class="deletions">-21</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: users bulk, misc, and light articles (90 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To manage custom security attribute assignments for users in your Microsoft Entra organization, you can use PowerShell or Microsoft Graph API. The following examples can be used to manage assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Assign a custom security attribute with a string value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with a string value to a user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Assign a custom security attribute with a multi-string value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with a multi-string value to a user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Assign a custom security attribute with an integer value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with an integer value to a user.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To manage custom security attribute assignments for users in your Microsoft Entra organization, you can use PowerShell or Microsoft Graph API. The following examples can be used to manage assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Assign a custom security attribute with a string value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with a string value to a user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Assign a custom security attribute with a multi-string value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with a multi-string value to a user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Assign a custom security attribute with an integer value to a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example assigns a custom security attribute with an integer value to a user.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-tutorial.md" target="_blank">docs/identity/users/groups-dynamic-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+20</span> / 
+              <span class="deletions">-18</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: dynamic groups articles (33 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You&#39;re not required to assign licenses to the users for them to be members in dynamic membership groups. You only need the minimum number of available Microsoft Entra ID P1 licenses in the organization to cover all such users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## To create a group of guest users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">First, you create a group for your guest users who all are from a single partner company. They need special licensing, so it&#39;s often more efficient to create a group for this purpose.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator).</div><div class="diff-line diff-deleted">1. Select Microsoft Entra ID.</div><div class="diff-line diff-deleted">2. Select **Groups** &gt; **All groups** &gt; **New group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-tutorial/new-group.png&quot; alt-text=&quot;Screenshot of using the Select command to start a new group.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">3. On the **New Group** pane:</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">   * Enter a *Guest users name*, *email address*, and *description* for the group.</div><div class="diff-line diff-context">   * Change **Membership type** to **Dynamic User**.</div><div class="diff-line diff-context">   </div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-tutorial/new-dynamic-group.png&quot; alt-text=&quot;Screenshot of Group page where user enters the dynamic membership group details.&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You&#39;re not required to assign licenses to the users for them to be members in dynamic membership groups. You only need the minimum number of available Microsoft Entra ID P1 licenses in the organization to cover all such users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Create a group of guest users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">First, you create a group for your guest users who all are from a single partner company. They need special licensing, so it&#39;s often more efficient to create a group for this purpose.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-added">1. Select **Microsoft Entra ID**.</div><div class="diff-line diff-added">1. Select **Groups** &gt; **All groups** &gt; **New group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-tutorial/new-group.png&quot; alt-text=&quot;Screenshot of using the Select command to start a new group.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On the **New Group** pane:</div><div class="diff-line diff-context">  </div><div class="diff-line diff-context">   * Enter a *Guest users name*, *email address*, and *description* for the group.</div><div class="diff-line diff-context">   * Change **Membership type** to **Dynamic User**.</div><div class="diff-line diff-context">   </div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-tutorial/new-dynamic-group.png&quot; alt-text=&quot;Screenshot of Group page where user enters the dynamic membership group details.&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-quickstart-expiration.md" target="_blank">docs/identity/users/groups-quickstart-expiration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-quickstart-expiration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+18</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: groups naming, quickstarts, and misc articles (41 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Expiration policy is simple:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Groups with user activities are automatically renewed as the expiration nears</div><div class="diff-line diff-deleted">- Group owners are notified to renew an expiring group</div><div class="diff-line diff-deleted">- A group that isn&#39;t renewed is deleted</div><div class="diff-line diff-deleted">- A deleted Microsoft 365 group can be restored within 30 days by a group owner or by a Microsoft Entra administrator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra ID, part of Microsoft Entra, uses intelligence to automatically renew groups based on whether they have been in recent use. This renewal decision is based on user activity in groups across Microsoft 365 services like Outlook, SharePoint, Teams, Yammer, and others.</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Groups** &gt; **All groups** and then select **General**.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-quickstart-expiration/self-service-settings.png&quot; alt-text=&quot;Screenshot of the Self-service group settings page.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">3. Set  **Users can create Microsoft 365 groups in Azure portals, API or PowerShell** to **Yes**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">4. Select **Save** to save the groups settings when you&#39;re done.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set group expiration</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Expiration policy is simple:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Groups with user activities are automatically renewed as the expiration nears.</div><div class="diff-line diff-added">- Group owners are notified to renew an expiring group.</div><div class="diff-line diff-added">- A group that isn&#39;t renewed is deleted.</div><div class="diff-line diff-added">- A deleted Microsoft 365 group can be restored within 30 days by a group owner or by a Microsoft Entra administrator.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra ID, part of Microsoft Entra, uses intelligence to automatically renew groups based on whether they have been in recent use. This renewal decision is based on user activity in groups across Microsoft 365 services like Outlook, SharePoint, Teams, Yammer, and others.</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Groups** &gt; **All groups** and then select **General**.</div><div class="diff-line diff-context">  </div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-quickstart-expiration/self-service-settings.png&quot; alt-text=&quot;Screenshot of the Self-service group settings page.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Set **Users can create Microsoft 365 groups in Azure portals, API or PowerShell** to **Yes**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Save** to save the groups settings when you&#39;re done.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Set group expiration</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-rule-member-of.md" target="_blank">docs/identity/users/groups-dynamic-rule-member-of.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-rule-member-of" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: dynamic groups articles (33 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This feature preview in Microsoft Entra ID enables admins to create dynamic membership groups and administrative units that populate by adding members of other groups using the `memberOf` attribute. Apps that couldn&#39;t read group-based membership previously in Microsoft Entra ID can now read the entire membership of these new `memberOf` groups. Not only can these groups be used for apps but they can also be used for licensing assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!WARNING]</div><div class="diff-line diff-deleted">&gt;This is a preview feature and isn&#39;t intended for production use. The use of this feature comes with limitations that can affect dynamic group processing in the tenant. We recommend you review the [Preview limitations](#preview-limitations) section before using this feature.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram illustrates how you could create Dynamic-Group-A with members of Security-Group-X and Security-Group-Y. Members of the groups inside Security-Group-X and Security-Group-Y don&#39;t become members of Dynamic-Group-A.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Preview limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- This preview should only be used in test environments as it can affect dynamic group processing in the tenant. We are working on addressing these limitations and will provide updates when they are available.</div><div class="diff-line diff-context">- Each Microsoft Entra tenant is limited to 500 dynamic groups using the `memberOf` attribute. The `memberOf` groups count toward the total dynamic group quota of 15,000.</div><div class="diff-line diff-context">- Each dynamic group can have up to 50 member groups.</div><div class="diff-line diff-context">- When you add members of security groups to `memberOf` dynamic membership groups, only direct members of the security group become members of the dynamic group.</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other rules. For example, a rule that states dynamic group A should contain members of group B and also should contain only users located in Redmond will fail.</div><div class="diff-line diff-context">- The dynamic group rule builder and validate feature can&#39;t be used for `memberOf` at this time.</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other operators. For example, you can&#39;t create a rule that states &quot;Members Of group A can&#39;t be in Dynamic group B.&quot;</div><div class="diff-line diff-deleted">- Users included in `memberOf` dynamic membership groups may cause a slower processing time for your tenant, if the tenant has a large number of groups or frequent dynamic membership groups updates.</div><div class="diff-line diff-context">- Membership of a memberOf dynamic group doesn&#39;t automatically update when a child group is deleted or when members are removed from a child group. The affected users or devices remain members of the memberOf dynamic group until the rule is modified.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This feature preview in Microsoft Entra ID enables admins to create dynamic membership groups and administrative units that populate by adding members of other groups using the `memberOf` attribute. Apps that couldn&#39;t read group-based membership previously in Microsoft Entra ID can now read the entire membership of these new `memberOf` groups. Not only can these groups be used for apps but they can also be used for licensing assignments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!WARNING]</div><div class="diff-line diff-added">&gt; This is a preview feature and isn&#39;t intended for production use. The use of this feature comes with limitations that can affect dynamic group processing in the tenant. Review the [Preview limitations](#preview-limitations) section before using this feature.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram illustrates how you could create Dynamic-Group-A with members of Security-Group-X and Security-Group-Y. Members of the groups inside Security-Group-X and Security-Group-Y don&#39;t become members of Dynamic-Group-A.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Preview limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- This preview should only be used in test environments as it can affect dynamic group processing in the tenant. These limitations are being addressed, and updates will be provided when they&#39;re available.</div><div class="diff-line diff-context">- Each Microsoft Entra tenant is limited to 500 dynamic groups using the `memberOf` attribute. The `memberOf` groups count toward the total dynamic group quota of 15,000.</div><div class="diff-line diff-context">- Each dynamic group can have up to 50 member groups.</div><div class="diff-line diff-context">- When you add members of security groups to `memberOf` dynamic membership groups, only direct members of the security group become members of the dynamic group.</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other rules. For example, a rule that states dynamic group A should contain members of group B and also should contain only users located in Redmond will fail.</div><div class="diff-line diff-context">- The dynamic group rule builder and validate feature can&#39;t be used for `memberOf` at this time.</div><div class="diff-line diff-context">- The `memberOf` attribute can&#39;t be used with other operators. For example, you can&#39;t create a rule that states &quot;Members Of group A can&#39;t be in Dynamic group B.&quot;</div><div class="diff-line diff-added">- Users included in `memberOf` dynamic membership groups might cause a slower processing time for your tenant, if the tenant has a large number of groups or frequent dynamic membership groups updates.</div><div class="diff-line diff-context">- Membership of a memberOf dynamic group doesn&#39;t automatically update when a child group is deleted or when members are removed from a child group. The affected users or devices remain members of the memberOf dynamic group until the rule is modified.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-sharing-accounts.md" target="_blank">docs/identity/users/users-sharing-accounts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-sharing-accounts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: users bulk, misc, and light articles (90 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Sharing accounts with Microsoft Entra ID</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In Microsoft Entra ID, part of Microsoft Entra, sometimes organizations need to use a single username and password for multiple people, which often happens in the following cases:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The traditional sharing model has several drawbacks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Enabling access to new applications requires you to distribute credentials to everyone that needs access.</div><div class="diff-line diff-deleted">* Each shared application might require its own unique set of shared credentials, requiring users to remember multiple sets of credentials. When users have to remember many credentials, the risk increases that they resort to risky practices. (for example, writing down passwords).</div><div class="diff-line diff-context">* You can&#39;t tell who has access to an application.</div><div class="diff-line diff-context">* You can&#39;t tell who *accessed* an application.</div><div class="diff-line diff-context">* When you want to remove access to an application, you have to update the credentials and redistribute them to everyone that needs access to that application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID provides a new approach to using shared accounts that eliminates these drawbacks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft Entra administrator configures which applications a user can access by using the Access Panel and choosing the type of single sign-on best suited for that application. One of those types, *password-based single-sign on*, lets Microsoft Entra ID act as a kind of &quot;broker&quot; during the sign-on process for that app.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Share accounts with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In Microsoft Entra ID, part of Microsoft Entra, sometimes organizations need to use a single username and password for multiple people, which often happens in the following cases:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The traditional sharing model has several drawbacks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* Enabling access to new applications requires you to distribute credentials to everyone that needs access.</div><div class="diff-line diff-added">* Each shared application might require its own unique set of shared credentials, requiring users to remember multiple sets of credentials. When users have to remember many credentials, the risk increases that they resort to risky practices (for example, writing down passwords).</div><div class="diff-line diff-context">* You can&#39;t tell who has access to an application.</div><div class="diff-line diff-context">* You can&#39;t tell who *accessed* an application.</div><div class="diff-line diff-context">* When you want to remove access to an application, you have to update the credentials and redistribute them to everyone that needs access to that application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID provides a new approach to using shared accounts that eliminates these drawbacks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Microsoft Entra administrator configures which applications a user can access by using the Access Panel and choosing the type of single sign-on best suited for that application. One of those types, *password-based single sign-on*, lets Microsoft Entra ID act as a kind of &quot;broker&quot; during the sign-in process for that app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Users sign in once with their organizational account. This account is the same one they regularly use to access their desktop or email. They can discover and access only those applications that they&#39;re assigned to. With shared accounts, this list of applications can include any number of shared credentials. The end-user doesn&#39;t need to remember or write down the various accounts they might be using.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-rule-validation.md" target="_blank">docs/identity/users/groups-dynamic-rule-validation.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-rule-validation" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: dynamic groups articles (33 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Validate Rules for Dynamic Membership Groups</div><div class="diff-line diff-deleted">description: Learn how to test members against a rule for a dynamic membership groups in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 12/19/2024</div><div class="diff-line diff-context">ms.reviewer: yukarppa</div><div class="diff-line diff-context">To evaluate the rule for dynamic membership groups, the administrator must be at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-deleted">&gt; Assigning one of the required roles via indirect role assignment is not supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Validate a rule for dynamic membership groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a Groups Administrator.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">2. Browse to **Entra ID** &gt; **Groups** &gt; **All groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">3. Select an existing dynamic group or create a new dynamic group, and then select **Dynamic membership rules**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-rule-validation/validate-tab.png&quot; alt-text=&quot;Screenshot of selections for viewing details of dynamic membership rules.&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Validate rules for dynamic membership groups</div><div class="diff-line diff-added">description: Learn how to test members against a rule for dynamic membership groups in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 12/19/2024</div><div class="diff-line diff-context">ms.reviewer: yukarppa</div><div class="diff-line diff-context">To evaluate the rule for dynamic membership groups, the administrator must be at least a [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-added">&gt; Assigning one of the required roles via indirect role assignment isn&#39;t supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Validate a rule for dynamic membership groups</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a Groups Administrator.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Groups** &gt; **All groups**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select an existing dynamic group or create a new dynamic group, and then select **Dynamic membership rules**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    :::image type=&quot;content&quot; source=&quot;./media/groups-dynamic-rule-validation/validate-tab.png&quot; alt-text=&quot;Screenshot of selections for viewing details of dynamic membership rules.&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-revoke-access.md" target="_blank">docs/identity/users/users-revoke-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-revoke-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: users bulk, misc, and light articles (90 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Access tokens and refresh tokens are frequently used with thick client applications, and also used in browser-based applications such as single page apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- When users authenticate to Microsoft Entra ID, part of Microsoft Entra, authorization policies are evaluated to determine if the user can be granted access to a specific resource.</div><div class="diff-line diff-deleted">- Once authorized, Microsoft Entra ID issues an access token and a refresh token for the resource.</div><div class="diff-line diff-context">- If the authentication protocol allows, the app can silently reauthenticate the user by passing the refresh token to Microsoft Entra ID when the access token expires. By default, access tokens issued by Microsoft Entra ID last for 1 hour.</div><div class="diff-line diff-deleted">- Microsoft Entra ID then reevaluates its authorization policies. If the user is still authorized, Microsoft Entra ID issues a new access token and refreshes token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Access tokens may pose a security risk if they need to be revoked within a period shorter than their typical one-hour lifespan. For this reason, Microsoft is actively working to bring [continuous access evaluation](~/identity/conditional-access/concept-continuous-access-evaluation.md) to Office 365 applications, which helps ensure invalidation of access tokens in near real time.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Session tokens (cookies)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- When a user opens a browser and authenticates to an application via Microsoft Entra ID, the user receives two session tokens. One from Microsoft Entra ID and another from the application.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Once the application issues its own session token, the application controls access based on its authorization policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- The authorization policies of Microsoft Entra ID are reevaluated as often as the application sends the user back to Microsoft Entra ID. Reevaluation usually happens silently, though the frequency depends on how the application is configured. It&#39;s possible that the app may never send the user back to Microsoft Entra ID as long as the session token is valid.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- For a session token to be revoked, the application must revoke access based on its own authorization policies. Microsoft Entra ID can&#39;t directly revoke a session token issued by an application.  </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Access tokens and refresh tokens are frequently used with thick client applications, and also used in browser-based applications such as single page apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- When users authenticate to Microsoft Entra ID, part of Microsoft Entra, authorization policies are evaluated to determine if the user can be granted access to a specific resource.</div><div class="diff-line diff-added">- After authorization, Microsoft Entra ID issues an access token and a refresh token for the resource.</div><div class="diff-line diff-context">- If the authentication protocol allows, the app can silently reauthenticate the user by passing the refresh token to Microsoft Entra ID when the access token expires. By default, access tokens issued by Microsoft Entra ID last for 1 hour.</div><div class="diff-line diff-added">- Microsoft Entra ID then reevaluates its authorization policies. If the user is still authorized, Microsoft Entra ID issues a new access token and refresh token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Access tokens might pose a security risk if they need to be revoked within a period shorter than their typical one-hour lifespan. For this reason, Microsoft is actively working to bring [continuous access evaluation](~/identity/conditional-access/concept-continuous-access-evaluation.md) to Office 365 applications, which helps ensure invalidation of access tokens in near real time.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Session tokens (cookies)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- When a user opens a browser and authenticates to an application via Microsoft Entra ID, the user receives two session tokens. One from Microsoft Entra ID and another from the application.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- After the application issues its own session token, the application controls access based on its authorization policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- The authorization policies of Microsoft Entra ID are reevaluated as often as the application sends the user back to Microsoft Entra ID. Reevaluation usually happens silently, though the frequency depends on how the application is configured. It&#39;s possible that the app might never send the user back to Microsoft Entra ID as long as the session token is valid.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- To revoke a session token, the application must revoke access based on its own authorization policies. Microsoft Entra ID can&#39;t directly revoke a session token issued by an application.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-dynamic-membership.md" target="_blank">docs/identity/users/groups-dynamic-membership.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-dynamic-membership" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: dynamic groups articles (33 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Manage Rules for Dynamic Membership Groups in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to manage rules for dynamic membership groups to automatically populate group members and rule references.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/05/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Also keep these limitations in mind:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- You can create a dynamic membership groups for users or devices, but you can&#39;t create a rule that contains both users and devices.</div><div class="diff-line diff-context">- You can&#39;t create a device membership group based on the user attributes of the device owner. Device membership rules can reference only device attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security consideration: Evaluate attribute write permissions before using them in dynamic group rules</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Parentheses are optional for a single expression. The total length of the body of your membership rule can&#39;t exceed 3,072 characters.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Constructing the body of a membership rule</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A membership rule that automatically populates a group with users or devices is a binary expression that results in a true or false outcome. The three parts of a simple rule are:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| `In` | `-in` |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Manage rules for dynamic membership groups in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to manage rules for dynamic membership groups to automatically populate group members and rule references.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/05/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Also keep these limitations in mind:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- You can create dynamic membership groups for users or devices, but you can&#39;t create a rule that contains both users and devices.</div><div class="diff-line diff-context">- You can&#39;t create a device membership group based on the user attributes of the device owner. Device membership rules can reference only device attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Security consideration: Evaluate attribute write permissions before using them in dynamic group rules</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Parentheses are optional for a single expression. The total length of the body of your membership rule can&#39;t exceed 3,072 characters.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Construct the body of a membership rule</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A membership rule that automatically populates a group with users or devices is a binary expression that results in a true or false outcome. The three parts of a simple rule are:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| `In` | `-in` |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-bulk-download-members.md" target="_blank">docs/identity/users/groups-bulk-download-members.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-bulk-download-members" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: bulk ops and groups articles (46 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Bulk download group membership list - Azure portal</div><div class="diff-line diff-deleted">description: Add users in bulk in the Azure admin center.</div><div class="diff-line diff-context">ms.date: 12/05/2025</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade) and in the left-hand navigation pane, select the **Groups** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">2. Select a group from the list and navigate to the **Members** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/bulk-operations/group-members-tab.png&quot; alt-text=&quot;Screenshot of a selected group&#39;s Members tab listing users and service principals.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">3. On the **Members** page command bar, select **Download members**.</div><div class="diff-line diff-deleted">   If you see a **Bulk operations** menu instead, select **Bulk operations** &gt; **Download members**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/bulk-operations/bulk-operations-download-members.png&quot; alt-text=&quot;Screenshot of the Bulk operations menu on the Members tab with Download members selected.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">4. Enter a filename and select **Start bulk operation**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Bulk download group membership list - Azure portal</div><div class="diff-line diff-added">description: Download group members in bulk in the Microsoft Entra admin center.</div><div class="diff-line diff-context">ms.date: 12/05/2025</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/GroupsManagementMenuBlade) and in the left-hand navigation pane, select the **Groups** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select a group from the list and navigate to the **Members** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/bulk-operations/group-members-tab.png&quot; alt-text=&quot;Screenshot of a selected group&#39;s Members tab listing users and service principals.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On the **Members** page command bar, select **Download members**.</div><div class="diff-line diff-added">    If you see a **Bulk operations** menu instead, select **Bulk operations** &gt; **Download members**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/bulk-operations/bulk-operations-download-members.png&quot; alt-text=&quot;Screenshot of the Bulk operations menu on the Members tab with Download members selected.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Enter a filename and select **Start bulk operation**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-assign-sensitivity-labels.md" target="_blank">docs/identity/users/groups-assign-sensitivity-labels.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 17, 2026 3:49 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-assign-sensitivity-labels" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial pass: bulk ops and groups articles (46 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### [21Vianet](#tab/21Vianet)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you are performing these Microsoft 365 operations from 21Vianet:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Register a Microsoft Entra ID application in Microsoft Entra ID.</div><div class="diff-line diff-deleted">1. Grant your application  API permissions to access Microsoft Graph including ```Directory.ReadWriteAll``` and ```Group.ReadWriteAll```, you may need to get tenant admin&#39;s explicit consent to grant the application access to Microsoft Graph.</div><div class="diff-line diff-deleted">1. Generate a client secret and copy it. You need the client secret to connect to MS Graph;</div><div class="diff-line diff-context">1. Run PowerShell as administrator:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```PowerShell</div><div class="diff-line diff-context">    $ClientSecretCredential = Get-Credential -Credential</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-deleted">     After commands run, you&#39;ll be prompted to enter a password. The password is the new client secret you copied in earlier step.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Run the following command to get access to MS Graph:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```PowerShell</div><div class="diff-line diff-deleted">    Connect-MgGraph -TenantId &quot;Current tenant id&quot; - ClientSecretCredential $ClientSecretCredential -Environment China</div><div class="diff-line diff-context">    ```</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### [21Vianet](#tab/21Vianet)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you&#39;re performing these Microsoft 365 operations from 21Vianet:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Register a Microsoft Entra ID application in Microsoft Entra ID.</div><div class="diff-line diff-added">1. Grant your application API permissions to access Microsoft Graph including ```Directory.ReadWriteAll``` and ```Group.ReadWriteAll```, you might need to get tenant admin&#39;s explicit consent to grant the application access to Microsoft Graph.</div><div class="diff-line diff-added">1. Generate a client secret and copy it. You need the client secret to connect to Microsoft Graph.</div><div class="diff-line diff-context">1. Run PowerShell as administrator:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```PowerShell</div><div class="diff-line diff-context">    $ClientSecretCredential = Get-Credential -Credential</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-added">     After commands run, you&#39;ll be prompted to enter a password. The password is the new client secret you copied in an earlier step.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Run the following command to get access to Microsoft Graph:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```PowerShell</div><div class="diff-line diff-added">    Connect-MgGraph -TenantId &quot;Current tenant id&quot; -ClientSecretCredential $ClientSecretCredential -Environment China</div><div class="diff-line diff-context">    ```</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
