@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 17th 2026, 9:29 PM PDT</p>
+        <p>Report generated on March 18th 2026, 9:29 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">45</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">43</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/managed-policies.md" target="_blank">docs/identity/conditional-access/managed-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Mar 18, 2026 4:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/managed-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+86</span> / 
+              <span class="deletions">-72</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> idp-security-baseline-031826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft-Managed Conditional Access Policies for Enhanced Security</div><div class="diff-line diff-context">description: Secure your resources with Microsoft-managed Conditional Access policies. Require multifactor authentication to reduce compromise risks.</div><div class="diff-line diff-deleted">ms.service: entra-id</div><div class="diff-line diff-deleted">ms.subservice: conditional-access</div><div class="diff-line diff-deleted">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 11/06/2025</div><div class="diff-line diff-context">ms.reviewer: swethar</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft-managed Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">As mentioned in the [Microsoft Digital Defense Report](https://www.microsoft.com/security/security-insider/microsoft-digital-defense-report-2023) from October 2023,</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; ...threats to digital peace have reduced trust in technology and highlighted the urgent need for improved cyber defenses at all levels...</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt; ...at Microsoft, our more than 10,000 security experts analyze over 65 trillion signals each day... driving some of the most influential insights in</div><div class="diff-line diff-deleted">cybersecurity. Together, we can build cyber resilience through innovative action and collective defense.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">As part of this work, we&#39;re making Microsoft-managed policies available in Microsoft Entra tenants around the world. These [simplified Conditional Access policies](#what-is-conditional-access) require multifactor authentication, which a [recent study](https://arxiv.org/abs/2305.00945) finds reduces the risk of compromise by more than 99%.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft-Managed Conditional Access Policies for Enhanced Security</div><div class="diff-line diff-context">description: Secure your resources with Microsoft-managed Conditional Access policies. Require multifactor authentication to reduce compromise risks.</div><div class="diff-line diff-added">ms.topic: article</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-added">ms.author: sarahlipsey</div><div class="diff-line diff-added">author: shlipsey3</div><div class="diff-line diff-added">manager: pmwongera</div><div class="diff-line diff-context">ms.reviewer: swethar</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Microsoft-managed Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Every day, Microsoft processes more than 100 trillion security signals from endpoints, cloud services, identity systems, and more. We use this data shape how we respond to threats and inform how we innovate to help build a safer digital future. Read about the work we&#39;re doing in the [Microsoft Digital Defense Report](https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/Microsoft-Digital-Defense-Report-2025.pdf#page=1).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">As part of this work, Microsoft-managed policies are available in Microsoft Entra tenants around the world. These [simplified Conditional Access policies](#what-is-conditional-access) require multifactor authentication, which continues to reduce the risk of compromise by more than 99%.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/managed-policies/microsoft-managed-policy.png&quot; alt-text=&quot;Screenshot of a Microsoft-managed Conditional Access policy in the Microsoft Entra admin center.&quot; lightbox=&quot;media/managed-policies/microsoft-managed-policy-expanded.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-zscaler-coexistence.md" target="_blank">docs/global-secure-access/how-to-zscaler-coexistence.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-zscaler-coexistence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+54</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix 21 structure violations in Zscaler coexistence article</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Microsoft and Zscaler for a Unified SASE Solution</div><div class="diff-line diff-deleted">description: &quot;Learn how to configure Microsoft and Zscaler SSE for unified SASE solutions to enhance security and connectivity in your organization.&quot;</div><div class="diff-line diff-context">#customer intent: As a network administrator, I want to configure Microsoft and Zscaler SSE for unified SASE solutions so that I can enhance security and connectivity in my organization.  </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">- Set up Zscaler Private Access and Internet Access</div><div class="diff-line diff-context">- Configure the Global Secure Access FQDN and IP bypasses</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Microsoft Global Secure Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To set up Microsoft Entra Global Secure Access and test all scenarios in this documentation:</div><div class="diff-line diff-context">- Enable and disable different Microsoft Global Secure Access traffic forwarding profiles for your Microsoft Entra tenant. For more information about enabling and disabling profiles, see [Global Secure Access traffic forwarding profiles](concept-traffic-forwarding.md).</div><div class="diff-line diff-context">- Install and configure the Microsoft Entra private network connector. For information on how to install and configure the connector, see [How to configure connectors](how-to-configure-connectors.md).</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">- Configure Quick Access to your private resources and set up Private Domain Name System (DNS) and DNS suffixes. For information on how to configure Quick Access, see [How to configure Quick Access](how-to-configure-quick-access.md).</div><div class="diff-line diff-context">- Install and configure the Global Secure Access client on end-user devices. For more information about clients, see [Global Secure Access clients](concept-clients.md). For information on how to install the Windows client, see [Global Secure Access client for Windows](how-to-install-windows-client.md). For macOS, see [Global Secure Access Client for macOS](how-to-install-macos-client.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure Microsoft and Zscaler for a Unified SASE Solution</div><div class="diff-line diff-added">description: &quot;Learn how to deploy Microsoft Global Secure Access alongside Zscaler Private Access and Internet Access. Covers four integration scenarios with step-by-step configuration, verification, and traffic testing procedures.&quot;</div><div class="diff-line diff-context">#customer intent: As a network administrator, I want to configure Microsoft and Zscaler SSE for unified SASE solutions so that I can enhance security and connectivity in my organization.  </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">- Set up Zscaler Private Access and Internet Access</div><div class="diff-line diff-context">- Configure the Global Secure Access FQDN and IP bypasses</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Prerequisites for Microsoft Global Secure Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To set up Microsoft Entra Global Secure Access and test all four scenarios described in this article:</div><div class="diff-line diff-context">- Enable and disable different Microsoft Global Secure Access traffic forwarding profiles for your Microsoft Entra tenant. For more information about enabling and disabling profiles, see [Global Secure Access traffic forwarding profiles](concept-traffic-forwarding.md).</div><div class="diff-line diff-context">- Install and configure the Microsoft Entra private network connector. For information on how to install and configure the connector, see [How to configure connectors](how-to-configure-connectors.md).</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">- Configure Quick Access to your private resources and set up Private Domain Name System (DNS) and DNS suffixes. For information on how to configure Quick Access, see [How to configure Quick Access](how-to-configure-quick-access.md).</div><div class="diff-line diff-context">- Install and configure the Global Secure Access client on end-user devices. For more information about clients, see [Global Secure Access clients](concept-clients.md). For information on how to install the Windows client, see [Global Secure Access client for Windows](how-to-install-windows-client.md). For macOS, see [Global Secure Access Client for macOS](how-to-install-macos-client.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/open-text-directory-services-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/open-text-directory-services-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 18, 2026 8:24 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/open-text-directory-services-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updating Opentext Directory Services template</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to OpenText Directory Services so that I can streamline the user management process and ensure that users have the appropriate access to OpenText Directory Services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">5. Set the **Provisioning Mode** to **Automatic**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      ![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">6. Under the **Admin Credentials** section, input your OpenText Directory Services Tenant URL.</div><div class="diff-line diff-deleted">   * Non-specific tenant URL : {OTDS URL}/scim/{partitionName}</div><div class="diff-line diff-deleted">   * Specific tenant URL :  {OTDS URL}/otdstenant/{tenantID}/scim/{partitionName}</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">7. Select &#39;OAuth2 Client Credentials Grant&#39; as the Authentication Method.</div><div class="diff-line diff-deleted">   1. Enter the Client ID and Client Secret retrieved from Step 2.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: jeevansd</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.author: jeedes</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to OpenText Directory Services so that I can streamline the user management process and ensure that users have the appropriate access to OpenText Directory Services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      ![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">6. Under the **Admin Credentials** section, input your OpenText Directory Services Tenant URL.</div><div class="diff-line diff-added">   * Non-specific tenant URL : `{OTDS URL}/scim/{partitionName}`</div><div class="diff-line diff-added">   * Specific tenant URL :  `{OTDS URL}/otdstenant/{tenantID}/scim/{partitionName}`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">7. Select **OAuth2 Client Credentials Grant** as the Authentication Method.</div><div class="diff-line diff-added">   1. Enter the **Client ID** and **Client Secret** retrieved from Step 2.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/27014.md" target="_blank">docs/includes/secure-recommendations/27014.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 18, 2026 5:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/27014" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+16</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify SWG layers and reorder remediation steps</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Microsoft Entra Suite Add-on for Microsoft Entra ID P2</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">The Global Secure Access Secure Web Gateway (SWG) implements defense-in-depth through five security layers that together create a comprehensive inspection chain for internet-bound traffic. Each layer serves a distinct protective function:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Layer 1: Context-aware network security** This layer routes internet traffic through the SWG and applies identity- and context-aware policy enforcement. Without this layer, traffic bypasses all downstream inspection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Layer 2: Web content, threat intelligence filtering, and AI Gateway** This layer blocks access to malicious, inappropriate, or policy-violating destinations and governs interactions with generative AI services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Layer 3: Content filtering and network DLP** This layer inspects file transfers and content payloads to prevent sensitive data exfiltration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Layer 4: Cloud firewall** This layer applies network-level firewall rules that protect branch office internet traffic routed through remote networks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Layer 5: Advanced threat protection** This layer uses TLS inspection to decrypt encrypted traffic so that you can scan payloads for malware, data exfiltration, and command-and-control communications.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.custom: Network-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Microsoft Entra Suite Add-on for Microsoft Entra ID P2</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">The Global Secure Access Secure Web Gateway (SWG) implements defense-in-depth through five security layers that together create a comprehensive inspection chain for internet-bound traffic. Each layer serves a distinct protective function:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 1: Context-aware network security** This outermost layer routes internet traffic through the SWG and applies identity- and context-aware policy enforcement. Without this layer, traffic bypasses all downstream inspection.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 2: TLS inspection, web content, and threat intelligence filtering** TLS inspection decrypts encrypted traffic so that all downstream web content filtering and DLP inspection operates on plaintext payloads. Web content filtering blocks access to malicious, inappropriate, or policy-violating destinations. Threat intelligence filtering blocks connections to known-malicious infrastructure.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 3: AI Gateway, content filtering, and network DLP** AI Gateway controls govern user interactions with generative AI services to prevent prompt injection and data leakage. Content filtering and network DLP inspect file transfers and payloads to prevent sensitive data exfiltration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Layer 4: Cloud firewall** This layer applies network-level firewall rules that protect branch office internet traffic routed through remote networks.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Layer 5: Advanced threat protection** This innermost layer is reserved for future capabilities including anti-malware scanning, intrusion detection and prevention (IDPS), and anomaly detection. No active checks are configured in this layer yet.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-cisco-secure-access-coexistence.md" target="_blank">docs/global-secure-access/how-to-cisco-secure-access-coexistence.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 8:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-cisco-secure-access-coexistence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix structure violations in Cisco coexistence articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Service Edge (SSE) Coexistence With Microsoft and Cisco Secure Access</div><div class="diff-line diff-deleted">description: Microsoft and Cisco’s Secure Access coexistence solution guide.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access </div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide outlines how to configure and deploy Global Secure Access solutions alongside Cisco Secure Access SSE offerings. By using both platforms, you can optimize your organization&#39;s security posture while maintaining high-performance connectivity for private applications, Microsoft 365 traffic, and internet access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide covers the following coexistence scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 1. Microsoft Entra Private Access with Cisco Secure Internet Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Global Secure Access configuration**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Service Edge (SSE) Coexistence With Microsoft and Cisco Secure Access</div><div class="diff-line diff-added">description: &quot;Configure Microsoft Global Secure Access and Cisco Secure Access for unified SASE capabilities. Covers deployment steps, FQDN and IP bypasses, and client configuration.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access </div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide outlines how to configure and deploy Global Secure Access solutions alongside Cisco Secure Access SSE offerings. By using both platforms, you can optimize your organization&#39;s security posture while maintaining high-performance connectivity for private applications, Microsoft 365 traffic, and internet access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Supported coexistence scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This guide covers the following coexistence scenarios:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 1. Microsoft Entra Private Access with Cisco Secure Internet Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### Configure Global Secure Access</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-simulate-remote-network.md" target="_blank">docs/global-secure-access/how-to-simulate-remote-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 8:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-simulate-remote-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-14</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix structure violations in remote network articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.reviewer: absinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">1. From the Azure portal, browse to **Virtual network gateways**.</div><div class="diff-line diff-context">1. Select **Create**.</div><div class="diff-line diff-context">1. Provide your virtual network gateway with a **Name** and select the appropriate region.</div><div class="diff-line diff-deleted">1. Select the **Virtual network** created in the previous section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      :::image type=&quot;content&quot; source=&quot;media/how-to-simulate-remote-network/create-azure-virtual-network-gateway.png&quot; alt-text=&quot;Screenshot of the Azure portal showing configuration settings for a virtual network gateway.&quot; lightbox=&quot;media/how-to-simulate-remote-network/create-azure-virtual-network-gateway-expanded.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create local network gateway</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This step is completed in the Azure portal. Several details from the previous step are needed to complete this step.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you selected **No redundancy** while creating device links in the Microsoft Entra admin center, you need to create just one local network gateway.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.reviewer: absinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">1. From the Azure portal, browse to **Virtual network gateways**.</div><div class="diff-line diff-context">1. Select **Create**.</div><div class="diff-line diff-context">1. Provide your virtual network gateway with a **Name** and select the appropriate region.</div><div class="diff-line diff-added">1. Select your **Virtual network**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">      :::image type=&quot;content&quot; source=&quot;media/how-to-simulate-remote-network/create-azure-virtual-network-gateway.png&quot; alt-text=&quot;Screenshot of the Azure portal showing configuration settings for a virtual network gateway.&quot; lightbox=&quot;media/how-to-simulate-remote-network/create-azure-virtual-network-gateway-expanded.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create local network gateway</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Creating a local network gateway is completed in the Azure portal. Several details from the remote network configuration (Microsoft gateway endpoint, ASN, and BGP address) are needed to complete this step.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you selected **No redundancy** when creating device links in the Microsoft Entra admin center, create one local network gateway.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-cisco-vpn-coexistence.md" target="_blank">docs/global-secure-access/how-to-cisco-vpn-coexistence.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 8:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-cisco-vpn-coexistence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix structure violations in Cisco coexistence articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Service Edge (SSE) Coexistence With Microsoft and Cisco VPNs</div><div class="diff-line diff-deleted">description: Microsoft and Cisco VPNs coexistence solution guide.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">**Global Secure Access configuration:**</div><div class="diff-line diff-context">1. Enable Microsoft Entra Internet Access and Microsoft Access forwarding profiles.</div><div class="diff-line diff-context">1. Install and configure the Global Secure Access client for Windows or macOS.</div><div class="diff-line diff-deleted">1. Add an Internet Access traffic forwarding profile custom bypass to exclude Cisco Secure Access VPNaaS service. [Instructions above.](#adding-a-custom-bypass)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Cisco configuration:**</div><div class="diff-line diff-context">1. Set up remote access VPN profile as [described previously](#split-include-configuration).</div><div class="diff-line diff-context">1. Install a private network connector for Microsoft Entra Private Access.</div><div class="diff-line diff-context">1. Configure Quick Access and set up Private DNS.</div><div class="diff-line diff-context">1. Create an app segment, for example an SMB file share. This will be the application you want to access through Global Secure Access and not Cisco VPN.</div><div class="diff-line diff-deleted">1. Add an Internet Access traffic forwarding profile [custom bypass](#adding-a-custom-bypass) to exclude Cisco Secure Access VPNaaS endpoint.</div><div class="diff-line diff-context">1. Install and configure the Global Secure Access client for Windows or macOS.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Security Service Edge (SSE) Coexistence With Microsoft and Cisco VPNs</div><div class="diff-line diff-added">description: &quot;Configure Microsoft Global Secure Access alongside Cisco AnyConnect and ASA VPNs for unified SASE. Covers deployment scenarios with step-by-step configuration for private access, Microsoft 365 traffic, and internet access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">**Global Secure Access configuration:**</div><div class="diff-line diff-context">1. Enable Microsoft Entra Internet Access and Microsoft Access forwarding profiles.</div><div class="diff-line diff-context">1. Install and configure the Global Secure Access client for Windows or macOS.</div><div class="diff-line diff-added">1. Add an Internet Access traffic forwarding profile custom bypass to exclude Cisco Secure Access VPNaaS service. Add a custom bypass rule for `*.vpn.sse.cisco.com` in the Internet Access profile. For detailed steps, see [Adding a custom bypass](#adding-a-custom-bypass).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Cisco configuration:**</div><div class="diff-line diff-context">1. Set up remote access VPN profile as [described previously](#split-include-configuration).</div><div class="diff-line diff-context">1. Install a private network connector for Microsoft Entra Private Access.</div><div class="diff-line diff-context">1. Configure Quick Access and set up Private DNS.</div><div class="diff-line diff-context">1. Create an app segment, for example an SMB file share. This will be the application you want to access through Global Secure Access and not Cisco VPN.</div><div class="diff-line diff-added">1. Add an Internet Access traffic forwarding profile custom bypass to exclude the Cisco Secure Access VPNaaS endpoint. Add a custom bypass rule for `*.vpn.sse.cisco.com` in the Internet Access profile. For detailed steps, see [Adding a custom bypass](#adding-a-custom-bypass).</div><div class="diff-line diff-context">1. Install and configure the Global Secure Access client for Windows or macOS.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-sharing-accounts.md" target="_blank">docs/identity/users/users-sharing-accounts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 7:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-sharing-accounts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Restore full article with merged editorial fixes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Sharing accounts and credentials</div><div class="diff-line diff-context">description: Learn how to configure shared accounts in Microsoft Entra ID using password-based single sign-on so multiple users can securely access apps without sharing passwords directly.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/14/2026</div><div class="diff-line diff-deleted">ms.reviewer: krbain</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Sharing accounts with Microsoft Entra ID</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In Microsoft Entra ID, part of Microsoft Entra, sometimes organizations need to use a single username and password for multiple people, which often happens in the following cases:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* A user account with at least the [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator) role to configure SSO and assign users. The [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator) role also works.</div><div class="diff-line diff-context">* At least the [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator) role to create security groups. If your tenant allows users to create security groups, this role isn&#39;t required.</div><div class="diff-line diff-context">* An application that supports password-based single sign-on (SSO).</div><div class="diff-line diff-deleted">* The [My Apps Secure Sign-in Extension](https://microsoftedge.microsoft.com/addons/detail/my-apps-secure-signin-ex/gaaceiggkkiffbfdpmfapegoiohkiipl) installed in end-user browsers (Microsoft Edge or Chrome) for accessing password-based SSO apps.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Sharing accounts and credentials</div><div class="diff-line diff-context">description: Learn how to configure shared accounts in Microsoft Entra ID using password-based single sign-on so multiple users can securely access apps without sharing passwords directly.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-added">ms.reviewer: yukarppa</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Share accounts with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In Microsoft Entra ID, part of Microsoft Entra, sometimes organizations need to use a single username and password for multiple people, which often happens in the following cases:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* A user account with at least the [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator) role to configure SSO and assign users. The [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator) role also works.</div><div class="diff-line diff-context">* At least the [Groups Administrator](~/identity/role-based-access-control/permissions-reference.md#groups-administrator) role to create security groups. If your tenant allows users to create security groups, this role isn&#39;t required.</div><div class="diff-line diff-context">* An application that supports password-based single sign-on (SSO).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;azure-active-directory-account-sharing&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-manage-remote-networks.md" target="_blank">docs/global-secure-access/how-to-manage-remote-networks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 8:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-manage-remote-networks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix structure violations in remote network articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to Update and Delete Remote Networks for Global Secure Access</div><div class="diff-line diff-deleted">description: Learn how to update and delete remote networks for Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are three sections with details you can edit. **Basics**, **Links**, and **Traffic profiles**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Basics</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The basics page provides a way to delete a selected remote network. You change the name of a remote network after you create it. Select the pencil icon to edit the name of the remote network.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of the basics tab with the pencil icon highlighted.](./media/how-to-manage-remote-networks/remote-network-basics.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Links</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add a new device link or delete an existing device link from this page. You can&#39;t edit the details of a device link after it was created. Select the trash can icon to delete a remote network device link.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to Update and Delete Remote Networks for Global Secure Access</div><div class="diff-line diff-added">description: &quot;Modify remote network configurations, delete unused networks, and manage device links and traffic profile assignments for Global Secure Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">There are three sections with details you can edit. **Basics**, **Links**, and **Traffic profiles**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### Update basic settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The basics page provides a way to delete a selected remote network. You change the name of a remote network after you create it. Select the pencil icon to edit the name of the remote network.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot of the basics tab with the pencil icon highlighted.](./media/how-to-manage-remote-networks/remote-network-basics.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#### Update device links</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add a new device link or delete an existing device link from this page. You can&#39;t edit the details of a device link after it was created. Select the trash can icon to delete a remote network device link.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-view-enriched-logs.md" target="_blank">docs/global-secure-access/how-to-view-enriched-logs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 18, 2026 9:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-view-enriched-logs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> AI readiness: fix remaining structure violations in 4 GSA articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to use enriched Microsoft 365 logs</div><div class="diff-line diff-deleted">description: Learn how to use enriched Microsoft 365 logs for Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use the enriched logs, you need the following roles, configurations, and subscriptions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Roles and Permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A **Security Administrator** role is required to export Global Secure Access Network Traffic Logs in Diagnostic Settings.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Configurations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Profile** - Ensure the Microsoft traffic profile is enabled. Microsoft traffic forwarding profile is required to capture traffic directed to Microsoft 365 services, which is fundamental for log enrichment. </div><div class="diff-line diff-context">- **Tenant sending data** - Confirms that traffic, as configured in forwarding profiles, is accurately tunneled to the Global Secure Access service.</div><div class="diff-line diff-context">- **Diagnostic Settings Configuration** - Set up Microsoft Entra diagnostic settings to channel the logs to a designated endpoint, like a Log Analytics workspace or Sentinel workspace. The requirements for each endpoint differ and are outlined in the Configure Diagnostic settings section of this article.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to use enriched Microsoft 365 logs</div><div class="diff-line diff-added">description: &quot;View performance, experience, and availability insights for Microsoft 365 apps routed through Microsoft Entra Internet Access. Integrate enriched log data with Log Analytics or Microsoft Sentinel for network diagnostics and security analysis.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/18/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To use the enriched logs, you need the following roles, configurations, and subscriptions:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Required roles and permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A **Security Administrator** role is required to export Global Secure Access Network Traffic Logs in Diagnostic Settings.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Required configurations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Profile** - Ensure the Microsoft traffic profile is enabled. Microsoft traffic forwarding profile is required to capture traffic directed to Microsoft 365 services, which is fundamental for log enrichment. </div><div class="diff-line diff-context">- **Tenant sending data** - Confirms that traffic, as configured in forwarding profiles, is accurately tunneled to the Global Secure Access service.</div><div class="diff-line diff-context">- **Diagnostic Settings Configuration** - Set up Microsoft Entra diagnostic settings to channel the logs to a designated endpoint, like a Log Analytics workspace or Sentinel workspace. The requirements for each endpoint differ and are outlined in the Configure Diagnostic settings section of this article.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md" target="_blank">docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Marilee Turscak - MSFT on Mar 18, 2026 11:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fixed broken link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">In the [Microsoft Intune admin center](https://intune.microsoft.com/), confirm the following criteria:</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">* Device enrollment</div><div class="diff-line diff-deleted">  * If not, [enroll the device in Intune](/intune/intune-service/fundamentals/deployment-guide-enrollment)</div><div class="diff-line diff-context">* Device compliance</div><div class="diff-line diff-deleted">  * If not, remediate the issue</div><div class="diff-line diff-deleted">  * See the following steps for more</div><div class="diff-line diff-deleted"></div><div class="diff-line diff-deleted">1. On the client device, open the **Company Portal** app.</div><div class="diff-line diff-deleted">2. Ensure the device status is **Compliant**. See the following steps [to resolve compliance issues](/intune/intune-service/user-help/check-device-access-windows-cpapp.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; After changes are made, it can take up to 30 minutes for the status to update. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">In the [Microsoft Intune admin center](https://intune.microsoft.com/), confirm the following criteria:</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">* Device enrollment</div><div class="diff-line diff-added">  * If not, [enroll the device in Intune](/intune/intune-service/fundamentals/deployment-guide-enrollment).</div><div class="diff-line diff-context">* Device compliance</div><div class="diff-line diff-added">  * If not, open the **Company Portal** app on the client device and follow the steps to [remediate the issue](/intune/intune-service/user-help/check-device-access-windows-cpapp).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; After changes are made, it can take up to 30 minutes for the status to update. </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/bynder-tutorial.md" target="_blank">docs/identity/saas-apps/bynder-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Regan Downer on Mar 18, 2026 4:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/bynder-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refactor Bynder tutorial for better readability</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">2. Add the Bynder app from the gallery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; We strongly recommend creating a custom application. Bynder now supports SCIM provisioning, which is available only</div><div class="diff-line diff-deleted">for custom applications. Using the Bynder application from the gallery will limit the availability of this</div><div class="diff-line diff-deleted">functionality for your integration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a custom application, you can use the [Enterprise App Configuration Wizard](https://portal.office.com/AdminPortal/home?Q=Docs#/azureadappintegration). In this wizard, you can add an application to your tenant, add users/groups to the app, assign roles, and walk through the SSO configuration. [Learn more about Microsoft 365 wizards](/microsoft-365/admin/misc/azure-ad-setup-guides).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot shows to Edit Basic SAML Configuration.](common/edit-urls.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   &gt; [!NOTE]</div><div class="diff-line diff-context">	&gt; For BYNDER_CONFIG_ID use an identifier value you got from **Сreate New Bynder Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Basic SAML Configuration** section, perform the following steps:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">2. Add the Bynder app from the gallery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; We strongly recommend creating a custom application. Bynder now supports SCIM provisioning, which is available only for custom applications. Using the Bynder application from the gallery will limit the availability of this functionality for your integration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a custom application, you can use the [Enterprise App Configuration Wizard](https://portal.office.com/AdminPortal/home?Q=Docs#/azureadappintegration). In this wizard, you can add an application to your tenant, add users/groups to the app, assign roles, and walk through the SSO configuration. [Learn more about Microsoft 365 wizards](/microsoft-365/admin/misc/azure-ad-setup-guides).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot shows to Edit Basic SAML Configuration.](common/edit-urls.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    &gt; [!NOTE]</div><div class="diff-line diff-context">	&gt; For BYNDER_CONFIG_ID use an identifier value you got from **Сreate New Bynder Configuration** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Basic SAML Configuration** section, perform the following steps:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/looop-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/looop-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 18, 2026 7:20 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/looop-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolving suggestions in all files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Manage options with the Provisioning option called out.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Properties** in the **Overview** page. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of the Manage options with the Provisioning option called out.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Properties** on the **Overview** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select the **Edit** icon to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/logicgate-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/logicgate-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 18, 2026 7:20 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/logicgate-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolving suggestions in all files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Provision tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Properties** in the **Overview** page. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Provision tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Properties** on the **Overview** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select the **Edit** icon to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/keystone-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/keystone-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Mar 18, 2026 7:20 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/keystone-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> resolving suggestions in all files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Properties** in the **Overview** page. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Create** to create your configuration.	</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Properties** on the **Overview** page. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select the **Edit** icon to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
