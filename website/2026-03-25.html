@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 23rd 2026, 9:27 PM PDT</p>
+        <p>Report generated on March 24th 2026, 9:27 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">37</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">36</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-web-content-filtering-categories.md" target="_blank">docs/global-secure-access/reference-web-content-filtering-categories.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 24, 2026 3:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-web-content-filtering-categories" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial cleanup: 12 GSA kenwith-owned articles (25 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|Nudity    | Sites that contain full or partial nudity that aren&#39;t necessarily overtly sexual in intent.|</div><div class="diff-line diff-context">|Pornography/sexually explicit    |Sites that contain explicit sexual content. Includes adult products such as sex toys, CD-ROMs, and videos, adult services such as videoconferencing, escort services, and strip clubs, erotic stories, and textual descriptions of sexual acts.  |</div><div class="diff-line diff-context">|Remote Access| Sites that enable users to remotely control and access computers or devices over the internet, facilitating support, collaboration, and management from a distance. |</div><div class="diff-line diff-deleted">|Self-harm      |Sites that promote actions that are relating to harming oneself, such as suicide, anorexia, bulimia, and so on.          |</div><div class="diff-line diff-context">|Sex education     |  Sites relating to sex education, including subjects such as respect for partner, abortion, contraceptives, sexually transmitted diseases, and pregnancy.       |</div><div class="diff-line diff-context">|Tasteless     |Sites with offensive or tasteless content, including profanity.          |</div><div class="diff-line diff-context">|Violence   | Sites that contain images or text depicting or advocating physical assault against humans, animals, or institutions. Sites of gruesome nature.         |</div><div class="diff-line diff-context">|Code repositories| Sites that host and manage source code repositories, enabling version control, collaboration, and code sharing among developers.|</div><div class="diff-line diff-context">|Computers + technology   |Sites that contain information such as product reviews, discussions, and news about computers, software, hardware, peripheral, and computer services.          |</div><div class="diff-line diff-context">|Education   |  Sites sponsored by educational institutions and schools of all types including distance education. Includes general educational and reference materials such as dictionaries, encyclopedias, online courses, teaching aids and discussion guides.       |</div><div class="diff-line diff-deleted">|Finance    | Sites related to banking, finance, payment or investment, including banks, brokerages, online stock trading, stock quotes, fund management, insurance companies, credit unions, credit card companies, and so on.         |</div><div class="diff-line diff-context">|Forums + newsgroups     | Sites for sharing information in the form of newsgroups, forums, bulletin boards. Doesn&#39;t include personal blogs.         |</div><div class="diff-line diff-context">|Government      |  Sites run by governmental or military organizations, departments, or agencies, including police departments, fire departments, customs bureaus, emergency services, civil defense, and counterterrorism organizations.        |</div><div class="diff-line diff-deleted">|Health + medicine      |   Sites containing information pertaining to health, healthcare services, fitness, and well-being, including information about medical equipment, hospitals, drugstores, nursing, medicine, procedures, prescription medications, and so on.       |</div><div class="diff-line diff-deleted">|Job search    |  Sites containing job listings, career information, assistance with job searches (such as resume writing, interviewing tips, and so on), employment agencies, or head hunters.        |</div><div class="diff-line diff-context">|News  |    Sites covering news and current events such as newspapers, newswire services, personalized news services, broadcasting sites, and magazines.      |</div><div class="diff-line diff-context">|Nonprofits + NGOs     |   Sites devoted to clubs, communities, unions, and non-profit organizations. Many of these groups exist for educational or charitable purposes.       |</div><div class="diff-line diff-deleted">|Personal sites     |    Sites about or hosted by personal individuals, including those hosted on commercial sites such as Blogger, AOL, and so on.      |</div><div class="diff-line diff-context">|Private IP addresses      |  Sites that are private IP addresses as defined in RFC 1918, that is, hosts that don&#39;t require access to hosts in other enterprises (or require limited access) and whose IP address might be ambiguous between enterprises but are well-defined within a certain enterprise.        |</div><div class="diff-line diff-context">|Professional networking   | Sites that enable professional networking for online communities.   |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|Nudity    | Sites that contain full or partial nudity that aren&#39;t necessarily overtly sexual in intent.|</div><div class="diff-line diff-context">|Pornography/sexually explicit    |Sites that contain explicit sexual content. Includes adult products such as sex toys, CD-ROMs, and videos, adult services such as videoconferencing, escort services, and strip clubs, erotic stories, and textual descriptions of sexual acts.  |</div><div class="diff-line diff-context">|Remote Access| Sites that enable users to remotely control and access computers or devices over the internet, facilitating support, collaboration, and management from a distance. |</div><div class="diff-line diff-added">|Self-harm      |Sites that promote actions that are relating to harming oneself, such as suicide, anorexia, bulimia.          |</div><div class="diff-line diff-context">|Sex education     |  Sites relating to sex education, including subjects such as respect for partner, abortion, contraceptives, sexually transmitted diseases, and pregnancy.       |</div><div class="diff-line diff-context">|Tasteless     |Sites with offensive or tasteless content, including profanity.          |</div><div class="diff-line diff-context">|Violence   | Sites that contain images or text depicting or advocating physical assault against humans, animals, or institutions. Sites of gruesome nature.         |</div><div class="diff-line diff-context">|Code repositories| Sites that host and manage source code repositories, enabling version control, collaboration, and code sharing among developers.|</div><div class="diff-line diff-context">|Computers + technology   |Sites that contain information such as product reviews, discussions, and news about computers, software, hardware, peripheral, and computer services.          |</div><div class="diff-line diff-context">|Education   |  Sites sponsored by educational institutions and schools of all types including distance education. Includes general educational and reference materials such as dictionaries, encyclopedias, online courses, teaching aids and discussion guides.       |</div><div class="diff-line diff-added">|Finance    | Sites related to banking, finance, payment or investment, including banks, brokerages, online stock trading, stock quotes, fund management, insurance companies, credit unions, credit card companies.         |</div><div class="diff-line diff-context">|Forums + newsgroups     | Sites for sharing information in the form of newsgroups, forums, bulletin boards. Doesn&#39;t include personal blogs.         |</div><div class="diff-line diff-context">|Government      |  Sites run by governmental or military organizations, departments, or agencies, including police departments, fire departments, customs bureaus, emergency services, civil defense, and counterterrorism organizations.        |</div><div class="diff-line diff-added">|Health + medicine      |   Sites containing information pertaining to health, healthcare services, fitness, and well-being, including information about medical equipment, hospitals, drugstores, nursing, medicine, procedures, prescription medications.       |</div><div class="diff-line diff-added">|Job search    |  Sites containing job listings, career information, assistance with job searches (such as resume writing, interviewing tips), employment agencies, or head hunters.        |</div><div class="diff-line diff-context">|News  |    Sites covering news and current events such as newspapers, newswire services, personalized news services, broadcasting sites, and magazines.      |</div><div class="diff-line diff-context">|Nonprofits + NGOs     |   Sites devoted to clubs, communities, unions, and non-profit organizations. Many of these groups exist for educational or charitable purposes.       |</div><div class="diff-line diff-added">|Personal sites     |    Sites about or hosted by personal individuals, including those hosted on commercial sites such as Blogger, AOL.      |</div><div class="diff-line diff-context">|Private IP addresses      |  Sites that are private IP addresses as defined in RFC 1918, that is, hosts that don&#39;t require access to hosts in other enterprises (or require limited access) and whose IP address might be ambiguous between enterprises but are well-defined within a certain enterprise.        |</div><div class="diff-line diff-context">|Professional networking   | Sites that enable professional networking for online communities.   |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Mar 24, 2026 11:30 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**What’s changing**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Beginning June 1 2026, Microsoft Entra ID will block any attempt by Microsoft Entra Connect Sync or Cloud Sync from hard-matching a new user object from Active Directory to an existing cloud-managed Microsoft Entra ID user object that holds [privileged roles](https://docs.azure.cn/en-us/entra/identity/role-based-access-control/permissions-reference#all-roles).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**This means:**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">*   If a cloud managed user already has [onPremisesImmutableId (sourceAnchor)](../identity/hybrid/connect/plan-connect-design-concepts.md#sourceanchor) set and is assigned a privileged role, Microsoft Entra Connect Sync or Cloud Sync will no longer be able to take over the Source of Authority of that user by hard-matching with an incoming user object from Active Directory.  </div><div class="diff-line diff-deleted">    </div><div class="diff-line diff-deleted">*   This safeguard prevents attackers from taking over privileged cloud managed users in Microsoft Entra by manipulating attributes of user objects in Active Directory. </div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**What’s not changing**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">*   Hard match operations for non-privileged accounts aren&#39;t affected.  </div><div class="diff-line diff-deleted">*   [Soft match](../identity/hybrid/connect/how-to-connect-install-existing-tenant.md?source=recommendations#hard-match-vs-soft-match) behavior isn&#39;t affected.  </div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Customer action required**</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**What’s changing**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Beginning **June 1, 2026**, Microsoft Entra ID will block any attempt by Entra Connect Sync or Cloud Sync from hard-matching a new user object from Active Directory to an existing cloud-managed Entra ID user object that hold [Microsoft Entra roles](../identity/role-based-access-control/permissions-reference.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**This means**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If a cloud managed user already has [onPremisesImmutableId (sourceAnchor)](..//identity/hybrid/connect/plan-connect-design-concepts.md#sourceanchor) set and is assigned a Microsoft Entra role, Microsoft Entra Connect Sync or Cloud Sync will no longer be able to take over the Source of Authority of that user by hard-matching with an incoming user object from Active Directory.</div><div class="diff-line diff-added">- This safeguard prevents attackers from taking over privileged cloud managed users in Entra by manipulating attributes of user objects in Active Directory.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**What’s not changing**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Hard match operations for cloud users without Microsoft Entra roles are not affected.   </div><div class="diff-line diff-added">- [Soft match](../identity/hybrid/connect/how-to-connect-install-existing-tenant.md?source=recommendations#hard-match-vs-soft-match) behavior isn&#39;t affected.</div><div class="diff-line diff-added">- Ongoing sync from Active Directory to Entra ID for previously hard-matched objects will not be affected.   </div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Customer action required**</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/troubleshoot-connectors.md" target="_blank">docs/global-secure-access/troubleshoot-connectors.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 24, 2026 3:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-connectors" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial cleanup: 12 GSA kenwith-owned articles (25 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot showing an example of the expected final configuration file.](media/troubleshoot-connectors/connector-logging-config-final-example.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">After you enable logging, attempt to access the resource from the Global Secure Access client in order to reproduce the error. Then, review the log file for errors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The updater service is healthy if it&#39;s running and there are no errors recorded in the event log (Applications and Services logs -&gt; Microsoft -&gt; Microsoft Entra private network -&gt; Updater -&gt; Admin). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Only major versions are released for auto-upgrade. We recommend updating your connector manually only if it&#39;s necessary. For example, you can&#39;t wait for a major release, because you must fix a known problem or you want to use a new feature. For more information on new releases, the type of the release (download, auto-upgrade), bug fixes, and new features see, [Microsoft Entra private network connector: Version release history](reference-version-history.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To manually upgrade a connector:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Download the latest version of the connector. (Find it in the Microsoft Entra admin center at **Global Secure Access** &gt; **Connect** &gt; **Connectors**)</div><div class="diff-line diff-deleted">- The installer restarts the Microsoft Entra private network connector services. In some cases, a reboot of the server might be required if the installer can&#39;t replace all files. Therefore we recommend closing all applications (that is, Event Viewer) before you start the upgrade.</div><div class="diff-line diff-context">- Run the installer. The upgrade process is quick and doesn&#39;t require providing any credentials and the connector isn&#39;t re-registered.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">**Can private network connector services run in a different user context than the default?**</div><div class="diff-line diff-context">    </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Screenshot showing an example of the expected final configuration file.](media/troubleshoot-connectors/connector-logging-config-final-example.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After you enable logging, attempt to access the resource from the Global Secure Access client to reproduce the error. Then, review the log file for errors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The updater service is healthy if it&#39;s running and there are no errors recorded in the event log (Applications and Services logs -&gt; Microsoft -&gt; Microsoft Entra private network -&gt; Updater -&gt; Admin). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Only major versions are released for auto-upgrade. Update your connector manually only if it&#39;s necessary. For example, you can&#39;t wait for a major release, because you must fix a known problem or you want to use a new feature. For more information on new releases, the type of the release (download, auto-upgrade), bug fixes, and new features see, [Microsoft Entra private network connector: Version release history](reference-version-history.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To manually upgrade a connector:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Download the latest version of the connector. (Find it in the Microsoft Entra admin center at **Global Secure Access** &gt; **Connect** &gt; **Connectors**)</div><div class="diff-line diff-added">- The installer restarts the Microsoft Entra private network connector services. In some cases, a reboot of the server might be required if the installer can&#39;t replace all files. Therefore close all applications (that is, Event Viewer) before you start the upgrade.</div><div class="diff-line diff-context">- Run the installer. The upgrade process is quick and doesn&#39;t require providing any credentials and the connector isn&#39;t re-registered.</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">**Can private network connector services run in a different user context than the default?**</div><div class="diff-line diff-context">    </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-compliant-network.md" target="_blank">docs/global-secure-access/how-to-compliant-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 24, 2026 3:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-compliant-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editorial cleanup: 12 GSA kenwith-owned articles (25 fixes)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Enable Compliant Network Check with Conditional Access</div><div class="diff-line diff-deleted">description: Learn how to require known compliant network locations in order to connect to your secured resources with Conditional Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.reviewer: smistry</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations that use Conditional Access along with the Global Secure Access can prevent malicious access to Microsoft apps, third-party SaaS apps, and private line-of-business (LoB) apps using multiple conditions to provide defense-in-depth. These conditions might include strong factor authentication, device compliance, location, and others. Enabling these conditions protects your organization against user identity compromise or token theft. Global Secure Access introduces the concept of a compliant network within Microsoft Entra ID Conditional Access. This compliant network check ensures users connect via the Global Secure Access service for their specific tenant and are compliant with security policies enforced by administrators.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Global Secure Access Client installed on devices or users behind configured remote networks allows administrators to secure resources behind a compliant network with advanced Conditional Access controls. This compliant network feature makes it easier for administrators to manage access policies, without having to maintain a list of egress IP addresses and removes the requirement to hairpin traffic through organization&#39;s VPN in order to maintain source IP anchoring and apply IP-based Conditional Access policies.</div><div class="diff-line diff-context">For more information about Conditional Access, see [What is Conditional Access?](../identity/conditional-access/overview.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Compliant network check enforcement</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Conditional Access Administrator](../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Conditional Access**.</div><div class="diff-line diff-context">1. Select **Create new policy**.</div><div class="diff-line diff-deleted">1. Give your policy a name. We recommend that organizations create a meaningful standard for the names of their policies.</div><div class="diff-line diff-context">1. Under **Assignments**, select **Users or workload identities**.</div><div class="diff-line diff-context">   1. Under **Include**, select **All users**.</div><div class="diff-line diff-context">   1. Under **Exclude**, select **Users and groups** and choose your organization&#39;s [emergency access or break-glass accounts](#user-exclusions).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Enable Compliant Network Check with Conditional Access</div><div class="diff-line diff-added">description: Learn how to require known compliant network locations to connect to your secured resources with Conditional Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.reviewer: smistry</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations that use Conditional Access along with the Global Secure Access can prevent malicious access to Microsoft apps, third-party SaaS apps, and private line-of-business (LoB) apps using multiple conditions to provide defense-in-depth. These conditions might include strong factor authentication, device compliance, location, and others. Enabling these conditions protects your organization against user identity compromise or token theft. Global Secure Access introduces the concept of a compliant network within Microsoft Entra ID Conditional Access. This compliant network check ensures users connect via the Global Secure Access service for their specific tenant and are compliant with security policies enforced by administrators.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Global Secure Access Client installed on devices or users behind configured remote networks allows administrators to secure resources behind a compliant network with advanced Conditional Access controls. This compliant network feature makes it easier for administrators to manage access policies, without having to maintain a list of egress IP addresses and removes the requirement to hairpin traffic through organization&#39;s VPN to maintain source IP anchoring and apply IP-based Conditional Access policies.</div><div class="diff-line diff-context">For more information about Conditional Access, see [What is Conditional Access?](../identity/conditional-access/overview.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Compliant network check enforcement</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Conditional Access Administrator](../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Conditional Access**.</div><div class="diff-line diff-context">1. Select **Create new policy**.</div><div class="diff-line diff-added">1. Give your policy a name. Create a meaningful standard for the names of your policies.</div><div class="diff-line diff-context">1. Under **Assignments**, select **Users or workload identities**.</div><div class="diff-line diff-context">   1. Under **Include**, select **All users**.</div><div class="diff-line diff-context">   1. Under **Exclude**, select **Users and groups** and choose your organization&#39;s [emergency access or break-glass accounts](#user-exclusions).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/compliance-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/compliance-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/compliance-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Compliance Administrator</div><div class="diff-line diff-context">description: Compliance Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 01/26/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Users with this role have permissions to manage compliance-related features in the Microsoft Purview portal, Microsoft 365 admin center, Azure, and Microsoft 365 Defender portal. Assignees can also manage all features within the Exchange admin center and create support tickets for Azure and Microsoft 365. For more information, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | Protect and manage your organization&#39;s data across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-context">| [Microsoft Purview Compliance Manager](/purview/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-deleted">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft 365 Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Compliance Administrator</div><div class="diff-line diff-context">description: Compliance Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Users with this role have permissions to manage compliance-related features in the Microsoft Purview portal, Microsoft 365 admin center, Azure, and Microsoft Defender portal. Assignees can also manage all features within the Exchange admin center and create support tickets for Azure and Microsoft 365. For more information, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| ----- | ---------- |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | Protect and manage your organization&#39;s data across Microsoft 365 services&lt;br&gt;Manage compliance alerts |</div><div class="diff-line diff-context">| [Microsoft Purview Compliance Manager](/purview/compliance-manager) | Track, assign, and verify your organization&#39;s regulatory compliance activities |</div><div class="diff-line diff-added">| [Microsoft Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Manage data governance&lt;br&gt;Perform legal and data investigation&lt;br&gt;Manage Data Subject Request&lt;br&gt;&lt;br&gt;This role has the same permissions as the [Compliance Administrator role group](/microsoft-365/security/office-365-security/scc-permissions) in Microsoft Defender portal role-based access control. |</div><div class="diff-line diff-context">| [Intune](/mem/intune/fundamentals/role-based-access-control) | View all Intune audit data |</div><div class="diff-line diff-context">| [Microsoft Defender for Cloud Apps](/defender-cloud-apps/manage-admins) | Has read-only permissions and can manage alerts&lt;br&gt;Can create and modify file policies and allow file governance actions&lt;br&gt;Can view all the built-in reports under Data Management |</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-reader.md" target="_blank">docs/identity/role-based-access-control/includes/global-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Global Reader</div><div class="diff-line diff-context">description: Global Reader</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 01/26/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users in this role can read settings and administrative information across Microsoft 365 services but can&#39;t take management actions. Global Reader is the read-only counterpart to Global Administrator. Assign Global Reader instead of Global Administrator for planning, audits, or investigations. Use Global Reader in combination with other limited admin roles like Exchange Administrator to make it easier to get work done without the assigning the Global Administrator role. Global Reader works with Microsoft 365 admin center, Exchange admin center, SharePoint admin center, Teams admin center, Microsoft 365 Defender portal, Microsoft Purview portal, Azure portal, and Device Management admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Users with this role **cannot** do the following:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; Global Reader role has the following limitations:</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt;- OneDrive admin center - OneDrive admin center does not support the Global Reader role</div><div class="diff-line diff-deleted">&gt;- [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) - Global Reader can&#39;t do content search or see Secure Score.</div><div class="diff-line diff-context">&gt;- [Teams admin center](/microsoftteams/manage-teams-in-modern-portal) - Global Reader cannot read **Teams lifecycle**, **Analytics &amp; reports**, **IP phone device management**, and **App catalog**. For more information, see [Use Microsoft Teams administrator roles to manage Teams](/microsoftteams/using-admin-roles).</div><div class="diff-line diff-context">&gt;- [Privileged Access Management](/purview/privileged-access-management) doesn&#39;t support the Global Reader role.</div><div class="diff-line diff-context">&gt;- [Azure Information Protection](/azure/information-protection/what-is-information-protection) - Global Reader is supported [for central reporting](/azure/information-protection/reports-aip) only, and when your Microsoft Entra organization isn&#39;t on the [unified labeling platform](/azure/information-protection/faqs#how-can-i-determine-if-my-tenant-is-on-the-unified-labeling-platform).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Global Reader</div><div class="diff-line diff-context">description: Global Reader</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users in this role can read settings and administrative information across Microsoft 365 services but can&#39;t take management actions. Global Reader is the read-only counterpart to Global Administrator. Assign Global Reader instead of Global Administrator for planning, audits, or investigations. Use Global Reader in combination with other limited admin roles like Exchange Administrator to make it easier to get work done without the assigning the Global Administrator role. Global Reader works with Microsoft 365 admin center, Exchange admin center, SharePoint admin center, Teams admin center, Microsoft Defender portal, Microsoft Purview portal, Azure portal, and Device Management admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Users with this role **cannot** do the following:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; Global Reader role has the following limitations:</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt;- OneDrive admin center - OneDrive admin center does not support the Global Reader role</div><div class="diff-line diff-added">&gt;- [Microsoft Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) - Global Reader can&#39;t do content search or see Secure Score.</div><div class="diff-line diff-context">&gt;- [Teams admin center](/microsoftteams/manage-teams-in-modern-portal) - Global Reader cannot read **Teams lifecycle**, **Analytics &amp; reports**, **IP phone device management**, and **App catalog**. For more information, see [Use Microsoft Teams administrator roles to manage Teams](/microsoftteams/using-admin-roles).</div><div class="diff-line diff-context">&gt;- [Privileged Access Management](/purview/privileged-access-management) doesn&#39;t support the Global Reader role.</div><div class="diff-line diff-context">&gt;- [Azure Information Protection](/azure/information-protection/what-is-information-protection) - Global Reader is supported [for central reporting](/azure/information-protection/reports-aip) only, and when your Microsoft Entra organization isn&#39;t on the [unified labeling platform](/azure/information-protection/faqs#how-can-i-determine-if-my-tenant-is-on-the-unified-labeling-platform).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-ai-prompt-injection-protection.md" target="_blank">docs/global-secure-access/how-to-ai-prompt-injection-protection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 24, 2026 4:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-ai-prompt-injection-protection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> stale-article-refresh-march-2026</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Protect enterprise generative AI apps with prompt injection protection (preview)</div><div class="diff-line diff-context">description: &quot;Protect your enterprise generative AI apps from prompt injection attacks with Microsoft&#39;s AI Gateway prompt injection protection.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/23/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Prompt Injection Protection currently supports only text prompts. It doesn&#39;t support files.</div><div class="diff-line diff-deleted">- Prompt Injection Protection supports only JSON-based generative AI apps. It doesn&#39;t support apps that use URL-based encoding, like Gemini.</div><div class="diff-line diff-context">- Prompt Injection Protection supports prompts up to 10,000 characters. Anything longer is truncated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Protect enterprise generative AI apps with prompt injection protection (preview)</div><div class="diff-line diff-context">description: &quot;Protect your enterprise generative AI apps from prompt injection attacks with Microsoft&#39;s AI Gateway prompt injection protection.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Prompt Injection Protection currently supports only text prompts. It doesn&#39;t support files.</div><div class="diff-line diff-added">- Prompt Injection Protection supports only JSON-based generative AI apps.</div><div class="diff-line diff-context">- Prompt Injection Protection supports prompts up to 10,000 characters. Anything longer is truncated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21844.md" target="_blank">docs/includes/secure-recommendations/21844.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Mar 24, 2026 4:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21844" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [ZT Assessment] Update 21844</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 10/28/2025</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Free</div><div class="diff-line diff-context"># sfipillar: Protect identities and secrets</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Threat actors frequently target legacy management interfaces such as the Azure AD PowerShell module (AzureAD and AzureADPreview), which don&#39;t support modern authentication, Conditional Access enforcement, or advanced audit logging. Continued use of these modules exposes the environment to risks including weak authentication, bypass of security controls, and incomplete visibility into administrative actions. Attackers can exploit these weaknesses to gain unauthorized access, escalate privileges, and perform malicious changes. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Block the Azure AD PowerShell module and enforce the use of Microsoft Graph PowerShell or Microsoft Entra PowerShell to ensure that only secure, supported, and auditable management channels are available, which closes critical gaps in the attack chain. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: MicrosoftGuyJFlo</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.custom: Identity-Secure-Recommendation</div><div class="diff-line diff-context"># minimumlicense: Free</div><div class="diff-line diff-context"># sfipillar: Protect identities and secrets</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Threat actors frequently target legacy management interfaces such as the Azure AD PowerShell module (AzureAD and AzureADPreview), which don&#39;t support modern authentication, Conditional Access enforcement, or advanced audit logging. Continued use of these modules exposes the environment to risks including weak authentication, bypass of security controls, and incomplete visibility into administrative actions. Attackers can exploit these weaknesses to gain unauthorized access, escalate privileges, and perform malicious changes. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Block the Azure AD PowerShell module (appID: 1b730954-1685-4b74-9bfd-dac224a7b894) and enforce the use of Microsoft Graph PowerShell or Microsoft Entra PowerShell to ensure that only secure, supported, and auditable management channels are available, which closes critical gaps in the attack chain. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Remediation action**</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/security-copilot/conditional-access-agent-optimization-passkeys.md" target="_blank">docs/security-copilot/conditional-access-agent-optimization-passkeys.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Mar 24, 2026 3:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/security-copilot/conditional-access-agent-optimization-passkeys" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> PR review fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Deploy passkeys with the Conditional Access Optimization Agent</div><div class="diff-line diff-context">description: Learn how to use the Conditional Access Optimization Agent to safely deploy a passkey program to roll out phishing-resistant authentication methods.</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">- Security Administrator</div><div class="diff-line diff-context">- SharePoint Administrator</div><div class="diff-line diff-context">- Teams Administrator</div><div class="diff-line diff-deleted">- User Administrator</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Deploy passkeys with the Microsoft Entra Conditional Access Optimization Agent</div><div class="diff-line diff-context">description: Learn how to use the Conditional Access Optimization Agent to safely deploy a passkey program to roll out phishing-resistant authentication methods.</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">- Security Administrator</div><div class="diff-line diff-context">- SharePoint Administrator</div><div class="diff-line diff-context">- Teams Administrator</div><div class="diff-line diff-added">- User Administrator</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/global-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Global Administrator</div><div class="diff-line diff-context">description: Global Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 03/23/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have access to all administrative features in Microsoft Entra ID, as well as services that use Microsoft Entra identities like the Microsoft 365 Defender portal, the Microsoft Purview portal, Exchange Online, SharePoint Online, and Skype for Business Online. Global Administrators can view Directory Activity logs. Furthermore, Global Administrators can [elevate their access](/azure/role-based-access-control/elevate-access-global-admin) to manage all Azure subscriptions and management groups. This allows Global Administrators to get full access to all Azure resources using the respective Microsoft Entra tenant. The person who signs up for the Microsoft Entra organization becomes a Global Administrator. There can be more than one Global Administrator at your company. Global Administrators can reset the password for any user and all other administrators. A Global Administrator cannot remove their own Global Administrator assignment. This is to prevent a situation where an organization has zero Global Administrators.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; As a best practice, Microsoft recommends that you assign the Global Administrator role to fewer than five people in your organization. For more information, see [Best practices for Microsoft Entra roles](../best-practices.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Global Administrator</div><div class="diff-line diff-context">description: Global Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have access to all administrative features in Microsoft Entra ID, as well as services that use Microsoft Entra identities like the Microsoft Defender portal, the Microsoft Purview portal, Exchange Online, SharePoint Online, and Skype for Business Online. Global Administrators can view Directory Activity logs. Furthermore, Global Administrators can [elevate their access](/azure/role-based-access-control/elevate-access-global-admin) to manage all Azure subscriptions and management groups. This allows Global Administrators to get full access to all Azure resources using the respective Microsoft Entra tenant. The person who signs up for the Microsoft Entra organization becomes a Global Administrator. There can be more than one Global Administrator at your company. Global Administrators can reset the password for any user and all other administrators. A Global Administrator cannot remove their own Global Administrator assignment. This is to prevent a situation where an organization has zero Global Administrators.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; As a best practice, Microsoft recommends that you assign the Global Administrator role to fewer than five people in your organization. For more information, see [Best practices for Microsoft Entra roles](../best-practices.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/security-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have permissions to manage security-related features in the Microsoft 365 Defender portal, Microsoft Entra ID Protection, Microsoft Entra Authentication, Azure Information Protection, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-deleted">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Monitor security-related policies across Microsoft 365 services&lt;br&gt;Manage security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for resetting passwords |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role&lt;br&gt;**Cannot** manage Microsoft Entra role assignments or settings |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | Manage security policies&lt;br&gt;View, investigate, and respond to security threats&lt;br&gt;View reports |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have permissions to manage security-related features in the Microsoft Defender portal, Microsoft Entra ID Protection, Microsoft Entra Authentication, Azure Information Protection, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-added">| [Microsoft Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | Monitor security-related policies across Microsoft 365 services&lt;br&gt;Manage security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for resetting passwords |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role&lt;br&gt;**Cannot** manage Microsoft Entra role assignments or settings |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | Manage security policies&lt;br&gt;View, investigate, and respond to security threats&lt;br&gt;View reports |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-operator.md" target="_blank">docs/identity/role-based-access-control/includes/security-operator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-operator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-deleted">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft 365 Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role can manage alerts and have global read-only access on security-related features, including all information in Microsoft Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-added">| [Microsoft Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | All permissions of the Security Reader role&lt;br/&gt;View, investigate, and respond to security threats alerts&lt;br/&gt;Manage security settings in Microsoft Defender portal |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | All permissions of the Security Reader role&lt;br&gt;Perform all ID Protection operations except for configuring or changing risk-based policies, resetting passwords, and configuring alert e-mails. |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | All permissions of the Security Reader role |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | All permissions of the Security Reader role&lt;br&gt;View, investigate, and respond to security alerts |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/security-reader.md" target="_blank">docs/identity/role-based-access-control/includes/security-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Mar 24, 2026 6:58 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/security-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Editor's feedback - Allow list & block list fixes - Microsoft 365 Defender portal -> Microsoft Defender portal</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have global read-only access on security-related feature, including all information in Microsoft 365 Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and the ability to read Microsoft Entra sign-in reports and audit logs, and in Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-deleted">| [Microsoft 365 Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | View security-related policies across Microsoft 365 services&lt;br&gt;View security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | View all ID Protection reports and Overview |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | Has read-only access to all information surfaced in Microsoft Entra Privileged Identity Management: Policies and reports for Microsoft Entra role assignments and security reviews.&lt;br&gt;**Cannot** sign up for Microsoft Entra Privileged Identity Management or make any changes to it. In the Privileged Identity Management portal or via PowerShell, someone in this role can activate additional roles (for example, Privileged Role Administrator), if the user is eligible for them. |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | View security policies&lt;br&gt;View and investigate security threats&lt;br&gt;View reports |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This is a [privileged role](../privileged-roles-permissions.md). Users with this role have global read-only access on security-related feature, including all information in Microsoft Defender portal, Microsoft Entra ID Protection, Privileged Identity Management, and the ability to read Microsoft Entra sign-in reports and audit logs, and in Microsoft Purview portal. For more information about Office 365 permissions, see [Roles and role groups in Microsoft Defender for Office 365 and Microsoft Purview compliance](/microsoft-365/security/office-365-security/scc-permissions).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| In | Can do |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-added">| [Microsoft Defender portal](/microsoft-365/security/defender/microsoft-365-defender-portal) | View security-related policies across Microsoft 365 services&lt;br&gt;View security threats and alerts&lt;br&gt;View reports |</div><div class="diff-line diff-context">| [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md) | View all ID Protection reports and Overview |</div><div class="diff-line diff-context">| [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md) | Has read-only access to all information surfaced in Microsoft Entra Privileged Identity Management: Policies and reports for Microsoft Entra role assignments and security reviews.&lt;br&gt;**Cannot** sign up for Microsoft Entra Privileged Identity Management or make any changes to it. In the Privileged Identity Management portal or via PowerShell, someone in this role can activate additional roles (for example, Privileged Role Administrator), if the user is eligible for them. |</div><div class="diff-line diff-context">| [Microsoft Purview portal](/purview/purview-portal) | View security policies&lt;br&gt;View and investigate security threats&lt;br&gt;View reports |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-global-secure-access-certifications.md" target="_blank">docs/global-secure-access/reference-global-secure-access-certifications.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 24, 2026 5:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-global-secure-access-certifications" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> stale-article-refresh-march-2026</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-deleted">ms.date: 03/09/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to know which certifications Global Secure Access supports so that I can ensure compliance with industry standards.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-added">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to know which certifications Global Secure Access supports so that I can ensure compliance with industry standards.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-customize-block-page.md" target="_blank">docs/global-secure-access/how-to-customize-block-page.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 24, 2026 4:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-customize-block-page" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove author/ms.author overrides from 5 GSA articles (transfer to folder-level)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to Customize Global Secure Access Block Page</div><div class="diff-line diff-context">description: Use custom block pages to display organization-specific messaging internet access policies block users from accessing websites.</div><div class="diff-line diff-deleted">author: fgomulka</div><div class="diff-line diff-deleted">ms.author: frankgomulka</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 09/24/2025</div><div class="diff-line diff-context">ms.reviewer: kenwith</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: How to Customize Global Secure Access Block Page</div><div class="diff-line diff-context">description: Use custom block pages to display organization-specific messaging internet access policies block users from accessing websites.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 09/24/2025</div><div class="diff-line diff-context">ms.reviewer: kenwith</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
