@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 24th 2026, 9:39 PM PDT</p>
+        <p>Report generated on March 25th 2026, 9:39 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">60</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">76</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-wildcard.md" target="_blank">docs/identity/app-proxy/application-proxy-wildcard.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 7:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-wildcard" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 5 — 3 heavy-screenshot articles (final batch)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Wildcard applications in Microsoft Entra application proxy</div><div class="diff-line diff-context">description: &quot;Publish and manage multiple on-premises applications at once using wildcard URL patterns in Microsoft Entra application proxy.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example: `http(s)://*.adventure-works.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">While the internal and external URLs can use different domains, as a best practice, they should be same. When publishing the application, you see an error if one of the URLs doesn&#39;t have a wildcard.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Creating a wildcard application is based on the same [application publishing flow](application-proxy-add-on-premises-application.md) that is available for all other applications. The only difference is that you include a wildcard in the URLs and potentially the SSO configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For wildcard applications, the **Internal URL** must be formatted as `http(s)://*.&lt;domain&gt;`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![For internal URL, use the format http(s)://*.\&lt;domain&gt;](./media/application-proxy-wildcard/22.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you configure an **External URL**, you must use the following format: `https://*.&lt;custom domain&gt;`</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Wildcard applications in Microsoft Entra application proxy</div><div class="diff-line diff-context">description: &quot;Publish and manage multiple on-premises applications at once using wildcard URL patterns in Microsoft Entra application proxy.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example: `http(s)://*.adventure-works.com`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">While the internal and external URLs can use different domains, as a best practice, they should be the same. When publishing the application, you see an error if one of the URLs doesn&#39;t have a wildcard.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Creating a wildcard application is based on the same [application publishing flow](application-proxy-add-on-premises-application.md) that is available for all other applications. The only difference is that you include a wildcard in the URLs and potentially the SSO configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For wildcard applications, the **Internal URL** must be formatted as `http(s)://*.&lt;domain&gt;`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![For internal URL, use the format http(s)://*.\&lt;domain&gt;.](./media/application-proxy-wildcard/22.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you configure an **External URL**, you must use the following format: `https://*.&lt;custom domain&gt;`</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-install-ios-client.md" target="_blank">docs/global-secure-access/how-to-install-ios-client.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by cagautham on Mar 25, 2026 11:28 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-install-ios-client" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise iOS client installation guide details</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: The Global Secure Access Client for iOS (Preview)</div><div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the iOS client app.</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to set up and deploy the Global Secure Access client for iOS devices so that I can secure network traffic for my organization.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Global Secure Access client for iOS (Preview)</div><div class="diff-line diff-deleted">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; The Global Secure Access client for iOS is currently in PREVIEW.</div><div class="diff-line diff-deleted">&gt; This information relates to a prerelease product that may be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">This article explains how to set up and deploy the Global Secure Access client app on iOS and iPadOS devices. For simplicity, this article refers to both iOS and iPadOS as **iOS**.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### System requirements</div><div class="diff-line diff-context">The iOS device (phone or tablet) must meet the following requirements:</div><div class="diff-line diff-deleted">- The device runs iOS 15.0 or newer.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: The Global Secure Access Client for iOS</div><div class="diff-line diff-context">description: The Global Secure Access client secures network traffic at the end-user device. This article describes how to download and install the iOS client app.</div><div class="diff-line diff-context">#customer intent: As an IT admin, I want to set up and deploy the Global Secure Access client for iOS devices so that I can secure network traffic for my organization.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Global Secure Access client for iOS</div><div class="diff-line diff-context">This article explains how to set up and deploy the Global Secure Access client app on iOS and iPadOS devices. For simplicity, this article refers to both iOS and iPadOS as **iOS**.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!CAUTION]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### System requirements</div><div class="diff-line diff-context">The iOS device (phone or tablet) must meet the following requirements:</div><div class="diff-line diff-added">- The device runs iOS 16.0 or newer.</div><div class="diff-line diff-context">- The device has the Microsoft Authenticator app or the Intune Company Portal app.</div><div class="diff-line diff-added">- For the supervised devices, the device must be enrolled to enforce Intune device compliance policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Known limitations</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-manage-users-groups-assignment.md" target="_blank">docs/global-secure-access/how-to-manage-users-groups-assignment.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-manage-users-groups-assignment" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Assign users and groups to traffic forwarding profiles</div><div class="diff-line diff-context">description: &quot;Control which users and groups receive traffic forwarding policies, enabling gradual rollout and limiting scope during testing or deployment phases.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># How to assign users and groups to traffic forwarding profiles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **View** link in the **User and group assignments** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the traffic forwarding profiles with the view link highlighted.](media/how-to-manage-users-groups-assignment/traffic-profile-view-user-group-assignments.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **0 Users, 0 Groups assigned** link.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the 0 users, 0 groups assigned link.](media/how-to-manage-users-groups-assignment/user-group-assignment-link.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Add user/group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the users and groups page with the Add user/group button highlighted.](media/how-to-manage-users-groups-assignment/traffic-profile-add-user-group-button.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Assign users and groups to traffic forwarding profiles</div><div class="diff-line diff-context">description: &quot;Control which users and groups receive traffic forwarding policies, enabling gradual rollout and limiting scope during testing or deployment phases.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># How to assign users and groups to traffic forwarding profiles</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **View** link in the **User and group assignments** section.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the traffic forwarding profiles with the view link highlighted.](media/how-to-manage-users-groups-assignment/traffic-profile-view-user-group-assignments.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **0 Users, 0 Groups assigned** link.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the 0 users, 0 groups assigned link.](media/how-to-manage-users-groups-assignment/user-group-assignment-link.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Add user/group**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the users and groups page with the Add user/group button highlighted.](media/how-to-manage-users-groups-assignment/traffic-profile-add-user-group-button.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-secure-api-access.md" target="_blank">docs/identity/app-proxy/application-proxy-secure-api-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 2:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-secure-api-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 1 — 2 articles reviewed</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Access on-premises Application Programming Interface (API) with Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Use Microsoft Entra application proxy to provide secure access to an Application Programming Interface (API) hosted in a private cloud or on premises.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-deleted">ms.custom: has-adal-ref, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use Microsoft Entra application proxy to provide secure access to an Application Programming Interface (API) hosted in a private cloud or on premises</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. You don&#39;t want APIs to be available to end users in the **MyApps** panel, so set **Visible to users** to **No** at the bottom of the **Properties** page, and then select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Properties page with Visible to users toggle set to No.](./media/application-proxy-secure-api-access/5-not-visible-to-users.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The web API is now published through Microsoft Entra application proxy. Next, add users who can access the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **SecretAPI - Overview** page, select **Users and groups** in the left navigation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. On the **Users and groups** page, select **Add user**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Access on-premises Application Programming Interface (API) with Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Use Microsoft Entra application proxy to provide secure access to an Application Programming Interface (API) hosted in a private cloud or on premises.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-added">ms.custom: has-adal-ref</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use Microsoft Entra application proxy to provide secure access to an Application Programming Interface (API) hosted in a private cloud or on premises</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. You don&#39;t want APIs to be available to end users in the **MyApps** panel, so set **Visible to users** to **No** at the bottom of the **Properties** page, and then select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Properties page in the Microsoft Entra admin center showing the Visible to users toggle.](./media/application-proxy-secure-api-access/5-not-visible-to-users.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The web API is now published through Microsoft Entra application proxy. Next, add users who can access the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **SecretAPI - Overview** page, select **Users and groups** in the left navigation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On the **Users and groups** page, select **Add user/group**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/stormshield-network-security-tutorial.md" target="_blank">docs/identity/saas-apps/stormshield-network-security-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Colin Cooper on Mar 25, 2026 9:28 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/stormshield-network-security-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update stormshield-network-security-tutorial.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This section guides you through the necessary configurations on the **Stormshield Network Security (SNS) firewall** to enable **OIDC authentication** via **Microsoft Entra ID**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Log in** to the web administration interface of the firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Set the firewall FQDN for access to the captive portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    The wizard suggests URLs that correspond to the captive portal service, the **SSL** VPN service, and access to the firewall’s web administration interface. These URLs can be copied directly from this wizard to be entered as redirect URLs in [your **Microsoft Entra ID** administration center](#configure-the-redirect-uris) if necessary.</div><div class="diff-line diff-context">    They are also available in the OIDC/**Microsoft Entra ID** method editing panel.</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-deleted">1. Select the CSV file containing the groups in your **Microsoft Entra ID** tenant, which was downloaded when [Download user groups to import them into the SNS firewall](#download-user-groups-to-import-them-into-the-sns-firewall-optional), then click on **Next**. A summary of the group import operation then appears.</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-deleted">1. Confirm your configuration by clicking on **Finish**.</div><div class="diff-line diff-context">    You will be redirected to the OIDC/**Microsoft Entra ID** authentication method editing panel.</div><div class="diff-line diff-context">1. Select **Apply** to save the configuration of the **Microsoft Entra ID** authentication method on the firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    * **in**: interface to access the internal captive portal to authenticate administrators via the web administration interface,</div><div class="diff-line diff-context">    * **out**: interface to access the external captive portal that **SSL** VPN clients use for retrieving their configuration files and setting up tunnels,</div><div class="diff-line diff-context">    * **sslvpn**: interface used by **SSL** VPN clients to access the firewall&#39;s **SSL** VPN service when the tunnel is set up.</div><div class="diff-line diff-deleted">1.  In the **Authentication methods** menu: click on **Enable a method** and select the **OIDC** method.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This section guides you through the necessary configurations on the **Stormshield Network Security (SNS) firewall** to enable **OIDC authentication** via **Microsoft Entra ID**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Sign in** to the web administration interface of the firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Set the firewall FQDN for access to the captive portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    The wizard suggests URLs that correspond to the captive portal service, the **SSL** VPN service, and access to the firewall’s web administration interface. These URLs can be copied directly from this wizard to be entered as redirect URLs in [your **Microsoft Entra ID** administration center](#configure-the-redirect-uris) if necessary.</div><div class="diff-line diff-context">    They are also available in the OIDC/**Microsoft Entra ID** method editing panel.</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-added">1. Select the CSV file containing the groups in your **Microsoft Entra ID** tenant, which was downloaded when [Download user groups to import them into the SNS firewall](#download-user-groups-to-import-them-into-the-sns-firewall-optional), then select **Next**. A summary of the group import operation then appears.</div><div class="diff-line diff-context">1. Select **Next**.</div><div class="diff-line diff-added">1. Confirm your configuration by selecting on **Finish**.</div><div class="diff-line diff-context">    You will be redirected to the OIDC/**Microsoft Entra ID** authentication method editing panel.</div><div class="diff-line diff-context">1. Select **Apply** to save the configuration of the **Microsoft Entra ID** authentication method on the firewall.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    * **in**: interface to access the internal captive portal to authenticate administrators via the web administration interface,</div><div class="diff-line diff-context">    * **out**: interface to access the external captive portal that **SSL** VPN clients use for retrieving their configuration files and setting up tunnels,</div><div class="diff-line diff-context">    * **sslvpn**: interface used by **SSL** VPN clients to access the firewall&#39;s **SSL** VPN service when the tunnel is set up.</div><div class="diff-line diff-added">1.  In the **Authentication methods** menu: select **Enable a method** and select the **OIDC** method.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-domain-controllers.md" target="_blank">docs/global-secure-access/how-to-configure-domain-controllers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-domain-controllers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure Microsoft Entra Private Access for Active Directory Domain Controllers</div><div class="diff-line diff-context">description: &quot;Enforce Conditional Access and multifactor authentication for Kerberos authentication to Active Directory Domain Controllers through Microsoft Entra Private Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/16/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Go to **Global Secure Access** &gt; **Connect** &gt; **Traffic forwarding** &gt; **Private Access Profile**.</div><div class="diff-line diff-context">1. Enable the Private Access profile.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[![Screenshot showing the Private Access traffic forwarding profile activated in the Microsoft Entra admin center.](media/how-to-configure-domain-controllers/traffic-forwarding-profile.png)](media/how-to-configure-domain-controllers/traffic-forwarding-profile.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 5. Install the Global Secure Access client</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. During installation, sign in with a Microsoft Entra ID user when prompted.</div><div class="diff-line diff-context">1. After installation, in the Microsoft Entra admin center, go to **Global Secure Access** &gt; **Connect** &gt; **Connectors and sensors** &gt; **Private access sensors** and verify the sensor status is **Active**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[![Screenshot showing the Private Access sensor as activated in the Microsoft Entra admin center.](media/how-to-configure-domain-controllers/connectors-and-sensors.png)](media/how-to-configure-domain-controllers/connectors-and-sensors.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure Microsoft Entra Private Access for Active Directory Domain Controllers</div><div class="diff-line diff-context">description: &quot;Enforce Conditional Access and multifactor authentication for Kerberos authentication to Active Directory Domain Controllers through Microsoft Entra Private Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: shkhalid</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Go to **Global Secure Access** &gt; **Connect** &gt; **Traffic forwarding** &gt; **Private Access Profile**.</div><div class="diff-line diff-context">1. Enable the Private Access profile.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[![Screenshot that shows the Private Access traffic forwarding profile activated in the Microsoft Entra admin center.](media/how-to-configure-domain-controllers/traffic-forwarding-profile.png)](media/how-to-configure-domain-controllers/traffic-forwarding-profile.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 5. Install the Global Secure Access client</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. During installation, sign in with a Microsoft Entra ID user when prompted.</div><div class="diff-line diff-context">1. After installation, in the Microsoft Entra admin center, go to **Global Secure Access** &gt; **Connect** &gt; **Connectors and sensors** &gt; **Private access sensors** and verify the sensor status is **Active**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[![Screenshot that shows the Private Access sensor as activated in the Microsoft Entra admin center.](media/how-to-configure-domain-controllers/connectors-and-sensors.png)](media/how-to-configure-domain-controllers/connectors-and-sensors.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-manage-microsoft-profile.md" target="_blank">docs/global-secure-access/how-to-manage-microsoft-profile.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-manage-microsoft-profile" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: How to Enable and Manage the Microsoft Profile</div><div class="diff-line diff-context">description: &quot;Enable the Microsoft traffic forwarding profile to route traffic to Microsoft 365 services including Exchange Online, SharePoint, and OneDrive through Global Secure Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.subservice: entra-internet-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The policy groups are listed, with a checkbox to indicate if the policy group is enabled. Expand a policy group to view all of the IPs and FQDNs included in the group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Screenshot of the Microsoft profile details.](media/how-to-manage-microsoft-profile/microsoft-profile-details.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The policy groups include the following details:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example shows setting the `*.sharepoint.com` FQDN to **Bypass** so the traffic isn&#39;t forwarded to the service.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Screenshot of the Action dropdown menu.](media/how-to-manage-microsoft-profile/microsoft-policies-forward-bypass.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the Global Secure Access client isn&#39;t able to connect to the service (for example due to an authorization or Conditional Access failure), the service *bypasses* the traffic. Traffic is sent direct-and-local instead of being blocked. In this scenario, you can create a Conditional Access policy for the [compliant network check](how-to-compliant-network.md), to block traffic if the client isn&#39;t able to connect to the service.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: How to Enable and Manage the Microsoft Profile</div><div class="diff-line diff-context">description: &quot;Enable the Microsoft traffic forwarding profile to route traffic to Microsoft 365 services including Exchange Online, SharePoint, and OneDrive through Global Secure Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.subservice: entra-internet-access</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The policy groups are listed, with a checkbox to indicate if the policy group is enabled. Expand a policy group to view all of the IPs and FQDNs included in the group.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Screenshot that shows the Microsoft profile details.](media/how-to-manage-microsoft-profile/microsoft-profile-details.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The policy groups include the following details:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example shows setting the `*.sharepoint.com` FQDN to **Bypass** so the traffic isn&#39;t forwarded to the service.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Screenshot that shows the Action dropdown menu.](media/how-to-manage-microsoft-profile/microsoft-policies-forward-bypass.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If the Global Secure Access client isn&#39;t able to connect to the service (for example due to an authorization or Conditional Access failure), the service *bypasses* the traffic. Traffic is sent direct-and-local instead of being blocked. In this scenario, you can create a Conditional Access policy for the [compliant network check](how-to-compliant-network.md), to block traffic if the client isn&#39;t able to connect to the service.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-simulate-remote-network.md" target="_blank">docs/global-secure-access/how-to-simulate-remote-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-simulate-remote-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.reviewer: absinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">1. Select **Review + create**.</div><div class="diff-line diff-context">1. Confirm your details, then select **Create**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Screenshot of the create a resource group fields.](media/how-to-simulate-remote-network/create-azure-resource-group.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a virtual network</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Review + create**.</div><div class="diff-line diff-context">1. Select **Create**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Screenshot of the create a virtual network fields.](media/how-to-simulate-remote-network/create-azure-virtual-network.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a virtual network gateway</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: absinh</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">1. Select **Review + create**.</div><div class="diff-line diff-context">1. Confirm your details, then select **Create**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Screenshot that shows the create a resource group fields.](media/how-to-simulate-remote-network/create-azure-resource-group.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a virtual network</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Review + create**.</div><div class="diff-line diff-context">1. Select **Create**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Screenshot that shows the create a virtual network fields.](media/how-to-simulate-remote-network/create-azure-virtual-network.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a virtual network gateway</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure-graph.md" target="_blank">docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure-graph.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 8:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/multi-tenant-organizations/cross-tenant-synchronization-configure-graph" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: Multi-Tenant Orgs — 5 articles reviewed</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure cross-tenant synchronization using PowerShell or Microsoft Graph API</div><div class="diff-line diff-context">description: &quot;Configure cross-tenant synchronization using Microsoft Graph PowerShell or Microsoft Graph API. Includes enabling synchronization, setting up automatic redemption, creating provisioning jobs, and testing on-demand provisioning.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/18/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Use the [Invoke-MgGraphRequest](/powershell/microsoftgraph/authentication-commands#using-invoke-mggraphrequest) command to enable user synchronization in the target tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    If you get an `Request_MultipleObjectsWithSameKeyValue` error, you might already have an existing policy. For more information, see [Symptom - Request_MultipleObjectsWithSameKeyValue error](#symptom---request_multipleobjectswithsamekeyvalue-error).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```powershell</div><div class="diff-line diff-context">    $Params = @{</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the target tenant, use the [Create crossTenantAccessPolicyConfigurationPartner](/graph/api/crosstenantaccesspolicy-post-partners) API to create a new partner configuration in a cross-tenant access policy between the target tenant and the source tenant. Use the source tenant ID in the request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    If you get an `Request_MultipleObjectsWithSameKeyValue` error, you might already have an existing configuration. For more information, see [Symptom - Request_MultipleObjectsWithSameKeyValue error](#symptom---request_multipleobjectswithsamekeyvalue-error).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    **Request**</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure cross-tenant synchronization using PowerShell or Microsoft Graph API</div><div class="diff-line diff-context">description: &quot;Configure cross-tenant synchronization using Microsoft Graph PowerShell or Microsoft Graph API. Includes enabling synchronization, setting up automatic redemption, creating provisioning jobs, and testing on-demand provisioning.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Use the [Invoke-MgGraphRequest](/powershell/microsoftgraph/authentication-commands#using-invoke-mggraphrequest) command to enable user synchronization in the target tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    If you get a `Request_MultipleObjectsWithSameKeyValue` error, you might already have an existing policy. For more information, see [Symptom - Request_MultipleObjectsWithSameKeyValue error](#symptom---request_multipleobjectswithsamekeyvalue-error).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```powershell</div><div class="diff-line diff-context">    $Params = @{</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the target tenant, use the [Create crossTenantAccessPolicyConfigurationPartner](/graph/api/crosstenantaccesspolicy-post-partners) API to create a new partner configuration in a cross-tenant access policy between the target tenant and the source tenant. Use the source tenant ID in the request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    If you get a `Request_MultipleObjectsWithSameKeyValue` error, you might already have an existing configuration. For more information, see [Symptom - Request_MultipleObjectsWithSameKeyValue error](#symptom---request_multipleobjectswithsamekeyvalue-error).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    **Request**</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-logic-apps.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-logic-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 7:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-logic-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 5 — 3 heavy-screenshot articles (final batch)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Securely integrate Azure Logic Apps with on-premises APIs using Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Microsoft Entra application proxy lets cloud-native logic apps securely access on-premises APIs to bridge your workload.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **API permissions** menu item from the navigation pane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![the Microsoft Entra App Registration API Permissions Menu Item.](./media/application-proxy-integrate-with-logic-apps/api-permissions-menu.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    1. Select the **Add a permission** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    3. Verify the configured permission appears.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">        ![the Microsoft Entra App Registration API Permissions Detail.](./media/application-proxy-integrate-with-logic-apps/api-permissions-detail.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Certificates &amp; secrets** menu item from the navigation pane.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Securely integrate Azure Logic Apps with on-premises APIs using Microsoft Entra application proxy</div><div class="diff-line diff-context">description: Microsoft Entra application proxy lets cloud-native logic apps securely access on-premises APIs to bridge your workload.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **API permissions** menu item from the navigation pane.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![The Microsoft Entra App Registration API Permissions Menu Item.](./media/application-proxy-integrate-with-logic-apps/api-permissions-menu.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    1. Select the **Add a permission** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    3. Verify the configured permission appears.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">        ![The Microsoft Entra App Registration API Permissions Detail.](./media/application-proxy-integrate-with-logic-apps/api-permissions-detail.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Certificates &amp; secrets** menu item from the navigation pane.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 7:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-sharepoint-server-saml" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 4 — 7 articles with 3-5 screenshots</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Publish an on-premises SharePoint farm with Microsoft Entra application proxy</div><div class="diff-line diff-context">description: &quot;Configure Microsoft Entra application proxy with SAML-based authentication for secure external access to on-premises SharePoint Server.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A SharePoint 2013 farm or newer. The SharePoint farm must be [integrated with Microsoft Entra ID](~/identity/saas-apps/sharepoint-on-premises-tutorial.md).</div><div class="diff-line diff-deleted">- A Microsoft Entra tenant with a plan that includes application proxy. Learn more about [Microsoft Entra ID plans and pricing](https://www.microsoft.com/security/business/identity-access-management/azure-ad-pricing).</div><div class="diff-line diff-context">- A Microsoft Office Web Apps Server farm to properly launch Office files from the on-premises SharePoint farm.</div><div class="diff-line diff-context">- A [custom, verified domain](~/fundamentals/add-custom-domain.md) in the Microsoft Entra tenant. The verified domain must match the SharePoint URL suffix.</div><div class="diff-line diff-context">- A Transport Layer Security (TLS) certificate is required. See the details in [custom domain publishing](./how-to-configure-custom-domain.md).</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The Internal and External URLs must match the **Sign on URL** in the SAML Based Application configuration in Step 1.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![the Sign on URL value.](./media/application-proxy-integrate-with-sharepoint-server/sso-url-saml.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Publish an on-premises SharePoint farm with Microsoft Entra application proxy</div><div class="diff-line diff-context">description: &quot;Configure Microsoft Entra application proxy with SAML-based authentication for secure external access to on-premises SharePoint Server.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A SharePoint 2013 farm or newer. The SharePoint farm must be [integrated with Microsoft Entra ID](~/identity/saas-apps/sharepoint-on-premises-tutorial.md).</div><div class="diff-line diff-added">- A Microsoft Entra tenant with a plan that includes application proxy. Learn more about [Microsoft Entra ID plans and pricing](https://www.microsoft.com/security/business/microsoft-entra-pricing).</div><div class="diff-line diff-context">- A Microsoft Office Web Apps Server farm to properly launch Office files from the on-premises SharePoint farm.</div><div class="diff-line diff-context">- A [custom, verified domain](~/fundamentals/add-custom-domain.md) in the Microsoft Entra tenant. The verified domain must match the SharePoint URL suffix.</div><div class="diff-line diff-context">- A Transport Layer Security (TLS) certificate is required. See the details in [custom domain publishing](./how-to-configure-custom-domain.md).</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The Internal and External URLs must match the **Sign on URL** in the SAML Based Application configuration in Step 1.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![The Sign on URL value.](./media/application-proxy-integrate-with-sharepoint-server/sso-url-saml.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/how-to-configure-sso-with-kcd.md" target="_blank">docs/identity/app-proxy/how-to-configure-sso-with-kcd.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 7:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/how-to-configure-sso-with-kcd" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 4 — 7 articles with 3-5 screenshots</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Kerberos Constrained Delegation for single sign-on (SSO) to your apps with application proxy</div><div class="diff-line diff-context">description: &quot;Configure Kerberos-based SSO for on-premises applications using Kerberos Constrained Delegation (KCD) with Microsoft Entra application proxy.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">## How single sign-on with KCD works</div><div class="diff-line diff-context">The diagram explains the flow when a user attempts to access an on-premises application that uses IWA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">![Microsoft Entra authentication flow diagram](./media/application-proxy-configure-single-sign-on-with-kcd/authdiagram.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. The user enters the URL to access the on-premises application through application proxy.</div><div class="diff-line diff-context">2. Application proxy redirects the request to Microsoft Entra authentication services to preauthenticate. At this point, Microsoft Entra ID applies any applicable authentication and authorization policies, such as multifactor authentication. If the user is validated, Microsoft Entra ID creates a token and sends it to the user.</div><div class="diff-line diff-context">5. Select **Use any authentication protocol**.</div><div class="diff-line diff-context">6. Under **Services to which this account can present delegated credentials**, add the value for the SPN identity of the application server. The setting enables the private network connector to impersonate users in AD against the applications defined in the list.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Connector-SVR Properties window](./media/application-proxy-configure-single-sign-on-with-kcd/properties.jpg)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Connector and application server in different domains</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Kerberos Constrained Delegation for single sign-on (SSO) to your apps with application proxy</div><div class="diff-line diff-context">description: &quot;Configure Kerberos-based SSO for on-premises applications using Kerberos Constrained Delegation (KCD) with Microsoft Entra application proxy.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">## How single sign-on with KCD works</div><div class="diff-line diff-context">The diagram explains the flow when a user attempts to access an on-premises application that uses IWA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">![Microsoft Entra authentication flow diagram.](./media/application-proxy-configure-single-sign-on-with-kcd/authdiagram.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. The user enters the URL to access the on-premises application through application proxy.</div><div class="diff-line diff-context">2. Application proxy redirects the request to Microsoft Entra authentication services to preauthenticate. At this point, Microsoft Entra ID applies any applicable authentication and authorization policies, such as multifactor authentication. If the user is validated, Microsoft Entra ID creates a token and sends it to the user.</div><div class="diff-line diff-context">5. Select **Use any authentication protocol**.</div><div class="diff-line diff-context">6. Under **Services to which this account can present delegated credentials**, add the value for the SPN identity of the application server. The setting enables the private network connector to impersonate users in AD against the applications defined in the list.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Connector-SVR Properties window.](./media/application-proxy-configure-single-sign-on-with-kcd/properties.jpg)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Connector and application server in different domains</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-proxy/application-proxy-integrate-with-teams.md" target="_blank">docs/identity/app-proxy/application-proxy-integrate-with-teams.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 2:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-proxy/application-proxy-integrate-with-teams" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: App Proxy batch 1 — 2 articles reviewed</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Access Microsoft Entra application proxy apps in Teams</div><div class="diff-line diff-context">description: Use Microsoft Entra application proxy to access your on-premises application through Microsoft Teams.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy gives you single sign-on to on-premises applications no matter where you are. Microsoft Teams streamlines your collaborative efforts in one place. Integrating the two together means that your users can be productive with their teammates in any situation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Your users can add cloud apps to their Teams channels [using tabs](https://support.office.com/article/Video-Using-Tabs-7350a03e-017a-4a00-a6ae-1c9fe8c497b3?ui=en-US&amp;rs=en-US&amp;ad=US), but what about the SharePoint sites or planning tool that are hosted on-premises? Application proxy is the solution. They can add apps published through application proxy to their channels using the same external URLs they always use to access their apps remotely. And because application proxy authenticates through Microsoft Entra ID, your users get a single sign-on experience.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Install the private network connector and publish your app</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to the Teams channel where you want to add this app and select **+** to add a tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Select + to add a tab in Teams](./media/application-proxy-integrate-with-teams/add-tab.png)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">1. Select **Website** from the tab options.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Access Microsoft Entra application proxy apps in Teams</div><div class="diff-line diff-context">description: Use Microsoft Entra application proxy to access your on-premises application through Microsoft Teams.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra application proxy gives you single sign-on to on-premises applications no matter where you are. Microsoft Teams streamlines your collaborative efforts in one place. Integrating the two together means that your users can be productive with their teammates in any situation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Your users can add cloud apps to their Teams channels [using tabs](https://support.microsoft.com/office/use-a-tab-in-a-channel-or-chat-in-microsoft-teams-83d0514f-2134-4db5-80f2-e9b43e111d57), but what about the SharePoint sites or planning tool that are hosted on-premises? Application proxy is the solution. They can add apps published through application proxy to their channels using the same external URLs they always use to access their apps remotely. And because application proxy authenticates through Microsoft Entra ID, your users get a single sign-on experience.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Install the private network connector and publish your app</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to the Teams channel where you want to add this app and select **+** to add a tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Website** from the tab options.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Give the tab a name and set the URL to the application proxy external URL.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-connectors.md" target="_blank">docs/global-secure-access/how-to-configure-connectors.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-connectors" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: How to configure connectors for Microsoft Entra Private Access</div><div class="diff-line diff-context">description: &quot;Set up private network connectors that enable outbound connections from your private network to Global Secure Access. Includes installation, connector groups, and high availability.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/16/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Connect** &gt; **Connectors**.</div><div class="diff-line diff-context">1. Select **Download connector service**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the Download connector service button in the App proxy page.](media/how-to-configure-connectors/app-proxy-download-connector-service.png)</div><div class="diff-line diff-context">1. Read the Terms of Service. When you&#39;re ready, select **Accept terms &amp; Download**.</div><div class="diff-line diff-context">1. At the bottom of the window, select **Run** to install the connector. An install wizard opens.</div><div class="diff-line diff-context">1. Follow the instructions in the wizard to install the service. When you&#39;re prompted to register the connector with the Application Proxy for your Microsoft Entra tenant, provide your Application Administrator credentials.</div><div class="diff-line diff-context">    * Expand the connector to view the details if it&#39;s not already expanded.</div><div class="diff-line diff-context">    * An active green label indicates that your connector can connect to the service. However, even though the label is green, a network issue could still block the connector from receiving messages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the connector groups and connector group details.](media/how-to-configure-connectors/app-proxy-connectors-status.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more help with installing a connector, see [troubleshoot connectors](troubleshoot-connectors.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: How to configure connectors for Microsoft Entra Private Access</div><div class="diff-line diff-context">description: &quot;Set up private network connectors that enable outbound connections from your private network to Global Secure Access. Includes installation, connector groups, and high availability.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Connect** &gt; **Connectors**.</div><div class="diff-line diff-context">1. Select **Download connector service**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the Download connector service button in the App proxy page.](media/how-to-configure-connectors/app-proxy-download-connector-service.png)</div><div class="diff-line diff-context">1. Read the Terms of Service. When you&#39;re ready, select **Accept terms &amp; Download**.</div><div class="diff-line diff-context">1. At the bottom of the window, select **Run** to install the connector. An install wizard opens.</div><div class="diff-line diff-context">1. Follow the instructions in the wizard to install the service. When you&#39;re prompted to register the connector with the Application Proxy for your Microsoft Entra tenant, provide your Application Administrator credentials.</div><div class="diff-line diff-context">    * Expand the connector to view the details if it&#39;s not already expanded.</div><div class="diff-line diff-context">    * An active green label indicates that your connector can connect to the service. However, even though the label is green, a network issue could still block the connector from receiving messages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the connector groups and connector group details.](media/how-to-configure-connectors/app-proxy-connectors-status.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more help with installing a connector, see [troubleshoot connectors](troubleshoot-connectors.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-per-app-access.md" target="_blank">docs/global-secure-access/how-to-configure-per-app-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 25, 2026 9:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-per-app-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Freshness review: GSA — 37 articles reviewed (alt text prefix, ms.date)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: How to configure per-app access using Global Secure Access applications</div><div class="diff-line diff-context">description: Learn how to configure per-app access to your private, internal resources using Global Secure Access applications for Microsoft Entra Private Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Applications** &gt; **Enterprise applications**.</div><div class="diff-line diff-context">1. Select **New application**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the Enterprise apps and Add new application button.](media/how-to-configure-per-app-access/new-enterprise-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Enter a name for the app.</div><div class="diff-line diff-context">1. Select a Connector group from the dropdown menu.</div><div class="diff-line diff-context">    - Spaces between values are removed when you apply the changes.</div><div class="diff-line diff-context">    - For example, `400-500, 80, 443`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of the create app segment panel with multiple ports added.](media/how-to-configure-per-app-access/app-segment-multiple-ports.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    The following table provides the most commonly used ports and their associated networking protocols:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: How to configure per-app access using Global Secure Access applications</div><div class="diff-line diff-context">description: Learn how to configure per-app access to your private, internal resources using Global Secure Access applications for Microsoft Entra Private Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/25/2026</div><div class="diff-line diff-context">ms.subservice: entra-private-access</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">1. Browse to **Global Secure Access** &gt; **Applications** &gt; **Enterprise applications**.</div><div class="diff-line diff-context">1. Select **New application**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the Enterprise apps and Add new application button.](media/how-to-configure-per-app-access/new-enterprise-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Enter a name for the app.</div><div class="diff-line diff-context">1. Select a Connector group from the dropdown menu.</div><div class="diff-line diff-context">    - Spaces between values are removed when you apply the changes.</div><div class="diff-line diff-context">    - For example, `400-500, 80, 443`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot that shows the create app segment panel with multiple ports added.](media/how-to-configure-per-app-access/app-segment-multiple-ports.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    The following table provides the most commonly used ports and their associated networking protocols:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
