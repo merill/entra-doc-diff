@@ -1,0 +1,686 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since March 26th 2026, 9:27 PM PDT</p>
+        <p>Report generated on March 27th 2026, 9:27 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">34</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">35</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-migrate-directaccess-to-private-access.md" target="_blank">docs/global-secure-access/how-to-migrate-directaccess-to-private-access.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jay on Mar 14, 2026 12:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-migrate-directaccess-to-private-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+158 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add migration guide: DirectAccess to Private Access</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-migrate-direct-access-to-private-access.md" target="_blank">docs/global-secure-access/how-to-migrate-direct-access-to-private-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Mar 16, 2026 10:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-migrate-direct-access-to-private-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+32</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Refine DirectAccess-to-Private Access docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.reviewer: buzaher</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a security administrator, I want to migrate from DirectAccess to Microsoft Entra Private Access so that I can provide secure, identity-aware access to private resources without the limitations of legacy VPN solutions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Migrate from DirectAccess to Microsoft Entra Private Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">DirectAccess provides organizations with seamless remote connectivity to internal resources without traditional VPN connections. However, DirectAccess relies on IPv6 transition technologies (IP-HTTPS, Teredo, ISATAP, 6to4), requires domain-joined Windows Enterprise clients, and provides full network-level access once connected. These architectural constraints don&#39;t align with modern hybrid and cloud-first environments where organizations need identity-aware, per-application access across diverse device types. Microsoft Entra Private Access is a cloud-based Zero Trust Network Access (ZTNA) solution that replaces the need for legacy VPN and DirectAccess infrastructure. It uses the [Global Secure Access client](/entra/global-secure-access/concept-clients) and [private network connectors](/entra/global-secure-access/how-to-configure-connectors) to provide conditional, per-app access to private resources without exposing your network to inbound connections. Migrating from DirectAccess to Microsoft Entra Private Access reduces infrastructure complexity, strengthens your Zero Trust posture, and extends secure access to any managed or unmanaged device.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Technical incompatibilities between DirectAccess and Private Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before you begin the migration, ensure the following requirements are met:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Microsoft Entra Private Access is enabled in your tenant. Your pilot user is descoped from Private Access [user assignment](/entra/global-secure-access/how-to-manage-users-groups-assignment) initially.</div><div class="diff-line diff-context">- Private Access connectivity is configured by using [Quick Access](/entra/global-secure-access/how-to-configure-quick-access) or [per-app access](/entra/global-secure-access/how-to-configure-per-app-access).</div><div class="diff-line diff-context">- [Private DNS](/entra/global-secure-access/concept-private-name-resolution) and name resolution for internal resources is configured as required.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/16/2026</div><div class="diff-line diff-context">ms.reviewer: buzaher</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a security administrator, I want to migrate from DirectAccess to Microsoft Entra Private Access so that I can provide secure, identity-aware access to private resources without the limitations of legacy VPN solutions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Migrate from DirectAccess to Microsoft Entra Private Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">DirectAccess provides remote connectivity to internal resources but relies on IPv6 transition technologies, requires domain-joined Windows Enterprise clients, and grants full network-level access once connected. However, these architectural constraints don&#39;t meet the needs of modern hybrid and cloud-first environments.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra Private Access is a cloud-based, Zero Trust Network Access (ZTNA) solution that replaces legacy VPN and DirectAccess infrastructure. It uses the [Global Secure Access client](/entra/global-secure-access/concept-clients) and [private network connectors](/entra/global-secure-access/how-to-configure-connectors), to deliver conditional, per-app access to private resources without exposing your network to inbound connections. Migrating to Microsoft Entra Private Access reduces infrastructure complexity, strengthens your Zero Trust posture, and extends secure access to any managed or unmanaged device.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Technical incompatibilities between DirectAccess and Private Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before you begin the migration, ensure the following requirements are met:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Microsoft Entra Private Access is enabled in your tenant. Descope the pilot user from Private Access [user assignment](/entra/global-secure-access/how-to-manage-users-groups-assignment) for the initial setup.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/tutorial-bulk-invite.md" target="_blank">docs/external-id/tutorial-bulk-invite.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 8:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/tutorial-bulk-invite" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+25</span> / 
+              <span class="deletions">-24</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538967</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Bulk invite B2B users</div><div class="diff-line diff-context">description: Learn how to bulk invite B2B collaboration users in Microsoft Entra External ID. Follow the steps to prepare a CSV file, upload it, and verify guest users in the directory.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 11/17/2025</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-deleted"># Customer intent: As a Microsoft Entra admin, I want to learn how to bulk invite external users to my organization using the Microsoft Entra admin center, so that I can efficiently manage user invitations and onboarding.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Tutorial: Bulk invite B2B collaboration users in Microsoft Entra External ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-deleted">&gt; * Use **Bulk invite users** to prepare a comma-separated value (.csv) file with the user information and invitation preferences</div><div class="diff-line diff-deleted">&gt; * Upload the .csv file to Microsoft Entra ID</div><div class="diff-line diff-deleted">&gt; * Verify the users were added to the directory</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">- If you don’t have Microsoft Entra ID, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn) before you begin.</div><div class="diff-line diff-deleted">- You need two or more test email accounts that you can send the invitations to. The accounts must be from outside your organization. You can use any type of account, including social accounts such as gmail.com or outlook.com addresses.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Bulk invite B2B users</div><div class="diff-line diff-context">description: Learn how to bulk invite B2B collaboration users in Microsoft Entra External ID. Follow the steps to prepare a CSV file, upload it, and verify guest users in the directory.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-added">#customer intent: As a Microsoft Entra admin, I want to learn how to bulk invite external users to my organization using the Microsoft Entra admin center, so that I can efficiently manage user invitations and onboarding.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Tutorial: Bulk invite B2B collaboration users in Microsoft Entra External ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-added">&gt; * Use **Bulk invite users** to prepare a comma-separated value (.csv) file with user information and invitation preferences.</div><div class="diff-line diff-added">&gt; * Upload the .csv file to Microsoft Entra ID.</div><div class="diff-line diff-added">&gt; * Verify that users were added to the directory.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-authentication-methods-customers.md" target="_blank">docs/external-id/customers/concept-authentication-methods-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 8:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-authentication-methods-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+16</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538967</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Identity providers for external tenants</div><div class="diff-line diff-context">description: Learn sign-in and MFA options for customer identity and access management (CIAM), including email, one-time passcodes, social providers, SAML/WS-Fed, and OIDC.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 10/07/2025</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">#customer intent: As an External ID administrator, I want to configure and enable multiple identity providers (such as email one-time passcode, Google, Facebook, Apple, SAML/WS-Fed, and custom OIDC) for external users, so that they can easily sign in and access our apps and resources.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Password reset**: If you enable email and password sign-in, a password reset link appears on the password page. If the user forgets their password, selecting this link sends a one-time passcode to their email address. After verification, the user can choose a new password.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/concept-authentication-methods-customers/email-password-sign-in.png&quot; alt-text=&quot;Screenshots of the email with password sign-in screens.&quot; border=&quot;false&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you [create a sign-up and sign-in user flow](how-to-user-flow-sign-up-sign-in-customers.md#create-and-customize-a-user-flow), **Email with password** is the default option.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you enable username sign-in, users can choose to sign in with either their email address or their username. If they choose to sign in with their username, they will be prompted to enter a password, similar to Email and password sign-in. If you [enable password reset](how-to-customize-branding-customers.md#to-customize-self-service-password-reset), users can reset their password by selecting the password reset link on the sign-in page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/how-to-sign-in-alias/alias-sign-in.png&quot; alt-text=&quot;Screenshot of the username sign-in option.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Email with one-time passcode sign-in</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Identity providers for external tenants</div><div class="diff-line diff-context">description: Learn sign-in and MFA options for customer identity and access management (CIAM), including email, one-time passcodes, social providers, SAML/WS-Fed, and OIDC.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024</div><div class="diff-line diff-context">#customer intent: As an External ID administrator, I want to configure and enable multiple identity providers (such as email one-time passcode, Google, Facebook, Apple, SAML/WS-Fed, and custom OIDC) for external users, so that they can easily sign in and access our apps and resources.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Password reset**: If you enable email and password sign-in, a password reset link appears on the password page. If the user forgets their password, selecting this link sends a one-time passcode to their email address. After verification, the user can choose a new password.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/concept-authentication-methods-customers/email-password-sign-in.png&quot; alt-text=&quot;Email and password screens shown during local account sign-up and sign-in.&quot; border=&quot;false&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you [create a sign-up and sign-in user flow](how-to-user-flow-sign-up-sign-in-customers.md#create-and-customize-a-user-flow), **Email with password** is the default option.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you enable username sign-in, users can choose to sign in with either their email address or their username. If they choose to sign in with their username, they will be prompted to enter a password, similar to Email and password sign-in. If you [enable password reset](how-to-customize-branding-customers.md#to-customize-self-service-password-reset), users can reset their password by selecting the password reset link on the sign-in page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/how-to-sign-in-alias/alias-sign-in.png&quot; alt-text=&quot;Username sign-in option on the sign-in page.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/microsoft-account.md" target="_blank">docs/external-id/microsoft-account.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 8:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/microsoft-account" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-13</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538967</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">title: Use Microsoft Accounts</div><div class="diff-line diff-deleted">description: Enable your external business partners and guest users to use their Microsoft Account (MSA) to sign in to your apps for B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a B2B collaboration administrator, I want to understand the built-in capability for using Microsoft account (MSA) as an identity provider for External ID, so that guest users can use their personal Microsoft accounts to sign in without additional configuration.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Use Microsoft accounts (MSA) for B2B collaboration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Your B2B guest users can use their own personal Microsoft accounts for B2B collaboration without further configuration. Guest users can redeem your B2B collaboration invitations or complete your sign-up user flows using their personal Microsoft account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft accounts are set up by a user to get access to consumer-oriented Microsoft products and cloud services, such as Outlook, OneDrive, Xbox LIVE, or Microsoft 365. The account is created and stored in the Microsoft consumer identity account system, run by Microsoft.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">title: Use Microsoft accounts</div><div class="diff-line diff-added">description: Enable your external business partners and guest users to use their Microsoft account (MSA) to sign in to your apps for B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: seo-july-2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#customer intent: As a B2B collaboration administrator, I want to understand the built-in capability for using Microsoft account (MSA) as an identity provider for Microsoft Entra External ID, so that guest users can use their personal Microsoft accounts to sign in without additional configuration.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Use Microsoft accounts for B2B collaboration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Your B2B guest users can use their own personal Microsoft accounts for B2B collaboration without further configuration. Guest users can redeem your B2B collaboration invitations or complete your sign-up user flows using their personal Microsoft account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft accounts are set up by a user to get access to consumer-oriented Microsoft products and cloud services, such as Outlook, OneDrive, Xbox, or Microsoft 365. The account is created and stored in the Microsoft consumer identity account system, run by Microsoft.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/default-account.md" target="_blank">docs/external-id/default-account.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 8:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/default-account" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538967</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Use Microsoft Entra Accounts</div><div class="diff-line diff-context">description: Enable your external business partners and guest users to use their Microsoft Entra work or school accounts to sign in to your apps for B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: seo-july-2024</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration administrator, I want to understand the built-in capability for using Microsoft Entra ID as an identity provider for external guests, so that guest users can use their Microsoft Entra work or school account to sign in without additional configuration.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Use Microsoft Entra work and school accounts for B2B collaboration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you [invite a guest user](add-users-administrator.yml) to B2B collaboration, you can specify their Microsoft Entra account as the **Email address** they use to sign in.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/default-account/default-account-invite.png&quot; alt-text=&quot;Screenshot of inviting a guest user using the Microsoft Entra account.&quot; lightbox=&quot;media/default-account/default-account-invite.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;azure-ad-account-in-self-service-sign-up-user-flows&#39;&gt;&lt;/a&gt;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Use Microsoft Entra accounts</div><div class="diff-line diff-context">description: Enable your external business partners and guest users to use their Microsoft Entra work or school accounts to sign in to your apps for B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: seo-july-2024</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration administrator, I want to understand the built-in capability for using Microsoft Entra ID as an identity provider for external guests, so that guest users can use their Microsoft Entra work or school account to sign in without additional configuration.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Use Microsoft Entra work or school accounts for B2B collaboration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-workforce-only](./includes/applies-to-workforce-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you [invite a guest user](add-users-administrator.yml) to B2B collaboration, you can specify their Microsoft Entra account as the **Email address** they use to sign in.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/default-account/default-account-invite.png&quot; alt-text=&quot;Invite user pane showing a Microsoft Entra work or school account as the sign-in email.&quot; lightbox=&quot;media/default-account/default-account-invite.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/cross-cloud-settings.md" target="_blank">docs/external-id/cross-cloud-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 8:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/cross-cloud-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538967</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Cross Cloud Settings</div><div class="diff-line diff-context">description: Enable secure cross-cloud B2B collaboration between organizations in different sovereign (national) Microsoft Azure clouds by configuring Microsoft cloud settings.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/14/2025</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an admin configuring B2B collaboration between partner organizations in different Microsoft Azure clouds, I want to enable collaboration with the partner&#39;s cloud, add the partner to my organizational settings, and configure inbound and outbound settings, so that Microsoft Entra B2B collaboration between the organizations is enabled.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enable the cloud in your Microsoft cloud settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">In your Microsoft cloud settings, enable the Microsoft Azure cloud you want to collaborate with.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Security Administrator](~/identity/role-based-access-control/permissions-reference.md#security-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **External Identities** &gt; **Cross-tenant access settings**, then select **Microsoft cloud settings**.</div><div class="diff-line diff-context">1. Select the checkboxes next to the external Microsoft Azure clouds you want to enable.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/cross-cloud-settings/cross-cloud-settings.png&quot; alt-text=&quot;Screenshot showing Microsoft cloud settings.&quot; border=&quot;true&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Cross-cloud settings</div><div class="diff-line diff-context">description: Enable secure cross-cloud B2B collaboration between organizations in different sovereign (national) Microsoft Azure clouds by configuring Microsoft cloud settings.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an admin configuring B2B collaboration between partner organizations in different Microsoft Azure clouds, I want to enable collaboration with the partner&#39;s cloud, add the partner to my organizational settings, and configure inbound and outbound settings, so that Microsoft Entra B2B collaboration between the organizations is enabled.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enable the cloud in your Microsoft cloud settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In your Microsoft cloud settings, enable the Microsoft Azure cloud you want to collaborate with.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Security Administrator](~/identity/role-based-access-control/permissions-reference.md#security-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **External Identities** &gt; **Cross-tenant access settings**, then select **Microsoft cloud settings**.</div><div class="diff-line diff-context">1. Select the checkboxes next to the external Microsoft Azure clouds you want to enable.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/cross-cloud-settings/cross-cloud-settings.png&quot; alt-text=&quot;Microsoft cloud settings page with external cloud options selected.&quot; border=&quot;true&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/authentication-conditional-access.md" target="_blank">docs/external-id/authentication-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 5:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/authentication-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538966</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Authentication and Conditional Access for B2B users</div><div class="diff-line diff-context">description: Learn how to enforce multifactor authentication policies for Microsoft Entra B2B users.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 07/07/2025</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an IT admin managing external user access to resources in my organization, I want to understand the authentication flow and Conditional Access policies for external users, so that I can ensure secure access and compliance with our organization&#39;s policies.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to B2B collaboration and B2B direct connect in workforce tenants. For information about external tenants, see [Security and governance in Microsoft Entra External ID](customers/concept-security-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When an external user accesses resources in your organization, the authentication flow is determined by the collaboration method (B2B collaboration or B2B direct connect), user&#39;s identity provider (an external Microsoft Entra tenant, social identity provider, and so on), Conditional Access policies, and the [cross-tenant access settings](cross-tenant-access-overview.md) configured both in the user&#39;s home tenant and the tenant hosting resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the authentication flow for external users who are accessing resources in your organization. Organizations can enforce multiple Conditional Access policies for their external users, which can be enforced at the tenant, app, or individual user level in the same way that they&#39;re enabled for full-time employees and members of the organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations can enforce Conditional Access policies for external B2B collaboration and B2B direct connect users in the same way that they’re enabled for full-time employees and members of the organization. With the introduction of cross-tenant access settings, you can also trust MFA and device claims from external Microsoft Entra organizations. This section describes important considerations for applying Conditional Access to users outside of your organization. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Custom Controls with Conditional Access are not support for cross-tenant trusts. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Authentication and Conditional Access for B2B users</div><div class="diff-line diff-context">description: Learn how to enforce multifactor authentication policies for Microsoft Entra B2B users.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">#customer intent: As an IT admin managing external user access to resources in my organization, I want to understand the authentication flow and Conditional Access policies for external users, so that I can ensure secure access and compliance with our organization&#39;s policies.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to B2B collaboration and B2B direct connect in workforce tenants. For information about external tenants, see [Security and governance in Microsoft Entra External ID](customers/concept-security-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When an external user accesses resources in your organization, the authentication flow is determined by the collaboration method (B2B collaboration or B2B direct connect), user&#39;s identity provider (for example, an external Microsoft Entra tenant or social identity provider), Conditional Access policies, and the [cross-tenant access settings](cross-tenant-access-overview.md) configured both in the user&#39;s home tenant and the tenant hosting resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes the authentication flow for external users who are accessing resources in your organization. Organizations can enforce multiple Conditional Access policies for their external users, which can be enforced at the tenant, app, or individual user level in the same way that they&#39;re enabled for full-time employees and members of the organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Organizations can enforce Conditional Access policies for external B2B collaboration and B2B direct connect users in the same way that they’re enabled for full-time employees and members of the organization. With the introduction of cross-tenant access settings, you can also trust MFA and device claims from external Microsoft Entra organizations. This section describes important considerations for applying Conditional Access to users outside of your organization. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Custom Controls with Conditional Access are not supported for cross-tenant trusts.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/one-time-passcode.md" target="_blank">docs/external-id/one-time-passcode.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 5:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/one-time-passcode" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538966</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Email one-time passcode authentication</div><div class="diff-line diff-context">description: Learn how to enable and use email one-time passcode authentication for B2B guest users in Microsoft Entra External ID. This feature provides a seamless fallback authentication method for sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/17/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration administrator, I want to make sure invited users can authenticate using email one-time passcode, so that invited users can sign in using a passcode even when other authentication methods are not available.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">  * `https://myapps.microsoft.com/&lt;your verified domain&gt;.onmicrosoft.com`</div><div class="diff-line diff-context">  * `https://portal.azure.com/&lt;your tenant ID&gt;`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can also give email one-time passcode guest users a direct link to an application or resource by including your tenant information, for example `https://myapps.microsoft.com/signin/X/&lt;application ID?tenantId=&lt;your tenant ID&gt;`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Email one-time passcode guest users can sign in to Microsoft Teams directly from the common endpoint without choosing **Sign-in options**. During the sign-in process to Microsoft Teams, the guest user can select a link to send a one-time passcode.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With one-time passcode authentication, the guest user can redeem your invitation by clicking a direct link or by using the invitation email. In either case, a message in the browser indicates that a code will be sent to the guest user&#39;s email address. The guest user selects **Send code**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Screenshot showing the Send code button.](media/one-time-passcode/otp-send-code.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Email one-time passcode authentication</div><div class="diff-line diff-context">description: Learn how to enable and use email one-time passcode authentication for B2B guest users in Microsoft Entra External ID. This feature provides a seamless fallback authentication method for sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#customer intent: As a B2B collaboration administrator, I want to make sure invited users can authenticate using email one-time passcode, so that invited users can sign in using a passcode even when other authentication methods are not available.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">  * `https://myapps.microsoft.com/&lt;your verified domain&gt;.onmicrosoft.com`</div><div class="diff-line diff-context">  * `https://portal.azure.com/&lt;your tenant ID&gt;`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can also give email one-time passcode guest users a direct link to an application or resource by including your tenant information, for example `https://myapps.microsoft.com/signin/X/&lt;application ID&gt;?tenantId=&lt;your tenant ID&gt;`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Email one-time passcode guest users can sign in to Microsoft Teams directly from the common endpoint without choosing **Sign-in options**. During the sign-in process to Microsoft Teams, the guest user can select a link to send a one-time passcode.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With one-time passcode authentication, the guest user can redeem your invitation by clicking a direct link or by using the invitation email. In either case, a message in the browser indicates that a code will be sent to the guest user&#39;s email address. The guest user selects **Send code**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/one-time-passcode/otp-send-code.png&quot; alt-text=&quot;Screenshot showing the Send code button.&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/groups-role-settings.md" target="_blank">docs/id-governance/privileged-identity-management/groups-role-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 27, 2026 3:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/groups-role-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add CA reauthentication guidance to 3 PIM role settings articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure PIM for Groups settings</div><div class="diff-line diff-context">description: Learn how to configure PIM for Groups settings.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/23/2026</div><div class="diff-line diff-context">ms.custom: pim, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure PIM for Groups settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has eligible users excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **On activation, require Microsoft Entra Conditional Access authentication context** setting defines the authentication context requirements that users must satisfy when they activate group membership/ownership. After group membership/ownership is activated, users aren&#39;t prevented from using another browsing session, device, or location to use group membership/ownership.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, users might use an Intune-compliant device to activate group membership/ownership. Then after the role is activated, they might sign in to the same user account from another device that isn&#39;t Intune compliant and use the previously activated group ownership/membership from there.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure PIM for Groups settings</div><div class="diff-line diff-context">description: Learn how to configure PIM for Groups settings.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ms.reviewer: tamimsangrar</div><div class="diff-line diff-context">ms.custom: pim, sfi-image-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure PIM for Groups settings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has eligible users excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To enforce reauthentication on every group membership or ownership activation, configure the Conditional Access policy targeting your authentication context with sign-in frequency set to **Every time** under **Session controls**. This ensures users must reauthenticate each time they activate group membership or ownership, even if they have an active session.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/pim-for-groups/role-settings-conditional-access-authentication-context.png&quot; alt-text=&quot;Screenshot that shows the Edit role setting page with the Microsoft Entra Conditional Access authentication context option selected.&quot; lightbox=&quot;media/pim-for-groups/role-settings-conditional-access-authentication-context.png&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user reauthenticates for one activation, a 10-minute window applies. If the user activates another eligible membership or ownership within this window, they aren&#39;t prompted to reauthenticate again. The 10-minute window applies across Microsoft Entra roles, Azure resource roles, and PIM for Groups.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user activates eligible group membership or ownership configured with an authentication context, they see the message: &quot;A Conditional Access policy is enabled and may require additional verification. Click to continue.&quot; The user is then redirected to complete reauthentication as defined by the Conditional Access policy.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/pim-how-to-change-default-settings.md" target="_blank">docs/id-governance/privileged-identity-management/pim-how-to-change-default-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 27, 2026 3:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-how-to-change-default-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add CA reauthentication guidance to 3 PIM role settings articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure Microsoft Entra role settings in PIM</div><div class="diff-line diff-context">description: Learn how to configure Microsoft Entra role settings in Privileged Identity Management (PIM).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/23/2026</div><div class="diff-line diff-context">ms.custom: pim, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure Microsoft Entra role settings in Privileged Identity Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has an eligible user excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **On activation, require Microsoft Entra Conditional Access authentication context** setting defines the authentication context requirements that users must satisfy when they activate the role. After the role is activated, users aren&#39;t prevented from using another browsing session, device, or location to use permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, users might use an Intune-compliant device to activate the role. Then after the role is activated, they might sign in to the same user account from another device that isn&#39;t Intune compliant and use the previously activated role from there.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure Microsoft Entra role settings in PIM</div><div class="diff-line diff-context">description: Learn how to configure Microsoft Entra role settings in Privileged Identity Management (PIM).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ms.reviewer: tamimsangrar</div><div class="diff-line diff-context">ms.custom: pim, sfi-ga-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure Microsoft Entra role settings in Privileged Identity Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has an eligible user excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To enforce reauthentication on every role activation, configure the Conditional Access policy targeting your authentication context with sign-in frequency set to **Every time** under **Session controls**. This ensures users must reauthenticate each time they activate a privileged role, even if they have an active session.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/pim-how-to-change-default-settings/role-settings-conditional-access-authentication-context.png&quot; alt-text=&quot;Screenshot that shows the Edit role setting page with the Microsoft Entra Conditional Access authentication context option selected.&quot; lightbox=&quot;media/pim-how-to-change-default-settings/role-settings-conditional-access-authentication-context.png&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user reauthenticates for one role activation, a 10-minute window applies. If the user activates another eligible role within this window, they aren&#39;t prompted to reauthenticate again. The 10-minute window applies across Microsoft Entra roles, Azure resource roles, and PIM for Groups.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user activates an eligible role configured with an authentication context, they see the message: &quot;A Conditional Access policy is enabled and may require additional verification. Click to continue.&quot; The user is then redirected to complete reauthentication as defined by the Conditional Access policy.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings.md" target="_blank">docs/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 27, 2026 3:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-resource-roles-configure-role-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add CA reauthentication guidance to 3 PIM role settings articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure Azure resource role settings in PIM</div><div class="diff-line diff-context">description: Learn how to configure Azure resource role settings in Privileged Identity Management (PIM).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/23/2026</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure Azure resource role settings in Privileged Identity Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has an eligible user excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The **On activation, require Microsoft Entra Conditional Access authentication context** setting defines the authentication context requirements that users must satisfy when they activate the role. After the role is activated, users aren&#39;t prevented from using another browsing session, device, or location to use permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, users might use an Intune-compliant device to activate the role. Then after the role is activated, they might sign in to the same user account from another device that isn&#39;t Intune compliant and use the previously activated role from there.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure Azure resource role settings in PIM</div><div class="diff-line diff-context">description: Learn how to configure Azure resource role settings in Privileged Identity Management (PIM).</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-added">ms.reviewer: tamimsangrar</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure Azure resource role settings in Privileged Identity Management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This backup protection mechanism is designed to solely protect from a scenario when PIM settings were updated before the Conditional Access policy was created because of a configuration mistake. This backup protection mechanism isn&#39;t triggered if the Conditional Access policy is turned off, is in report-only mode, or has an eligible user excluded from the policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To enforce reauthentication on every role activation, configure the Conditional Access policy targeting your authentication context with sign-in frequency set to **Every time** under **Session controls**. This ensures users must reauthenticate each time they activate a privileged role, even if they have an active session.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/pim-resource-roles-configure-role-settings/role-settings-conditional-access-authentication-context.png&quot; alt-text=&quot;Screenshot that shows the Edit role setting page with the Microsoft Entra Conditional Access authentication context option selected.&quot; lightbox=&quot;media/pim-resource-roles-configure-role-settings/role-settings-conditional-access-authentication-context.png&quot;:::</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user reauthenticates for one role activation, a 10-minute window applies. If the user activates another eligible role within this window, they aren&#39;t prompted to reauthenticate again. The 10-minute window applies across Microsoft Entra roles, Azure resource roles, and PIM for Groups.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">When a user activates an eligible role configured with an authentication context, they see the message: &quot;A Conditional Access policy is enabled and may require additional verification. Click to continue.&quot; The user is then redirected to complete reauthentication as defined by the Conditional Access policy.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-google-federation-customers.md" target="_blank">docs/external-id/customers/how-to-google-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 5:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-google-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538966</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Add Google as an identity provider</div><div class="diff-line diff-context">description: Learn how to add Google as an identity provider for your external tenant.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-deleted">#Customer intent: As a dev, devops, or it admin, I want to</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Add Google as an identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a Google application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To enable sign-in for customers with a Google account, you need to create an application in [Google Developers Console](https://console.developers.google.com/). For more information, see [Setting up OAuth 2.0](https://support.google.com/googleapi/answer/6158849). If you don&#39;t already have a Google account, you can sign up at [`https://accounts.google.com/signup`](https://accounts.google.com/signup).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign in to the [Google Developers Console](https://console.developers.google.com/) with your Google account credentials.</div><div class="diff-line diff-context">1. Accept the terms of service if you&#39;re prompted to do so.</div><div class="diff-line diff-context">1. In the upper-left corner of the page, select the project list, and then select **New Project**.</div><div class="diff-line diff-context">1. Enter a **Project Name**, select **Create**.</div><div class="diff-line diff-context">1. Record the values of **Client ID** and **Client secret**. You need both values to configure Google as an identity provider in your tenant.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Add Google as an identity provider</div><div class="diff-line diff-context">description: Learn how to add Google as an identity provider for your external tenant.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">#Customer intent: As a dev, devops, or it admin, I want to add Google as an identity provider for my external tenant so that customers can sign in with their Google accounts.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Add Google as an identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a Google application</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To enable sign-in for customers with a Google account, you need to create an application in [Google Cloud console](https://console.cloud.google.com/). For more information, see [Manage OAuth clients](https://support.google.com/cloud/answer/15549257). If you don&#39;t already have a Google account, you can sign up at [`https://accounts.google.com/signup`](https://accounts.google.com/signup).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Google Cloud console](https://console.cloud.google.com/) with your Google account credentials.</div><div class="diff-line diff-context">1. Accept the terms of service if you&#39;re prompted to do so.</div><div class="diff-line diff-context">1. In the upper-left corner of the page, select the project list, and then select **New Project**.</div><div class="diff-line diff-context">1. Enter a **Project Name**, select **Create**.</div><div class="diff-line diff-context">1. Record the values of **Client ID** and **Client secret**. You need both values to configure Google as an identity provider in your tenant.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-define-custom-attributes.md" target="_blank">docs/external-id/customers/how-to-define-custom-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Mar 27, 2026 5:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-define-custom-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538966</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Define custom attributes</div><div class="diff-line diff-context">description: Learn how to create and define new custom attributes to be collected from users during sign-up and sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to user flows in external tenants. For information about workforce tenants, see [Collect custom user attributes during B2B collaboration sign-up](../user-flow-add-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If your app requires more information than the built-in user attributes provide, you can add your own attributes. We refer to these attributes as *custom user attributes*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To define a custom user attribute, you first create the attribute at the tenant level so it can be used in any user flow in the tenant. Then you assign the attribute to your sign-up user flow and configure how you want it to appear on the sign-up page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Learn more about custom user attributes in [User profile attributes](concept-user-attributes.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create custom user attributes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Define custom attributes</div><div class="diff-line diff-context">description: Learn how to create and define new custom attributes to be collected from users during sign-up and sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/27/2026</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-image-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">#Customer intent: As a developer, devops, IT admin, I want to create custom attributes in my tenant and add them to my sign-up user flow so that I can collect then during sign-up.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to user flows in external tenants. For information about workforce tenants, see [Collect custom user attributes during B2B collaboration sign-up](../user-flow-add-custom-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If your app requires more information than the built-in user attributes provide, you can add your own attributes. These attributes are called *custom user attributes*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To define a custom user attribute, you first create the attribute at the tenant level so it can be used in any user flow in the tenant. Then you assign the attribute to your sign-up user flow and configure how you want it to appear on the sign-up page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Learn more about custom user attributes in the [User profile attributes](concept-user-attributes.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create custom user attributes</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-threat-intelligence.md" target="_blank">docs/global-secure-access/how-to-configure-threat-intelligence.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Frank Gomulka on Mar 27, 2026 3:26 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-threat-intelligence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> remove "preview" tag</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: entra-internet-access</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># How to configure Global Secure Access threat intelligence (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You must disable Domain Name System (DNS) over HTTPS (Secure DNS) to tunnel network traffic. Use the rules of the fully qualified domain names (FQDNs) in the traffic forwarding profile. For more information, see [Configure the DNS client to support DoH](/windows-server/networking/dns/doh-client-support#configure-the-dns-client-to-support-doh).</div><div class="diff-line diff-context">- Disable built-in DNS client on Chrome and Microsoft Edge.</div><div class="diff-line diff-context">- IPv6 traffic isn&#39;t acquired by the client and is therefore transferred directly to the network. To enable all relevant traffic to be tunneled, set the network adapter properties to [IPv4 preferred](troubleshoot-global-secure-access-client-diagnostics-health-check.md#ipv4-preferred).</div><div class="diff-line diff-deleted">- User Datagram Protocol (UDP) traffic (that is, QUIC) isn&#39;t supported in the current preview of Internet Access. Most websites support fallback to Transmission Control Protocol (TCP) when QUIC can&#39;t be established. For an improved user experience, you can deploy a Windows Firewall rule that blocks outbound UDP 443: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```powershell</div><div class="diff-line diff-context">@New-NetFirewallRule -DisplayName &quot;Block QUIC&quot; -Direction Outbound -Action Block -Protocol UDP  -RemotePort 443</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: entra-internet-access</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># How to configure Global Secure Access threat intelligence</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- You must disable Domain Name System (DNS) over HTTPS (Secure DNS) to tunnel network traffic. Use the rules of the fully qualified domain names (FQDNs) in the traffic forwarding profile. For more information, see [Configure the DNS client to support DoH](/windows-server/networking/dns/doh-client-support#configure-the-dns-client-to-support-doh).</div><div class="diff-line diff-context">- Disable built-in DNS client on Chrome and Microsoft Edge.</div><div class="diff-line diff-context">- IPv6 traffic isn&#39;t acquired by the client and is therefore transferred directly to the network. To enable all relevant traffic to be tunneled, set the network adapter properties to [IPv4 preferred](troubleshoot-global-secure-access-client-diagnostics-health-check.md#ipv4-preferred).</div><div class="diff-line diff-added">- User Datagram Protocol (UDP) traffic (that is, QUIC) isn&#39;t supported. Most websites support fallback to Transmission Control Protocol (TCP) when QUIC can&#39;t be established. For an improved user experience, you can deploy a Windows Firewall rule that blocks outbound UDP 443: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```powershell</div><div class="diff-line diff-context">@New-NetFirewallRule -DisplayName &quot;Block QUIC&quot; -Direction Outbound -Action Block -Protocol UDP  -RemotePort 443</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/reference-office-365-application-contents.md" target="_blank">docs/identity/conditional-access/reference-office-365-application-contents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Mar 27, 2026 9:06 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/reference-office-365-application-contents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate entries from Office 365 CA app suite reference</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- make.gov.powerapps.us</div><div class="diff-line diff-context">- make.powerapps.com</div><div class="diff-line diff-context">- Media Analysis and Transformation Service</div><div class="diff-line diff-deleted">- Media Analysis and Transformation Service</div><div class="diff-line diff-context">- Message Recall</div><div class="diff-line diff-context">- Messaging Async Media</div><div class="diff-line diff-context">- MessagingAsyncMediaProd</div><div class="diff-line diff-context">- Microsoft Flow Portal GCC</div><div class="diff-line diff-context">- Microsoft Forms</div><div class="diff-line diff-context">- Microsoft Forms Web</div><div class="diff-line diff-deleted">- Microsoft Forms Web</div><div class="diff-line diff-context">- Microsoft Information Protection API</div><div class="diff-line diff-context">- Microsoft Office</div><div class="diff-line diff-context">- Microsoft Office 365 Portal</div><div class="diff-line diff-context">- Microsoft Teams Targeting Application</div><div class="diff-line diff-context">- Microsoft Teams UIS</div><div class="diff-line diff-context">- Microsoft Teams Web Client</div><div class="diff-line diff-deleted">- Microsoft Todo web app</div><div class="diff-line diff-context">- Microsoft To-Do web app</div><div class="diff-line diff-context">- Microsoft Virtual Events Portal</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- make.gov.powerapps.us</div><div class="diff-line diff-context">- make.powerapps.com</div><div class="diff-line diff-context">- Media Analysis and Transformation Service</div><div class="diff-line diff-context">- Message Recall</div><div class="diff-line diff-context">- Messaging Async Media</div><div class="diff-line diff-context">- MessagingAsyncMediaProd</div><div class="diff-line diff-context">- Microsoft Flow Portal GCC</div><div class="diff-line diff-context">- Microsoft Forms</div><div class="diff-line diff-context">- Microsoft Forms Web</div><div class="diff-line diff-context">- Microsoft Information Protection API</div><div class="diff-line diff-context">- Microsoft Office</div><div class="diff-line diff-context">- Microsoft Office 365 Portal</div><div class="diff-line diff-context">- Microsoft Teams Targeting Application</div><div class="diff-line diff-context">- Microsoft Teams UIS</div><div class="diff-line diff-context">- Microsoft Teams Web Client</div><div class="diff-line diff-context">- Microsoft To-Do web app</div><div class="diff-line diff-context">- Microsoft Virtual Events Portal</div><div class="diff-line diff-context">- Microsoft Virtual Events Services</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
