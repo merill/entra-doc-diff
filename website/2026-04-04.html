@@ -1,0 +1,594 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 2nd 2026, 9:24 PM PDT</p>
+        <p>Report generated on April 3rd 2026, 9:24 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">30</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/concept-agent-id-design-patterns.md" target="_blank">docs/agent-id/concept-agent-id-design-patterns.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Apr 3, 2026 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/concept-agent-id-design-patterns" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+149 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> agent-id-decision-guide-040326</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/how-to-plan-agent-identity-architecture.md" target="_blank">docs/agent-id/how-to-plan-agent-identity-architecture.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Apr 3, 2026 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/how-to-plan-agent-identity-architecture" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+129 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> agent-id-decision-guide-040326</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/agent-service-principals.md" target="_blank">docs/agent-id/identity-platform/agent-service-principals.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 3, 2026 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-service-principals" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+27</span> / 
+              <span class="deletions">-34</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> agent-id-decision-guide-040326</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Agent identities, service principals, and applications</div><div class="diff-line diff-deleted">description: Learn about agent service principals in Microsoft Entra, including agent identity blueprint Principal and Agent Identity, and how they differ from traditional service principals in authentication, permissions, and lifecycle management.</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra Agent ID</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 11/04/2025</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">ms.reviewer: dastrock</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Agent identities, service principals, and applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The agent app model introduces specific service principal types with distinct roles and characteristics compared to nonagent application service principals. This article explains service principals in the agent application model, how they relate to agent identity blueprint and differ from nonagent application service principals.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Agent identity blueprint principal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Agent identity blueprint principals are created automatically when an agent identity blueprint is instantiated in a tenant. These service principals provide the runtime representation of the agent identity blueprint within the tenant&#39;s directory and enable the agent identity blueprint to perform operations like creating instances and managing lifecycle operations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The creation process involves consent operations that require permissions like `AgentIdentity.Create` and `ServicePrincipal.Manage.OwnedBy`. The agent identity blueprint principal enables the agent identity blueprint to obtain app-only tokens for Microsoft Graph calls necessary to create and manage agent identities. This process is essential because agent blueprints themselves can&#39;t directly obtain tokens for Microsoft Graph operations.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Agent identities, service principals, and applications</div><div class="diff-line diff-added">description: Learn about agent service principals in Microsoft Entra and how they differ from traditional service principals in authentication, permissions, and lifecycle management.</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra Agent ID</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">ms.reviewer: dastrock</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Agent identities, service principals, and applications</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Agent identities are built on the same service principal infrastructure that applications use throughout Microsoft Entra, but they&#39;re a distinct object type. Standard service principals were designed for static, deterministic workloads and operate using their own credentials directly. Agent identities add a delegation model where the blueprint acquires tokens on behalf of each agent identity, support a one-to-many blueprint relationship, require an assigned sponsor, and generate agent-specific audit entries.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This article explains the following concepts:</div><div class="diff-line diff-added">- The service principal types in the agent app model</div><div class="diff-line diff-added">- How they relate to agent identity blueprints</div><div class="diff-line diff-added">- How they differ from standard application service principals</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Agent identity blueprint principal</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/identity-platform/key-concepts.md" target="_blank">docs/agent-id/identity-platform/key-concepts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 3, 2026 4:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/key-concepts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> agent-id-decision-guide-040326</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Fundamental concepts in Microsoft agent identity platform</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra Agent ID</div><div class="diff-line diff-context">description: Discover the role of agent identities in AI authentication. Understand their unique identifiers, token usage, and how they enable secure access to systems.</div><div class="diff-line diff-context">author: omondiatieno</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.reviewer: dastrock</div><div class="diff-line diff-deleted">ms.date: 11/04/2025</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">#customer intent: As a developer, I want to understand the core concepts of agent identities and blueprints in Microsoft Entra ID so that I can implement secure authentication patterns for AI agents in my applications.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Agent identity and blueprint concepts in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft agent identity platform provides specialized identity constructs designed specifically for AI agents operating in enterprise environments. These identity constructs enable secure authentication and authorization patterns that differ from traditional user and application identities, addressing the unique requirements of autonomous AI systems.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Core identity concepts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following concepts form the foundation of the agent identity system in Microsoft Entra ID.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Fundamental concepts in Microsoft Entra Agent ID</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra Agent ID</div><div class="diff-line diff-context">description: Discover the role of agent identities in AI authentication. Understand their unique identifiers, token usage, and how they enable secure access to systems.</div><div class="diff-line diff-context">author: omondiatieno</div><div class="diff-line diff-context">ms.author: jomondi</div><div class="diff-line diff-context">ms.reviewer: dastrock</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">#customer intent: As a developer, I want to understand the core concepts of agent identities and blueprints in Microsoft Entra ID so that I can implement secure authentication patterns for AI agents in my applications.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Microsoft Entra Agent ID key concepts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The Microsoft agent identity platform provides specialized identity constructs designed specifically for AI agents operating in enterprise environments. These identity constructs enable secure authentication and authorization patterns that differ from traditional user and application identities, addressing the unique requirements of autonomous AI systems.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Core identity concepts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The following concepts form the foundation of Microsoft Entra Agent ID and the Microsoft agent identity platform.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/concept-agent-id-design-patterns.md" target="_blank">docs/agent-id/concept-agent-id-design-patterns.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 3, 2026 4:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/concept-agent-id-design-patterns" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> link-fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes common AI agent deployment patterns and how they map to Microsoft Entra Agent ID. The article starts with a review of key identity concepts, describes permisssions and trust boundaries, and then walks through common deployment patterns.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For step-by-step decision guidance on how many blueprints and agent identities to create, see [Plan your agent identity architecture](plan-agent-identity-architecture.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [entra-agent-id-preview-note](../../includes/entra-agent-id-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Key concepts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following components are the foundation of Microsoft Entra Agent ID. If you&#39;re new to them, start with [Microsoft Entra Agent ID key concepts](../identity-platform/key-concepts.md) before continuing with this article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Identity constructs</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following identity constructs are used throughout the patterns described in this article:</div><div class="diff-line diff-deleted">- **[Agent identity blueprint](../identity-platform/agent-blueprint.md)**: The template and authentication foundation for one or more agent identities. It holds credentials and policies that apply to all agent identities created from it.</div><div class="diff-line diff-deleted">- **[Agent identity blueprint principal](../identity-platform/agent-blueprint.md#agent-identity-blueprint-principals)**: The Microsoft Entra object created when a blueprint is added to a tenant. It&#39;s what actually acquires tokens, creates agent identities, and appears in audit logs on behalf of the blueprint.</div><div class="diff-line diff-deleted">- **[Agent identity](../identity-platform/agent-identities.md)**: The runtime identity for a specific AI agent, with its own permissions on downstream resources.</div><div class="diff-line diff-deleted">- **[Agent&#39;s user account](../identity-platform/agent-users.md)**: An optional 1:1 account paired with an agent identity, needed only when the agent must access systems that require a user object.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Permissions models</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article describes common AI agent deployment patterns and how they map to Microsoft Entra Agent ID. The article starts with a review of key identity concepts, describes permisssions and trust boundaries, and then walks through common deployment patterns.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For step-by-step decision guidance on how many blueprints and agent identities to create, see [Plan your agent identity architecture](how-to-plan-agent-identity-architecture.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [entra-agent-id-preview-note](../includes/entra-agent-id-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Key concepts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The following components are the foundation of Microsoft Entra Agent ID. If you&#39;re new to them, start with [Microsoft Entra Agent ID key concepts](identity-platform/key-concepts.md) before continuing with this article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Identity constructs</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following identity constructs are used throughout the patterns described in this article:</div><div class="diff-line diff-added">- **[Agent identity blueprint](identity-platform/agent-blueprint.md)**: The template and authentication foundation for one or more agent identities. It holds credentials and policies that apply to all agent identities created from it.</div><div class="diff-line diff-added">- **[Agent identity blueprint principal](identity-platform/agent-blueprint.md#agent-identity-blueprint-principals)**: The Microsoft Entra object created when a blueprint is added to a tenant. It&#39;s what actually acquires tokens, creates agent identities, and appears in audit logs on behalf of the blueprint.</div><div class="diff-line diff-added">- **[Agent identity](identity-platform/agent-identities.md)**: The runtime identity for a specific AI agent, with its own permissions on downstream resources.</div><div class="diff-line diff-added">- **[Agent&#39;s user account](identity-platform/agent-users.md)**: An optional 1:1 account paired with an agent identity, needed only when the agent must access systems that require a user object.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Permissions models</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/how-to-plan-agent-identity-architecture.md" target="_blank">docs/agent-id/how-to-plan-agent-identity-architecture.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 3, 2026 4:52 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/how-to-plan-agent-identity-architecture" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> link-fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. **How many blueprints** your system requires.</div><div class="diff-line diff-context">1. **How many agent identities** to create per blueprint.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Work through these decisions in order, because earlier choices shape later ones. Some single-agent deployments might only need the first two steps. For examples of how these decisions map to real-world agent architectures, see [Agent ID design patterns](agent-id-design-patterns.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [entra-agent-id-preview-note](../../includes/entra-agent-id-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Choose an identity type</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Blueprint-managed credentials and lifecycle: you create, rotate, and delete agent identities through their parent blueprint, not individually.</div><div class="diff-line diff-context">- Support for ephemeral agent identities that are created at runtime with inheritable permissions already granted through the blueprint, and deleted when the task completes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For a detailed comparison, see [Agent identities, service principals, and applications](../identity-platform/agent-service-principals.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Why not a regular user account?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some agents need both. For example, an agent might run a nightly background sync using the autonomous pattern and also respond to user chat messages using the interactive pattern. In this case, implement both OAuth flows and select the appropriate token based on the operation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- For autonomous agents, see [Request agent tokens for autonomous agents](../identity-platform/autonomous-agent-request-tokens.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. **How many blueprints** your system requires.</div><div class="diff-line diff-context">1. **How many agent identities** to create per blueprint.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Work through these decisions in order, because earlier choices shape later ones. Some single-agent deployments might only need the first two steps. For examples of how these decisions map to real-world agent architectures, see [Agent ID design patterns](concept-agent-id-design-patterns.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [entra-agent-id-preview-note](../includes/entra-agent-id-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Choose an identity type</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Blueprint-managed credentials and lifecycle: you create, rotate, and delete agent identities through their parent blueprint, not individually.</div><div class="diff-line diff-context">- Support for ephemeral agent identities that are created at runtime with inheritable permissions already granted through the blueprint, and deleted when the task completes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For a detailed comparison, see [Agent identities, service principals, and applications](identity-platform/agent-service-principals.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Why not a regular user account?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some agents need both. For example, an agent might run a nightly background sync using the autonomous pattern and also respond to user chat messages using the interactive pattern. In this case, implement both OAuth flows and select the appropriate token based on the operation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- For autonomous agents, see [Request agent tokens for autonomous agents](identity-platform/autonomous-agent-request-tokens.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-entra-id-federation-customers.md" target="_blank">docs/external-id/customers/how-to-entra-id-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 3, 2026 9:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-entra-id-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix MS Learn style issues: product naming, punctuation, formatting</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a developer, devops, or it administrator, I want to learn how to add a Microsoft Entra ID tenant as an OpenID Connect identity provider in my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Add a Microsoft Entra ID tenant as an OpenID Connect identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   `https://&lt;tenant-subdomain&gt;.ciamlogin.com/&lt;custom-domain&gt;/federation/oauth2`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For step by step guidance, see [Register an application](/entra/identity-platform/quickstart-register-app).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After the app is registered, complete the following configuration:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure the identity provider in the external tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">After you register the external tenant in the Microsoft Entra ID tenant, add it as a custom OIDC identity provider in the external tenant. Follow the steps in [Configure a new OpenID Connect identity provider in the admin center](how-to-custom-oidc-federation-customers.md#configure-a-new-openid-connect-identity-provider-in-the-admin-center) and use the following Entra ID-specific values:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Setting | Value |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#Customer intent: As a developer, DevOps, or IT administrator, I want to learn how to add a Microsoft Entra ID tenant as an OpenID Connect identity provider in my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Add a Microsoft Entra ID tenant as an OpenID Connect identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   `https://&lt;tenant-subdomain&gt;.ciamlogin.com/&lt;custom-domain&gt;/federation/oauth2`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For step-by-step guidance, see [Register an application](/entra/identity-platform/quickstart-register-app).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After the app is registered, complete the following configuration:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configure the identity provider in the external tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After you register the external tenant in the Microsoft Entra ID tenant, add it as a custom OIDC identity provider in the external tenant. Follow the steps in [Configure a new OpenID Connect identity provider in the admin center](how-to-custom-oidc-federation-customers.md#configure-a-new-openid-connect-identity-provider-in-the-admin-center) and use the following Microsoft Entra ID-specific values:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Setting | Value |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/assign-local-admin.md" target="_blank">docs/identity/devices/assign-local-admin.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 3, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/assign-local-admin" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify placeholder values in local admin command examples (AB#481870)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: How to manage local administrators on Microsoft Entra joined devices</div><div class="diff-line diff-context">description: Learn how to assign Azure roles to the local administrators group of a Windows device.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/27/2025</div><div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">#Customer intent: As an IT admin, I want to manage the local administrators group assignment during a Microsoft Entra join, so that I can control who can manage Microsoft Entra joined devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, you can also add users using the command prompt:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If your tenant users are synchronized from on-premises Active Directory, use `net localgroup administrators /add &quot;Contoso\username&quot;`.</div><div class="diff-line diff-deleted">- If your tenant users are created in Microsoft Entra ID, use `net localgroup administrators /add &quot;AzureAD\UserUpn&quot;`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Considerations</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: How to manage local administrators on Microsoft Entra joined devices</div><div class="diff-line diff-context">description: Learn how to assign Azure roles to the local administrators group of a Windows device.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">#Customer intent: As an IT admin, I want to manage the local administrators group assignment during a Microsoft Entra join, so that I can control who can manage Microsoft Entra joined devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Additionally, you can also add users using the command prompt:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If your tenant users are synchronized from on-premises Active Directory, use `net localgroup administrators /add &quot;&lt;domain&gt;\&lt;username&gt;&quot;`, where `&lt;domain&gt;` is your on-premises Active Directory domain name and `&lt;username&gt;` is the user&#39;s SAM account name.</div><div class="diff-line diff-added">- If your tenant users are created in Microsoft Entra ID, use `net localgroup administrators /add &quot;AzureAD\&lt;UserUPN&gt;&quot;`, where `&lt;UserUPN&gt;` is the user&#39;s User Principal Name.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Considerations</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-migrate-passwords-just-in-time.md" target="_blank">docs/external-id/customers/how-to-migrate-passwords-just-in-time.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 3, 2026 1:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-migrate-passwords-just-in-time" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update JIT migration doc to use built-in portal role</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">author: garrodonnell</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 12/12/2025</div><div class="diff-line diff-context">ms.author: godonnell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Customer intent: As a developer or administrator responsible for managing user identities, I want to implement Just-In-Time (JIT) password migration to migrate user credentials from a legacy identity provider to Microsoft Entra External ID, so that users can continue using their existing passwords without requiring an immediate password reset or bulk migration of password hashes.</div><div class="diff-line diff-context">- An account with the following roles assigned:</div><div class="diff-line diff-context">    - [Application Administrator](../../identity/role-based-access-control/permissions-reference.md#application-administrator) </div><div class="diff-line diff-context">    - [User Administrator](../../identity/role-based-access-control/permissions-reference.md#user-administrator)</div><div class="diff-line diff-deleted">    - Authentication Extensibility Password Administrator. This role gives you the necessary permissions to create and manage custom authentication extensions for password migration. The role definition ID is `0b00bede-4072-4d22-b441-e7df02a1ef63`. </div><div class="diff-line diff-deleted">    You can find more information about role assignments in the [Microsoft Entra ID roles documentation](/entra/identity/role-based-access-control/manage-roles-portal?tabs=ms-graph). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview of the JIT migration process</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">author: garrodonnell</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.author: godonnell</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Customer intent: As a developer or administrator responsible for managing user identities, I want to implement Just-In-Time (JIT) password migration to migrate user credentials from a legacy identity provider to Microsoft Entra External ID, so that users can continue using their existing passwords without requiring an immediate password reset or bulk migration of password hashes.</div><div class="diff-line diff-context">- An account with the following roles assigned:</div><div class="diff-line diff-context">    - [Application Administrator](../../identity/role-based-access-control/permissions-reference.md#application-administrator) </div><div class="diff-line diff-context">    - [User Administrator](../../identity/role-based-access-control/permissions-reference.md#user-administrator)</div><div class="diff-line diff-added">    - [Authentication Extensibility Password Administrator](../../identity/role-based-access-control/permissions-reference.md#authentication-extensibility-password-administrator). This built-in role is available in the Azure portal and gives you the necessary permissions to create and manage custom authentication extensions for password migration. For more information about role assignments, see [Assign Microsoft Entra roles](/entra/identity/role-based-access-control/manage-roles-portal).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview of the JIT migration process</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-templates.md" target="_blank">docs/id-governance/lifecycle-workflow-templates.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 3, 2026 9:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-templates" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Improve prominence of Lifecycle Workflows custom extensibility docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Conceptual article discussing workflow templates and categories with Lifecycle Workflows.</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.custom: template-concept</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [`workflowTemplate` resource type](/graph/api/resources/identitygovernance-workflowtemplate?view=graph-rest-beta&amp;preserve-view=true)</div><div class="diff-line diff-context">- [Lifecycle Workflow tasks and definitions](lifecycle-workflow-tasks.md)</div><div class="diff-line diff-context">- [Create a Lifecycle workflow](create-lifecycle-workflow.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Conceptual article discussing workflow templates and categories with Lifecycle Workflows.</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.custom: template-concept</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [`workflowTemplate` resource type](/graph/api/resources/identitygovernance-workflowtemplate?view=graph-rest-beta&amp;preserve-view=true)</div><div class="diff-line diff-context">- [Lifecycle Workflow tasks and definitions](lifecycle-workflow-tasks.md)</div><div class="diff-line diff-context">- [Create a Lifecycle workflow](create-lifecycle-workflow.md)</div><div class="diff-line diff-added">- [Custom task extensions for workflows beyond built-in templates](lifecycle-workflow-extensibility.md)</div><div class="diff-line diff-added">- [Trigger Logic Apps based on custom task extensions](trigger-custom-task.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-supported-features-customers.md" target="_blank">docs/external-id/customers/concept-supported-features-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 3, 2026 9:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-supported-features-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix MS Learn style issues: product naming, punctuation, formatting</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Compare features and capabilities of a workforce versus an external tenant configuration. Determine which tenant type applies to your external identities scenario.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/30/2026</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-ropc-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, DevOps, or IT admin, I want to learn about features supported in a CIAM tenant so that I can configure tenants according to my organization&#39;s needs.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">| Microsoft personal account ([OpenID Connect](./how-to-custom-oidc-federation-customers.md)) | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-context">| [Microsoft Entra ID federation](./how-to-entra-id-federation-customers.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-context">| [OpenID Connect federation](./how-to-custom-oidc-federation-customers.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-deleted">| [SAML/WS-Fed federation](../direct-federation.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;::: | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;::: ||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Application registration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Compare features and capabilities of a workforce versus an external tenant configuration. Determine which tenant type applies to your external identities scenario.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/30/2026</div><div class="diff-line diff-context">ms.custom: it-pro, seo-july-2024, sfi-ropc-nochange</div><div class="diff-line diff-context">#Customer intent: As a dev, DevOps, or IT admin, I want to learn about features supported in a CIAM tenant so that I can configure tenants according to my organization&#39;s needs.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">| Microsoft personal account ([OpenID Connect](./how-to-custom-oidc-federation-customers.md)) | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-context">| [Microsoft Entra ID federation](./how-to-entra-id-federation-customers.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-context">| [OpenID Connect federation](./how-to-custom-oidc-federation-customers.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-added">| [SAML/WS-Fed federation](../direct-federation.md)| :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  | :::image type=&quot;icon&quot; source=&quot;../media/common/applies-to-yes.png&quot; border=&quot;false&quot;:::  |  |  |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Application registration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/entra-admin-center.md" target="_blank">docs/fundamentals/entra-admin-center.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 3, 2026 9:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/entra-admin-center" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Improve prominence of Lifecycle Workflows custom extensibility docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra admin center</div><div class="diff-line diff-context">description: Overview of the Microsoft Entra admin center interface for configuring and managing Microsoft Entra products.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 06/04/2025</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a user, I want an overview of the products and features available in the Microsoft Entra admin center and then be able to easily navigate to learn more about those products and features. </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* [Access reviews](~/id-governance/access-reviews-overview.md)</div><div class="diff-line diff-context">* [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md)</div><div class="diff-line diff-context">* [Lifecycle workflows](~/id-governance/what-are-lifecycle-workflows.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Verified ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra admin center</div><div class="diff-line diff-context">description: Overview of the Microsoft Entra admin center interface for configuring and managing Microsoft Entra products.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a user, I want an overview of the products and features available in the Microsoft Entra admin center and then be able to easily navigate to learn more about those products and features. </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">* [Access reviews](~/id-governance/access-reviews-overview.md)</div><div class="diff-line diff-context">* [Privileged Identity Management](~/id-governance/privileged-identity-management/pim-configure.md)</div><div class="diff-line diff-context">* [Lifecycle workflows](~/id-governance/what-are-lifecycle-workflows.md)</div><div class="diff-line diff-added">* [Custom task extensions for Lifecycle workflows](~/id-governance/lifecycle-workflow-extensibility.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Verified ID</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-planning-your-solution.md" target="_blank">docs/external-id/customers/concept-planning-your-solution.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 3, 2026 9:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-planning-your-solution" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix MS Learn style issues: product naming, punctuation, formatting</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Requirements for token claims**. If your application requires specific user attributes, you can include them in the token sent to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Identity providers**. You can set up social identity providers like [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md), [Apple](how-to-apple-federation-customers.md), a [Microsoft Entra ID tenant](how-to-entra-id-federation-customers.md), or a [custom-configured OpenID Connect (OIDC)](how-to-custom-oidc-federation-customers.md) identity provider. Then, you can add them to your user flow as sign-in options</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How to integrate a user flow with your app</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Requirements for token claims**. If your application requires specific user attributes, you can include them in the token sent to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Identity providers**. You can set up social identity providers like [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md), [Apple](how-to-apple-federation-customers.md), a [Microsoft Entra ID tenant](how-to-entra-id-federation-customers.md), or a [custom-configured OpenID Connect (OIDC)](how-to-custom-oidc-federation-customers.md) identity provider. Then, you can add them to your user flow as sign-in options.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How to integrate a user flow with your app</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/overview-customers-ciam.md" target="_blank">docs/external-id/customers/overview-customers-ciam.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 3, 2026 9:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/overview-customers-ciam" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix MS Learn style issues: product naming, punctuation, formatting</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Design user flows for self-service sign-up</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can create a simple sign-up and sign-in experience for your customers by adding a user flow to your application. The user flow defines the series of sign-up steps customers follow and the sign-in methods they can use (such as email and password, one-time passcodes, social accounts from [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md) or [Apple](how-to-apple-federation-customers.md), [Microsoft Entra ID](how-to-entra-id-federation-customers.md) federation, as well as [custom OIDC](how-to-custom-oidc-federation-customers.md) identity providers). You can also collect information from customers during sign-up by selecting from a series of user built-in attributes or adding your own custom attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Several user flow settings let you control how the customer signs up for the application, including:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Design user flows for self-service sign-up</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can create a simple sign-up and sign-in experience for your customers by adding a user flow to your application. The user flow defines the series of sign-up steps customers follow and the sign-in methods they can use (such as email and password, one-time passcodes, social accounts from [Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md), or [Apple](how-to-apple-federation-customers.md), [Microsoft Entra ID](how-to-entra-id-federation-customers.md) federation, as well as [custom OIDC](how-to-custom-oidc-federation-customers.md) identity providers). You can also collect information from customers during sign-up by selecting from a series of user built-in attributes or adding your own custom attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Several user flow settings let you control how the customer signs up for the application, including:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
