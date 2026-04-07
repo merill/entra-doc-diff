@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 5th 2026, 9:40 PM PDT</p>
+        <p>Report generated on April 6th 2026, 9:40 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/entra-admin-center.md" target="_blank">docs/fundamentals/entra-admin-center.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 6, 2026 3:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/entra-admin-center" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+41</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Enhance admin center overview with task table and navigation detail AB#567035</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra admin center</div><div class="diff-line diff-context">description: Overview of the Microsoft Entra admin center interface for configuring and managing Microsoft Entra products.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a user, I want an overview of the products and features available in the Microsoft Entra admin center and then be able to easily navigate to learn more about those products and features. </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The [Microsoft Entra admin center](https://entra.microsoft.com/) is a web-based identity portal for Microsoft Entra products. It provides a unified administrative experience for organizations to configure and manage their Microsoft Entra solutions in a centralized location.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Explore the Microsoft Entra admin center</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft Entra admin center is organized by product. Access the products through the search bar or left-hand menu.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Home** includes at-a-glance information about your tenant, recent activities, and other helpful resources, including shortcuts and deployment guides.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;./media/entra-admin-center/entra-admin-center-home.png&quot; alt-text=&quot;Screenshot of the Microsoft Entra admin center overview home page.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra admin center</div><div class="diff-line diff-context">description: Overview of the Microsoft Entra admin center interface for configuring and managing Microsoft Entra products.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 04/06/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">#Customer intent: As a user, I want an overview of the products and features available in the Microsoft Entra admin center and then be able to easily navigate to learn more about those products and features. </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The [Microsoft Entra admin center](https://entra.microsoft.com/) is a web-based portal that provides a unified administrative experience for configuring and managing Microsoft Entra products in a centralized location. From the admin center, administrators can manage users and groups, configure authentication methods, create Conditional Access policies, monitor identity security posture, and govern access across the organization.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The admin center brings together the following Microsoft Entra product areas, each accessible from the left-hand navigation menu:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- **[Entra ID](#entra-id)** — Manage users, groups, devices, applications, roles, and authentication methods.</div><div class="diff-line diff-added">- **[ID Protection](#id-protection)** — Monitor and respond to identity-based risks with risk policies and reports.</div><div class="diff-line diff-added">- **[Identity Governance](#identity-governance)** — Control access lifecycle with entitlement management, access reviews, and lifecycle workflows.</div><div class="diff-line diff-added">- **[Verified ID](#verified-id)** — Issue and manage verifiable credentials.</div><div class="diff-line diff-added">- **[Global Secure Access](#global-secure-access)** — Secure access to apps and resources with Private Access and Internet Access.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/controls.md" target="_blank">docs/identity/conditional-access/controls.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 6, 2026 2:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/controls" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Address review feedback: fix retirement claim, update stale names, update ms.date AB#556043</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Custom controls in Microsoft Entra Conditional Access</div><div class="diff-line diff-context">description: Learn how custom controls in Microsoft Entra Conditional Access work.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 04/01/2026</div><div class="diff-line diff-context">ms.reviewer: gkinasewitz</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Custom controls are a preview capability of Microsoft Entra ID. When you use custom controls, users are redirected to a compatible service to meet authentication requirements outside of Microsoft Entra ID. To meet this control, a user&#39;s browser redirects to the external service, performs any required authentication, and then redirects back to Microsoft Entra ID. Microsoft Entra ID verifies the response and, if the user is successfully authenticated or validated, the user continues in the Conditional Access flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Custom controls are deprecated and will be retired on September 30, 2026. External MFA (previously known as external authentication methods) is the replacement for custom controls and is now generally available. External MFA provides several benefits over the custom controls approach. Existing custom controls will continue to function until retirement, but new implementations should use external MFA. Start planning your migration now.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Manage external MFA in Microsoft Entra ID](../authentication/how-to-authentication-external-method-manage.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Custom controls in Microsoft Entra Conditional Access</div><div class="diff-line diff-context">description: Learn how custom controls in Microsoft Entra Conditional Access work.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.reviewer: gkinasewitz</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Custom controls are a preview capability of Microsoft Entra ID. When you use custom controls, users are redirected to a compatible service to meet authentication requirements outside of Microsoft Entra ID. To meet this control, a user&#39;s browser redirects to the external service, performs any required authentication, and then redirects back to Microsoft Entra ID. Microsoft Entra ID verifies the response and, if the user is successfully authenticated or validated, the user continues in the Conditional Access flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Custom controls will be deprecated on September 30, 2026. External MFA (previously known as external authentication methods) is the replacement for custom controls and is now generally available. External MFA provides several benefits over the custom controls approach. Existing custom controls will continue to function during the transition period, but new implementations should use external MFA. Start planning your migration now.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Manage external MFA in Microsoft Entra ID](../authentication/how-to-authentication-external-method-manage.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/plan-conditional-access.md" target="_blank">docs/identity/conditional-access/plan-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by John Flores on Apr 6, 2026 8:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Increase Conditional Access policy limit to 240</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Minimize the number of Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Creating a policy for each app isn&#39;t efficient and makes managing policies difficult. Conditional Access has a limit of 195 policies per tenant. This 195-policy limit includes Conditional Access policies in any state, including report-only mode, on, or off.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Analyze your apps and group them by the same resource requirements for the same users. For example, if all Microsoft 365 apps or all HR apps have the same requirements for the same users, create a single policy and include all the apps it applies to.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Minimize the number of Conditional Access policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Creating a policy for each app isn&#39;t efficient and makes managing policies difficult. Conditional Access has a limit of 240 policies per tenant. This 240-policy limit includes Conditional Access policies in any state, including report-only mode, on, or off.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Analyze your apps and group them by the same resource requirements for the same users. For example, if all Microsoft 365 apps or all HR apps have the same requirements for the same users, create a single policy and include all the apps it applies to.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/managed-policies.md" target="_blank">docs/identity/conditional-access/managed-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jared Ross on Apr 6, 2026 3:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/managed-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update monitoring instructions for Microsoft policies</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Custom controls don&#39;t satisfy multifactor authentication claim requirements](controls.md#creating-custom-controls). If your organization uses custom controls you should [migrate to external authentication methods](/entra/identity/authentication/how-to-authentication-external-method-manage), the replacement of custom controls. Your external authentication provider must support external authentication methods and provide the necessary configuration guidance for integration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### How do I monitor when Microsoft makes a change to these policies or adds a new one?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Administrators with **AuditLog.Read.All** and **Directory.Read** permissions can query the audit log for entries initiated by **Microsoft Managed Policy Manager** in the **Policy** category. For example, use [Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) to find entries with this query string: `https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?$filter=initiatedBy/app/displayName eq &#39;Microsoft Managed Policy Manager&#39; and category eq &#39;Policy&#39;`.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[Custom controls don&#39;t satisfy multifactor authentication claim requirements](controls.md#creating-custom-controls). If your organization uses custom controls you should [migrate to external authentication methods](/entra/identity/authentication/how-to-authentication-external-method-manage), the replacement of custom controls. Your external authentication provider must support external authentication methods and provide the necessary configuration guidance for integration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### How do I monitor when Microsoft makes a change to these policies, adds a new one, or deletes one?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Administrators with **AuditLog.Read.All** and **Directory.Read** permissions can query the audit log for entries initiated by **Microsoft Managed Policy Manager** in the **Policy** category. For example, use [Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) to find entries with this query string: `https://graph.microsoft.com/v1.0/auditLogs/directoryAudits?$filter=initiatedBy/app/displayName eq &#39;Microsoft Managed Policy Manager&#39; and category eq &#39;Policy&#39;`.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/resilience-in-credentials.md" target="_blank">docs/architecture/resilience-in-credentials.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 6, 2026 2:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/resilience-in-credentials" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Address review feedback: fix retirement claim, update stale names, update ms.date AB#556043</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|Certificate Based Authentication (CBA)|In most cases (depending on configuration) CBA will require a revocation check. This adds an external dependency on the CRL distribution point (CDP) |[Understanding the certificate revocation process](~/identity/authentication/concept-certificate-based-authentication-certificate-revocation-list.md#enforce-crl-validation-for-cas)|</div><div class="diff-line diff-context">|Pass Through Authentication (PTA)|PTA uses on-premise agents to process the password authentication.|[How does Microsoft Entra pass-through authentication work?](~/identity/hybrid/connect/how-to-connect-pta-how-it-works.md#how-does-microsoft-entra-pass-through-authentication-work)|</div><div class="diff-line diff-context">|Federation| Federation server(s) must be online and available to process the authentication attempt|[High availability cross-geographic AD FS deployment in Azure with Azure Traffic Manager](/windows-server/identity/ad-fs/deployment/active-directory-adfs-in-azure-with-azure-traffic-manager)|</div><div class="diff-line diff-deleted">|External Authentication Methods (EAM)| EAM provides a path for customers to use external MFA providers.|[Manage external MFA in Microsoft Entra ID](~/identity/authentication/how-to-authentication-external-method-manage.md)|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How do multiple credentials help resilience?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|Certificate Based Authentication (CBA)|In most cases (depending on configuration) CBA will require a revocation check. This adds an external dependency on the CRL distribution point (CDP) |[Understanding the certificate revocation process](~/identity/authentication/concept-certificate-based-authentication-certificate-revocation-list.md#enforce-crl-validation-for-cas)|</div><div class="diff-line diff-context">|Pass Through Authentication (PTA)|PTA uses on-premise agents to process the password authentication.|[How does Microsoft Entra pass-through authentication work?](~/identity/hybrid/connect/how-to-connect-pta-how-it-works.md#how-does-microsoft-entra-pass-through-authentication-work)|</div><div class="diff-line diff-context">|Federation| Federation server(s) must be online and available to process the authentication attempt|[High availability cross-geographic AD FS deployment in Azure with Azure Traffic Manager](/windows-server/identity/ad-fs/deployment/active-directory-adfs-in-azure-with-azure-traffic-manager)|</div><div class="diff-line diff-added">|External Multifactor Authentication (External MFA)| External MFA provides a path for customers to use external MFA providers.|[Manage external MFA in Microsoft Entra ID](~/identity/authentication/how-to-authentication-external-method-manage.md)|</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How do multiple credentials help resilience?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-mandatory-multifactor-authentication.md" target="_blank">docs/identity/authentication/concept-mandatory-multifactor-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 6, 2026 2:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Address review feedback: fix retirement claim, update stale names, update ms.date AB#556043</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some customers apply Conditional Access policies to user-based service accounts. You can reclaim the user-based license, and add a [workload identities](~/workload-id/workload-identities-overview.md) license to apply [Conditional Access for workload identities](~/identity/conditional-access/workload-identity.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Migrate federated Identity Provider to external authentication methods </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Support for external MFA solutions is available with [external MFA](https://aka.ms/EAMAdminDocs), and can be used to meet the MFA requirement. The legacy Conditional Access custom controls preview doesn&#39;t satisfy the MFA requirement. You should migrate to external MFA to use an external solution with Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some customers apply Conditional Access policies to user-based service accounts. You can reclaim the user-based license, and add a [workload identities](~/workload-id/workload-identities-overview.md) license to apply [Conditional Access for workload identities](~/identity/conditional-access/workload-identity.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Migrate federated Identity Provider to external MFA </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Support for external MFA solutions is available with [external MFA](https://aka.ms/EAMAdminDocs), and can be used to meet the MFA requirement. The legacy Conditional Access custom controls preview doesn&#39;t satisfy the MFA requirement. You should migrate to external MFA to use an external solution with Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
