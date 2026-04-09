@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 7th 2026, 9:40 PM PDT</p>
+        <p>Report generated on April 8th 2026, 9:40 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-ai-prompt-injection-protection.md" target="_blank">docs/global-secure-access/how-to-ai-prompt-injection-protection.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kamran Tabish on Apr 8, 2026 4:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-ai-prompt-injection-protection" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove preview note in documentation</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Protect enterprise generative AI apps with prompt injection protection (preview)</div><div class="diff-line diff-context">description: &quot;Protect your enterprise generative AI apps from prompt injection attacks with Microsoft&#39;s AI Gateway prompt injection protection.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Protect enterprise generative AI applications with prompt injection protection (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Prompt injection attacks pose a significant risk for generative AI apps. Bad actors craft malicious input to make a large language model (LLM) ignore instructions, expose sensitive data, perform unintended actions, or generate harmful content.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## High-level architecture</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-ai-prompt-injection-protection/prompt-shield-architecture.png&quot; alt-text=&quot;Diagram showing the architecture of network content filtering with Global Secure Access and Microsoft Purview.&quot; lightbox=&quot;media/how-to-ai-prompt-injection-protection/prompt-shield-architecture.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; The Prompt Injection Protection feature is currently in PREVIEW.   </div><div class="diff-line diff-deleted">&gt; This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Protect enterprise generative AI apps with prompt injection protection (preview)</div><div class="diff-line diff-context">description: &quot;Protect your enterprise generative AI apps from prompt injection attacks with Microsoft&#39;s AI Gateway prompt injection protection.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/08/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: KaTabish</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Protect enterprise generative AI applications with prompt injection protection</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Prompt injection attacks pose a significant risk for generative AI apps. Bad actors craft malicious input to make a large language model (LLM) ignore instructions, expose sensitive data, perform unintended actions, or generate harmful content.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## High-level architecture</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/how-to-ai-prompt-injection-protection/prompt-shield-architecture.png&quot; alt-text=&quot;Diagram showing the architecture of network content filtering with Global Secure Access and Microsoft Purview.&quot; lightbox=&quot;media/how-to-ai-prompt-injection-protection/prompt-shield-architecture.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To complete the steps in this process, you must have the following prerequisites in place:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-continuous-access-evaluation.md" target="_blank">docs/identity/conditional-access/concept-continuous-access-evaluation.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 8, 2026 5:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-continuous-access-evaluation" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update reviewer for continuous access evaluation doc</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/24/2026</div><div class="diff-line diff-deleted">ms.reviewer: vmahtani</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">  - has-adal-ref</div><div class="diff-line diff-context">  - ai-gen-docs-bap</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/24/2026</div><div class="diff-line diff-added">ms.reviewer: sreyanthmora</div><div class="diff-line diff-context">ms.custom:</div><div class="diff-line diff-context">  - has-adal-ref</div><div class="diff-line diff-context">  - ai-gen-docs-bap</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/optional-claims-reference.md" target="_blank">docs/identity-platform/optional-claims-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 8, 2026 12:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove broken link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| `acrs` | Auth Context IDs | JWT | Microsoft Entra ID | Indicates the Auth Context IDs of the operations that the bearer is eligible to perform. Auth Context IDs can be used to trigger a demand for step-up authentication from within your application and services. Often used along with the `xms_cc` claim. |</div><div class="diff-line diff-context">| `auth_time` | Time when the user last authenticated. | JWT | | |</div><div class="diff-line diff-context">| `ctry` | User&#39;s country/region | JWT |  | This claim is returned if it&#39;s present and the value of the field is a standard two-letter country/region code, such as FR, JP, SZ, and so on. |</div><div class="diff-line diff-deleted">| `email` | The reported email address for this user | JWT, SAML | MSA, Microsoft Entra ID | This value is included by default if the user is a guest in the tenant. For managed users (the users inside the tenant), it must be requested through this optional claim or, on v2.0 only, with the OpenID scope. This value isn&#39;t guaranteed to be correct, and is mutable over time - never use it for authorization or to save data for a user. For more information, see [Validate the user has permission to access this data](access-tokens.md). If you&#39;re using the email claim for authorization, we recommend [performing a migration to move to a more secure claim](./migrate-off-email-claim-authorization.md). If you require an addressable email address in your app, request this data from the user directly, using this claim as a suggestion or prefill in your UX. |</div><div class="diff-line diff-context">| `fwd` | IP address | JWT | | Adds the original address of the requesting client (when inside a VNET). |</div><div class="diff-line diff-context">| `groups` | Optional formatting for group claims | JWT, SAML | | The `groups` claim is used with the GroupMembershipClaims setting in the [application manifest](reference-app-manifest.md), which must be set as well. |</div><div class="diff-line diff-context">| `idtyp` | Token type | JWT access tokens | Special: only in app-only access tokens | The value is `app` when the token is an app-only token. This claim is the most accurate way for an API to determine if a token is an app token or an app+user token. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| `acrs` | Auth Context IDs | JWT | Microsoft Entra ID | Indicates the Auth Context IDs of the operations that the bearer is eligible to perform. Auth Context IDs can be used to trigger a demand for step-up authentication from within your application and services. Often used along with the `xms_cc` claim. |</div><div class="diff-line diff-context">| `auth_time` | Time when the user last authenticated. | JWT | | |</div><div class="diff-line diff-context">| `ctry` | User&#39;s country/region | JWT |  | This claim is returned if it&#39;s present and the value of the field is a standard two-letter country/region code, such as FR, JP, SZ, and so on. |</div><div class="diff-line diff-added">| `email` | The reported email address for this user | JWT, SAML | MSA, Microsoft Entra ID | This value is included by default if the user is a guest in the tenant. For managed users (the users inside the tenant), it must be requested through this optional claim or, on v2.0 only, with the OpenID scope. This value isn&#39;t guaranteed to be correct, and is mutable over time - never use it for authorization or to save data for a user. For more information, see [Validate the user has permission to access this data](access-tokens.md). If you require an addressable email address in your app, request this data from the user directly, using this claim as a suggestion or prefill in your UX. |</div><div class="diff-line diff-context">| `fwd` | IP address | JWT | | Adds the original address of the requesting client (when inside a VNET). |</div><div class="diff-line diff-context">| `groups` | Optional formatting for group claims | JWT, SAML | | The `groups` claim is used with the GroupMembershipClaims setting in the [application manifest](reference-app-manifest.md), which must be set as well. |</div><div class="diff-line diff-context">| `idtyp` | Token type | JWT access tokens | Special: only in app-only access tokens | The value is `app` when the token is an app-only token. This claim is the most accurate way for an API to determine if a token is an app token or an app+user token. |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/services-integration-partners.md" target="_blank">docs/external-id/customers/services-integration-partners.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on Apr 8, 2026 6:48 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/services-integration-partners" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Adding email</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">|[Grit](https://www.gritiam.com/migration.html) |&quot;Grit Software has deep expertise in consumer identity and access management, with a strong track record of helping Fortune 500 and mid-market companies execute complex transformation projects successfully and on time. For Azure AD B2C to Microsoft Entra External ID migrations, Grit&#39;s AI-powered migration service uses advanced coding agents to deliver accurate migrations in days, while ensuring customer data isn&#39;t sent to the underlying AI models.&quot; | info@gritsoftwaresystems.com |</div><div class="diff-line diff-context">|[Modern 42](https://www.modern42.com/blog/microsoft-recommends-modern-42-for-azure-ad-b2c-entra-external-id-migrations-australia) |&quot;Modern 42 is a specialist identity consultancy delivering enterprise-grade identity advisory and engineering services across Australia. With Microsoft Entra External ID experience for government and private sector customers, Modern 42 has both the technical expertise and experience required to assist any organization to transition from Azure AD B2C to Microsoft Entra External ID, no matter how complex or simple. Modern 42&#39;s approach combines strategic consulting with hands-on technical implementation, ensuring CIAM solutions align with your business objectives, regulatory requirements, customer experience expectations, and security best practices.&quot; | hello@modern42.com |</div><div class="diff-line diff-context">|[PlanB.](https://www.planb.net/en/post/microsoft-entra-external-id) |&quot;PlanB. combines deep identity and security expertise with a strong focus on measurable business outcomes. As an experienced partner within the Microsoft Entra ecosystem, we help organizations securely integrate and manage external identities at scale—customers, agents, partners, and suppliers—across their digital platforms. From identity strategy and architecture through hands-on implementation of Microsoft Entra External ID, we ensure security, governance, compliance, and user experience work seamlessly together. Our mission is to simplify complex identity scenarios, reduce risk, and enable sustainable digital growth built on trusted identity foundations.&quot; | Felix Rohmeier (Solution Expert for Identity), Identity@plan-b-gmbh.com |</div><div class="diff-line diff-deleted">|[Slalom](https://www.slalom.com/us/en/who-we-are/newsroom/microsoft-slalom-accelerate-microsoft-entra-migrations) |&quot;Slalom is a trusted Microsoft partner that helps organizations modernize identity systems at scale. As an integration partner for Entra External ID migrations, Slalom offers practical experience in identity migrations, organizational change management, and secure customer access. Their B2C to Entra External ID migration approach combines strategic planning, architectural expertise, and proven delivery tools to simplify complex migrations and reduce risk. This empowers organizations to provide secure, scalable customer identity solutions and fully leverage the Microsoft Entra platform.&quot; | |</div><div class="diff-line diff-context">|[WhoIAM](https://whoiam.ai/product/azureadb2c-to-entraexternalid-migrati/) |&quot;WhoIAM is a trusted specialist in Microsoft customer identity, uniquely positioned to guide organizations through the transition from Azure AD B2C to Microsoft Entra External ID. Founded by former Microsoft identity engineering leaders, WhoIAM brings deep, hands-on expertise across Azure AD B2C, Entra, and large-scale CIAM platforms. Through purpose-built migration tooling, proven just-in-time and bulk migration patterns, and close collaboration with customer engineering and security teams, WhoIAM helps organizations modernize identity with minimal disruption—ensuring continuity today while building a future-ready external identity foundation on Microsoft Entra.&quot; | Info@whoiam.ai |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Next steps</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">|[Grit](https://www.gritiam.com/migration.html) |&quot;Grit Software has deep expertise in consumer identity and access management, with a strong track record of helping Fortune 500 and mid-market companies execute complex transformation projects successfully and on time. For Azure AD B2C to Microsoft Entra External ID migrations, Grit&#39;s AI-powered migration service uses advanced coding agents to deliver accurate migrations in days, while ensuring customer data isn&#39;t sent to the underlying AI models.&quot; | info@gritsoftwaresystems.com |</div><div class="diff-line diff-context">|[Modern 42](https://www.modern42.com/blog/microsoft-recommends-modern-42-for-azure-ad-b2c-entra-external-id-migrations-australia) |&quot;Modern 42 is a specialist identity consultancy delivering enterprise-grade identity advisory and engineering services across Australia. With Microsoft Entra External ID experience for government and private sector customers, Modern 42 has both the technical expertise and experience required to assist any organization to transition from Azure AD B2C to Microsoft Entra External ID, no matter how complex or simple. Modern 42&#39;s approach combines strategic consulting with hands-on technical implementation, ensuring CIAM solutions align with your business objectives, regulatory requirements, customer experience expectations, and security best practices.&quot; | hello@modern42.com |</div><div class="diff-line diff-context">|[PlanB.](https://www.planb.net/en/post/microsoft-entra-external-id) |&quot;PlanB. combines deep identity and security expertise with a strong focus on measurable business outcomes. As an experienced partner within the Microsoft Entra ecosystem, we help organizations securely integrate and manage external identities at scale—customers, agents, partners, and suppliers—across their digital platforms. From identity strategy and architecture through hands-on implementation of Microsoft Entra External ID, we ensure security, governance, compliance, and user experience work seamlessly together. Our mission is to simplify complex identity scenarios, reduce risk, and enable sustainable digital growth built on trusted identity foundations.&quot; | Felix Rohmeier (Solution Expert for Identity), Identity@plan-b-gmbh.com |</div><div class="diff-line diff-added">|[Slalom](https://www.slalom.com/us/en/who-we-are/newsroom/microsoft-slalom-accelerate-microsoft-entra-migrations) |&quot;Slalom is a trusted Microsoft partner that helps organizations modernize identity systems at scale. As an integration partner for Entra External ID migrations, Slalom offers practical experience in identity migrations, organizational change management, and secure customer access. Their B2C to Entra External ID migration approach combines strategic planning, architectural expertise, and proven delivery tools to simplify complex migrations and reduce risk. This empowers organizations to provide secure, scalable customer identity solutions and fully leverage the Microsoft Entra platform.&quot; | MoreTogether@Slalom.com |</div><div class="diff-line diff-context">|[WhoIAM](https://whoiam.ai/product/azureadb2c-to-entraexternalid-migrati/) |&quot;WhoIAM is a trusted specialist in Microsoft customer identity, uniquely positioned to guide organizations through the transition from Azure AD B2C to Microsoft Entra External ID. Founded by former Microsoft identity engineering leaders, WhoIAM brings deep, hands-on expertise across Azure AD B2C, Entra, and large-scale CIAM platforms. Through purpose-built migration tooling, proven just-in-time and bulk migration patterns, and close collaboration with customer engineering and security teams, WhoIAM helps organizations modernize identity with minimal disruption—ensuring continuity today while building a future-ready external identity foundation on Microsoft Entra.&quot; | Info@whoiam.ai |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Next steps</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
