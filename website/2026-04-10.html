@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 8th 2026, 9:53 PM PDT</p>
+        <p>Report generated on April 9th 2026, 9:53 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">45</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">52</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/what-is-entra.md" target="_blank">docs/fundamentals/what-is-entra.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 9, 2026 5:22 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/what-is-entra" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Microsoft Entra Agent ID section to What is Microsoft Entra overview AB#568677</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra product family</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The Microsoft Entra product family spans identity, access, governance, and security. It covers secure end-to-end access for employees, customers, partners, and workloads across any cloud environment.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;./media/what-is-entra/entra-product-family.png&quot; alt-text=&quot;Diagram of Microsoft Entra products across four maturity stages.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Establish Zero Trust access controls</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**For example**, GitHub Actions need a workload identity to access Azure subscriptions to automate, customize, and execute software development workflows.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prepare your environment</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before deploying Microsoft Entra, configure your infrastructure and processes according to security best practices and standards. The following articles provide architectural, deployment, and operational guidance:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra product family</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The Microsoft Entra product family spans identity, access, governance, and security. It covers secure end-to-end access for employees, customers, partners, workloads, and AI agents across any cloud environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Establish Zero Trust access controls</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**For example**, GitHub Actions need a workload identity to access Azure subscriptions to automate, customize, and execute software development workflows.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Secure access for AI agents</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">#### Microsoft Entra Agent ID</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[Microsoft Entra Agent ID](~/agent-id/what-is-microsoft-entra-agent-id.md) is an identity and security framework that extends Microsoft Entra capabilities to AI agents. As organizations deploy assistive, autonomous, and user-like agents, Agent ID provides purpose-built identity constructs to authenticate, authorize, govern, and protect these nonhuman identities at enterprise scale.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; **Scenario:** An organization deploys AI agents that access corporate data on behalf of users. Agent ID provides each agent with a governed identity, enforces least-privilege access, and maintains an audit trail of the agent&#39;s actions.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Prepare your environment</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/security-copilot/conditional-access-agent-optimization-settings.md" target="_blank">docs/security-copilot/conditional-access-agent-optimization-settings.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 9, 2026 3:57 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/security-copilot/conditional-access-agent-optimization-settings" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pm-revision</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The **Capabilities** category includes important settings that you should review.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Entra objects to monitor**: Use the checkboxes to specify what the agent should monitor when making policy suggestions. By default the agent looks for both new users and applications in your tenant over the previous 24 hour period.</div><div class="diff-line diff-deleted">- **Agent capabilities**: By default, the Conditional Access Optimization Agent *can&#39;t create new policies*, even in report-only mode. You can change this setting so that the agent can create report-only policies on your behalf. With this setting enabled, an administrator must approve the new report-only policy before it&#39;s turned on. After reviewing the policy impact, you can turn on the policy directly from the agent experience or from Conditional Access.</div><div class="diff-line diff-context">- **Phased rollout**: When the agent creates a new policy in report-only mode and that policy meets the criteria for a phased rollout, the policy is rolled out in phases, so you can monitor the effect of the new policy. Phased rollout is on by default. For more information, see [Conditional Access Optimization Agent Phased Rollout](conditional-access-agent-optimization-phased-rollout.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/conditional-access-agent-optimization-settings/agent-settings-capabilities.png&quot; alt-text=&quot;Screenshot of the Conditional Access Optimization agent Capabilities settings.&quot; lightbox=&quot;media/conditional-access-agent-optimization-settings/agent-settings-capabilities.png&quot;:::</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The **Capabilities** category includes important settings that you should review.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Entra objects to monitor**: Use the checkboxes to specify what the agent should monitor when making policy suggestions. By default the agent looks for both new users and applications in your tenant over the previous 24 hour period.</div><div class="diff-line diff-added">- **Agent capabilities**: By default, the Conditional Access Optimization Agent *can&#39;t create new policies*, even in report-only mode. You can change this setting so that the agent can create report-only policies on your behalf.</div><div class="diff-line diff-added">  - With this setting enabled, an administrator must approve the new report-only policy before it&#39;s turned on. After reviewing the policy impact, you can turn on the policy directly from the agent experience or from Conditional Access.</div><div class="diff-line diff-added">  - With this setting disabled, you still receive the suggestion and insights, but you must create the policy on your own.</div><div class="diff-line diff-context">- **Phased rollout**: When the agent creates a new policy in report-only mode and that policy meets the criteria for a phased rollout, the policy is rolled out in phases, so you can monitor the effect of the new policy. Phased rollout is on by default. For more information, see [Conditional Access Optimization Agent Phased Rollout](conditional-access-agent-optimization-phased-rollout.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/conditional-access-agent-optimization-settings/agent-settings-capabilities.png&quot; alt-text=&quot;Screenshot of the Conditional Access Optimization agent Capabilities settings.&quot; lightbox=&quot;media/conditional-access-agent-optimization-settings/agent-settings-capabilities.png&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-overview.md" target="_blank">docs/fundamentals/whats-new-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to overview articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 11/13/2024</div><div class="diff-line diff-context"># Customer intent: As a customer, I want an overview of the What&#39;s new experience in the Microsoft Entra admin center.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># What&#39;s new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Entra releases and announcements](./whats-new.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-context">ms.date: 11/13/2024</div><div class="diff-line diff-context"># Customer intent: As a customer, I want an overview of the What&#39;s new experience in the Microsoft Entra admin center.</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to learn about what&#39;s new in Microsoft Entra so that I can stay informed about the latest features and changes.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># What&#39;s new</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Microsoft Entra releases and announcements](./whats-new.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-entra-self-service-support.md" target="_blank">docs/fundamentals/how-to-entra-self-service-support.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/how-to-entra-self-service-support" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to how-to articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context"># customer intent: As an IT admin, I want to troubleshoot identity and access issues using the Support Assistant so that I can resolve problems quickly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use Microsoft Entra Self-Service Support (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Each assistant response includes a feedback prompt for rating, comments, or suggestions. Use the &quot;thumbs up&quot; or &quot;thumbs down&quot; buttons to provide feedback on the responses. This feedback is important and is used to improve the accuracy of Self-Service Support.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">​Self-Service Support might make mistakes or provide incomplete information. Always verify important actions and consult the official Microsoft documentation when needed.</div><div class="diff-line diff-deleted">​</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra</div><div class="diff-line diff-context"># customer intent: As an IT admin, I want to troubleshoot identity and access issues using the Support Assistant so that I can resolve problems quickly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to use Microsoft Entra self-service support so that I can resolve common issues without contacting support.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Use Microsoft Entra Self-Service Support (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Each assistant response includes a feedback prompt for rating, comments, or suggestions. Use the &quot;thumbs up&quot; or &quot;thumbs down&quot; buttons to provide feedback on the responses. This feedback is important and is used to improve the accuracy of Self-Service Support.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">​Self-Service Support might make mistakes or provide incomplete information. Always verify important actions and consult the official Microsoft documentation when needed.</div><div class="diff-line diff-added">​</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/inaccessible-tenant.md" target="_blank">docs/fundamentals/inaccessible-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/inaccessible-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to troubleshooting articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.date: 01/15/2025</div><div class="diff-line diff-context">ms.reviewer: Sunayana</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Quickstart: Create a new tenant in Microsoft Entra ID](create-new-tenant.md)</div><div class="diff-line diff-deleted">- [Add your custom domain name to your tenant](add-custom-domain.md)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.date: 01/15/2025</div><div class="diff-line diff-context">ms.reviewer: Sunayana</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to troubleshoot inaccessible tenants so that I can regain access to my organization&#39;s directory.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Quickstart: Create a new tenant in Microsoft Entra ID](create-new-tenant.md)</div><div class="diff-line diff-added">- [Add your custom domain name to your tenant](add-custom-domain.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/create-new-tenant.md" target="_blank">docs/fundamentals/create-new-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/create-new-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to quickstart articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Quickstart: Create a new tenant in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To learn about access management, see [Azure role-based access control (RBAC)](/azure/role-based-access-control/overview) and [Conditional Access](~/identity/conditional-access/overview.md) to help manage your organization&#39;s application and resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Learn about Microsoft Entra ID, including [basic licensing information, terminology, and associated features](./what-is-entra.md).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to create a new Microsoft Entra tenant so that I can set up a directory for my organization or development environment.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Quickstart: Create a new tenant in Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To learn about access management, see [Azure role-based access control (RBAC)](/azure/role-based-access-control/overview) and [Conditional Access](~/identity/conditional-access/overview.md) to help manage your organization&#39;s application and resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Learn about Microsoft Entra ID, including [basic licensing information, terminology, and associated features](./what-is-entra.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/try-microsoft-entra-suite.md" target="_blank">docs/fundamentals/try-microsoft-entra-suite.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/try-microsoft-entra-suite" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to overview articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.date: 04/02/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Trial user guide: Microsoft Entra Suite</div><div class="diff-line diff-context">- [Microsoft Entra Suite now generally available - Microsoft Community Hub](https://techcommunity.microsoft.com/t5/microsoft-entra-blog/microsoft-entra-suite-now-generally-available/ba-p/2520427)</div><div class="diff-line diff-context">- [Microsoft Entra plans &amp; pricing](https://www.microsoft.com/security/business/microsoft-entra-pricing)</div><div class="diff-line diff-context">- [Learn how to simplify your Zero Trust strategy with the Microsoft Entra Suite](https://info.microsoft.com/ww-ondemand-zero-trust-in-the-age-of-ai.html?lcid=en-us/?ocid=cmmvobsb34b)</div><div class="diff-line diff-deleted">- [Simplified Zero Trust security with the Microsoft Entra Suite](https://microsoft.com/security/blog/2024/07/11/simplified-zero-trust-security-with-the-microsoft-entra-suite-and-unified-security-operations-platform-now-generally-available)</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.date: 04/02/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to try Microsoft Entra Suite for free so that I can evaluate the full set of identity and access management capabilities.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Trial user guide: Microsoft Entra Suite</div><div class="diff-line diff-context">- [Microsoft Entra Suite now generally available - Microsoft Community Hub](https://techcommunity.microsoft.com/t5/microsoft-entra-blog/microsoft-entra-suite-now-generally-available/ba-p/2520427)</div><div class="diff-line diff-context">- [Microsoft Entra plans &amp; pricing](https://www.microsoft.com/security/business/microsoft-entra-pricing)</div><div class="diff-line diff-context">- [Learn how to simplify your Zero Trust strategy with the Microsoft Entra Suite](https://info.microsoft.com/ww-ondemand-zero-trust-in-the-age-of-ai.html?lcid=en-us/?ocid=cmmvobsb34b)</div><div class="diff-line diff-added">- [Simplified Zero Trust security with the Microsoft Entra Suite](https://microsoft.com/security/blog/2024/07/11/simplified-zero-trust-security-with-the-microsoft-entra-suite-and-unified-security-operations-platform-now-generally-available)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/get-started-premium.md" target="_blank">docs/fundamentals/get-started-premium.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/get-started-premium" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to how-to articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: piotrci</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sign up for Microsoft Entra ID P1 or P2 editions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Now that you have Microsoft Entra ID P1 or P2, you can [customize your domain](add-custom-domain.md), add your [corporate branding](./how-to-customize-branding.md), [create a tenant](create-new-tenant.md), and [add groups](./how-to-manage-groups.yml) and [users](./how-to-create-delete-users.yml).</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: piotrci</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to sign up for Microsoft Entra premium editions so that I can access advanced identity and access management features.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sign up for Microsoft Entra ID P1 or P2 editions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Now that you have Microsoft Entra ID P1 or P2, you can [customize your domain](add-custom-domain.md), add your [corporate branding](./how-to-customize-branding.md), [create a tenant](create-new-tenant.md), and [add groups](./how-to-manage-groups.yml) and [users](./how-to-create-delete-users.yml).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/zero-trust-protect-engineering-systems.md" target="_blank">docs/fundamentals/zero-trust-protect-engineering-systems.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/zero-trust-protect-engineering-systems" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add #Customer Intent to concept-article articles in fundamentals</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: shlipsey</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.reviewer: ramical</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure Microsoft Entra for Zero Trust: Protect engineering systems</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [21837](../includes/secure-recommendations/21837.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Conditional Access policies for Privileged Access Workstations are configured</div><div class="diff-line diff-deleted">[!INCLUDE [21830](../includes/secure-recommendations/21830.md)]</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: shlipsey</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.reviewer: ramical</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to understand how to protect engineering systems so that I can secure my organization&#39;s development infrastructure.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Configure Microsoft Entra for Zero Trust: Protect engineering systems</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [21837](../includes/secure-recommendations/21837.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Conditional Access policies for Privileged Access Workstations are configured</div><div class="diff-line diff-added">[!INCLUDE [21830](../includes/secure-recommendations/21830.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-archive.md" target="_blank">docs/fundamentals/whats-new-archive.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 4:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-archive" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove broken Jellyfish link from whats-new-archive.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In January 2024, we added the following new applications in our App gallery with Federation support:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[Boeing ToolBox](https://www.boeing.com/), [Kloud Connect Practice Management](https://www.kloudconnect.com.au/), [トーニチ・ネクスタ・メイシ ( Tonichi Nexta Meishi )](../identity/saas-apps/tonicdm-tutorial.md), [Vinkey](https://vinkey.app/), [Cognito Forms](https://www.cognitoforms.com/), [Ocurus](../identity/saas-apps/ocurus-tutorial.md), [Magister](https://www.magister.nl/), [eFlok](../identity/saas-apps/eflok-tutorial.md), [GoSkills](https://www.goskills.com/), [FortifyData](https://fortifydata.com/), [Toolsfactory platform, Briq](https://toolsfactory.nl/en/ogsm-tool/), [Mailosaur](../identity/saas-apps/mailosaur-tutorial.md), [Astro](../identity/saas-apps/astro-tutorial.md), [JobDiva / Teams VOIP Integration](https://www.jobdiva.com/), [Colossyan SAML](../identity/saas-apps/colossyan-saml-tutorial.md), [CallTower Connect](https://www.calltower.com/calltower-connect/), [Jellyfish](https://cogitogroup.net/jellyfish/), [MetLife Legal Plans Member App](../identity/saas-apps/metlife-legal-plans-member-app-tutorial.md), [Navigo Cloud SAML](../identity/saas-apps/navigo-cloud-saml-tutorial.md), [Delivery Scheduling Tool](../identity/saas-apps/delivery-scheduling-tool-tutorial.md), [Highspot for MS Teams](https://app.highspot.com/signin), [Reach 360](../identity/saas-apps/reach-360-tutorial.md), [Fareharbor SAML SSO](../identity/saas-apps/fareharbor-saml-sso-tutorial.md), [HPE Aruba Networking EdgeConnect Orchestrator](../identity/saas-apps/hpe-aruba-networking-edgeconnect-orchestrator-tutorial.md), [Terranova Security Awareness Platform](../identity/saas-apps/terranova-security-awareness-platform-tutorial.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can also find the documentation of all the applications from here https://aka.ms/AppsTutorial.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In January 2024, we added the following new applications in our App gallery with Federation support:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[Boeing ToolBox](https://www.boeing.com/), [Kloud Connect Practice Management](https://www.kloudconnect.com.au/), [トーニチ・ネクスタ・メイシ ( Tonichi Nexta Meishi )](../identity/saas-apps/tonicdm-tutorial.md), [Vinkey](https://vinkey.app/), [Cognito Forms](https://www.cognitoforms.com/), [Ocurus](../identity/saas-apps/ocurus-tutorial.md), [Magister](https://www.magister.nl/), [eFlok](../identity/saas-apps/eflok-tutorial.md), [GoSkills](https://www.goskills.com/), [FortifyData](https://fortifydata.com/), [Toolsfactory platform, Briq](https://toolsfactory.nl/en/ogsm-tool/), [Mailosaur](../identity/saas-apps/mailosaur-tutorial.md), [Astro](../identity/saas-apps/astro-tutorial.md), [JobDiva / Teams VOIP Integration](https://www.jobdiva.com/), [Colossyan SAML](../identity/saas-apps/colossyan-saml-tutorial.md), [CallTower Connect](https://www.calltower.com/calltower-connect/), [MetLife Legal Plans Member App](../identity/saas-apps/metlife-legal-plans-member-app-tutorial.md), [Navigo Cloud SAML](../identity/saas-apps/navigo-cloud-saml-tutorial.md), [Delivery Scheduling Tool](../identity/saas-apps/delivery-scheduling-tool-tutorial.md), [Highspot for MS Teams](https://app.highspot.com/signin), [Reach 360](../identity/saas-apps/reach-360-tutorial.md), [Fareharbor SAML SSO](../identity/saas-apps/fareharbor-saml-sso-tutorial.md), [HPE Aruba Networking EdgeConnect Orchestrator](../identity/saas-apps/hpe-aruba-networking-edgeconnect-orchestrator-tutorial.md), [Terranova Security Awareness Platform](../identity/saas-apps/terranova-security-awareness-platform-tutorial.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can also find the documentation of all the applications from here https://aka.ms/AppsTutorial.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/new-name.md" target="_blank">docs/fundamentals/new-name.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/new-name" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate customer intent from new-name.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: nicholepet</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As a new or existing customer, I want to learn more about the new name for Azure Active Directory (Azure AD) and understand the impact the name change may have on other products, new or existing license(s), what I need to do, and where I can learn more about Microsoft Entra products.</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to understand the new name for Azure Active Directory so that I can stay informed about product branding changes.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># New name for Azure Active Directory</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: nicholepet</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As a new or existing customer, I want to learn more about the new name for Azure Active Directory (Azure AD) and understand the impact the name change may have on other products, new or existing license(s), what I need to do, and where I can learn more about Microsoft Entra products.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># New name for Azure Active Directory</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/licensing-preview-info.md" target="_blank">docs/fundamentals/licensing-preview-info.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/licensing-preview-info" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate customer intent from licensing-preview-info.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.date: 12/16/2024</div><div class="diff-line diff-context"># Customer intent: I am trying to find information on the terms and conditions for Microsoft Entra ID preview programs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to understand Microsoft Entra ID preview program information so that I can evaluate new features before general availability.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.date: 12/16/2024</div><div class="diff-line diff-context"># Customer intent: I am trying to find information on the terms and conditions for Microsoft Entra ID preview programs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-customize-branding.md" target="_blank">docs/fundamentals/how-to-customize-branding.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/how-to-customize-branding" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate customer intent from how-to-customize-branding.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: mkokkalera</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As a Microsoft Entra administrator, I want to customize the sign-in experience for my organization&#39;s users so that I can provide a consistent look and feel across all sign-ins.</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to add company branding to my organization&#39;s sign-in page so that I can provide a customized authentication experience.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure your company branding</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: mkokkalera</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As a Microsoft Entra administrator, I want to customize the sign-in experience for my organization&#39;s users so that I can provide a consistent look and feel across all sign-ins.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure your company branding</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/five-steps-to-full-application-integration.md" target="_blank">docs/fundamentals/five-steps-to-full-application-integration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/five-steps-to-full-application-integration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate customer intent from five-steps-to-full-application-integration.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/01/2023</div><div class="diff-line diff-context"># Customer intent: As an IT admin responsible for application integration, I want to learn how to integrate my company&#39;s applications with Microsoft Entra ID, so that I can improve security, reduce costs, increase productivity, and enable compliance through centralized Identity and Access Management.</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to learn the five steps to integrate my apps with Microsoft Entra ID so that I can centralize application access management.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Five steps to integrate your apps with Microsoft Entra ID</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 03/01/2023</div><div class="diff-line diff-context"># Customer intent: As an IT admin responsible for application integration, I want to learn how to integrate my company&#39;s applications with Microsoft Entra ID, so that I can improve security, reduce costs, increase productivity, and enable compliance through centralized Identity and Access Management.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Five steps to integrate your apps with Microsoft Entra ID</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/data-residency.md" target="_blank">docs/fundamentals/data-residency.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 9, 2026 7:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/data-residency" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove duplicate customer intent from data-residency.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro, references_regions</div><div class="diff-line diff-context">ms.collection:</div><div class="diff-line diff-context"># Customer intent: As a cloud administrator, I want to understand how Microsoft Entra ID handles data residency, so that I can ensure compliance with data residency requirements and make informed decisions about storing and managing identity and access data in the cloud.</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to understand Microsoft Entra ID data residency so that I can ensure compliance with data location requirements.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra ID and data residency</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.custom: it-pro, references_regions</div><div class="diff-line diff-context">ms.collection:</div><div class="diff-line diff-context"># Customer intent: As a cloud administrator, I want to understand how Microsoft Entra ID handles data residency, so that I can ensure compliance with data residency requirements and make informed decisions about storing and managing identity and access data in the cloud.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra ID and data residency</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
