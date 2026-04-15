@@ -1,0 +1,727 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 13th 2026, 9:51 PM PDT</p>
+        <p>Report generated on April 14th 2026, 9:51 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">47</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">18</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/improved-enforcement-resource-exclusions.md" target="_blank">docs/identity/conditional-access/improved-enforcement-resource-exclusions.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Apr 14, 2026 3:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/improved-enforcement-resource-exclusions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+141 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> ca-improved-enforcement-041426</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/improved-enforcement-resource-exclusions-faq.md" target="_blank">docs/identity/conditional-access/improved-enforcement-resource-exclusions-faq.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Apr 14, 2026 3:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/improved-enforcement-resource-exclusions-faq" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+132 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add alt FAQ version of improved enforcement article</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-catalog-create.md" target="_blank">docs/id-governance/entitlement-management-catalog-create.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 14, 2026 5:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-catalog-create" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-36</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove Catalog privilege levels (Preview) section</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article shows you how to create and manage a catalog of resources and access packages in entitlement management. Catalogs are also used in [access reviews (preview)](catalog-access-reviews.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Catalog privilege levels (Preview)</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID Governance catalogs have two privilege levels that determine their security and management requirements:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Privilege levels</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- **Standard catalog**</div><div class="diff-line diff-deleted">     - The default type for most catalogs.</div><div class="diff-line diff-deleted">     - Remains standard as long as it doesn&#39;t contain privileged resources.</div><div class="diff-line diff-deleted">     - Supports all catalog management actions and access patterns.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">- **Privileged catalog**</div><div class="diff-line diff-deleted">     - Automatically assigned when a catalog contains resources that grant elevated permissions, such as:</div><div class="diff-line diff-deleted">         - Microsoft Entra roles</div><div class="diff-line diff-deleted">         - Application API permissions</div><div class="diff-line diff-deleted">     - These catalogs apply stricter access and governance controls due to their security‑sensitive nature, such as more restrictive application permissions, tighter role requirements for catalog modification, and limits on automation to reduce the risk of unintended privileged access assignments.</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article shows you how to create and manage a catalog of resources and access packages in entitlement management. Catalogs are also used in [access reviews (preview)](catalog-access-reviews.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create a catalog</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A catalog is a container of resources and access packages. You create a catalog when you want to group related resources and access packages. An administrator can create a catalog. In addition, a user delegated to the [catalog creator](entitlement-management-delegate.md) role can create a catalog for resources that they own. A nonadministrator who creates the catalog becomes the first catalog owner. A catalog owner can add more users, groups of users, or application service principals as catalog owners.  </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md" target="_blank">docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nuno Alexandre on Apr 14, 2026 6:23 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-clear-on-premises-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-17</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix Acrolinx Score</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Clear on-premises attributes from migrated Microsoft Entra ID users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">After you&#39;ve migrated your users and groups to Microsoft Entra ID, you may be ready to decommission your on-premises Active Directory and uninstall sync tools. After turning off directory synchronization, you can manage these objects directly in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">However, you may encounter issues in Windows, Intune, and Outlook due to legacy values remaining in the user attributes that were previously synchronized from on-premises. For example, hybrid device joining may fail because the system pulls the username and domain from these outdated attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">## How to update these attributes</div><div class="diff-line diff-deleted">You can update these attributes via Microsoft Graph Beta with [Update User](/graph/api/user-update) API call. These attributes can only be updated in Entra ID for native Cloud-Only users or for previously synced users that have been converted to Cloud-Only users after turning off synchronization in Entra ID. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Required roles</div><div class="diff-line diff-context">- [Windows PowerShell 7](/powershell/scripting/install/installing-powershell-on-windows) </div><div class="diff-line diff-context">- [Microsoft Graph SDK PowerShell module](/powershell/microsoftgraph/installation) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">In order to use [ADSyncTools](reference-connect-adsynctools.md) you need to install the module from PowerShell Gallery, as follows: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> ``` powershell</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Clear on-premises attributes from migrated Microsoft Entra ID users</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After migrating your users and groups to Microsoft Entra ID, you may be ready to decommission your on-premises Active Directory and uninstall sync tools. After turning off directory synchronization, you can manage these objects directly in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">However, you may encounter issues in Windows, Intune, and Outlook due to legacy values remaining in the user attributes that were previously synchronized from on-premises. For example, hybrid device joining may fail because the system pulls the username and domain from these outdated attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">## How to update these attributes</div><div class="diff-line diff-added">You can update these attributes via Microsoft Graph Beta with [Update User](/graph/api/user-update) API call. You can update these attributes in Entra ID only for Cloud‑Only users. This includes users that were previously synchronized and later converted to Cloud‑Only when tenant synchronization was disabled.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Required roles</div><div class="diff-line diff-context">- [Windows PowerShell 7](/powershell/scripting/install/installing-powershell-on-windows) </div><div class="diff-line diff-context">- [Microsoft Graph SDK PowerShell module](/powershell/microsoftgraph/installation) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Install the [ADSyncTools](reference-connect-adsynctools.md) module from PowerShell Gallery: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"> ``` powershell</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/improved-enforcement-resource-exclusions-faq.md" target="_blank">docs/identity/conditional-access/improved-enforcement-resource-exclusions-faq.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 14, 2026 4:18 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/improved-enforcement-resource-exclusions-faq" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> revisions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: FAQ - Improved enforcement for Conditional Access policies with resource exclusions</div><div class="diff-line diff-context">description: Frequently asked questions about the improved Conditional Access enforcement behavior for policies that target All resources with resource exclusions.</div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.date: 04/14/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># FAQ: Improved enforcement for policies with resource exclusions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article answers frequently asked questions about the improved Conditional Access enforcement for policies that target **All resources** with resource exclusions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What is the upcoming Conditional Access behavior change for baseline scopes?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Today, Conditional Access policies that target All resources aren&#39;t enforced if the policy has one or more resource exclusions when:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. A user signs in through a **public client application** (for example, desktop apps such as Microsoft Teams desktop client) that requests only the baseline scopes (OIDC or directory). Examples:</div><div class="diff-line diff-context">   - A user signs into Visual Studio Code desktop client, which requests `openid` and `profile` scopes.</div><div class="diff-line diff-context">   - A user signs in using Azure CLI, which requests only `User.Read`.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: FAQs for the improved enforcement for Conditional Access policies with resource exclusions</div><div class="diff-line diff-context">description: Frequently asked questions about the improved Conditional Access enforcement behavior for policies that target All resources with resource exclusions.</div><div class="diff-line diff-context">ms.topic: faq</div><div class="diff-line diff-context">ms.date: 04/14/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># FAQs: Improved enforcement for policies with resource exclusions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article answers frequently asked questions about the improved Conditional Access enforcement for policies that target **All resources** with resource exclusions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What is the upcoming Conditional Access behavior change for baseline scopes?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Currently, Conditional Access policies that target **All resources** aren&#39;t enforced if the policy has* one or more* resource exclusions when:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. A user signs in through a **public client application** (for example, desktop apps such as Microsoft Teams desktop client) that requests only the baseline scopes (OIDC or directory). Examples:</div><div class="diff-line diff-context">   - A user signs into Visual Studio Code desktop client, which requests `openid` and `profile` scopes.</div><div class="diff-line diff-context">   - A user signs in using Azure CLI, which requests only `User.Read`.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/leapsome-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/leapsome-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tracey Torble on Apr 14, 2026 10:08 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/leapsome-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Alt text</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your [Leapsome Admin Console](https://www.Leapsome.com/app/#/login). Navigate to **Settings &gt; Admin Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Leapsome Admin Console](media/Leapsome-provisioning-tutorial/leapsome-admin-console.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.	Navigate to **Integrations &gt; SCIM User provisioning**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Leapsome Add SCIM](media/Leapsome-provisioning-tutorial/leapsome-add-scim.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.	Copy the **SCIM Authentication Token**. This value is entered in the Secret Token field in the Provisioning tab of your Leapsome application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Leapsome Create Token](media/Leapsome-provisioning-tutorial/leapsome-create-token.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add Leapsome from the gallery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Leapsome**, select **Leapsome** in the search box.</div><div class="diff-line diff-context">1. Select **Leapsome** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-deleted">	![Screenshot of Leapsome in the results list](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your [Leapsome Admin Console](https://www.Leapsome.com/app/#/login). Navigate to **Settings &gt; Admin Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Leapsome Admin Console.](media/Leapsome-provisioning-tutorial/leapsome-admin-console.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.	Navigate to **Integrations &gt; SCIM User provisioning**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Leapsome Add SCIM.](media/Leapsome-provisioning-tutorial/leapsome-add-scim.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.	Copy the **SCIM Authentication Token**. This value is entered in the Secret Token field in the Provisioning tab of your Leapsome application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Leapsome Create Token.](media/Leapsome-provisioning-tutorial/leapsome-create-token.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add Leapsome from the gallery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Leapsome**, select **Leapsome** in the search box.</div><div class="diff-line diff-context">1. Select **Leapsome** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-added">	![Screenshot of Leapsome in the results list.](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/jostle-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/jostle-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 14, 2026 5:06 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/jostle-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> worked on suggestions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Automation account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Before you begin, you’ll need to create an **Automation user** in your Jostle intranet. This are the account you’ll use to configure with Azure. Automation users can be created in Admin **Settings &gt; User accounts and data &gt; Manage Automation users**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more details on Automation users and how to create one, see [this article](https://forum.jostle.us/hc/en-us/articles/360057364073).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Under **User data to/from other systems** select **Manage user provisioning** .If you don&#39;t see &quot;Manage user provisioning&quot; here and have verified that your account includes SSO/user provisioning, contact Support &lt;support@jostle.me&gt; to have this page enabled in your Admin Settings).</div><div class="diff-line diff-context">1. In the **User Provisioning API details** section, go to **Your Base URL** field, select the Copy button and save the URL somewhere you can easily access it later.                                                           </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Provisioning](media/jostle-provisioning-tutorial/manage-user-provisioning.png)</div><div class="diff-line diff-context">                </div><div class="diff-line diff-context">1. Next, select the **Add a new key**... button</div><div class="diff-line diff-context">1. On the following screen, go to the **Automation User** field and use the drop-down menu to select your Automation user account. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Integration Account](media/jostle-provisioning-tutorial/select-integration-account.png)                                                                                                                                     </div><div class="diff-line diff-context">1. In the **Provisioning API key description** field give your key a name (such as `Azure`) and then select the **Add** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Once your key is generated, **make sure to copy it right away** and save it where you saved your URL (since it&#39;s the only time your key appears).                                                               </div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Automation account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Before you begin, you’ll need to create an **Automation user** in your Jostle intranet. This is the account you’ll use to configure with Azure. Automation users can be created in Admin **Settings &gt; User accounts and data &gt; Manage Automation users**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more details on Automation users and how to create one, see [this article](https://forum.jostle.us/hc/en-us/articles/360057364073).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Under **User data to/from other systems** select **Manage user provisioning** .If you don&#39;t see &quot;Manage user provisioning&quot; here and have verified that your account includes SSO/user provisioning, contact Support &lt;support@jostle.me&gt; to have this page enabled in your Admin Settings).</div><div class="diff-line diff-context">1. In the **User Provisioning API details** section, go to **Your Base URL** field, select the Copy button and save the URL somewhere you can easily access it later.                                                           </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of User Provisioning API details](media/jostle-provisioning-tutorial/manage-user-provisioning.png)</div><div class="diff-line diff-context">                </div><div class="diff-line diff-context">1. Next, select the **Add a new key**... button</div><div class="diff-line diff-context">1. On the following screen, go to the **Automation User** field and use the drop-down menu to select your Automation user account. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Integration Account](media/jostle-provisioning-tutorial/select-integration-account.png)                                                                                                                                     </div><div class="diff-line diff-context">1. In the **Provisioning API key description** field give your key a name (such as `Azure`) and then select the **Add** button.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Once your key is generated, **make sure to copy it right away** and save it where you saved your URL (since it&#39;s the only time your key appears).                                                               </div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-view-model-context-protocol-logging.md" target="_blank">docs/global-secure-access/how-to-view-model-context-protocol-logging.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by jenniferf-skc on Apr 14, 2026 4:18 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-view-model-context-protocol-logging" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add (Preview) to MCP logging article title and preview notice</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: How to view Model Context Protocol (MCP) traffic logs in Global Secure Access</div><div class="diff-line diff-context">description: Learn how to monitor and analyze Model Context Protocol (MCP) traffic between AI agents and remote MCP servers using the Global Secure Access Generative AI Insights page.</div><div class="diff-line diff-context">author: jenniferf-skc</div><div class="diff-line diff-context">ms.author: jfields</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># How to view MCP traffic logs in Global Secure Access</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Global Secure Access [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) logging provides advanced monitoring and analysis capabilities for MCP traffic between client MCP on devices and remote MCP servers. This feature provides thorough visibility into which MCP servers are being used, what tools and resources they expose, and how those tools are invoked. MCP Logging helps you discover shadow MCP servers in your organization and enforce stronger security and governance controls on AI agent communications and helps in understanding what tool is exposed  and what tools are used. MCP logging also monitors a client MCP that is used by the Copilot Studio agent and a remote MCP server in case you have enabled [GSA MCP integration for Copilot Studio agents](/power-platform/admin/security/secure-web-ai-gateway-agents#enable-network-controls-for-copilot-studio-agents).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">MCP Logging uses deep packet inspection to identify MCP traffic based on the protocol itself, rather than a predefined cloud app catalog. This approach enables discovery of previously unknown or private MCP servers that employees might be using.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to access and interpret MCP traffic logs in the Global Secure Access Generative AI Insights page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: How to view Model Context Protocol (MCP) traffic logs in Global Secure Access (Preview)</div><div class="diff-line diff-context">description: Learn how to monitor and analyze Model Context Protocol (MCP) traffic between AI agents and remote MCP servers using the Global Secure Access Generative AI Insights page.</div><div class="diff-line diff-context">author: jenniferf-skc</div><div class="diff-line diff-context">ms.author: jfields</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># How to view MCP traffic logs in Global Secure Access (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Global Secure Access [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) logging provides advanced monitoring and analysis capabilities for MCP traffic between client MCP on devices and remote MCP servers. This feature provides thorough visibility into which MCP servers are being used, what tools and resources they expose, and how those tools are invoked. MCP Logging helps you discover shadow MCP servers in your organization and enforce stronger security and governance controls on AI agent communications and helps in understanding what tool is exposed  and what tools are used. MCP logging also monitors a client MCP that is used by the Copilot Studio agent and a remote MCP server in case you have enabled [GSA MCP integration for Copilot Studio agents](/power-platform/admin/security/secure-web-ai-gateway-agents#enable-network-controls-for-copilot-studio-agents).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">MCP Logging uses deep packet inspection to identify MCP traffic based on the protocol itself, rather than a predefined cloud app catalog. This approach enables discovery of previously unknown or private MCP servers that employees might be using.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes how to access and interpret MCP traffic logs in the Global Secure Access Generative AI Insights page. MCP logging is currently in preview.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-enforcement-resource-exclusions.md" target="_blank">docs/identity/conditional-access/concept-enforcement-resource-exclusions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 14, 2026 10:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-enforcement-resource-exclusions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> fix</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You can preview the improved enforcement behavior before the rollout begins:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/) as at least a [Conditional Access administrator](../role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-deleted">1. Access the [Baseline scopes settings](https://aka.ms/BaselineScopesSettings) in Conditional Access. This direct link is required to view the preview settings.</div><div class="diff-line diff-context">1. Choose **default target resource** (Windows Azure Active Directory).</div><div class="diff-line diff-context">1. Select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I preview the enforcement change ahead of the rollout?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Go to &lt;https://aka.ms/BaselineScopesSettings&gt;, choose the **default target resource** (Windows Azure Active Directory), and select **Save**. This setting immediately enforces the improved behavior. To revert back, select **reset**. For more information, see [Preview the enforcement change](#preview-the-enforcement-change).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I retain the legacy behavior after the rollout?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You can preview the improved enforcement behavior before the rollout begins:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/) as at least a [Conditional Access administrator](../role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-added">1. Access the [Baseline scopes settings](https://aka.ms/BaselineScopesSettingsUX) in Conditional Access. This direct link is required to view the preview settings.</div><div class="diff-line diff-context">1. Choose **default target resource** (Windows Azure Active Directory).</div><div class="diff-line diff-context">1. Select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I preview the enforcement change ahead of the rollout?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Go to &lt;https://aka.ms/BaselineScopesSettingsUX&gt;, choose the **default target resource** (Windows Azure Active Directory), and select **Save**. This setting immediately enforces the improved behavior. To revert back, select **reset**. For more information, see [Preview the enforcement change](#preview-the-enforcement-change).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I retain the legacy behavior after the rollout?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/improved-enforcement-resource-exclusions.md" target="_blank">docs/identity/conditional-access/improved-enforcement-resource-exclusions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 14, 2026 4:18 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/improved-enforcement-resource-exclusions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> revisions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Starting May 13, 2026, Microsoft Entra ID is rolling out an improved enforcement model for Conditional Access policies that target **All resources** and include one or more **resource exclusions**. This change ensures that sign-ins requesting only baseline scopes receive the same Conditional Access protections as other resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Previously, certain low-privilege scopes were automatically excluded from policy enforcement when a resource exclusion existed. With this change, those scopes are now evaluated as directory access and are subject to your Conditional Access policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## What is changing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">After the rollout, the following scenarios might now trigger Conditional Access challenges (such as MFA or device compliance) where previously access was granted without enforcement:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Public client applications** (like desktop apps) that request only baseline scopes. For example, a user signs into Visual Studio Code desktop client, which requests `openid` and `profile` scopes, or Azure CLI, which requests only `User.Read`.</div><div class="diff-line diff-context">- **Confidential client applications** (like web apps) that are excluded from an All resources policy and request only baseline directory scopes. For example, a web application excluded from the policy that requests only `User.Read` and `People.Read`.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID is rolling out an improved enforcement model for Conditional Access policies that target **All resources** and include one or more **resource exclusions**. This change ensures that sign-ins requesting only baseline scopes receive the same Conditional Access protections as other resource access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Previously, certain low-privilege scopes were automatically excluded from policy enforcement when a resource exclusion existed. With this change, those scopes are now evaluated as directory access and are subject to your Conditional Access policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## What is changing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After the rollout, the following scenarios might now trigger Conditional Access challenges (such as MFA or device compliance) where access was previously granted without enforcement:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Public client applications** (like desktop apps) that request only baseline scopes. For example, a user signs into Visual Studio Code desktop client, which requests `openid` and `profile` scopes, or Azure CLI, which requests only `User.Read`.</div><div class="diff-line diff-context">- **Confidential client applications** (like web apps) that are excluded from an All resources policy and request only baseline directory scopes. For example, a web application excluded from the policy that requests only `User.Read` and `People.Read`.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/configure-workday-termination-lookahead.md" target="_blank">docs/identity/app-provisioning/configure-workday-termination-lookahead.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 14, 2026 2:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/configure-workday-termination-lookahead" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix stray backslashes in Workday termination lookahead expressions AB#543837</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```python</div><div class="diff-line diff-context">Switch([StatusTerminationLastDayOfWork],   </div><div class="diff-line diff-deleted">  Switch([Active\], &quot;True&quot;,  </div><div class="diff-line diff-context">&quot;0&quot;, &quot;False&quot;,   </div><div class="diff-line diff-context">&quot;1&quot;, IIF(DateDiff(&quot;d&quot;, DateAdd(&quot;h&quot;,&quot;9&quot;,Now()),CDate(  </div><div class="diff-line diff-context">    Switch([StatusTerminationLastDayOfWork],[StatusTerminationLastDayOfWork],  </div><div class="diff-line diff-context">  Switch([Active], &quot;False&quot;,  </div><div class="diff-line diff-context">&quot;0&quot;, &quot;True&quot;,   </div><div class="diff-line diff-context">&quot;1&quot;, IIF(DateDiff(&quot;d&quot;, DateAdd(&quot;h&quot;,&quot;9&quot;,Now()),CDate(  </div><div class="diff-line diff-deleted">    Switch([StatusTerminationLastDayOfWork\],[StatusTerminationLastDayOfWork],  </div><div class="diff-line diff-context">&quot;&quot;,&quot;9999-12-31&quot;)  </div><div class="diff-line diff-context">    )  </div><div class="diff-line diff-context">  ) &lt;= 0, &quot;True&quot;, &quot;False&quot;)  </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```python</div><div class="diff-line diff-context">Switch([StatusTerminationLastDayOfWork],   </div><div class="diff-line diff-added">  Switch([Active], &quot;True&quot;,  </div><div class="diff-line diff-context">&quot;0&quot;, &quot;False&quot;,   </div><div class="diff-line diff-context">&quot;1&quot;, IIF(DateDiff(&quot;d&quot;, DateAdd(&quot;h&quot;,&quot;9&quot;,Now()),CDate(  </div><div class="diff-line diff-context">    Switch([StatusTerminationLastDayOfWork],[StatusTerminationLastDayOfWork],  </div><div class="diff-line diff-context">  Switch([Active], &quot;False&quot;,  </div><div class="diff-line diff-context">&quot;0&quot;, &quot;True&quot;,   </div><div class="diff-line diff-context">&quot;1&quot;, IIF(DateDiff(&quot;d&quot;, DateAdd(&quot;h&quot;,&quot;9&quot;,Now()),CDate(  </div><div class="diff-line diff-added">    Switch([StatusTerminationLastDayOfWork],[StatusTerminationLastDayOfWork],  </div><div class="diff-line diff-context">&quot;&quot;,&quot;9999-12-31&quot;)  </div><div class="diff-line diff-context">    )  </div><div class="diff-line diff-context">  ) &lt;= 0, &quot;True&quot;, &quot;False&quot;)  </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/decentralized-identifier-overview.md" target="_blank">docs/verified-id/decentralized-identifier-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 14, 2026 2:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/verified-id/decentralized-identifier-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify DID vs traditional authentication in Verified ID introduction AB#566916</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The issuer is an organization that creates an issuance solution requesting information from a user. The information is used to verify the user’s identity. For example, Woodgrove, Inc. has an issuance solution that enables them to create and distribute verifiable credentials (VCs) to all their employees. The employee uses the Authenticator app to sign in with their username and password, which passes an ID token to the issuing service. Once Woodgrove, Inc. validates the ID token submitted, the issuance solution creates a VC that includes claims about the employee and is signed with Woodgrove, Inc. DID. The employee now has an employer signed verifiable credential which includes the employee&#39;s DID as the subject DID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### User</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The user is the person or entity that is requesting a VC. For example, Alice is a new Woodgrove employee and was previously issued her proof of employment verifiable credential. When Alice needs to provide proof of employment to get a discount at Proseware, she can grant access to the credential in her Authenticator app by signing a verifiable presentation that proves Alice is the owner of the DID. Proseware is able to validate Woodgrove-issued credentials and Alice&#39;s verifiable credential ownership.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The issuer is an organization that creates an issuance solution requesting information from a user. The information is used to verify the user’s identity. For example, Woodgrove, Inc. has an issuance solution that enables them to create and distribute verifiable credentials (VCs) to all their employees. The employee uses the Authenticator app to sign in with their username and password, which passes an ID token to the issuing service. Once Woodgrove, Inc. validates the ID token submitted, the issuance solution creates a VC that includes claims about the employee and is signed with Woodgrove, Inc. DID. The employee now has an employer signed verifiable credential which includes the employee&#39;s DID as the subject DID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; The sign-in step uses traditional authentication (such as username and password) to verify the employee&#39;s identity with the issuer. This is separate from the verifiable credential itself. The verifiable credential is a portable, cryptographically signed proof that the employee can later present to any verifier without the verifier needing to contact Woodgrove or any central authority.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### User</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The user is the person or entity that is requesting a VC. For example, Alice is a new Woodgrove employee and was previously issued her proof of employment verifiable credential. When Alice needs to provide proof of employment to get a discount at Proseware, she can grant access to the credential in her Authenticator app by signing a verifiable presentation that proves Alice is the owner of the DID. Proseware is able to validate Woodgrove-issued credentials and Alice&#39;s verifiable credential ownership.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-cloud-apps.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-cloud-apps.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 14, 2026 8:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> remove-dupe</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access policies that target All resources with one or more resource exclusions, or policies that explicitly target Azure AD Graph, are enforced in user sign-in flows where the client application requests only these scopes. There is no change in behavior when an application requests any additional scope beyond those listed above.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For guidance on assessing impact, identifying affected applications, and retaining legacy behavior, see [Improved enforcement for policies with resource exclusions](improved-enforcement-resource-exclusions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The [Azure AD Graph retirement](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/important-update-azure-ad-graph-retirement/4364990) does not affect the Azure AD Graph (Windows Azure Active Directory) resource registered in your tenant.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access policies that target All resources with one or more resource exclusions, or policies that explicitly target Azure AD Graph, are enforced in user sign-in flows where the client application requests only these scopes. There is no change in behavior when an application requests any additional scope beyond those listed above.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For guidance on assessing impact, identifying affected applications, and retaining legacy behavior, see [Improved enforcement for policies with resource exclusions](concept-enforcement-resource-exclusions.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The [Azure AD Graph retirement](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/important-update-azure-ad-graph-retirement/4364990) does not affect the Azure AD Graph (Windows Azure Active Directory) resource registered in your tenant.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/on-premises-scim-provisioning.md" target="_blank">docs/identity/app-provisioning/on-premises-scim-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 14, 2026 7:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-scim-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Replace outdated IE reference with Edge guidance in SCIM provisioning article AB#497965</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> 8. Leave the portal and open the provisioning agent installer, agree to the terms of service, and select **Install**.</div><div class="diff-line diff-context"> 9. Wait for the Microsoft Entra provisioning agent configuration wizard and then select **Next**.</div><div class="diff-line diff-context"> 10. In the **Select Extension** step, select **On-premises application provisioning** and then select **Next**.    </div><div class="diff-line diff-deleted"> 11. The provisioning agent uses the operating system&#39;s web browser to display a popup window for you to authenticate to Microsoft Entra ID, and potentially also your organization&#39;s identity provider. If you&#39;re using Internet Explorer as the browser on Windows Server, then you may need to add Microsoft web sites to your browser&#39;s trusted site list to allow JavaScript to run correctly.</div><div class="diff-line diff-context"> 12. Provide credentials for a Microsoft Entra administrator when you&#39;re prompted to authorize. The user is required to have at least the [Hybrid Identity Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-identity-administrator) role.</div><div class="diff-line diff-context"> 13. Select **Confirm** to confirm the setting. Once installation is successful, you can select **Exit**, and also close the Provisioning Agent Package installer.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> 8. Leave the portal and open the provisioning agent installer, agree to the terms of service, and select **Install**.</div><div class="diff-line diff-context"> 9. Wait for the Microsoft Entra provisioning agent configuration wizard and then select **Next**.</div><div class="diff-line diff-context"> 10. In the **Select Extension** step, select **On-premises application provisioning** and then select **Next**.    </div><div class="diff-line diff-added"> 11. The provisioning agent uses the operating system&#39;s web browser to display a popup window for you to authenticate to Microsoft Entra ID, and potentially also your organization&#39;s identity provider. If you&#39;re using Microsoft Edge on Windows Server, ensure that Microsoft sites aren&#39;t blocked. If your organization requires legacy browser support, you can use [Microsoft Edge with IE Mode](/deployedge/edge-ie-mode) and add Microsoft sites to the trusted site list.</div><div class="diff-line diff-context"> 12. Provide credentials for a Microsoft Entra administrator when you&#39;re prompted to authorize. The user is required to have at least the [Hybrid Identity Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-identity-administrator) role.</div><div class="diff-line diff-context"> 13. Select **Confirm** to confirm the setting. Once installation is successful, you can select **Exit**, and also close the Provisioning Agent Package installer.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-overview.md" target="_blank">docs/id-governance/entitlement-management-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 14, 2026 5:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken bookmark references to removed privilege levels section</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| access package | A bundle of resources that a team or project needs and is governed with policies. An access package is always contained in a catalog. You would create a new access package for a scenario in which identities need to request access for themselves. |</div><div class="diff-line diff-context">| access request | A request to access the resources in an access package. A request typically goes through an approval workflow. If approved, the requesting identity receives an access package assignment. |</div><div class="diff-line diff-context">| assignment | An assignment of an access package to an identity ensures the identity has all the resource roles of that access package. Access package assignments typically have a time limit before they expire. |</div><div class="diff-line diff-deleted">| catalog | A container of related resources and access packages. Catalogs are used for delegation, so that nonadministrators can create their own access packages. Catalog owners can add resources they own to a catalog. Catalogs can have a [privilege level](entitlement-management-catalog-create.md#catalog-privilege-levels-preview) of **Standard**, or a catalog with regular resources in it, or **Privileged** where it contains resources that grant elevated permissions. |</div><div class="diff-line diff-context">| catalog creator | A collection of identities who are authorized to create new catalogs. When a nonadministrator identity who is authorized to be a catalog creator creates a new catalog, they automatically become the owner of that catalog. |</div><div class="diff-line diff-context">| connected organization | An external Microsoft Entra directory or domain that you have a relationship with. The identities from a connected organization can be specified in a policy as being allowed to request access. |</div><div class="diff-line diff-context">| policy | A set of rules that defines the access lifecycle, such as how identities get access, who can approve, and how long they have access through an assignment. A policy is linked to an access package. For example, an access package could have two policies - one for employees to request access and a second for external identities to request access. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| access package | A bundle of resources that a team or project needs and is governed with policies. An access package is always contained in a catalog. You would create a new access package for a scenario in which identities need to request access for themselves. |</div><div class="diff-line diff-context">| access request | A request to access the resources in an access package. A request typically goes through an approval workflow. If approved, the requesting identity receives an access package assignment. |</div><div class="diff-line diff-context">| assignment | An assignment of an access package to an identity ensures the identity has all the resource roles of that access package. Access package assignments typically have a time limit before they expire. |</div><div class="diff-line diff-added">| catalog | A container of related resources and access packages. Catalogs are used for delegation, so that nonadministrators can create their own access packages. Catalog owners can add resources they own to a catalog. |</div><div class="diff-line diff-context">| catalog creator | A collection of identities who are authorized to create new catalogs. When a nonadministrator identity who is authorized to be a catalog creator creates a new catalog, they automatically become the owner of that catalog. |</div><div class="diff-line diff-context">| connected organization | An external Microsoft Entra directory or domain that you have a relationship with. The identities from a connected organization can be specified in a policy as being allowed to request access. |</div><div class="diff-line diff-context">| policy | A set of rules that defines the access lifecycle, such as how identities get access, who can approve, and how long they have access through an assignment. A policy is linked to an access package. For example, an access package could have two policies - one for employees to request access and a second for external identities to request access. |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-roles.md" target="_blank">docs/id-governance/entitlement-management-roles.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Apr 14, 2026 5:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-roles" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix broken bookmark references to removed privilege levels section</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Assigning a Microsoft Entra role to a catalog automatically changes its [privilege level](entitlement-management-catalog-create.md#catalog-privilege-levels-preview) to **Privileged**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Scenarios for Microsoft Entra role assignment using access packages</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Assigning a Microsoft Entra role to a catalog can change its access and governance controls.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Scenarios for Microsoft Entra role assignment using access packages</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/what-are-lifecycle-workflows.md" target="_blank">docs/id-governance/what-are-lifecycle-workflows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 14, 2026 5:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/what-are-lifecycle-workflows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Security Copilot cross-reference to lifecycle workflows overview AB#427624</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Manage user lifecycle at scale. As your organization grows, the need for other resources to manage user lifecycle decreases.</div><div class="diff-line diff-context">- Reduce or remove manual tasks.</div><div class="diff-line diff-context">- Apply logic apps to extend workflows for more complex scenarios with your existing logic apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Those capabilities can help ensure a holistic experience by allowing you to remove other dependencies and applications to achieve the same result. You can then increase efficiency in new employee orientation and in removal of former employees from the system.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Create a custom workflow by using the Microsoft Entra admin center](tutorial-onboard-custom-workflow-portal.md)</div><div class="diff-line diff-context">- [Create a lifecycle workflow](create-lifecycle-workflow.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Manage user lifecycle at scale. As your organization grows, the need for other resources to manage user lifecycle decreases.</div><div class="diff-line diff-context">- Reduce or remove manual tasks.</div><div class="diff-line diff-context">- Apply logic apps to extend workflows for more complex scenarios with your existing logic apps.</div><div class="diff-line diff-added">- Use [Microsoft Security Copilot to create and manage lifecycle workflows](../security-copilot/entra-lifecycle-workflows.md) using natural language.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Those capabilities can help ensure a holistic experience by allowing you to remove other dependencies and applications to achieve the same result. You can then increase efficiency in new employee orientation and in removal of former employees from the system.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Create a custom workflow by using the Microsoft Entra admin center](tutorial-onboard-custom-workflow-portal.md)</div><div class="diff-line diff-context">- [Create a lifecycle workflow](create-lifecycle-workflow.md)</div><div class="diff-line diff-added">- [Manage lifecycle workflows with Microsoft Security Copilot](../security-copilot/entra-lifecycle-workflows.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/conditional-access/improved-enforcement-resource-exclusions-faq.md
+            </div>
+            <div class="file-meta">
+              Deleted by shlipsey3 on Apr 14, 2026 8:15 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/conditional-access/improved-enforcement-resource-exclusions-faq</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-128 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> remove-dupe</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
