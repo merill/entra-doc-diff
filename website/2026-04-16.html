@@ -1,0 +1,553 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 14th 2026, 9:57 PM PDT</p>
+        <p>Report generated on April 15th 2026, 9:57 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/concept-license-usage-insights.md" target="_blank">docs/fundamentals/concept-license-usage-insights.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 15, 2026 7:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/concept-license-usage-insights" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+24</span> / 
+              <span class="deletions">-12</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update license usage insights article with new UI features</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra license usage insights</div><div class="diff-line diff-context">description: Learn how to use the license usage insights page in the Microsoft Entra admin center to monitor license usage and entitlements.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/11/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to understand license usage insights so that I can monitor and optimize license allocation in my organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License entitlements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The license entitlements section shows how many licenses you&#39;ve purchased for the current month. Entitlements are calculated by looking at all Microsoft Entra products you&#39;ve purchased, including:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra ID P1</div><div class="diff-line diff-context">- Microsoft Entra ID P2</div><div class="diff-line diff-context">The entitlement count reflects the total number of licenses across all products that include each tier of Microsoft Entra ID functionality.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Feature usage metrics</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The license usage insights page uses a single representative metric (hero metric) for each license tier to measure usage. This approach simplifies the view by focusing on the most meaningful indicator of paid feature adoption.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra license usage insights</div><div class="diff-line diff-context">description: Learn how to use the license usage insights page in the Microsoft Entra admin center to monitor license usage and entitlements.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to understand license usage insights so that I can monitor and optimize license allocation in my organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## License entitlements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The license entitlements section shows how many licenses you&#39;ve purchased for the current month. Amounts for other months might change based on license agreement renewals, non-renewals, or additional purchases. Entitlements are calculated by looking at all Microsoft Entra products you&#39;ve purchased, including:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra ID P1</div><div class="diff-line diff-context">- Microsoft Entra ID P2</div><div class="diff-line diff-context">The entitlement count reflects the total number of licenses across all products that include each tier of Microsoft Entra ID functionality.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Product usage insights</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The **Product usage insights** section helps you monitor license usage to maximize your Microsoft Entra plan. Data shows last month&#39;s feature usage based on your entitled licenses and might take up to three days to update.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/tutorial-manage-certificates-for-federated-single-sign-on.md" target="_blank">docs/identity/enterprise-apps/tutorial-manage-certificates-for-federated-single-sign-on.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Apr 15, 2026 10:34 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/tutorial-manage-certificates-for-federated-single-sign-on" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix capitalization and enhance ISV guidance on certificates</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You receive the notification email from azure-noreply@microsoft.com. To avoid the email going to your spam location, add this email to your contacts.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; If notification email address configuration is completed programmatically using Microsoft Graph or PowerShell, administrators should open the Single Sign-On blade for the application in the Microsoft Entra admin center to ensure expiration notifications are enabled.</div><div class="diff-line diff-context">&gt; Failure to initialize SAML settings in the admin center may result in certificate expiration notification emails not being sent.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your app lacks certificate expiration validation and the certificate matches both Microsoft Entra ID and your app, it remains accessible. This condition is true even if the certificate is expired. Ensure your application can validate certificate expiration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Guidance and best practices for ISVs on rotating certificates</div><div class="diff-line diff-deleted">This section will outline best practices independent software vendors (ISV’s) can adopt to enable automated certificate rollover when SAML certificates are near expiry and when applications federated with Microsoft Entra ID. SAML certificates in Entra ID are used for signing assertions in federated single sign-on (SSO). These certificates expire (typically every 1-3 years) and rotation requires a Customer and SaaS ISV coordination to update a mutual certificate in both systems without downtime. Industry trends are shortening certificate lifetimes, manual rollover processes increasingly create operational burden and risk service disruption — especially in large organizations with many SAML enterprise applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a high level, the recommended rollover model relies on customers generating (or uploading) a new signing certificate in Microsoft Entra ID, and the SAML application automatically discovering it via the application’s federation metadata endpoint. The application should download metadata on a regular cadence, add newly discovered certificates as a secondary signing certificate while the new key is still inactive, and then seamlessly promote it to primary after the customer activates it in Microsoft Entra ID. Once the new certificate is in use, the old certificate can be safely removed from both Microsoft Entra ID and the application, completing the rotation without downtime. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You receive the notification email from azure-noreply@microsoft.com. To avoid the email going to your spam location, add this email to your contacts.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; If notification email address configuration is completed programmatically using Microsoft Graph or PowerShell, administrators should open the single sign-on blade for the application in the Microsoft Entra admin center to ensure expiration notifications are enabled.</div><div class="diff-line diff-context">&gt; Failure to initialize SAML settings in the admin center may result in certificate expiration notification emails not being sent.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If your app lacks certificate expiration validation and the certificate matches both Microsoft Entra ID and your app, it remains accessible. This condition is true even if the certificate is expired. Ensure your application can validate certificate expiration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Guidance and best practices for ISVs on rotating certificates</div><div class="diff-line diff-added">This section will outline best practices independent software vendors (ISVs) can adopt to enable automated certificate rollover when SAML certificates are near expiry and when applications federated with Microsoft Entra ID. SAML certificates in Entra ID are used for signing assertions in federated single sign-on (SSO). These certificates expire (typically every 1-3 years) and rotation requires a Customer and SaaS ISV coordination to update a mutual certificate in both systems without downtime. Industry trends are shortening certificate lifetimes, manual rollover processes increasingly create operational burden and risk service disruption — especially in large organizations with many SAML enterprise applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a high level, the recommended rollover model relies on customers generating (or uploading) a new signing certificate in Microsoft Entra ID, and the SAML application automatically discovering it via the application’s federation metadata endpoint. The application should download metadata on a regular cadence, add newly discovered certificates as a secondary signing certificate while the new key is still inactive, and then seamlessly promote it to primary after the customer activates it in Microsoft Entra ID. Once the new certificate is in use, the old certificate can be safely removed from both Microsoft Entra ID and the application, completing the rotation without downtime. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-remote-network-connectivity.md" target="_blank">docs/global-secure-access/concept-remote-network-connectivity.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-remote-network-connectivity" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn how remote network connectivity in Global Secure Access allows users to connect to your corporate network from a remote location, such as a branch office.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn how remote network connectivity in Global Secure Access allows users to connect to your corporate network from a remote location, such as a branch office.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-assign-traffic-profile-to-remote-network.md" target="_blank">docs/global-secure-access/how-to-assign-traffic-profile-to-remote-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-assign-traffic-profile-to-remote-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: &quot;Assign remote networks to traffic forwarding profiles through the Microsoft Entra admin center or Microsoft Graph API to route branch office traffic through Global Secure Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Assign a remote network to a traffic forwarding profile for Global Secure Access</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: &quot;Assign remote networks to traffic forwarding profiles through the Microsoft Entra admin center or Microsoft Graph API to route branch office traffic through Global Secure Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Assign a remote network to a traffic forwarding profile for Global Secure Access</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-create-remote-network-vwan.md" target="_blank">docs/global-secure-access/how-to-create-remote-network-vwan.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-create-remote-network-vwan" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure vWAN</div><div class="diff-line diff-context">description: Use Global Secure Access to configure Azure and Microsoft Entra resources to create a virtual wide area network to connect to your resources in Azure.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure vWAN</div><div class="diff-line diff-context">description: Use Global Secure Access to configure Azure and Microsoft Entra resources to create a virtual wide area network to connect to your resources in Azure.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-create-remote-networks.md" target="_blank">docs/global-secure-access/how-to-create-remote-networks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-create-remote-networks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to be able to create a remote network for a remote office so that my organization can connect to the Global Secure Access service.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to be able to create a remote network for a remote office so that my organization can connect to the Global Secure Access service.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-simulate-remote-network.md" target="_blank">docs/global-secure-access/how-to-simulate-remote-network.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-simulate-remote-network" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Simulate remote network connectivity using Azure VNG</div><div class="diff-line diff-context">description: Configure Azure resources to simulate remote network connectivity to Microsoft&#39;s Security Edge Solutions with Global Secure Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/overview-what-is-global-secure-access.md" target="_blank">docs/global-secure-access/overview-what-is-global-secure-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/overview-what-is-global-secure-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: What is Global Secure Access?</div><div class="diff-line diff-context">description: Learn how Microsoft&#39;s Security Service Edge (SSE) solution, Global Secure Access, provides network access control and visibility to users and devices inside and outside a traditional office.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.custom: references_regions</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: What is Global Secure Access?</div><div class="diff-line diff-context">description: Learn how Microsoft&#39;s Security Service Edge (SSE) solution, Global Secure Access, provides network access control and visibility to users and devices inside and outside a traditional office.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.custom: references_regions</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-current-known-limitations.md" target="_blank">docs/global-secure-access/reference-current-known-limitations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-current-known-limitations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-deleted">ms.date: 04/01/2026</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: HULKsmashGithub</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.author: jayrusso</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.custom: agent-id-ignite</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/remote-network-asymmetric-routing-include.md" target="_blank">docs/includes/remote-network-asymmetric-routing-include.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/remote-network-asymmetric-routing-include" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/remote-network-traffic-enforcement-include.md" target="_blank">docs/includes/remote-network-traffic-enforcement-include.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jay on Apr 15, 2026 4:00 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/remote-network-traffic-enforcement-include" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update ms.date to 04/15/2026 on all changed files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/06/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">manager: dougeby</div><div class="diff-line diff-context">ms.service: global-secure-access</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by owinfreyATL on Apr 15, 2026 2:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Whats New date</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> - clicktale</div><div class="diff-line diff-context">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 04/01/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> - clicktale</div><div class="diff-line diff-context">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 04/15/2026</div><div class="diff-line diff-context">ms.author: owinfrey</div><div class="diff-line diff-context">ms.reviewer: dhanyahk</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
