@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 20th 2026, 9:52 PM PDT</p>
+        <p>Report generated on April 21st 2026, 9:52 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">31</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/knowbe4-security-awareness-training-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/knowbe4-security-awareness-training-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 21, 2026 2:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/knowbe4-security-awareness-training-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Navigate to the **User Management &gt; User Provisioning** section of your settings.</div><div class="diff-line diff-context">1. Select **Enable User Provisioning (User Syncing)** to display more provisioning settings.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of User Provisioning (User Syncing)](media/knowbe4-security-awareness-training-provisioning-tutorial\user-sync.png) </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. By default, the toggle is set to **ADI**. Select the **SCIM** toggle to begin setting up.</div><div class="diff-line diff-context">1. Expand your SCIM settings by selecting **+ SCIM Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Tenant Url](media/knowbe4-security-awareness-training-provisioning-tutorial\tenant-url.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Generate SCIM Token**. This will open a new window with your token ID. Copy this ID and save it to a place that you can easily access later. It&#39;s important that you save this token because once you close this window, you can&#39;t view the token again. Once you’ve saved the information, select **OK** to close the window.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy the Tenant URL and save it to a place that you can easily access later.</div><div class="diff-line diff-context">1. Make sure that the Test Mode option is selected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Tenant Mode](media/knowbe4-security-awareness-training-provisioning-tutorial\test-mode.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt;[!NOTE]</div><div class="diff-line diff-context">   &gt;We recommend keeping **Test Mode** enabled until you’ve configured the connection between KnowBe4 and your identity provider and have run a successful sync. Test Mode is used to generate a report of what will happen when SCIM is enabled. This means no changes are made to your console so you can configure your setup without worrying about changes to your console. When you&#39;re ready, you can disable **Test Mode** from your **Account Settings** to enable syncing.If you&#39;re switching from ADI to SCIM, **Test Mode** is enabled automatically after you save your **Account Settings**.</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Navigate to the **User Management &gt; User Provisioning** section of your settings.</div><div class="diff-line diff-context">1. Select **Enable User Provisioning (User Syncing)** to display more provisioning settings.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of User Provisioning (User Syncing).](media/knowbe4-security-awareness-training-provisioning-tutorial\user-sync.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. By default, the toggle is set to **ADI**. Select the **SCIM** toggle to begin setting up.</div><div class="diff-line diff-context">1. Expand your SCIM settings by selecting **+ SCIM Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the SCIM tenant URL configuration settings.](media/knowbe4-security-awareness-training-provisioning-tutorial\tenant-url.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Generate SCIM Token**. This will open a new window with your token ID. Copy this ID and save it to a place that you can easily access later. It&#39;s important that you save this token because once you close this window, you can&#39;t view the token again. Once you’ve saved the information, select **OK** to close the window.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy the Tenant URL and save it to a place that you can easily access later.</div><div class="diff-line diff-context">1. Make sure that the Test Mode option is selected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the SCIM test mode configuration option.](media/knowbe4-security-awareness-training-provisioning-tutorial\test-mode.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt;[!NOTE]</div><div class="diff-line diff-context">   &gt;We recommend keeping **Test Mode** enabled until you’ve configured the connection between KnowBe4 and your identity provider and have run a successful sync. Test Mode is used to generate a report of what will happen when SCIM is enabled. This means no changes are made to your console so you can configure your setup without worrying about changes to your console. When you&#39;re ready, you can disable **Test Mode** from your **Account Settings** to enable syncing.If you&#39;re switching from ADI to SCIM, **Test Mode** is enabled automatically after you save your **Account Settings**.</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/lanschool-air-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/lanschool-air-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 21, 2026 2:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/lanschool-air-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Log into LanSchool Air as Site Admin.</div><div class="diff-line diff-context">1. Select the menu at the top left then select **Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Settings menu](media/lanschool-air-provisioning-tutorial/settings.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **SSO Configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Configuration](media/lanschool-air-provisioning-tutorial/sso-configuration.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Generate New**. The system generates a random secrete token. **Select Copy**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Token generation](media/lanschool-air-provisioning-tutorial/generate-token.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;step-3-add-lanschool-air-from-the-azure-ad-application-gallery&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Log into LanSchool Air as Site Admin.</div><div class="diff-line diff-context">1. Select the menu at the top left then select **Settings**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Settings menu in the LanSchool Air admin.](media/lanschool-air-provisioning-tutorial/settings.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **SSO Configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the the SSO Configuration settings page.](media/lanschool-air-provisioning-tutorial/sso-configuration.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Generate New**. The system generates a random secrete token. **Select Copy**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the SCIM token generation dialog](media/lanschool-air-provisioning-tutorial/generate-token.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;step-3-add-lanschool-air-from-the-azure-ad-application-gallery&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/kpifire-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/kpifire-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 21, 2026 2:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/kpifire-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Sign in to https://app.kpifire.com with admin rights</div><div class="diff-line diff-context">1. Navigate to **Settings-&gt;API Settings-&gt;Add New Token** to generate the SCIM token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	[ ![Screenshot of kpifire token generation](media/kpifire-provisioning-tutorial/kpifire-token-generation.png) ](media/kpifire-provisioning-tutorial/kpifire-token-generation.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy and save the SCIM token. This value is entered in the **Secret Token** field in the Provisioning tab of your kpifire application. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **kpifire**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of The kpifire link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Sign in to https://app.kpifire.com with admin rights</div><div class="diff-line diff-context">1. Navigate to **Settings-&gt;API Settings-&gt;Add New Token** to generate the SCIM token.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	[ ![Screenshot of the kpifire token generation page.](media/kpifire-provisioning-tutorial/kpifire-token-generation.png) ](media/kpifire-provisioning-tutorial/kpifire-token-generation.png#lightbox)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Copy and save the SCIM token. This value is entered in the **Secret Token** field in the Provisioning tab of your kpifire application. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **kpifire**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the kpifire link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Provisioning tab in the application settings.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md" target="_blank">docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nuno Alexandre on Apr 21, 2026 5:09 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-clear-on-premises-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update tshoot-clear-on-premises-attributes.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-context">- onPremisesSamAccountName </div><div class="diff-line diff-context">- onPremisesSecurityIdentifier </div><div class="diff-line diff-context">- onPremisesUserPrincipalName </div><div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-context">- onPremisesSamAccountName </div><div class="diff-line diff-context">- onPremisesSecurityIdentifier </div><div class="diff-line diff-context">- onPremisesUserPrincipalName </div><div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-deleted">- onPremisesObjectIdentifier</div><div class="diff-line diff-context">- sonPremisesSamAccountName </div><div class="diff-line diff-deleted">- onPremisesSecurityIdentifier * </div><div class="diff-line diff-context">- onPremisesUserPrincipalName </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-added">- onPremisesObjectIdentifier </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- onPremisesSamAccountName </div><div class="diff-line diff-context">- onPremisesSecurityIdentifier </div><div class="diff-line diff-context">- onPremisesUserPrincipalName </div><div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-added">- onPremisesObjectIdentifier </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">- onPremisesSamAccountName </div><div class="diff-line diff-context">- onPremisesSecurityIdentifier </div><div class="diff-line diff-context">- onPremisesUserPrincipalName </div><div class="diff-line diff-context">- onPremisesDistinguishedName </div><div class="diff-line diff-context">- onPremisesDomainName </div><div class="diff-line diff-context">- onPremisesImmutableId </div><div class="diff-line diff-added">- onPremisesObjectIdentifier *</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/tutorial-internet-access-application-discovery.md" target="_blank">docs/global-secure-access/tutorial-internet-access-application-discovery.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by paulth1 on Apr 21, 2026 7:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-internet-access-application-discovery" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit pass: entra-internet-access-lab-tutorials</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What is shadow IT?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Shadow IT refers to applications and services that are used by employees without the IT department&#39;s knowledge or approval. This use creates risk such as the following examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Risk category | Examples | Why it matters |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| Data loss | Uploading files to personal cloud storage | Sensitive data leaves corporate control. |</div><div class="diff-line diff-context">| Compliance | Using apps that don&#39;t meet regulatory requirements | Health Insurance Portability and Accountability Act (HIPAA) and Sarbanes-Oxley Act violations. |</div><div class="diff-line diff-deleted">| Security | Apps with poor security practices | Credential theft and malware delivery. |</div><div class="diff-line diff-deleted">| Licensing | Duplicate tools across teams | Wasted IT budget. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Shadow AI: The new frontier</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Generative AI tools (ChatGPT, Claude, Gemini, and others) present unique challenges:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Employees might paste sensitive data into prompts.</div><div class="diff-line diff-context">- Confidential information might be used to train AI models.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 3: Identify generative AI applications</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What is shadow IT?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">*Shadow IT* refers to applications and services that are used by employees without the IT department&#39;s knowledge or approval. This use creates risk such as the following examples.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Risk category | Examples | Why it matters |</div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">| Data loss | Uploading files to personal cloud storage | Sensitive data leaves corporate control. |</div><div class="diff-line diff-context">| Compliance | Using apps that don&#39;t meet regulatory requirements | Health Insurance Portability and Accountability Act (HIPAA) and Sarbanes-Oxley Act violations. |</div><div class="diff-line diff-added">| Security | Using apps with poor security practices | Credential theft and malware delivery. |</div><div class="diff-line diff-added">| Licensing | Duplicating tools across teams | Wasted IT budget. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Shadow AI: The new frontier</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">*Shadow AI* is the unauthorized use of AI tools by employees without approval or security clearance. Generative AI tools (ChatGPT, Claude, Gemini, and others) present unique challenges:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Employees might paste sensitive data into prompts.</div><div class="diff-line diff-context">- Confidential information might be used to train AI models.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 3: Identify generative AI applications</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/tutorial-internet-access-url-filtering.md" target="_blank">docs/global-secure-access/tutorial-internet-access-url-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by paulth1 on Apr 21, 2026 7:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-internet-access-url-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit pass: entra-internet-access-lab-tutorials</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Aspect | FQDN filtering | URL filtering |</div><div class="diff-line diff-context">|--------|----------------|---------------|</div><div class="diff-line diff-deleted">| Requires TLS inspection | No | Yes. |</div><div class="diff-line diff-deleted">| Visibility | Domain only | Full path. |</div><div class="diff-line diff-deleted">| Example match | `www.youtube.com` | `www.youtube.com/shorts`. |</div><div class="diff-line diff-deleted">| Use case | Block or allow entire sites | Block or allow specific sites. |</div><div class="diff-line diff-deleted">| Granularity | Coarse | Fine-grained. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Objective</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Aspect | FQDN filtering | URL filtering |</div><div class="diff-line diff-context">|--------|----------------|---------------|</div><div class="diff-line diff-added">| Requires TLS inspection | No | Yes |</div><div class="diff-line diff-added">| Visibility | Domain only | Full path |</div><div class="diff-line diff-added">| Example match | `www.youtube.com` | `www.youtube.com/shorts` |</div><div class="diff-line diff-added">| Use case | Block or allow entire sites | Block or allow specific sites |</div><div class="diff-line diff-added">| Granularity | Coarse | Fine-grained |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Objective</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/kpn-grip-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/kpn-grip-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 21, 2026 2:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/kpn-grip-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **KPN Grip**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of The KPN Grip link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab automatic](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Tenant URL** field, enter your KPN Grip Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to KPN Grip. If the connection fails, ensure your KPN Grip account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **KPN Grip**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the KPN Grip link in the Applications list.](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Provisioning tab in the application settings.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Tenant URL** field, enter your KPN Grip Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to KPN Grip. If the connection fails, ensure your KPN Grip account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/tutorial-internet-access-web-content-filtering.md" target="_blank">docs/global-secure-access/tutorial-internet-access-web-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by paulth1 on Apr 21, 2026 7:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-internet-access-web-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit pass: entra-internet-access-lab-tutorials</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">   - **100 = highest priority**: Evaluated first.</div><div class="diff-line diff-context">   - **65,000 = lowest priority**: Evaluated last.</div><div class="diff-line diff-context">   - **Traditional firewall logic**: Lower numbers = higher precedence.</div><div class="diff-line diff-deleted">   - **Best practice:** Add spacing of ~100 between priorities for future flexibility.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Multi-profile processing**: When multiple Conditional Access policies match a user&#39;s traffic, *all matching security profiles are processed* in priority order of the security profiles themselves.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ↓</div><div class="diff-line diff-context">All policies in Custom Security Profile are evaluated</div><div class="diff-line diff-context">   ↓</div><div class="diff-line diff-deleted">Baseline Profile (priority 65000) ALSO executes ← Always runs as catch-all</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can create organization-wide protections in the baseline profile while still allowing higher-priority custom profiles to create exceptions for specific groups. Higher-priority security profiles still take precedence over the baseline security profile if there are conflicting rules between the two profiles.</div><div class="diff-line diff-context">In this exercise, you accomplished the following tasks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Created a web content filtering policy:** You defined rules by using both FQDN-based blocking (specific domains) and category-based blocking (gambling as a web category).</div><div class="diff-line diff-deleted">- **Understood the baseline profile:** You learned that the baseline profile applies to all internet traffic tunneled through Global Secure Access (GSA), which makes it ideal for organization-wide protections.</div><div class="diff-line diff-context">- **Linked policies to security profiles:** You learned that policies must be linked to a security profile. Security profiles must be linked to Conditional Access policies to be assigned to users and take effect. The baseline security profile (used in this tutorial) doesn&#39;t require Conditional Access and applies to all internet traffic.</div><div class="diff-line diff-context">- **Observed the &quot;connection reset&quot; error:** You learned that without TLS inspection, GSA can only drop the connection, which results in a generic browser error rather than a helpful message.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">   - **100 = highest priority**: Evaluated first.</div><div class="diff-line diff-context">   - **65,000 = lowest priority**: Evaluated last.</div><div class="diff-line diff-context">   - **Traditional firewall logic**: Lower numbers = higher precedence.</div><div class="diff-line diff-added">   - **Best practice:** Add spacing of about 100 between priorities for future flexibility.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Multi-profile processing**: When multiple Conditional Access policies match a user&#39;s traffic, *all matching security profiles are processed* in priority order of the security profiles themselves.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ↓</div><div class="diff-line diff-context">All policies in Custom Security Profile are evaluated</div><div class="diff-line diff-context">   ↓</div><div class="diff-line diff-added">Baseline Profile (priority 65,000) ALSO executes ← Always runs as catch-all</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can create organization-wide protections in the baseline profile while still allowing higher-priority custom profiles to create exceptions for specific groups. Higher-priority security profiles still take precedence over the baseline security profile if there are conflicting rules between the two profiles.</div><div class="diff-line diff-context">In this exercise, you accomplished the following tasks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Created a web content filtering policy:** You defined rules by using both FQDN-based blocking (specific domains) and category-based blocking (gambling as a web category).</div><div class="diff-line diff-added">- **Understood the baseline profile:** You learned that the baseline profile applies to all internet traffic tunneled through GSA, which makes it ideal for organization-wide protections.</div><div class="diff-line diff-context">- **Linked policies to security profiles:** You learned that policies must be linked to a security profile. Security profiles must be linked to Conditional Access policies to be assigned to users and take effect. The baseline security profile (used in this tutorial) doesn&#39;t require Conditional Access and applies to all internet traffic.</div><div class="diff-line diff-context">- **Observed the &quot;connection reset&quot; error:** You learned that without TLS inspection, GSA can only drop the connection, which results in a generic browser error rather than a helpful message.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/howto-identity-protection-remediate-unblock.md" target="_blank">docs/id-protection/howto-identity-protection-remediate-unblock.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Apr 21, 2026 3:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-protection/howto-identity-protection-remediate-unblock" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> idp-update-042126</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Remediate risks and unblock users</div><div class="diff-line diff-context">description: Learn how to configure user self-remediation and manually remediate risky users in Microsoft Entra ID Protection.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 01/05/2026</div><div class="diff-line diff-context">ms.reviewer: ebasseri</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to learn how to remediate risks and unblock users in Microsoft Entra ID Protection.</div><div class="diff-line diff-context">- **Risk state**: &quot;At risk&quot; -&gt; &quot;Dismissed&quot;</div><div class="diff-line diff-context">- **Risk detail**: &quot;-&quot; -&gt; &quot;Microsoft Entra ID Protection assessed sign-in safe&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Administrator manual remediation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some situations require an IT administrator to manually remediate sign-in or user risk. If you don&#39;t have risk-based policies configured, if the risk level doesn&#39;t meet the criteria for self-remediation, or if time is of the essence, you might need to take one of the following actions:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Remediate risks and unblock users</div><div class="diff-line diff-context">description: Learn how to configure user self-remediation and manually remediate risky users in Microsoft Entra ID Protection.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/21/2026</div><div class="diff-line diff-context">ms.reviewer: ebasseri</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to learn how to remediate risks and unblock users in Microsoft Entra ID Protection.</div><div class="diff-line diff-context">- **Risk state**: &quot;At risk&quot; -&gt; &quot;Dismissed&quot;</div><div class="diff-line diff-context">- **Risk detail**: &quot;-&quot; -&gt; &quot;Microsoft Entra ID Protection assessed sign-in safe&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Threat-informed remediation by Microsoft</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">In limited cases, Microsoft Threat Intelligence identifies accounts, sessions, or resources being actively used in attack campaigns targeting Microsoft Entra tenants. When Microsoft has high-confidence evidence of compromise that poses an active risk to your organization, Microsoft might take remediation action on your behalf to help contain the threat.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">These actions are recorded in the Microsoft Entra audit logs with *Microsoft* listed as the initiator. Administrators retain full control of their tenant and can reverse any action taken through this process after completing their own investigation.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Administrator manual remediation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some situations require an IT administrator to manually remediate sign-in or user risk. If you don&#39;t have risk-based policies configured, if the risk level doesn&#39;t meet the criteria for self-remediation, or if time is of the essence, you might need to take one of the following actions:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-grant.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-grant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ebasseri on Apr 21, 2026 8:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update link text for risk remediation policy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Require risk remediation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When user risk is detected, users can self-remediate by completing the appropriate remediation flow, regardless of their authentication method. The Microsoft-managed remediation policy in Conditional Access accommodates all authentication methods, including password-based and passwordless. For more information, see [Require risk remediation with Microsoft-managed remediation (preview)](../../id-protection/concept-identity-protection-policies.md#require-risk-remediation-control-preview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you select **Require risk remediation** as a grant control, the following settings are automatically applied to the policy:</div><div class="diff-line diff-context">- **Require authentication strength**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Conditional Access common policies](concept-conditional-access-policy-common.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Report-only mode](concept-conditional-access-report-only.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Require risk remediation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When user risk is detected, users can self-remediate by completing the appropriate remediation flow, regardless of their authentication method. The Microsoft-managed remediation policy in Conditional Access accommodates all authentication methods, including password-based and passwordless. For more information, see [Require risk remediation control](../../id-protection/concept-identity-protection-policies.md#require-risk-remediation-control).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you select **Require risk remediation** as a grant control, the following settings are automatically applied to the policy:</div><div class="diff-line diff-context">- **Require authentication strength**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Conditional Access common policies](concept-conditional-access-policy-common.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Report-only mode](concept-conditional-access-report-only.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/kno2fy-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/kno2fy-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 21, 2026 2:08 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/kno2fy-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab automatic](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Tenant URL** field, enter your Kno2fy Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Kno2fy. If the connection fails, ensure your Kno2fy account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Attribute Mapping** in the left panel and select **users**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Tenant URL** field, enter your Kno2fy Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Kno2fy. If the connection fails, ensure your Kno2fy account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of the Provisioning properties page.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Attribute Mapping** in the left panel and select **users**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ebasseri on Apr 21, 2026 8:42 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update whats-new.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">**Service category:** Identity Protection  </div><div class="diff-line diff-context">**Product capability:** Identity Security &amp; Protection  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Self-remediation for passwordless users:** Risk-based access policies in Microsoft Entra Conditional Access now support self-remediation of risks across all authentication methods, including passwordless ones. This new control revokes compromised sessions in real-time, enables frictionless self-service, and reduces help-desk load. For more information, see: [Require risk remediation with Microsoft-managed remediation (preview)](../id-protection/concept-identity-protection-policies.md#require-risk-remediation-control-preview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">**Service category:** Identity Protection  </div><div class="diff-line diff-context">**Product capability:** Identity Security &amp; Protection  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Self-remediation for passwordless users:** Risk-based access policies in Microsoft Entra Conditional Access now support self-remediation of risks across all authentication methods, including passwordless ones. This new control revokes compromised sessions in real-time, enables frictionless self-service, and reduces help-desk load. For more information, see: [Require risk remediation control](../id-protection/concept-identity-protection-policies.md#require-risk-remediation-control).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/tutorial-internet-access-content-policies.md" target="_blank">docs/global-secure-access/tutorial-internet-access-content-policies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by paulth1 on Apr 21, 2026 7:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-internet-access-content-policies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit pass: entra-internet-access-lab-tutorials</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Configure content policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Network content filtering in Microsoft Entra Internet Access allows administrators to use content policies to prevent the transport of specific file types over the network. This feature helps protect sensitive data by blocking uploads and downloads of certain file formats (such as .doc, .docx, .pdf, and .zip) to and from web applications like ChatGPT, Gmail, and file-sharing apps. It can also use Purview to scan files and apply network-level policies based on document sensitivity labels.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this tutorial, you learn how to:</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Configure content policies</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Network content filtering in Microsoft Entra Internet Access allows administrators to use content policies to prevent the transport of specific file types over the network. This feature helps protect sensitive data by blocking uploads and downloads of certain file formats (such as .doc, .docx, .pdf, and .zip) to and from web applications like ChatGPT, Gmail, and file-sharing apps. It can also use Microsoft Purview to scan files and apply network-level policies based on document sensitivity labels.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this tutorial, you learn how to:</div><div class="diff-line diff-context">&gt; [!div class=&quot;checklist&quot;]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/tutorial-internet-access-enable-traffic-forwarding.md" target="_blank">docs/global-secure-access/tutorial-internet-access-enable-traffic-forwarding.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by paulth1 on Apr 21, 2026 7:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-internet-access-enable-traffic-forwarding" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit pass: entra-internet-access-lab-tutorials</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Download the GSA client for Windows 11 from one of the following links. You can also use the [sample PowerShell script](scripts/powershell-windows-client-install-proof-of-concept.md).</div><div class="diff-line diff-context">   - For standard Windows 11 machines, use `https://aka.ms/GlobalSecureAccess-Windows`.</div><div class="diff-line diff-deleted">   - For ARM-based Windows 11 machines, use `https://aka.ms/GlobalSecureAccess-WindowsOnArm`.</div><div class="diff-line diff-context">1. Select the downloaded file and complete the wizard to install the GSA client.</div><div class="diff-line diff-context">1. After installation is complete, verify that the GSA client icon appears in the Windows system tray.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Download the GSA client for Windows 11 from one of the following links. You can also use the [sample PowerShell script](scripts/powershell-windows-client-install-proof-of-concept.md).</div><div class="diff-line diff-context">   - For standard Windows 11 machines, use `https://aka.ms/GlobalSecureAccess-Windows`.</div><div class="diff-line diff-added">   - For Arm-based Windows 11 machines, use `https://aka.ms/GlobalSecureAccess-WindowsOnArm`.</div><div class="diff-line diff-context">1. Select the downloaded file and complete the wizard to install the GSA client.</div><div class="diff-line diff-context">1. After installation is complete, verify that the GSA client icon appears in the Windows system tray.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jun Takata on Apr 21, 2026 5:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-password-hash-synchronization" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You can continue to sign in to your cloud services by using a synchronized password that is expired in your on-premises environment. Your cloud password is updated the next time you change the password in the on-premises environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Even if a user’s password has expired, the user is not prompted to change their password as long as they have an active sign-in session with Entra ID using cookies or tokens. A password change prompt is shown only when the user explicitly completes authentication using a password. If the user has an existing single sign-on (SSO) cookie, refresh token, or primary refresh token (PRT), they will not be prompted to change their password. Additionally, when a user signs in using a passwordless authentication method, password expiration is not evaluated, and the user is not prompted to change their password. For more information, see [token revocation](~/identity-platform/refresh-tokens.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">##### CloudPasswordPolicyForPasswordSyncedUsersEnabled</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You can continue to sign in to your cloud services by using a synchronized password that is expired in your on-premises environment. Your cloud password is updated the next time you change the password in the on-premises environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Even if a user’s password has expired, the user isn&#39;t prompted to change their password as long as they have an active sign-in session with Microsoft Entra ID using cookies or tokens. A password change prompt is shown only when the user explicitly completes authentication using a password. If the user has an existing single sign-on (SSO) cookie, refresh token, or primary refresh token (PRT), they won&#39;t be prompted to change their password. Additionally, when a user signs in using a passwordless authentication method, password expiration isn&#39;t evaluated, and the user isn&#39;t prompted to change their password. For more information, see [Token revocation](~/identity-platform/refresh-tokens.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">##### CloudPasswordPolicyForPasswordSyncedUsersEnabled</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
