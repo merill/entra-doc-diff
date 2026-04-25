@@ -1,0 +1,553 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 23rd 2026, 9:42 PM PDT</p>
+        <p>Report generated on April 24th 2026, 9:42 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">19</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-customize-languages-customers.md" target="_blank">docs/external-id/customers/how-to-customize-languages-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-customize-languages-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+17</span> / 
+              <span class="deletions">-16</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538971</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Customize the browser language</div><div class="diff-line diff-context">description: Learn about how to customize the browser language for your app&#39;s authentication experience to provide a personalized sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/16/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a dev, devops, or it admin, I want to learn about how to add customized browser languages to my app&#39;s authentication experience.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Customize browser language for authentication experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to the external tenant you created earlier from the **Directories + subscriptions** menu.</div><div class="diff-line diff-context">1. Browse to **Company branding** &gt; **Browser language customizations** &gt; **Add browser language**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/how-to-customize-languages-customers/company-branding-add-browser-language.png&quot; alt-text=&quot;Screenshot of the browser language customizations tab.&quot; lightbox=&quot;media/how-to-customize-languages-customers/company-branding-add-browser-language.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">4. On the **Basics** tab, under **Language specific UI Customization**, select the browser language you want to customize from the menu. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   :::image type=&quot;content&quot; source=&quot;media/how-to-customize-languages-customers/language-selection.png&quot; alt-text=&quot;Screenshot of selecting a language.&quot; lightbox=&quot;media/how-to-customize-languages-customers/language-selection.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following languages are supported in the external tenant: </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Customize the browser language</div><div class="diff-line diff-context">description: Learn about how to customize the browser language for your app&#39;s authentication experience to provide a personalized sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Customer intent: As a developer, DevOps engineer, or IT admin, I want to add customized browser languages to my app&#39;s authentication experience.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Customize browser language for authentication experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to the external tenant you created earlier from the **Directories + subscriptions** menu.</div><div class="diff-line diff-context">1. Browse to **Company branding** &gt; **Browser language customizations** &gt; **Add browser language**. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/how-to-customize-languages-customers/company-branding-add-browser-language.png&quot; alt-text=&quot;Screenshot of Company branding with Browser language customizations and the Add browser language action.&quot; lightbox=&quot;media/how-to-customize-languages-customers/company-branding-add-browser-language.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. On the **Basics** tab, under **Language specific UI Customization**, select the browser language you want to customize from the menu.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/how-to-customize-languages-customers/language-selection.png&quot; alt-text=&quot;Screenshot of the language selector on the Basics tab for browser language customization.&quot; lightbox=&quot;media/how-to-customize-languages-customers/language-selection.png&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/b2b-sponsors.md" target="_blank">docs/external-id/b2b-sponsors.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/b2b-sponsors" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538971</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Add sponsors to a guest user in the Microsoft Entra admin center - External ID</div><div class="diff-line diff-context">description: Shows how an admin can add sponsors to guest users in Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 12/12/2024</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As a B2B organization administrator, I want to track and manage sponsors for guest users, so that I can ensure accountability and proper governance of external partners in my directory.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Sponsors field for B2B users</div><div class="diff-line diff-context">The **Sponsors** field on the user object refers to the person or group who manages and monitors the lifecycle of the user, ensuring they have access to the right resources.</div><div class="diff-line diff-context">Being a sponsor doesn&#39;t grant administrative powers for the sponsor user or the group, but it can be used for approval processes in entitlement management. You can also use it for custom solutions, but it doesn&#39;t offer any other built-in directory powers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">:::image type=&quot;content&quot; source=&quot;media/b2b-sponsors/single-sponsor.png&quot; alt-text=&quot;Screenshot of the sponsors&#39; name.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Who can be a sponsor?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [User Administrator](~/identity/role-based-access-control/permissions-reference.md#user-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Users**.</div><div class="diff-line diff-context">1. Select **New user** &gt; **Invite external user** from the menu.</div><div class="diff-line diff-deleted">1. Entered the details on the Basics tab and select **Next: Properties**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Add sponsors to a guest user in the Microsoft Entra admin center - External ID</div><div class="diff-line diff-context">description: Shows how an admin can add sponsors to guest users in Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context"># Customer intent: As a B2B organization administrator, I want to track and manage sponsors for guest users, so that I can ensure accountability and proper governance of external partners in my directory.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Sponsors field for B2B users</div><div class="diff-line diff-context">The **Sponsors** field on the user object refers to the person or group who manages and monitors the lifecycle of the user, ensuring they have access to the right resources.</div><div class="diff-line diff-context">Being a sponsor doesn&#39;t grant administrative powers for the sponsor user or the group, but it can be used for approval processes in entitlement management. You can also use it for custom solutions, but it doesn&#39;t offer any other built-in directory powers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">:::image type=&quot;content&quot; source=&quot;media/b2b-sponsors/single-sponsor.png&quot; alt-text=&quot;Screenshot of a guest user profile showing one sponsor listed in the Sponsors field.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Who can be a sponsor?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [User Administrator](~/identity/role-based-access-control/permissions-reference.md#user-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Users**.</div><div class="diff-line diff-context">1. Select **New user** &gt; **Invite external user** from the menu.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/user-flow-customize-language.md" target="_blank">docs/external-id/user-flow-customize-language.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/user-flow-customize-language" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538971</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Language customization in Microsoft Entra user flows</div><div class="diff-line diff-context">description: Learn about customizing the language experience in your user flows in Microsoft Entra External ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/17/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted">ms.custom:  </div><div class="diff-line diff-deleted">#customer intent: As a B2B collaboration user, I want to customize the language of the authentication experience in Microsoft Entra External ID, so that I can accommodate different languages for my users and provide a personalized user flow.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Language customization in Microsoft Entra External ID</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to B2B collaboration user flows in workforce tenants. For information about external tenants, see [Customize the language of the authentication experience](customers/how-to-customize-languages-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Language customization in Microsoft Entra External ID allows your user flow to accommodate different languages to suit your user&#39;s needs. Microsoft provides the translations for [36 languages](#supported-languages). In this article, you learn how to customize the attribute names on the [attribute collection page](self-service-sign-up-user-flow.yml#select-the-layout-of-the-attribute-collection-form), even if your experience is provided for only a single language.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How language customization works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">These steps give you a JSON file that you can use to start editing your strings.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Language customization in Microsoft Entra user flows</div><div class="diff-line diff-context">description: Learn about customizing the language experience in your user flows in Microsoft Entra External ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ms.custom:</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added"># Customer intent: As a B2B collaboration user flow administrator, I want to customize the language of the authentication experience in Microsoft Entra External ID so that I can accommodate different languages for my users and provide a personalized user flow.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Language customization in Microsoft Entra External ID</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-context">&gt; This article applies to B2B collaboration user flows in workforce tenants. For information about external tenants, see [Customize the language of the authentication experience](customers/how-to-customize-languages-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Language customization in Microsoft Entra External ID allows your user flow to accommodate different languages to suit your users&#39; needs. Microsoft provides translations for [36 languages](#supported-languages). In this article, you learn how to customize attribute names on the [attribute collection page](self-service-sign-up-user-flow.yml#select-the-layout-of-the-attribute-collection-form), even if your experience is provided in only a single language.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How language customization works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/hybrid-cloud-to-on-premises.md" target="_blank">docs/external-id/hybrid-cloud-to-on-premises.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/hybrid-cloud-to-on-premises" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538971</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Grant B2B users access to your on-premises apps</div><div class="diff-line diff-deleted">description: Shows how to give cloud B2B users access to on premises apps with Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 12/10/2024</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an organization using Microsoft Entra B2B collaboration, I want to grant B2B users access to our on-premises applications, so that they can authenticate and access these apps using SAML-based authentication or integrated Windows authentication with Kerberos constrained delegation.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Enable Application Proxy and install a connector. For instructions, see [Publish applications using Microsoft Entra application proxy](~/identity/app-proxy/application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-context">- Publish the on-premises SAML-based application through Microsoft Entra application proxy by following the instructions in [SAML single sign-on for on-premises applications with Application Proxy](~/identity/app-proxy/conceptual-sso-apps.md).</div><div class="diff-line diff-deleted">- Assign Microsoft Entra B2B Users to the SAML Application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you&#39;ve completed the steps above, your app should be up and running. To test Microsoft Entra B2B access:</div><div class="diff-line diff-context">1. Open a browser and navigate to the external URL that you created when you published the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram provides a high-level overview of how Microsoft Entra application proxy and the generation of the B2B user object in the on-premises directory work together to grant B2B users access to your on-premises IWA and KCD apps. The numbered steps are described in detail below the diagram.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Grant B2B users access to your on-premises apps</div><div class="diff-line diff-added">description: Learn how to give cloud B2B users access to on-premises apps with Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an organization using Microsoft Entra B2B collaboration, I want to grant B2B users access to our on-premises applications, so that they can authenticate and access these apps using SAML-based authentication or integrated Windows authentication with Kerberos constrained delegation.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Enable Application Proxy and install a connector. For instructions, see [Publish applications using Microsoft Entra application proxy](~/identity/app-proxy/application-proxy-add-on-premises-application.md).</div><div class="diff-line diff-context">- Publish the on-premises SAML-based application through Microsoft Entra application proxy by following the instructions in [SAML single sign-on for on-premises applications with Application Proxy](~/identity/app-proxy/conceptual-sso-apps.md).</div><div class="diff-line diff-added">- Assign Microsoft Entra B2B users to the SAML application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you&#39;ve completed the steps above, your app should be up and running. To test Microsoft Entra B2B access:</div><div class="diff-line diff-context">1. Open a browser and navigate to the external URL that you created when you published the app.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following diagram provides a high-level overview of how Microsoft Entra application proxy and the generation of the B2B user object in the on-premises directory work together to grant B2B users access to your on-premises IWA and KCD apps. The numbered steps are described in detail below the diagram.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/azure-rest-api-operations-tenant-management.md" target="_blank">docs/external-id/customers/azure-rest-api-operations-tenant-management.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/azure-rest-api-operations-tenant-management" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538971</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: garrodonnell</div><div class="diff-line diff-context">ms.author: godonnell</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/17/2025</div><div class="diff-line diff-context">ms.custom: developer</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a dev, devops, I want to learn how to use the Azure REST API to manage my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Manage an external tenant with Azure REST API (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can manage your external tenant using the Azure REST API. The management of resources related to tenant management supports the following API operations. Each link in the following sections targets the corresponding page within the Microsoft Graph API reference for that operation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Tenant Management operations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can perform tenant management operations with your external tenant with the following operations:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Create or Update](/rest/api/activedirectory/ciam-tenants/create)</div><div class="diff-line diff-context">- [Delete](/rest/api/activedirectory/ciam-tenants/delete)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: garrodonnell</div><div class="diff-line diff-context">ms.author: godonnell</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">ms.custom: developer</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Customer intent: As a developer or DevOps engineer, I want to use the Azure REST API to manage my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Manage an external tenant with Azure REST API (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can manage your external tenant by using the Azure REST API. Tenant management resources support the following API operations. Each link in the following sections targets the corresponding page in the Azure REST API reference for that operation.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Tenant Management operations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can perform tenant management operations for your external tenant by using the following operations:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Create or Update](/rest/api/activedirectory/ciam-tenants/create)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/hybrid-on-premises-to-cloud.md" target="_blank">docs/external-id/hybrid-on-premises-to-cloud.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 7:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/hybrid-on-premises-to-cloud" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538972</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Sync local partner accounts to cloud as B2B users</div><div class="diff-line diff-context">description: Give locally managed external partners access to both local and cloud resources using the same credentials with Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/17/2025</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context"># Customer intent: As an IT admin managing partner accounts in a hybrid organization, I want to sync partner accounts from our on-premises directory to the cloud using Microsoft Entra Connect, so that our partners can access the resources they need with the same sign-in credentials for both on-premises and cloud resources.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before Microsoft Entra ID, organizations with on-premises identity systems have managed partner accounts in their on-premises directory. In such an organization, when you start to move apps to Microsoft Entra ID, you want to make sure your partners can access the resources they need. It shouldn&#39;t matter whether the resources are on-premises or in the cloud. Also, you want your partner users to be able to use the same sign-in credentials for both on-premises and Microsoft Entra resources. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">If you create accounts for your external partners in your on-premises directory (for example, you create an account with a sign-in name of &quot;msullivan&quot; for an external user named Maria Sullivan in your partners.contoso.com domain), you can now sync these accounts to the cloud. Specifically, you can use [Microsoft Entra Connect](~/identity/hybrid/connect/whatis-azure-ad-connect.md) to sync the partner accounts to the cloud, which creates a user account with UserType = Guest. This configuration enables your partner users to access cloud resources using the same credentials as their local accounts, without giving them more access than they need. For more information about converting local guest accounts, see [Convert local guest accounts to Microsoft Entra B2B guest accounts](~/architecture/10-secure-local-guest.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; See also how to [invite internal users to B2B collaboration](invite-internal-users.md). With this feature, you can invite internal guest users to use B2B collaboration, regardless of whether you&#39;ve synced their accounts from your on-premises directory to the cloud. Once the user accepts the invitation to use B2B collaboration, they&#39;ll be able to use their own identities and credentials to sign in to the resources you want them to access. You won’t need to maintain passwords or manage account lifecycles.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Identify unique attributes for UserType</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Sync local partner accounts to cloud as B2B users</div><div class="diff-line diff-context">description: Give locally managed external partners access to both local and cloud resources using the same credentials with Microsoft Entra B2B collaboration.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context"># Customer intent: As an IT admin managing partner accounts in a hybrid organization, I want to sync partner accounts from our on-premises directory to the cloud using Microsoft Entra Connect, so that our partners can access the resources they need with the same sign-in credentials for both on-premises and cloud resources.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before Microsoft Entra ID, organizations with on-premises identity systems have managed partner accounts in their on-premises directory. In such an organization, when you start to move apps to Microsoft Entra ID, you want to make sure your partners can access the resources they need. It shouldn&#39;t matter whether the resources are on-premises or in the cloud. Also, you want your partner users to be able to use the same sign-in credentials for both on-premises and Microsoft Entra resources. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If you create accounts for your external partners in your on-premises directory (for example, you create an account with a sign-in name of &quot;msullivan&quot; for an external user named Maria Sullivan in your partners.contoso.com domain), you can now sync these accounts to the cloud. Specifically, you can use [Microsoft Entra Connect](~/identity/hybrid/connect/whatis-azure-ad-connect.md) to sync partner accounts to the cloud, which creates a user account with UserType = Guest. This configuration enables partner users to access cloud resources by using the same credentials as their local accounts, without giving them more access than they need. For more information about converting local guest accounts, see [Convert local guest accounts to Microsoft Entra B2B guest accounts](~/architecture/10-secure-local-guest.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; See also [Invite internal users to B2B collaboration](invite-internal-users.md). With this feature, you can invite internal guest users to use B2B collaboration, regardless of whether you&#39;ve synced their accounts from your on-premises directory to the cloud. Once the user accepts the invitation, they can use their own identities and credentials to sign in to the resources you want them to access. You won&#39;t need to maintain passwords or manage account lifecycles.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Identify unique attributes for UserType</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/configurable-token-lifetimes.md" target="_blank">docs/identity-platform/configurable-token-lifetimes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sreyanth on Apr 24, 2026 5:55 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/configurable-token-lifetimes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> remove the licensing requirements from the page</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- **Managed identities**: Configuring token lifetimes for [managed identity service principals](~/identity/managed-identities-azure-resources/overview.md) isn&#39;t supported.</div><div class="diff-line diff-context">- **Refresh &amp; session token lifetimes**: Refresh and session token lifetimes are no longer configurable through token lifetime policies. Microsoft Entra ID uses only the default values described below. To control how frequently users are required to sign in, use [Conditional Access sign-in frequency](~/identity/conditional-access/howto-conditional-access-session-lifetime.md) instead.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## License requirements</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Using this feature requires a Microsoft Entra ID P1 license. To find the right license for your requirements, see [Comparing generally available features of the Free and Premium editions](https://www.microsoft.com/security/business/identity-access-management/azure-ad-pricing).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Customers with [Microsoft 365 Business licenses](/office365/servicedescriptions/office-365-service-descriptions-technet-library) also have access to Conditional Access features.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Token lifetime policies for access, SAML, and ID tokens</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can set token lifetime policies for access tokens, SAML tokens, and ID tokens.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- **Managed identities**: Configuring token lifetimes for [managed identity service principals](~/identity/managed-identities-azure-resources/overview.md) isn&#39;t supported.</div><div class="diff-line diff-context">- **Refresh &amp; session token lifetimes**: Refresh and session token lifetimes are no longer configurable through token lifetime policies. Microsoft Entra ID uses only the default values described below. To control how frequently users are required to sign in, use [Conditional Access sign-in frequency](~/identity/conditional-access/howto-conditional-access-session-lifetime.md) instead.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Token lifetime policies for access, SAML, and ID tokens</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can set token lifetime policies for access tokens, SAML tokens, and ID tokens.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/current-limitations.md" target="_blank">docs/external-id/current-limitations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 7:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/current-limitations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538972</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Limitations of B2B collaboration</div><div class="diff-line diff-context">description: Current limitations for Microsoft Entra B2B collaboration</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 04/15/2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: content-health, M365-identity-device-management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a user of Microsoft Entra B2B collaboration, I want to understand the limitations and potential issues with the platform, so that I can effectively manage and troubleshoot any authentication or replication problems that may arise.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Limitations of Microsoft Entra B2B collaboration</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Limitations of B2B collaboration</div><div class="diff-line diff-context">description: Current limitations for Microsoft Entra B2B collaboration</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: content-health, M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Customer intent: As a user of Microsoft Entra B2B collaboration, I want to understand the current platform limitations so that I can effectively manage and troubleshoot authentication or replication issues.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Limitations of Microsoft Entra B2B collaboration</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/external-identities-overview.md" target="_blank">docs/external-id/external-identities-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by TheWriteDoc on Apr 24, 2026 7:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/external-identities-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> userstory538972</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra External ID Overview</div><div class="diff-line diff-context">description: Compare solutions for using Microsoft Entra External ID to work with people outside your organization, including B2B collaboration and Azure AD B2C.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 01/30/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted">#customer intent: As a developer who creates apps for consumers and business customers, I want to understand the capabilities of Microsoft Entra External ID so that I can manage my customers&#39; identity experiences and allow them to use their own credentials to sign in.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Introduction to Microsoft Entra External ID</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra External ID Overview</div><div class="diff-line diff-context">description: Compare solutions for using Microsoft Entra External ID to work with people outside your organization, including B2B collaboration and Azure AD B2C.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 04/24/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added"># Customer intent: As a developer who creates apps for consumers and business customers, I want to understand the capabilities of Microsoft Entra External ID so that I can manage my customers&#39; identity experiences and allow them to use their own credentials to sign in.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Introduction to Microsoft Entra External ID</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/v2-protocols-oidc.md" target="_blank">docs/identity-platform/v2-protocols-oidc.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Dickson Mwendia on Apr 24, 2026 6:11 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add recommendations for using form_post</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| `redirect_uri` | Recommended | The redirect URI of your app, where authentication responses can be sent and received by your app. It must exactly match one of the redirect URIs you registered in the portal, except that it must be URL-encoded. If not present, the endpoint picks one registered `redirect_uri` at random to send the user back to. |</div><div class="diff-line diff-context">| `scope` | Required | A space-separated list of scopes. For OpenID Connect, it must include the scope `openid`, which translates to the **Sign you in** permission in the consent UI. You might also include other scopes in this request for requesting consent. |</div><div class="diff-line diff-context">| `nonce` | Required | A value generated and sent by your app in its request for an ID token. The same `nonce` value is included in the ID token returned to your app by the Microsoft identity platform. To mitigate token replay attacks, your app should verify the `nonce` value in the ID token is the same value it sent when requesting the token. The value is typically a unique, random string. |</div><div class="diff-line diff-deleted">| `response_mode` | Recommended | Specifies the method that should be used to send the resulting authorization code back to your app. Can be `form_post` or `fragment`. For web applications, we recommend using `response_mode=form_post`, to ensure the most secure transfer of tokens to your application. |</div><div class="diff-line diff-context">| `state` | Recommended | A value included in the request that is also returned in the token response. It can be a string of any content you want. A randomly generated unique value typically is used to [prevent cross-site request forgery attacks](https://tools.ietf.org/html/rfc6749#section-10.12). The state also is used to encode information about the user&#39;s state in the app before the authentication request occurred, such as the page or view the user was on. |</div><div class="diff-line diff-context">| `prompt` | Optional | Indicates the type of user interaction that is required. The only valid values at this time are `login`, `none`, `consent`, and `select_account`. The `prompt=login` claim forces the user to enter their credentials on that request, which negates single sign-on. The `prompt=none` parameter is the opposite, and should be paired with a `login_hint` to indicate which user must be signed in. These parameters ensure that the user isn&#39;t presented with any interactive prompt at all. If the request can&#39;t be completed silently via single sign-on, the Microsoft identity platform returns an error. Causes include no signed-in user, the hinted user isn&#39;t signed in, or multiple users are signed in but no hint was provided. The `prompt=consent` claim triggers the OAuth consent dialog after the user signs in. The dialog asks the user to grant permissions to the app. Finally, `select_account` shows the user an account selector, negating single sign-out but allowing the user to pick which account they intend to sign in with, without requiring credential entry. You can&#39;t use both `login_hint` and `select_account`.|</div><div class="diff-line diff-context">| `login_hint` | Optional | You can use this parameter to prefill the username and email address field of the sign-in page for the user, if you know the username ahead of time. Often, apps use this parameter during reauthentication, after already extracting the `login_hint` [optional claim](./optional-claims.md) from an earlier sign-in. |</div><div class="diff-line diff-context">client_id=00001111-aaaa-2222-bbbb-3333cccc4444        // Your app registration&#39;s Application (client) ID</div><div class="diff-line diff-context">&amp;response_type=id_token%20token                       // Requests both an ID token and access token</div><div class="diff-line diff-context">&amp;redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F       // Your application&#39;s redirect URI (URL-encoded)</div><div class="diff-line diff-deleted">&amp;response_mode=form_post                              // &#39;form_post&#39; or &#39;fragment&#39;</div><div class="diff-line diff-context">&amp;scope=openid+profile+email                           // &#39;openid&#39; is required; &#39;profile&#39; and &#39;email&#39; provide information in the UserInfo endpoint as they do in an ID token. </div><div class="diff-line diff-context">&amp;state=12345                                          // Any value - provided by your app</div><div class="diff-line diff-context">&amp;nonce=678910                                         // Any value - provided by your app</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| `redirect_uri` | Recommended | The redirect URI of your app, where authentication responses can be sent and received by your app. It must exactly match one of the redirect URIs you registered in the portal, except that it must be URL-encoded. If not present, the endpoint picks one registered `redirect_uri` at random to send the user back to. |</div><div class="diff-line diff-context">| `scope` | Required | A space-separated list of scopes. For OpenID Connect, it must include the scope `openid`, which translates to the **Sign you in** permission in the consent UI. You might also include other scopes in this request for requesting consent. |</div><div class="diff-line diff-context">| `nonce` | Required | A value generated and sent by your app in its request for an ID token. The same `nonce` value is included in the ID token returned to your app by the Microsoft identity platform. To mitigate token replay attacks, your app should verify the `nonce` value in the ID token is the same value it sent when requesting the token. The value is typically a unique, random string. |</div><div class="diff-line diff-added">| `response_mode` | Recommended | Specifies the method that should be used to send the resulting authorization code back to your app. Can be `form_post` or `fragment`. For web applications, we recommend using `response_mode=form_post`, to ensure the most secure transfer of tokens to your application. &lt;br&gt;&lt;br&gt; Using `form_post` is also recommended for reliability. When you use `fragment`, the response is returned in the URL, which is subject to a 2,048-character length limit. If the token payload exceeds this limit, the response can be truncated, causing authentication failures. Using `form_post` avoids this limitation because tokens are sent in the HTTP request body instead of the URL. |</div><div class="diff-line diff-context">| `state` | Recommended | A value included in the request that is also returned in the token response. It can be a string of any content you want. A randomly generated unique value typically is used to [prevent cross-site request forgery attacks](https://tools.ietf.org/html/rfc6749#section-10.12). The state also is used to encode information about the user&#39;s state in the app before the authentication request occurred, such as the page or view the user was on. |</div><div class="diff-line diff-context">| `prompt` | Optional | Indicates the type of user interaction that is required. The only valid values at this time are `login`, `none`, `consent`, and `select_account`. The `prompt=login` claim forces the user to enter their credentials on that request, which negates single sign-on. The `prompt=none` parameter is the opposite, and should be paired with a `login_hint` to indicate which user must be signed in. These parameters ensure that the user isn&#39;t presented with any interactive prompt at all. If the request can&#39;t be completed silently via single sign-on, the Microsoft identity platform returns an error. Causes include no signed-in user, the hinted user isn&#39;t signed in, or multiple users are signed in but no hint was provided. The `prompt=consent` claim triggers the OAuth consent dialog after the user signs in. The dialog asks the user to grant permissions to the app. Finally, `select_account` shows the user an account selector, negating single sign-out but allowing the user to pick which account they intend to sign in with, without requiring credential entry. You can&#39;t use both `login_hint` and `select_account`.|</div><div class="diff-line diff-context">| `login_hint` | Optional | You can use this parameter to prefill the username and email address field of the sign-in page for the user, if you know the username ahead of time. Often, apps use this parameter during reauthentication, after already extracting the `login_hint` [optional claim](./optional-claims.md) from an earlier sign-in. |</div><div class="diff-line diff-context">client_id=00001111-aaaa-2222-bbbb-3333cccc4444        // Your app registration&#39;s Application (client) ID</div><div class="diff-line diff-context">&amp;response_type=id_token%20token                       // Requests both an ID token and access token</div><div class="diff-line diff-context">&amp;redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F       // Your application&#39;s redirect URI (URL-encoded)</div><div class="diff-line diff-added">&amp;response_mode=form_post                              // &#39;form_post&#39; (recommended) or &#39;fragment&#39;. form_post avoids URL length limits.</div><div class="diff-line diff-context">&amp;scope=openid+profile+email                           // &#39;openid&#39; is required; &#39;profile&#39; and &#39;email&#39; provide information in the UserInfo endpoint as they do in an ID token. </div><div class="diff-line diff-context">&amp;state=12345                                          // Any value - provided by your app</div><div class="diff-line diff-context">&amp;nonce=678910                                         // Any value - provided by your app</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/shopify-plus-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/shopify-plus-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Apr 24, 2026 9:45 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/shopify-plus-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Correct login instruction for Shopify Plus admin</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure Shopify Plus to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Login to [Shopify Plus organization admin](https://shopify.plus). Navigate to **Users &gt; Security**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to the **SCIM Integration** section, select **Generate API token**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure Shopify Plus to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Log in to [Shopify Plus organization admin](https://shopify.plus). Navigate to **Users &gt; Security**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to the **SCIM Integration** section, select **Generate API token**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/servicenow-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/servicenow-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Carolyn McSharry on Apr 24, 2026 9:43 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/servicenow-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change 'allowlist' to 'allow list' in tutorial</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  If you still can&#39;t resolve your problem, contact ServiceNow support, and ask them to turn on SOAP debugging to help troubleshoot. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- The Microsoft Entra provisioning service currently operates under particular [IP ranges](~/identity/app-provisioning/use-scim-to-provision-users-and-groups.md#ip-ranges). If necessary, you can restrict other IP ranges and add these particular IP ranges to the allowlist of your application. That technique will allow traffic flow from the Microsoft Entra provisioning service to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Self-hosted ServiceNow instances aren&#39;t supported. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  If you still can&#39;t resolve your problem, contact ServiceNow support, and ask them to turn on SOAP debugging to help troubleshoot. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- The Microsoft Entra provisioning service currently operates under particular [IP ranges](~/identity/app-provisioning/use-scim-to-provision-users-and-groups.md#ip-ranges). If necessary, you can restrict other IP ranges and add these particular IP ranges to the allow list of your application. That technique will allow traffic flow from the Microsoft Entra provisioning service to your application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Self-hosted ServiceNow instances aren&#39;t supported. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
