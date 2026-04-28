@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 26th 2026, 10:37 PM PDT</p>
+        <p>Report generated on April 27th 2026, 10:37 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">72</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">41</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">20</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/users-custom-security-attributes.md" target="_blank">docs/identity/users/users-custom-security-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 2:29 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/users-custom-security-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+101</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add example: List all users and any custom security attribute assignments (AB#444679)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Assign, update, list, or remove custom security attributes for a user</div><div class="diff-line diff-context">description: Assign, update, list, or remove custom security attributes for a user in Microsoft Entra ID.</div><div class="diff-line diff-deleted">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro, no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### List all users with a custom security attribute assignment that equals a value</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following example lists all users with a custom security attribute assignment that equals a value. It retrieves users with a custom security attribute named `AppCountry` with a value that equals `Canada`. The filter value is case sensitive. You must add `ConsistencyLevel=eventual` in the request or the header. You must also include `$count=true` to ensure the request is routed correctly.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Assign, update, list, or remove custom security attributes for a user</div><div class="diff-line diff-context">description: Assign, update, list, or remove custom security attributes for a user in Microsoft Entra ID.</div><div class="diff-line diff-added">ms.date: 04/27/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: it-pro, no-azure-ad-ps-ref, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### List all users and any custom security attribute assignments</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The following example lists all users and any custom security attribute assignments. You must add `ConsistencyLevel=eventual` in the request or the header. You must also include `$count=true` to ensure the request is routed correctly.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added"># [PowerShell](#tab/ms-powershell)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[Get-MgUser](/powershell/module/microsoft.graph.users/get-mguser)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">```powershell</div><div class="diff-line diff-added">$userAttributes = Get-MgUser -CountVariable CountVar -Property &quot;id,displayName,customSecurityAttributes&quot; -ConsistencyLevel eventual</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/powershell-samples.md" target="_blank">docs/global-secure-access/powershell-samples.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 27, 2026 6:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/powershell-samples" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+40</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update PowerShell samples overview to include all samples (AB#572995)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: PowerShell samples for Global Secure Access</div><div class="diff-line diff-deleted">description: Use these PowerShell samples for Global Secure Access.</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-deleted">ms.date: 03/13/2026</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Global Secure Access PowerShell examples</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Sample scripts provide guidance on tasks for Global Secure Access using PowerShell.</div><div class="diff-line diff-deleted">The samples require the [Microsoft Graph Beta PowerShell module](/powershell/microsoftgraph/installation) 2.10 or newer, unless otherwise noted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Get token for connector</div><div class="diff-line diff-deleted">Use the [Get token for connector](scripts/powershell-get-token.md) script to get the Auth Token for registering your Microsoft Entra private network connector through Azure Marketplace.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Next steps</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: PowerShell samples for Global Secure Access</div><div class="diff-line diff-added">description: Use these PowerShell samples to automate common Global Secure Access tasks, including connector registration, client install, traffic forwarding bypasses, break glass scenarios, and TLS certificate creation.</div><div class="diff-line diff-context">ms.topic: sample</div><div class="diff-line diff-added">ms.date: 04/27/2026</div><div class="diff-line diff-context">ms.reviewer: katabish</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Global Secure Access PowerShell samples</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">These sample scripts provide guidance on common Global Secure Access tasks using PowerShell. Most samples require the [Microsoft Graph Beta PowerShell module](/powershell/microsoftgraph/installation) 2.10 or newer, unless otherwise noted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The samples are grouped by scenario.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Connector setup</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">| Sample | Description |</div><div class="diff-line diff-added">|---|---|</div><div class="diff-line diff-added">| [Get token for connector](scripts/powershell-get-token.md) | Get the auth token for registering your Microsoft Entra private network connector through Azure, AWS, or GCP Marketplaces. |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/preciate-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/preciate-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/preciate-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.  Sign in to [Preciate Admin Portal](https://preciate.com/web/admin/keys) and navigate to the **Integrations** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Preciate secret](media/preciate-provisioning-tutorial/preciate-secret-path.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2.  Select the **Generate** button where it says Active Directory Integration Secret Key. </div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted">	![Screenshot of Preciate generate](media/preciate-provisioning-tutorial/preciate-secret-generate.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3.  A new **Secret Key** appears. Copy and save the **Secret Key**. Also make a note that Tenant URL is `https://preciate.com/api/v1/scim`. These values are entered in the **Secret Token** and **Tenant URL** field in the Provisioning tab of your Preciate&#39;s application.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">### To configure automatic user provisioning for Preciate in Microsoft Entra ID:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-deleted">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Preciate**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1.  Sign in to [Preciate Admin Portal](https://preciate.com/web/admin/keys) and navigate to the **Integrations** page.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Preciate secret token configuration page.](media/preciate-provisioning-tutorial/preciate-secret-path.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2.  Select the **Generate** button where it says Active Directory Integration Secret Key. </div><div class="diff-line diff-context"> </div><div class="diff-line diff-added">	![Screenshot of the Preciate secret token generation page.](media/preciate-provisioning-tutorial/preciate-secret-generate.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3.  A new **Secret Key** appears. Copy and save the **Secret Key**. Also make a note that Tenant URL is `https://preciate.com/api/v1/scim`. These values are entered in the **Secret Token** and **Tenant URL** field in the Provisioning tab of your Preciate&#39;s application.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">### To configure automatic user provisioning for Preciate in Microsoft Entra ID:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Enterprise apps**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Preciate**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/tutorial-password-policy-overview-frequently-asked-questions.md" target="_blank">docs/identity/authentication/tutorial-password-policy-overview-frequently-asked-questions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ruimurakami-MSFT on Apr 27, 2026 1:25 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/tutorial-password-policy-overview-frequently-asked-questions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-10</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammatical issues in password policy FAQ</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Depending on the environment, synced users might also be subject to Microsoft Entra ID restrictions such as the global banned password list. For more information, see the [FAQ section](#faq).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Cloud-only users</div><div class="diff-line diff-deleted">For cloud users, the Microsoft Entra ID password policy cannot be customized, except for password expiration.</div><div class="diff-line diff-context">For detailed information about the Entra ID password policy, see [Microsoft Entra password policies](/entra/identity/authentication/concept-sspr-policy?tabs=ms-powershell#microsoft-entra-password-policies).</div><div class="diff-line diff-context">Although Microsoft Entra ID doesn&#39;t provide the same granular password complexity settings as on-premises AD DS, it does include a global banned password list and a custom banned password list.</div><div class="diff-line diff-deleted">The global banned password list is enabled for all tenants and cannot be disabled.</div><div class="diff-line diff-context">It blocks weak passwords such as admin or baseball.</div><div class="diff-line diff-context">The custom banned password list allows organizations to register words such as the company name or abbreviations and prevent them from being used in passwords.</div><div class="diff-line diff-context">For details, see [Global banned password list](/entra/identity/authentication/concept-password-ban-bad#global-banned-password-list).</div><div class="diff-line diff-context">## Policies evaluated during authentication (password expiration)</div><div class="diff-line diff-context">Password expiration specifies the maximum number of days a single password can be used.</div><div class="diff-line diff-context">When the expiration date is reached, users are required to change their password the next time they sign in. </div><div class="diff-line diff-deleted">When considering password expiration, it is helpful to look not only at whether the user is a synced user or a cloud user, but also whether authentication occurs on-premises or in the cloud.</div><div class="diff-line diff-context">Each scenario is described in the next sections. Refer to the section that matches the user type and environment you want to review</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Synced users with password hash synchronization</div><div class="diff-line diff-deleted">It is sometimes misunderstood that the on-premises AD DS password expiration is directly synchronized to Microsoft Entra ID.</div><div class="diff-line diff-context">However, password expiration values for synced users are stored separately in on-premises AD DS and in Microsoft Entra ID.</div><div class="diff-line diff-context">Because password information exists in both environments, the applied expiration policy depends on where the user signs in (where authentication occurs).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Depending on the environment, synced users might also be subject to Microsoft Entra ID restrictions such as the global banned password list. For more information, see the [FAQ section](#faq).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Cloud-only users</div><div class="diff-line diff-added">For cloud users, the Microsoft Entra ID password policy can&#39;t be customized, except for password expiration.</div><div class="diff-line diff-context">For detailed information about the Entra ID password policy, see [Microsoft Entra password policies](/entra/identity/authentication/concept-sspr-policy?tabs=ms-powershell#microsoft-entra-password-policies).</div><div class="diff-line diff-context">Although Microsoft Entra ID doesn&#39;t provide the same granular password complexity settings as on-premises AD DS, it does include a global banned password list and a custom banned password list.</div><div class="diff-line diff-added">The global banned password list is enabled for all tenants and can&#39;t be disabled.</div><div class="diff-line diff-context">It blocks weak passwords such as admin or baseball.</div><div class="diff-line diff-context">The custom banned password list allows organizations to register words such as the company name or abbreviations and prevent them from being used in passwords.</div><div class="diff-line diff-context">For details, see [Global banned password list](/entra/identity/authentication/concept-password-ban-bad#global-banned-password-list).</div><div class="diff-line diff-context">## Policies evaluated during authentication (password expiration)</div><div class="diff-line diff-context">Password expiration specifies the maximum number of days a single password can be used.</div><div class="diff-line diff-context">When the expiration date is reached, users are required to change their password the next time they sign in. </div><div class="diff-line diff-added">When considering password expiration, it&#39;s helpful to look not only at whether the user is a synced user or a cloud user, but also whether authentication occurs on-premises or in the cloud.</div><div class="diff-line diff-context">Each scenario is described in the next sections. Refer to the section that matches the user type and environment you want to review</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Synced users with password hash synchronization</div><div class="diff-line diff-added">It&#39;s sometimes misunderstood that the on-premises AD DS password expiration is directly synchronized to Microsoft Entra ID.</div><div class="diff-line diff-context">However, password expiration values for synced users are stored separately in on-premises AD DS and in Microsoft Entra ID.</div><div class="diff-line diff-context">Because password information exists in both environments, the applied expiration policy depends on where the user signs in (where authentication occurs).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/plandisc-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/plandisc-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/plandisc-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-9</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure Plandisc to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Log in to [Plandisc](https://create.plandisc.com) and navigate to **Enterprise**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Plandisc navigate Enterprise](media/plandisc-provisioning-tutorial/get-scim-token-from-plandisc-step-1.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Scroll down to see section **Manage users with SCIM** section.</div><div class="diff-line diff-context">Here you find values to be entered in the Provisioning tab of your Plandisc application. </div><div class="diff-line diff-context">The **SCIM endpoint** is inserted into the Tenant URL field.</div><div class="diff-line diff-context">The **SCIM token** is inserted into the Secret Token field.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Copy SCIM token from Plandisc](media/plandisc-provisioning-tutorial/get-scim-token-from-plandisc-step-2.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;step-3-add-plandisc-from-the-azure-ad-application-gallery&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab](common/provisioning.png)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure Plandisc to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to [Plandisc](https://create.plandisc.com) and navigate to **Enterprise**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Plandisc navigate Enterprise.](media/plandisc-provisioning-tutorial/get-scim-token-from-plandisc-step-1.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Scroll down to see section **Manage users with SCIM** section.</div><div class="diff-line diff-context">Here you find values to be entered in the Provisioning tab of your Plandisc application. </div><div class="diff-line diff-context">The **SCIM endpoint** is inserted into the Tenant URL field.</div><div class="diff-line diff-context">The **SCIM token** is inserted into the Secret Token field.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of Copy SCIM token from Plandisc.](media/plandisc-provisioning-tutorial/get-scim-token-from-plandisc-step-2.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;step-3-add-plandisc-from-the-azure-ad-application-gallery&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Provisioning tab for configuring automatic user provisioning.](common/provisioning.png)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/playvox-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/playvox-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/playvox-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+8</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. Select **Create API Key**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of Partial screenshot showing the location of the Create API Key button in the Playvox user interface.](media/playvox-provisioning-tutorial/create.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Enter a meaningful name for the API key, and then select **Save**. After the API key is generated, select **Close**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. On the API key that you created, select the **Details** icon.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of Partial screenshot showing the location of the Details icon, which is a magnifying glass, in the Playvox user interface.](media/playvox-provisioning-tutorial/api.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Copy and save the **BASE64 KEY** value. Later, in the Azure portal, you enter this value in the **Secret Token** text box in the **Provisioning** tab of your Playvox application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Partial screenshot of the Azure portal, with Enterprise applications and All applications items highlighted](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, search for and select **Playvox**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">2. Select **Create API Key**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot showing the location of the Create API Key button in the Playvox user interface.](media/playvox-provisioning-tutorial/create.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Enter a meaningful name for the API key, and then select **Save**. After the API key is generated, select **Close**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">4. On the API key that you created, select the **Details** icon.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot showing the location of the Details icon, which is a magnifying glass, in the Playvox user interface.](media/playvox-provisioning-tutorial/api.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">5. Copy and save the **BASE64 KEY** value. Later, in the Azure portal, you enter this value in the **Secret Token** text box in the **Provisioning** tab of your Playvox application.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of the Azure portal with Enterprise applications and All applications items highlighted.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, search for and select **Playvox**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/dropboxforbusiness-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/dropboxforbusiness-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Apr 27, 2026 9:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/dropboxforbusiness-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> acrolinx and alt text</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The objective of this article is to demonstrate the steps to be performed in Dropbox for Business and Microsoft Entra ID to configure Microsoft Entra ID to automatically provision and de-provision users and/or groups to Dropbox for Business.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; In the future, Microsoft and Dropbox is deprecating the old Dropbox integration. This was originally planned for 4/1/2021, but has been postponed indefinitely. However, to avoid disruption of service, we recommend migrating to the new SCIM 2.0 Dropbox integration which supports Groups. To migrate to the new Dropbox integration, add and configure a new instance of Dropbox for Provisioning in your Microsoft Entra tenant using the steps below. Once you have configured the new Dropbox integration, disable Provisioning on the old Dropbox integration to avoid Provisioning conflicts. For more detailed steps on migrating to the new Dropbox integration, see [Update to the newest Dropbox for Business application using Microsoft Entra ID](https://help.dropbox.com/installs-integrations/third-party/update-dropbox-azure-ad-connector) and [Connect Dropbox with Microsoft Entra ID](https://help.dropbox.com/integrations/microsoft-entra-id).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This article describes a connector built on top of the Microsoft Entra user provisioning service. For important details on what this service does, how it works, and frequently asked questions, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Dropbox for Business**, select **Dropbox for Business** in the search box.</div><div class="diff-line diff-context">1. Select **Dropbox for Business** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-deleted">	![Screenshot of Dropbox for Business in the results list](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning users to Dropbox for Business</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Dropbox for Business**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The objective of this article is to demonstrate the steps to be performed in Dropbox for Business and Microsoft Entra ID to configure Microsoft Entra ID to automatically provision and de-provision users and/or groups to Dropbox for Business.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; In the future, Microsoft and Dropbox are deprecating the old Dropbox integration. This was originally planned for 4/1/2021, but has been postponed indefinitely. However, to avoid disruption of service, we recommend migrating to the new SCIM 2.0 Dropbox integration which supports Groups. To migrate to the new Dropbox integration, add and configure a new instance of Dropbox for Provisioning in your Microsoft Entra tenant using the steps below. Once you have configured the new Dropbox integration, disable Provisioning on the old Dropbox integration to avoid Provisioning conflicts. For more detailed steps on migrating to the new Dropbox integration, see [Update to the newest Dropbox for Business application using Microsoft Entra ID](https://help.dropbox.com/installs-integrations/third-party/update-dropbox-azure-ad-connector) and [Connect Dropbox with Microsoft Entra ID](https://help.dropbox.com/integrations/microsoft-entra-id).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This article describes a connector built on top of the Microsoft Entra user provisioning service. For important details on what this service does, how it works, and frequently asked questions, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Dropbox for Business**, select **Dropbox for Business** in the search box.</div><div class="diff-line diff-context">1. Select **Dropbox for Business** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-added">	![Screenshot of Dropbox for Business in the results list.](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Assigning users to Dropbox for Business</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Dropbox for Business**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/postman-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/postman-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/postman-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Tenant URL** field, input your Recnice Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Recnice. If the connection fails, ensure your Recnice account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Attribute Mapping** in the left panel and select users.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Provisioning tab for configuring automatic user provisioning.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, enter your Postman Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Postman. If the connection fails, ensure your Postman account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   ![Screenshot of the Provisioning properties page showing notification and deletion settings.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Attribute Mapping** in the left panel and select **users**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/mondaycom-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/mondaycom-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 27, 2026 5:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/mondaycom-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on suggestions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]</div><div class="diff-line diff-deleted">* An **Enterprise**  monday.com account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Plan your provisioning deployment</div><div class="diff-line diff-context">1. Learn about [how the provisioning service works](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">&lt;a name=&#39;step-2-configure-mondaycom-to-support-provisioning-with-azure-ad&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure monday.com to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-deleted">1. Login to [monday.com](https://www.monday.com/). Select your profile picture , on the left navigation pane.</div><div class="diff-line diff-deleted">1. Navigate to **Admin &gt; Security** .</div><div class="diff-line diff-deleted">1. Select **Open** in the **SCIM** section under the **Login** tab</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Scim Provisioning Tab](media/mondaycom-provisioning-tutorial/provisioning-tab-monday.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Generate** . These are the **Tenant URL** and **Secret Token** you need for step 5.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt;don&#39;t share or save this secret token. You can always generate a new token whenever and wherever it&#39;s required.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]</div><div class="diff-line diff-added">* An **Enterprise** monday.com account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 1: Plan your provisioning deployment</div><div class="diff-line diff-context">1. Learn about [how the provisioning service works](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">&lt;a name=&#39;step-2-configure-mondaycom-to-support-provisioning-with-azure-ad&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Configure monday.com to support provisioning with Microsoft Entra ID</div><div class="diff-line diff-added">1. Sign in to [monday.com](https://www.monday.com/). Select your profile picture , on the left navigation pane.</div><div class="diff-line diff-added">1. Navigate to **Admin &gt; Security**.</div><div class="diff-line diff-added">1. Select **Open** in the **SCIM** section under the **Login** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Scim Provisioning Tab](media/mondaycom-provisioning-tutorial/provisioning-tab-monday.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Generate**. These are the **Tenant URL** and **Secret Token** you need for step 5.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Don&#39;t share or save this secret token. You can always generate a new token whenever and wherever it&#39;s required.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/oracle-cloud-infrastructure-console-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/oracle-cloud-infrastructure-console-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 27, 2026 6:39 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/oracle-cloud-infrastructure-console-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on suggestions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Log on to the Oracle Cloud Infrastructure Console admin portal. On the top left corner of the screen navigate to **Identity &gt; Federation**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot shows the Oracle Admin.](./media/oracle-cloud-infratstructure-console-provisioning-tutorial/identity.png &quot;Admin&quot;)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the URL displayed on the page beside Oracle Identity Cloud Service Console.</div><div class="diff-line diff-context">1. Select **Add Identity Provider** to create a new identity provider. Save the IdP ID to be used as a part of tenant URL. Select the plus icon beside the **Applications** tab to create an OAuth Client and Grant IDCS Identity Domain Administrator AppRole.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot shows the Oracle Cloud Icon.](./media/oracle-cloud-infratstructure-console-provisioning-tutorial/add.png &quot;Icon&quot;)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Follow the screenshots below to configure your application. When the configuration is done, select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Tenant URL** field, enter your Cybozu Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Cybozu. If the connection fails, ensure your Cybozu account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">    &gt; Enter `https://&lt;IdP ID&gt;.identity.oraclecloud.com/admin/v1` in the **Tenant URL**.</div><div class="diff-line diff-deleted">    &gt; Example : If your IdP ID is `idcs-0bfd023ff2xx4a98a760fa2c31k92b1d`, then you would enter `https://idcs-0bfd023ff2xx4a98a760fa2c31k92b1d.identity.oraclecloud.com/admin/v1` in the **Tenant URL**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Log on to the Oracle Cloud Infrastructure Console admin portal. On the top left corner of the screen navigate to **Identity &gt; Federation**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot shows the Oracle Admin console for identity management.](./media/oracle-cloud-infratstructure-console-provisioning-tutorial/identity.png &quot;Admin&quot;)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the URL displayed on the page beside Oracle Identity Cloud Service Console.</div><div class="diff-line diff-context">1. Select **Add Identity Provider** to create a new identity provider. Save the IdP ID to be used as a part of tenant URL. Select the plus icon beside the **Applications** tab to create an OAuth Client and Grant IDCS Identity Domain Administrator AppRole.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot shows the Oracle Cloud Icon for adding applications.](./media/oracle-cloud-infratstructure-console-provisioning-tutorial/add.png &quot;Icon&quot;)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Follow the screenshots below to configure your application. When the configuration is done, select **Save**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, enter your Oracle Cloud Infrastructure Console Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Oracle Cloud Infrastructure Console. If the connection fails, ensure your Oracle Cloud Infrastructure Console account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!NOTE]</div><div class="diff-line diff-context">    &gt; Enter `https://&lt;IdP ID&gt;.identity.oraclecloud.com/admin/v1` in the **Tenant URL**.</div><div class="diff-line diff-added">    &gt; Example: If your IdP ID is `idcs-0bfd023ff2xx4a98a760fa2c31k92b1d`, then you would enter `https://idcs-0bfd023ff2xx4a98a760fa2c31k92b1d.identity.oraclecloud.com/admin/v1` in the **Tenant URL**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/druva-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/druva-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Apr 27, 2026 9:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/druva-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> alt text</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your [Druva Admin Console](https://console.druva.com). Navigate to **Druva** &gt; **inSync**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of Druva Admin Console](media/druva-provisioning-tutorial/menubar.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to **Manage** &gt; **Deployments** &gt; **Users**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Druva**, select **Druva** in the search box.</div><div class="diff-line diff-context">1. Select **Druva** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-deleted">    ![Screenshot of Druva in the results list](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configuring automatic user provisioning to Druva </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Druva**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your [Druva Admin Console](https://console.druva.com). Navigate to **Druva** &gt; **inSync**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of Druva Admin Console.](media/druva-provisioning-tutorial/menubar.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Navigate to **Manage** &gt; **Deployments** &gt; **Users**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Druva**, select **Druva** in the search box.</div><div class="diff-line diff-context">1. Select **Druva** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-added">    ![Screenshot of Druva in the results list.](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configuring automatic user provisioning to Druva </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Druva**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/directprint-io-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/directprint-io-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Diana Richards on Apr 27, 2026 9:45 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/directprint-io-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> alt text and acrolinx</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. log into your [directprint.io account](https://directprint.io/login/).</div><div class="diff-line diff-context">1. Navigate to the Microsoft Entra SSO and Provisioning screen.</div><div class="diff-line diff-deleted">1. Save the Tenant URL and secret toke for future reference. You need it in **Step 5**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 3: Add directprint.io from the Microsoft Entra application gallery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **directprint.io**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of The directprint.io link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of Provisioning tab](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. log into your [directprint.io account](https://directprint.io/login/).</div><div class="diff-line diff-context">1. Navigate to the Microsoft Entra SSO and Provisioning screen.</div><div class="diff-line diff-added">1. Save the Tenant URL and secret token for future reference. You need it in **Step 5**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 3: Add directprint.io from the Microsoft Entra application gallery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **directprint.io**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of The directprint.io link in the Applications list.](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of Provisioning tab.](common/provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md" target="_blank">docs/identity/hybrid/connect/tshoot-clear-on-premises-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Nuno Alexandre on Apr 27, 2026 7:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-clear-on-premises-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update tshoot-clear-on-premises-attributes.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">#### By Identity</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context"> ``` powershell</div><div class="diff-line diff-deleted">  Get-ADSyncToolsOnPremisesAttribute [-Identity] &lt;String&gt; [[-Property] &lt;String[]&gt;] [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context"> ```</div><div class="diff-line diff-context">#### By IncludeSyncedUsers</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">### SYNTAX </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` powershell</div><div class="diff-line diff-deleted">Set-ADSyncToolsOnPremisesAttribute [-Identity] &lt;String&gt; [[-onPremisesDistinguishedName] &lt;String&gt;] [[-onPremisesDomainName] &lt;String&gt;] [[-onPremisesImmutableId] &lt;String&gt;] [[-onPremisesSamAccountName] &lt;String&gt;] [[-onPremisesSecurityIdentifier] &lt;String&gt;] [[-onPremisesUserPrincipalName] &lt;String&gt;] [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### By BodyParameter</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` powershell</div><div class="diff-line diff-deleted">Set-ADSyncToolsOnPremisesAttribute [-Identity] &lt;String&gt; [-BodyParameter] &lt;String&gt; [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context">```</div><div class="diff-line diff-deleted"> </div><div class="diff-line diff-context">### EXAMPLES </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">#### By Identity</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context"> ``` powershell</div><div class="diff-line diff-added">  Get-ADSyncToolsOnPremisesAttribute [-Id] &lt;String&gt; [[-Property] &lt;String[]&gt;] [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context"> ```</div><div class="diff-line diff-context">#### By IncludeSyncedUsers</div><div class="diff-line diff-context"> </div><div class="diff-line diff-context">### SYNTAX </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` powershell</div><div class="diff-line diff-added">Set-ADSyncToolsOnPremisesAttribute [-Id] &lt;String&gt; [[-onPremisesDistinguishedName] &lt;String&gt;] [[-onPremisesDomainName] &lt;String&gt;] [[-onPremisesImmutableId] &lt;String&gt;] [[-onPremisesSamAccountName] &lt;String&gt;] [[-onPremisesSecurityIdentifier] &lt;String&gt;] [[-onPremisesUserPrincipalName] &lt;String&gt;] [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### By BodyParameter</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">``` powershell</div><div class="diff-line diff-added">Set-ADSyncToolsOnPremisesAttribute [-Id] &lt;String&gt; [-BodyParameter] &lt;String&gt; [&lt;CommonParameters&gt;] </div><div class="diff-line diff-context">```</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### EXAMPLES </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/pingboard-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/pingboard-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 5:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/pingboard-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select your instance of Pingboard, and then select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Set **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Tenant URL** field, input your Recnice Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Recnice. If the connection fails, ensure your Recnice account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot of Provisioning properties.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Attribute Mapping** in the left panel and select users.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Attribute Mappings** section, review the user attributes to be synchronized from Microsoft Entra ID to Pingboard. The attributes selected as **Matching** properties are used to match the user accounts in Pingboard for update operations. Select **Save** to commit any changes. For more information, see [Customize user provisioning attribute mappings](~/identity/app-provisioning/customize-application-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select your instance of Pingboard, and then select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **+ New configuration**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, enter your Pingboard Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Pingboard. If the connection fails, ensure your Pingboard account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    ![Screenshot of the Provisioning properties page showing notification and deletion settings.](common/provisioning-properties.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Attribute Mapping** in the left panel and select **users**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the **Attribute Mappings** section, review the user attributes to be synchronized from Microsoft Entra ID to Pingboard. The attributes selected as **Matching** properties are used to match the user accounts in Pingboard for update operations. Select **Save** to commit any changes. For more information, see [Customize user provisioning attribute mappings](~/identity/app-provisioning/customize-application-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/reward-gateway-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/reward-gateway-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Shreya Goyal (HCL Technologies Corporate Services) on Apr 27, 2026 4:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/reward-gateway-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Updated files</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Reward Gateway**, select **Reward Gateway** in the search box.</div><div class="diff-line diff-context">1. Select **Reward Gateway** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-deleted">	![Screenshot of the Reward Gateway in the results list](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configuring automatic user provisioning to Reward Gateway  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of the Enterprise applications blade](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Reward Gateway**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of the Reward Gateway link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the pencil to edit the properties. Enable notification emails and provide an email to receive quarantine emails. Enable accidental deletions prevention. Select **Apply** to save the changes.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.</div><div class="diff-line diff-context">1. In the **Add from the gallery** section, type **Reward Gateway**, select **Reward Gateway** in the search box.</div><div class="diff-line diff-context">1. Select **Reward Gateway** from results panel and then add the app. Wait a few seconds while the app is added to your tenant.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Reward Gateway in the results list.](common/search-new-app.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Configuring automatic user provisioning to Reward Gateway  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).</div><div class="diff-line diff-context">1. Browse to **Entra ID** &gt; **Enterprise apps**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Enterprise applications blade.](common/enterprise-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Reward Gateway**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Reward Gateway link in the Applications list.](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
