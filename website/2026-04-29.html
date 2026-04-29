@@ -1,0 +1,553 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 27th 2026, 10:33 PM PDT</p>
+        <p>Report generated on April 28th 2026, 10:33 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">22</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/sso-linux.md" target="_blank">docs/identity/devices/sso-linux.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Ploegert on Apr 28, 2026 4:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/sso-linux" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates for ubuntu 26.04 release support</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft single sign-on for Linux is supported on the following operating systems (physical or Hyper-V machines with x86/64 CPUs):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Ubuntu Desktop 24.04 LTS (Long Term Support)</div><div class="diff-line diff-deleted">- Ubuntu Desktop 22.04 LTS (Long Term Support) </div><div class="diff-line diff-deleted">- Red Hat Enterprise Linux 8 (Long Term Support)</div><div class="diff-line diff-context">- Red Hat Enterprise Linux 9 (Long Term Support)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### System Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- User accounts synchronized with or created in Microsoft Entra ID</div><div class="diff-line diff-context">- Appropriate licensing for conditional access policies (if applicable)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## SSO experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following animation shows the sign-in experience for brokered flows on Linux.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft single sign-on for Linux is supported on the following operating systems (physical or Hyper-V machines with x86/64 CPUs):</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Ubuntu Desktop 26.04 LTS (Long Term Support)</div><div class="diff-line diff-context">- Ubuntu Desktop 24.04 LTS (Long Term Support)</div><div class="diff-line diff-context">- Red Hat Enterprise Linux 9 (Long Term Support)</div><div class="diff-line diff-added">- Red Hat Enterprise Linux 10 (Long Term Support)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### System Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- User accounts synchronized with or created in Microsoft Entra ID</div><div class="diff-line diff-context">- Appropriate licensing for conditional access policies (if applicable)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Single Sign-on (SSO) experience</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following animation shows the sign-in experience for brokered flows on Linux.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/whats-new-linux.md" target="_blank">docs/identity/devices/whats-new-linux.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Ploegert on Apr 28, 2026 3:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/whats-new-linux" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+18</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update whats-new-linux.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Changes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### 3.0.2 - April 27, 2026  - (Production)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">###   </div><div class="diff-line diff-deleted">3.0.1 - March 31, 2026 - (GA Major Release)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">GA release of the Microsoft Identity Broker for Linux, now using a newly rewritten C++ broker instead of the previous Java-based broker.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Assets</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Ubuntu-24.04 - [microsoft-identity-broker_2.5.0-noble_amd64.deb ](https://packages.microsoft.com/ubuntu/24.04/prod/pool/main/m/microsoft-identity-broker/microsoft-identity-broker_2.5.0-noble_amd64.deb)</div><div class="diff-line diff-context">- Ubuntu-22.04 - [microsoft-identity-broker_2.5.0-jammy_amd64.deb](https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/m/microsoft-identity-broker/microsoft-identity-broker_2.5.0-jammy_amd64.deb)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 2.0.3 - Oct 21, 2025 - (Preview Release in fast Insiders channel)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Changes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### 3.0.2 - April 27, 2026 - (Production)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Ensure that all browser calls are done in the same thread</div><div class="diff-line diff-added">- Removed some PII from logs</div><div class="diff-line diff-added">- Fix the package file time missing issue on RHEL 10</div><div class="diff-line diff-added">- PKCE support</div><div class="diff-line diff-added">- Brings microsoft-identity-broker support to Ubuntu 26.04</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">#### Assets</div><div class="diff-line diff-added">- Ubuntu-26.04 - [microsoft-identity-broker_3.0.2-noble_amd64.deb ](https://packages.microsoft.com/ubuntu/26.04/prod/pool/main/m/microsoft-identity-broker/microsoft-identity-broker_3.0.2-noble_amd64.deb)</div><div class="diff-line diff-added">- Ubuntu-24.04 - [microsoft-identity-broker_3.0.2-noble_amd64.deb ](https://packages.microsoft.com/ubuntu/24.04/prod/pool/main/m/microsoft-identity-broker/microsoft-identity-broker_3.0.2-noble_amd64.deb)</div><div class="diff-line diff-added">- Ubuntu-22.04 - [microsoft-identity-broker_3.0.2-jammy_amd64.deb](https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/m/microsoft-identity-broker/microsoft-identity-broker_3.0.2-jammy_amd64.deb)</div><div class="diff-line diff-added">- Red Hat Enterprise Linux 10 - [microsoft-identity-broker-3.0.2-1.el10.x86_64.rpm](https://packages.microsoft.com/rhel/10/insiders-fast/Packages/m/microsoft-identity-broker-3.0.2-1.el10.x86_64.rpm)</div><div class="diff-line diff-added">- Red Hat Enterprise Linux 9.0 - [microsoft-identity-broker-3.0.2-1.el9.x86_64.rpm](https://packages.microsoft.com/rhel/9.0/insiders-fast/Packages/m/microsoft-identity-broker-3.0.2-1.el9.x86_64.rpm)</div><div class="diff-line diff-added">- Red Hat Enterprise Linux 8.0 - [microsoft-identity-broker-3.0.2-1.el8.x86_64.rpm](https://packages.microsoft.com/rhel/8.0/insiders-fast/Packages/m/microsoft-identity-broker-3.0.2-1.el8.x86_64.rpm)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### 3.0.1 - March 31, 2026 - (GA Major Release)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/concept-directory-join.md" target="_blank">docs/identity/devices/concept-directory-join.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Ploegert on Apr 28, 2026 4:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/concept-directory-join" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> updates for ubuntu 26.04 release support</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| **Definition** | &lt;ul&gt;&lt;li&gt;Joined only to Microsoft Entra ID requiring organizational account to sign in to the device&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Primary audience** | &lt;ul&gt;&lt;li&gt;Suitable for both cloud-only and hybrid organizations. &lt;/li&gt;&lt;li&gt;Applicable to all users in an organization&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Device ownership** | &lt;ul&gt;&lt;li&gt;Organization&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-deleted">| **Operating Systems** | &lt;ul&gt;&lt;li&gt;All Windows 11 and Windows 10 devices except Home editions&lt;/li&gt;&lt;li&gt;[Windows Enterprise multi-session Virtual Machines running in Azure](/azure/virtual-desktop/windows-multisession-faq#can-windows-enterprise-multi-session-be-microsoft-entra-joined)&lt;/li&gt;&lt;li&gt;[Windows Server 2019 and newer Virtual Machines running in Azure](howto-vm-sign-in-azure-ad-windows.md) (Server core isn&#39;t supported)&lt;/li&gt;&lt;li&gt;Apple devices running macOS 13 or newer&lt;/li&gt;&lt;li&gt;Linux editions:&lt;ul&gt;&lt;li&gt;Ubuntu 22.04/24.04 LTS&lt;/li&gt;&lt;li&gt;Red Hat Enterprise Linux 8/9 LTS&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Provisioning** | &lt;ul&gt;&lt;li&gt;Self-service: Windows Out of Box Experience (OOBE) or Settings&lt;/li&gt;&lt;li&gt;Bulk enrollment&lt;/li&gt;&lt;li&gt;Windows Autopilot&lt;/li&gt;&lt;li&gt;(Public preview) Apple Automated Device Enrollment (applies to Apple devices only)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Device management** | &lt;ul&gt;&lt;li&gt;Mobile Device Management (example: Microsoft Intune)&lt;/li&gt;&lt;li&gt;[Configuration Manager standalone or co-management with Microsoft Intune](/mem/configmgr/comanage/overview)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Key capabilities** | &lt;ul&gt;&lt;li&gt;single sign-on (SSO) to both cloud and on-premises resources&lt;/li&gt;&lt;li&gt;Conditional Access&lt;/li&gt;&lt;li&gt;[Self-service Password Reset and Windows Hello PIN reset on lock screen](../authentication/howto-sspr-windows.md)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following are the supported sign-in options for Microsoft Entra joined devices. The availability of these options depends on the device&#39;s operating system and configuration. For example, Windows Hello for Business requires additional setup and may not be available on all devices.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Platform | Password | SmartCard | Microsoft Authenticator phone sign-in | [Windows Hello for Business](/windows/security/identity-protection/hello-for-business/hello-planning-guide) / [Platform Credentials](macos-psso.md) | Web Sign-In | FIDO2  |</div><div class="diff-line diff-context">| --------------------- | --- | --- | --- | --- | ---| --- |  </div><div class="diff-line diff-context">|Windows 10/11          | ✅  | ✅ | ✅ | ✅ | ✅ |  ✅ |</div><div class="diff-line diff-deleted">|macOS 13+              | ✅  | ✅ |     |    |     |      |</div><div class="diff-line diff-deleted">|Ubuntu 22.04/24.04 LTS | ✅  | ✅ | ✅ |    |     |      |</div><div class="diff-line diff-deleted">|RHEL 8/9/10            | ✅  | ⚠️ | ✅ |    |     |      |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You sign in to Microsoft Entra joined devices using a Microsoft Entra account. Access to resources can be controlled based on your account and [Conditional Access policies](../conditional-access/policy-alt-all-users-compliant-hybrid-or-mfa.md) applied to the device.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| **Definition** | &lt;ul&gt;&lt;li&gt;Joined only to Microsoft Entra ID requiring organizational account to sign in to the device&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Primary audience** | &lt;ul&gt;&lt;li&gt;Suitable for both cloud-only and hybrid organizations. &lt;/li&gt;&lt;li&gt;Applicable to all users in an organization&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Device ownership** | &lt;ul&gt;&lt;li&gt;Organization&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-added">| **Operating Systems** | &lt;ul&gt;&lt;li&gt;All Windows 11 and Windows 10 devices except Home editions&lt;/li&gt;&lt;li&gt;[Windows Enterprise multi-session Virtual Machines running in Azure](/azure/virtual-desktop/windows-multisession-faq#can-windows-enterprise-multi-session-be-microsoft-entra-joined)&lt;/li&gt;&lt;li&gt;[Windows Server 2019 and newer Virtual Machines running in Azure](howto-vm-sign-in-azure-ad-windows.md) (Server core isn&#39;t supported)&lt;/li&gt;&lt;li&gt;Apple devices running macOS 13 or newer&lt;/li&gt;&lt;li&gt;Linux editions:&lt;ul&gt;&lt;li&gt;Ubuntu 22.04/24.04/26.04 LTS&lt;/li&gt;&lt;li&gt;Red Hat Enterprise Linux 9/10 LTS&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Provisioning** | &lt;ul&gt;&lt;li&gt;Self-service: Windows Out of Box Experience (OOBE) or Settings&lt;/li&gt;&lt;li&gt;Bulk enrollment&lt;/li&gt;&lt;li&gt;Windows Autopilot&lt;/li&gt;&lt;li&gt;(Public preview) Apple Automated Device Enrollment (applies to Apple devices only)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Device management** | &lt;ul&gt;&lt;li&gt;Mobile Device Management (example: Microsoft Intune)&lt;/li&gt;&lt;li&gt;[Configuration Manager standalone or co-management with Microsoft Intune](/mem/configmgr/comanage/overview)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| **Key capabilities** | &lt;ul&gt;&lt;li&gt;single sign-on (SSO) to both cloud and on-premises resources&lt;/li&gt;&lt;li&gt;Conditional Access&lt;/li&gt;&lt;li&gt;[Self-service Password Reset and Windows Hello PIN reset on lock screen](../authentication/howto-sspr-windows.md)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following are the supported sign-in options for Microsoft Entra joined devices. The availability of these options depends on the device&#39;s operating system and configuration. For example, Windows Hello for Business requires additional setup and may not be available on all devices.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Platform | Password | SmartCard | Microsoft Authenticator&lt;br/&gt; phone sign-in | [Windows Hello for Business](/windows/security/identity-protection/hello-for-business/hello-planning-guide) / &lt;br/&gt;[Platform Credentials](macos-psso.md) | Web Sign-In | FIDO2  |</div><div class="diff-line diff-context">| --------------------- | --- | --- | --- | --- | ---| --- |  </div><div class="diff-line diff-context">|Windows 10/11          | ✅  | ✅ | ✅ | ✅ | ✅ |  ✅ |</div><div class="diff-line diff-added">|macOS 13+              | ✅  | ✅ |   | ✅   |     |      |</div><div class="diff-line diff-added">|Ubuntu 22.04/24.04/26.04 LTS | ✅  | ✅ | ✅ |    |     |      |</div><div class="diff-line diff-added">|RHEL 9/10            | ✅  | ⚠️ Preview | ✅ |    |     |      |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You sign in to Microsoft Entra joined devices using a Microsoft Entra account. Access to resources can be controlled based on your account and [Conditional Access policies](../conditional-access/policy-alt-all-users-compliant-hybrid-or-mfa.md) applied to the device.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/overview-recommendations.md" target="_blank">docs/identity/monitoring-health/overview-recommendations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/overview-recommendations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses section to recommendations overview (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: What are Microsoft Entra recommendations?</div><div class="diff-line diff-context">description: Provides a general overview of Microsoft Entra recommendations so you can keep your tenant secure and healthy.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 02/02/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context"># Customer intent: As a Microsoft Entra administrator, I want guidance to so that I can keep my Microsoft Entra tenant in a healthy state.</div><div class="diff-line diff-context">Each recommendation contains a description, a summary of the value of addressing the recommendation, and a step-by-step action plan. If applicable, impacted resources associated with the recommendation are listed, so you can resolve each affected area. If a recommendation doesn&#39;t have any associated resources, the impacted resource type is *Tenant level*, so your step-by-step action plan impacts the entire tenant and not just a specific resource. The system processes recommendation data daily, reflecting activity from the preceding 24-hour window. Occasionally, data synchronization may extend up to 72 hours.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Recommendations overview table</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The recommendations listed in the following table are currently available in public preview or general availability the types of resources addressed by the recommendation, and more. The license requirements for recommendations in public preview are subject to change. The table provides links to available documentation for those recommendations that required separate guidance.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: What are Microsoft Entra recommendations?</div><div class="diff-line diff-context">description: Provides a general overview of Microsoft Entra recommendations so you can keep your tenant secure and healthy.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza </div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context"># Customer intent: As a Microsoft Entra administrator, I want guidance to so that I can keep my Microsoft Entra tenant in a healthy state.</div><div class="diff-line diff-context">Each recommendation contains a description, a summary of the value of addressing the recommendation, and a step-by-step action plan. If applicable, impacted resources associated with the recommendation are listed, so you can resolve each affected area. If a recommendation doesn&#39;t have any associated resources, the impacted resource type is *Tenant level*, so your step-by-step action plan impacts the entire tenant and not just a specific resource. The system processes recommendation data daily, reflecting activity from the preceding 24-hour window. Occasionally, data synchronization may extend up to 72 hours.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Roles and licenses</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The following roles and Microsoft Graph permissions provide access to Microsoft Entra recommendations. License requirements depend on the specific recommendation; see the [Recommendations overview table](#recommendations-overview-table) for per-recommendation details.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](~/includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Recommendations overview table</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The recommendations listed in the following table are currently available in public preview or general availability the types of resources addressed by the recommendation, and more. The license requirements for recommendations in public preview are subject to change. The table provides links to available documentation for those recommendations that required separate guidance.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-mfa-from-known-devices.md" target="_blank">docs/identity/monitoring-health/recommendation-mfa-from-known-devices.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-mfa-from-known-devices" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Recommendation to minimize MFA prompts from known devices</div><div class="diff-line diff-context">description: Learn about the recommendation to minimize multifactor authentication prompts from known devices in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/12/2025</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to minimize the number of multifactor authentication prompts my users receive from known devices so that they can access resources more easily and securely.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to minimize multifactor authentication prompts from known devices. This recommendation is called `tenantMFA` in the recommendations API in Microsoft Graph. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin, you want to maintain security for your company’s resources, but you also want your employees to easily access resources as needed. While enabling MFA is a good practice, you should try to keep the number of MFA prompts your users have to go through at a minimum. One option you have to accomplish this goal is to **allow users to remember multifactor authentication on trusted devices**.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Recommendation to minimize MFA prompts from known devices</div><div class="diff-line diff-context">description: Learn about the recommendation to minimize multifactor authentication prompts from known devices in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to minimize the number of multifactor authentication prompts my users receive from known devices so that they can access resources more easily and securely.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to minimize multifactor authentication prompts from known devices. This recommendation is called `tenantMFA` in the recommendations API in Microsoft Graph. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin, you want to maintain security for your company’s resources, but you also want your employees to easily access resources as needed. While enabling MFA is a good practice, you should try to keep the number of MFA prompts your users have to go through at a minimum. One option you have to accomplish this goal is to **allow users to remember multifactor authentication on trusted devices**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-migrate-apps-from-adfs-to-azure-ad.md" target="_blank">docs/identity/monitoring-health/recommendation-migrate-apps-from-adfs-to-azure-ad.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-migrate-apps-from-adfs-to-azure-ad" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn about the recommendation to migrate application authentication from AD FS to Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/12/2025</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to migrate my applications from Active Directory Federated Services (AD FS) to Microsoft Entra ID so that I can take advantage of the security features of Microsoft Entra ID and maximize the value of my applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate apps from Active Directory Federated Services (AD FS) to Microsoft Entra ID. This recommendation is called `adfsAppsMigration` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin responsible for managing applications, you want your applications to use the security features of Microsoft Entra ID and maximize their value. This recommendation shows up if your tenant has apps on ADFS that can 100% be migrated to Microsoft Entra ID. For more information, see [Understand the stages of migrating application authentication from AD FS to Microsoft Entra ID](../../identity/enterprise-apps/migrate-adfs-apps-stages.md).</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn about the recommendation to migrate application authentication from AD FS to Microsoft Entra ID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to migrate my applications from Active Directory Federated Services (AD FS) to Microsoft Entra ID so that I can take advantage of the security features of Microsoft Entra ID and maximize the value of my applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate apps from Active Directory Federated Services (AD FS) to Microsoft Entra ID. This recommendation is called `adfsAppsMigration` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin responsible for managing applications, you want your applications to use the security features of Microsoft Entra ID and maximize their value. This recommendation shows up if your tenant has apps on ADFS that can 100% be migrated to Microsoft Entra ID. For more information, see [Understand the stages of migrating application authentication from AD FS to Microsoft Entra ID](../../identity/enterprise-apps/migrate-adfs-apps-stages.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-migrate-to-authenticator.md" target="_blank">docs/identity/monitoring-health/recommendation-migrate-to-authenticator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-migrate-to-authenticator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn the importance of migrating your users to the Microsoft authenticator app in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/12/2025</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to make sure that my users are using the most secure multi-factor authentication method available in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate users to the Microsoft Authenticator app, which is currently a preview recommendation. This recommendation is called `useAuthenticatorApp` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Multifactor authentication (MFA) is a key component to improve the security posture of your Microsoft Entra tenant. While SMS text and voice calls were once commonly used for multifactor authentication, they&#39;re becoming increasingly less secure. You also don&#39;t want to overwhelm your users with lots of MFA methods and messages.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn the importance of migrating your users to the Microsoft authenticator app in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: jadedsouza</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I want to make sure that my users are using the most secure multi-factor authentication method available in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate users to the Microsoft Authenticator app, which is currently a preview recommendation. This recommendation is called `useAuthenticatorApp` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Multifactor authentication (MFA) is a key component to improve the security posture of your Microsoft Entra tenant. While SMS text and voice calls were once commonly used for multifactor authentication, they&#39;re becoming increasingly less secure. You also don&#39;t want to overwhelm your users with lots of MFA methods and messages.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-migrate-to-microsoft-entra-mfa.md" target="_blank">docs/identity/monitoring-health/recommendation-migrate-to-microsoft-entra-mfa.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-migrate-to-microsoft-entra-mfa" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Recommendation to migrate to Microsoft Entra MFA</div><div class="diff-line diff-context">description: Learn about the Microsoft Entra recommendation to migrate to Microsoft Entra multifactor authentication from MFA server</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.reviewer:  jupetter</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to migrate from MFA Server to Microsoft Entra MFA to align with Microsoft Entra recommendations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate from MFA server to Microsoft Entra MFA. This recommendation is called `mfaServerDeprecation` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Azure Multi-Factor Authentication Server (MFA Server) was scheduled for retirement on September 30th, 2024. To help organizations migrate to Microsoft Entra MFA, this Microsoft Entra recommendation identifies tenants with MFA server activity. This recommendation identifies tenants with active users and MFA attempts for MFA Server in the last seven days. MFA Server client integrations, including a list of affected clients are also surfaced as a part of this recommendation.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Recommendation to migrate to Microsoft Entra MFA</div><div class="diff-line diff-context">description: Learn about the Microsoft Entra recommendation to migrate to Microsoft Entra multifactor authentication from MFA server</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer:  jupetter</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to migrate from MFA Server to Microsoft Entra MFA to align with Microsoft Entra recommendations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to migrate from MFA server to Microsoft Entra MFA. This recommendation is called `mfaServerDeprecation` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Azure Multi-Factor Authentication Server (MFA Server) was scheduled for retirement on September 30th, 2024. To help organizations migrate to Microsoft Entra MFA, this Microsoft Entra recommendation identifies tenants with MFA server activity. This recommendation identifies tenants with active users and MFA attempts for MFA Server in the last seven days. MFA Server client integrations, including a list of affected clients are also surfaced as a part of this recommendation.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-migrate-to-microsoft-graph-api.md" target="_blank">docs/identity/monitoring-health/recommendation-migrate-to-microsoft-graph-api.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-migrate-to-microsoft-graph-api" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Recommendation to migrate to Microsoft Graph API</div><div class="diff-line diff-context">description: Learn about the Microsoft Entra recommendation to migrate from Azure Active Directory Graph APIs to Microsoft Graph APIs.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.reviewer: krbash</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to make sure that all apps and service principals are no longer using the Azure AD Graph APIs because they are being deprecated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers two recommendations to migrate applications and service principals from Azure AD Graph APIs to Microsoft Graph. These recommendations are called `aadGraphDeprecationApplication` and `aadGraphDeprecationServicePrincipal` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The deprecation of Azure Active Directory (Azure AD) Graph APIs was announced in 2020 and are now in the retirement cycle. All applications and service principals need to migrate to the new Microsoft Graph APIs.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Recommendation to migrate to Microsoft Graph API</div><div class="diff-line diff-context">description: Learn about the Microsoft Entra recommendation to migrate from Azure Active Directory Graph APIs to Microsoft Graph APIs.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: krbash</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to make sure that all apps and service principals are no longer using the Azure AD Graph APIs because they are being deprecated.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers two recommendations to migrate applications and service principals from Azure AD Graph APIs to Microsoft Graph. These recommendations are called `aadGraphDeprecationApplication` and `aadGraphDeprecationServicePrincipal` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The deprecation of Azure Active Directory (Azure AD) Graph APIs was announced in 2020 and are now in the retirement cycle. All applications and service principals need to migrate to the new Microsoft Graph APIs.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/recommendation-turn-off-per-user-mfa.md" target="_blank">docs/identity/monitoring-health/recommendation-turn-off-per-user-mfa.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Apr 28, 2026 9:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/recommendation-turn-off-per-user-mfa" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Roles and licenses include to remaining recommendation articles (AB#446904)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Turn off per user MFA in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn why you should turn off per user MFA in Microsoft Entra ID with Microsoft Entra recommendations</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 02/21/2025</div><div class="diff-line diff-context">ms.reviewer: deawari</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to know how many users in my tenant are using per-user MFA so I can make a plan to switch to Conditional Access MFA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to switch per-user multifactor authentication (MFA) accounts to Conditional Access MFA accounts. This recommendation is called `switchFromPerUserMFA` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin, you want to maintain security for your company’s resources, but you also want your employees to easily access resources as needed. MFA enables you to enhance the security posture of your tenant.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Turn off per user MFA in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn why you should turn off per user MFA in Microsoft Entra ID with Microsoft Entra recommendations</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 04/28/2026</div><div class="diff-line diff-context">ms.reviewer: deawari</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT admin, I need to know how many users in my tenant are using per-user MFA so I can make a plan to switch to Conditional Access MFA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article covers the recommendation to switch per-user multifactor authentication (MFA) accounts to Conditional Access MFA accounts. This recommendation is called `switchFromPerUserMFA` in the recommendations API in Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [Recommendations roles](../../includes/recommendations-roles.md)]</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Description</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">As an admin, you want to maintain security for your company’s resources, but you also want your employees to easily access resources as needed. MFA enables you to enhance the security posture of your tenant.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-roadmap.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-roadmap.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on Apr 28, 2026 10:37 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-roadmap" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Connect Health download links on roadmap page</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Download and install Microsoft Entra Connect Health Agent</div><div class="diff-line diff-context">* Make sure that you [satisfy the requirements](how-to-connect-health-agent-install.md#requirements) for Microsoft Entra Connect Health.</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD FS</div><div class="diff-line diff-deleted">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://go.microsoft.com/fwlink/?LinkID=518973)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for sync</div><div class="diff-line diff-context">    * [Download and install the latest version of Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted). The Health Agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or higher).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD DS</div><div class="diff-line diff-deleted">    * [Download Microsoft Entra Connect Health Agent for AD DS](https://go.microsoft.com/fwlink/?LinkID=820540).</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-azure-ad-ds).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Download and install Microsoft Entra Connect Health Agent</div><div class="diff-line diff-context">* Make sure that you [satisfy the requirements](how-to-connect-health-agent-install.md#requirements) for Microsoft Entra Connect Health.</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD FS</div><div class="diff-line diff-added">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://www.microsoft.com/en-us/download/details.aspx?id=108565)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for sync</div><div class="diff-line diff-context">    * [Download and install the latest version of Microsoft Entra Connect](https://entra.microsoft.com/#view/Microsoft_AAD_Connect_Provisioning/AADConnectMenuBlade/~/GetStarted). The Health Agent for sync is installed as part of the Microsoft Entra Connect installation (version 1.0.9125.0 or higher).</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD DS</div><div class="diff-line diff-added">    * [Download Microsoft Entra Connect Health Agent for AD DS](https://www.microsoft.com/en-us/download/details.aspx?id=108565).</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-azure-ad-ds).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-certificate-based-authentication-certificate-revocation-list.md" target="_blank">docs/identity/authentication/concept-certificate-based-authentication-certificate-revocation-list.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Apr 28, 2026 3:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-certificate-based-authentication-certificate-revocation-list" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update CRL download information link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### After a CRL endpoint is configured, end users can&#39;t sign in and they see &quot;AADSTS500173: Unable to download CRL. Invalid status code Forbidden from CRL distribution point.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When a problem prevents Microsoft Entra from downloading the CRL, the cause is often firewall restrictions. In most cases, you can resolve the issue by updating firewall rules to allow the required IP addresses so Microsoft Entra can successfully download the CRL. For more information, see [List of Microsoft IPAddress](/microsoft-365/enterprise/urls-and-ip-address-ranges#microsoft-365-unified-domains).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How do I find the CRL for a CA, or how do I troubleshoot the error &quot;AADSTS2205015: The Certificate Revocation List (CRL) failed signature validation&quot;?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### After a CRL endpoint is configured, end users can&#39;t sign in and they see &quot;AADSTS500173: Unable to download CRL. Invalid status code Forbidden from CRL distribution point.&quot;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When a problem prevents Microsoft Entra from downloading the CRL, the cause is often firewall restrictions. In most cases, you can resolve the issue by updating firewall rules to allow the required IP addresses so Microsoft Entra can successfully download the CRL. For more information, see [Download Azure IP Ranges and Service Tags – Public Cloud from Official Microsoft Download Center](https://www.microsoft.com/download/details.aspx?id=56519).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How do I find the CRL for a CA, or how do I troubleshoot the error &quot;AADSTS2205015: The Certificate Revocation List (CRL) failed signature validation&quot;?</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
