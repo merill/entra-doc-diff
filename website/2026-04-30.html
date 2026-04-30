@@ -1,0 +1,664 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since April 28th 2026, 10:37 PM PDT</p>
+        <p>Report generated on April 29th 2026, 10:37 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">25</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-explicit-forward-proxy-intune-policy.md" target="_blank">docs/global-secure-access/how-to-configure-explicit-forward-proxy-intune-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Apr 29, 2026 3:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-explicit-forward-proxy-intune-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+50</span> / 
+              <span class="deletions">-48</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yet another review update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">author: idmdev</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Configure Microsoft Edge with Global Secure Access Explicit Forward Proxy (preview) using Intune Mobile Application Management Policy</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ Create** &gt; **Managed Apps**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    1. **Name** = `GSA Explicit Forward Proxy Settings for Edge` (feel free to choose your own name).</div><div class="diff-line diff-deleted">    1. **Target policy to**: Selected Apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ Select public apps**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    1. Search for `Edge`.</div><div class="diff-line diff-deleted">    1. Select **Microsoft Edge** / **Windows**.</div><div class="diff-line diff-deleted">    1. Select **Select**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    ![Screenshot showing the public apps selection with Microsoft Edge selected.](media/how-to-configure-microsoft-edge-mam-policy/select-target-apps.png)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">author: idmdev</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Configure Microsoft Edge with Global Secure Access Explicit Forward Proxy (preview) using Intune Mobile Application Management policy</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can automatically deliver the proxy settings and the automatic Certificate Authority trust settings in Microsoft Edge using the Intune app management policies.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ Create** &gt; **Managed Apps**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   1. **Name** = `GSA Explicit Forward Proxy Settings for Edge` (feel free to choose your own name).</div><div class="diff-line diff-added">   1. **Target policy to**: Selected Apps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **+ Select public apps**:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   1. Search for `Edge`.</div><div class="diff-line diff-added">   1. Select **Microsoft Edge** / **Windows**.</div><div class="diff-line diff-added">   1. Select **Select**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/ai-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/ai-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/ai-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-24</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: AI Administrator</div><div class="diff-line diff-context">description: AI Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Assign the AI Administrator role to users who need to do the following tasks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Manage all aspects of Microsoft 365 Copilot, AI-related enterprise services, extensibility, and Search content.</div><div class="diff-line diff-deleted">- Approve and publish line-of-business copilot agents.</div><div class="diff-line diff-deleted">- Manage the full lifecycle of agent users, their licenses, and sign-in sessions.</div><div class="diff-line diff-deleted">- Read and configure Azure and Microsoft 365 service health dashboards.</div><div class="diff-line diff-deleted">- View usage reports, adoption insights, organizational insight, and message center posts.</div><div class="diff-line diff-deleted">- Create and manage support tickets in Azure and the Microsoft 365 admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.azure.serviceHealth/allEntities/allTasks | Read and configure Azure Service Health |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: AI Administrator</div><div class="diff-line diff-context">description: AI Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Assign the AI Administrator role to users who need to do the following tasks:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Manage all aspects of Microsoft 365 Copilot</div><div class="diff-line diff-added">- Manage AI-related enterprise services, extensibility, and copilot agents from the Integrated apps page in the Microsoft 365 admin center</div><div class="diff-line diff-added">- Approve and publish line-of-business copilot agents</div><div class="diff-line diff-added">- Read and configure Azure and Microsoft 365 service health dashboards</div><div class="diff-line diff-added">- View usage reports, adoption insights, and organizational insight</div><div class="diff-line diff-added">- Create and manage support tickets in Azure and the Microsoft 365 admin center</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.azure.serviceHealth/allEntities/allTasks | Read and configure Azure Service Health |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/simple-in-out-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/simple-in-out-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 29, 2026 9:24 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/simple-in-out-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on blocking issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Reveal** on your Recovery Key and store this entire key in a safe place. **IMPORTANT!** If you&#39;re ever locked out of your Microsoft accounts and need to disconnect SSO without access, you be required to relay the Recovery Key to Simple In/Out technical support.</div><div class="diff-line diff-context">1. Select **Reveal** on your Bearer Token and make note of it. You&#39;ll need this for Step 5.6.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* When a new user is provisioned from Microsoft Entra ID to Simple In/Out, Simple In/Out will set that user&#39;s role to the default role for your organization. This role will govern the user&#39;s permissions inside Simple In/Out. For existing users that may be converted to SSO, Simple In/Out will maintain their existing role.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* After users are provisioned to Simple In/Out, any administrator-level user can edit a user&#39;s role. This is done by selecting a user on the Simple In/Out board, then selecting the **Edit User** button that appears in the user&#39;s profile dialog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* You can change the default role in Simple In/Out and customize the permissions in the role on Simple In/Out&#39;s website.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Within Simple In/Out&#39;s website, select **Settings** in the upper-right</div><div class="diff-line diff-context">1. Select **Roles** under the **USERS** menu on the left.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Reveal** on your Recovery Key and store this entire key in a safe place. **IMPORTANT!** If you&#39;re ever locked out of your Microsoft accounts and need to disconnect SSO without access, you be required to relay the Recovery Key to Simple In/Out technical support.</div><div class="diff-line diff-context">1. Select **Reveal** on your Bearer Token and make note of it. You&#39;ll need this for Step 5.6.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   * When a new user is provisioned from Microsoft Entra ID to Simple In/Out, Simple In/Out will set that user&#39;s role to the default role for your organization. This role will govern the user&#39;s permissions inside Simple In/Out. For existing users that may be converted to SSO, Simple In/Out will maintain their existing role.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   * After users are provisioned to Simple In/Out, any administrator-level user can edit a user&#39;s role. This is done by selecting a user on the Simple In/Out board, then selecting the **Edit User** button that appears in the user&#39;s profile dialog.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   * You can change the default role in Simple In/Out and customize the permissions in the role on Simple In/Out&#39;s website.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Within Simple In/Out&#39;s website, select **Settings** in the upper-right</div><div class="diff-line diff-context">1. Select **Roles** under the **USERS** menu on the left.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/entra-backup-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/entra-backup-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/entra-backup-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Entra Backup Administrator</div><div class="diff-line diff-context">description: Entra Backup Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;mx-tableFixed&quot;]</div><div class="diff-line diff-context">&gt; | Actions | Description |</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/cancel | Cancel a Microsoft Entra backup operation to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/create | Create a Microsoft Entra backup operation that allows a user to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/recovery/cancel | Cancel a Microsoft Entra recovery operation to recover the contents of a backup snapshot |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/recovery/create | Create a Microsoft Entra recovery operation that allows a user to recover the contents of a backup snapshot. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/standard/read | List Microsoft Entra backups (for example, backup IDs and timestamps), view difference reports, and list recovery jobs and their associated properties. |</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Entra Backup Administrator</div><div class="diff-line diff-context">description: Entra Backup Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;mx-tableFixed&quot;]</div><div class="diff-line diff-context">&gt; | Actions | Description |</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-added">&gt; | microsoft.directory/auditLogs/standard/read | Read standard properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/cancel | Cancel a Microsoft Entra backup operation to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/create | Create a Microsoft Entra backup operation that allows a user to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/recovery/cancel | Cancel a Microsoft Entra recovery operation to recover the contents of a backup snapshot |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/recovery/create | Create a Microsoft Entra recovery operation that allows a user to recover the contents of a backup snapshot. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/standard/read | List Microsoft Entra backups (for example, backup IDs and timestamps), view difference reports, and list recovery jobs and their associated properties. |</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/entra-backup-reader.md" target="_blank">docs/identity/role-based-access-control/includes/entra-backup-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/entra-backup-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Entra Backup Reader</div><div class="diff-line diff-context">description: Entra Backup Reader</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;mx-tableFixed&quot;]</div><div class="diff-line diff-context">&gt; | Actions | Description |</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/cancel | Cancel a Microsoft Entra backup operation to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/create | Create a Microsoft Entra backup operation that allows a user to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/standard/read | List Microsoft Entra backups (for example, backup IDs and timestamps), view difference reports, and list recovery jobs and their associated properties. |</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Entra Backup Reader</div><div class="diff-line diff-context">description: Entra Backup Reader</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!div class=&quot;mx-tableFixed&quot;]</div><div class="diff-line diff-context">&gt; | Actions | Description |</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-added">&gt; | microsoft.directory/auditLogs/standard/read | Read standard properties on audit logs, excluding custom security attributes audit logs |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/cancel | Cancel a Microsoft Entra backup operation to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/preview/create | Create a Microsoft Entra backup operation that allows a user to compare a backup snapshot with the current state. |</div><div class="diff-line diff-context">&gt; | microsoft.directory/backup/standard/read | List Microsoft Entra backups (for example, backup IDs and timestamps), view difference reports, and list recovery jobs and their associated properties. |</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/permissions-reference.md" target="_blank">docs/identity/role-based-access-control/permissions-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra built-in roles</div><div class="diff-line diff-context">description: Describes the Microsoft Entra built-in roles and permissions.</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | Role | Description | Template ID |</div><div class="diff-line diff-context">&gt; | --- | --- | --- |</div><div class="diff-line diff-context">&gt; | [Agent ID Administrator](#agent-id-administrator) | Manage all aspects of agents in a tenant including identity lifecycle operations for agent blueprints, agent service principals, agent identities, and agentic users.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | db506228-d27e-4b7d-95e5-295956d6615f |</div><div class="diff-line diff-deleted">&gt; | [Agent ID Developer](#agent-id-developer) | Create an agent blueprint and its service principal in a tenant. User will be added as an owner of the agent blueprint and its service principal. | adb2368d-a9be-41b5-8667-d96778e081b0 |</div><div class="diff-line diff-context">&gt; | [Agent Registry Administrator](#agent-registry-administrator) | Manage all aspects of the Agent Registry service in Microsoft Entra ID | 6b942400-691f-4bf0-9d12-d8a254a2baf5 |</div><div class="diff-line diff-context">&gt; | [AI Administrator](#ai-administrator) | Manage all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | d2562ede-74db-457e-a7b6-544e236ebb61 |</div><div class="diff-line diff-context">&gt; | [AI Reader](#ai-reader) | Read all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | 1fe13547-53f6-408d-ac04-7f8eed167b38 |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra built-in roles</div><div class="diff-line diff-context">description: Describes the Microsoft Entra built-in roles and permissions.</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | Role | Description | Template ID |</div><div class="diff-line diff-context">&gt; | --- | --- | --- |</div><div class="diff-line diff-context">&gt; | [Agent ID Administrator](#agent-id-administrator) | Manage all aspects of agents in a tenant including identity lifecycle operations for agent blueprints, agent service principals, agent identities, and agentic users.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | db506228-d27e-4b7d-95e5-295956d6615f |</div><div class="diff-line diff-added">&gt; | [Agent ID Developer](#agent-id-developer) | Create an agent identity blueprint and its agent identity blueprint principal in a tenant. User will be added as an owner of the created agent identity blueprint and its agent identity blueprint principal. | adb2368d-a9be-41b5-8667-d96778e081b0 |</div><div class="diff-line diff-context">&gt; | [Agent Registry Administrator](#agent-registry-administrator) | Manage all aspects of the Agent Registry service in Microsoft Entra ID | 6b942400-691f-4bf0-9d12-d8a254a2baf5 |</div><div class="diff-line diff-context">&gt; | [AI Administrator](#ai-administrator) | Manage all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | d2562ede-74db-457e-a7b6-544e236ebb61 |</div><div class="diff-line diff-context">&gt; | [AI Reader](#ai-reader) | Read all aspects of Microsoft 365 Copilot and AI-related enterprise services in Microsoft 365.&lt;br/&gt;[![Privileged label icon.](./media/permissions-reference/privileged-label.png)](privileged-roles-permissions.md) | 1fe13547-53f6-408d-ac04-7f8eed167b38 |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/signagelive-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/signagelive-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 29, 2026 9:24 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/signagelive-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on blocking issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* [!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)].</div><div class="diff-line diff-context">* [A Signagelive tenant](https://signagelive.com/pricing/)</div><div class="diff-line diff-context">* A user account in Signagelive with Admin permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Signagelive**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot of the Signagelive link in the Applications list](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"> [!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)].</div><div class="diff-line diff-context">* [A Signagelive tenant](https://signagelive.com/pricing/)</div><div class="diff-line diff-context">* A user account in Signagelive with Admin permissions.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the applications list, select **Signagelive**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Signagelive link in the Applications list.](common/all-applications.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select the **Provisioning** tab.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/netskope-administrator-console-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/netskope-administrator-console-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 29, 2026 8:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/netskope-administrator-console-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on blocking issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the user attributes that are synchronized from Microsoft Entra ID to Netskope User Authentication in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the user accounts in Netskope User Authentication for update operations. If you choose to change the [matching target attribute](~/identity/app-provisioning/customize-application-attributes.md), you need to ensure that the Netskope User Authentication API supports filtering users based on that attribute. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Netskope User Authentication User Attributes](media/netskope-administrator-console-provisioning-tutorial/userattributes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the group attributes that are synchronized from Microsoft Entra ID to Netskope User Authentication in the **Attribute Mapping** section. The attributes selected as **Matching** properties are used to match the groups in Netskope User Authentication for update operations. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Netskope User Authentication Group Attributes](media/netskope-administrator-console-provisioning-tutorial/groupattributes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To configure scoping filters, refer to the instructions provided in the [Scoping filter article](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the user attributes that are synchronized from Microsoft Entra ID to Netskope User Authentication in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the user accounts in Netskope User Authentication for update operations. If you choose to change the [matching target attribute](~/identity/app-provisioning/customize-application-attributes.md), you need to ensure that the Netskope User Authentication API supports filtering users based on that attribute. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Netskope User Authentication User Attributes.](media/netskope-administrator-console-provisioning-tutorial/userattributes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the group attributes that are synchronized from Microsoft Entra ID to Netskope User Authentication in the **Attribute Mapping** section. The attributes selected as **Matching** properties are used to match the groups in Netskope User Authentication for update operations. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot of the Netskope User Authentication Group Attributes.](media/netskope-administrator-console-provisioning-tutorial/groupattributes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. To configure scoping filters, refer to the instructions provided in the [Scoping filter article](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/palo-alto-networks-scim-connector-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/palo-alto-networks-scim-connector-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Sudhakaran-S-micro on Apr 29, 2026 8:59 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/palo-alto-networks-scim-connector-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Worked on blocking issues</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department|String||</div><div class="diff-line diff-context">    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager|String||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; **Schema Discovery** is enabled on this app. Hence you might see more attributes in the application than mentioned in the table above.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the group attributes that are synchronized from Microsoft Entra ID to Palo Alto Networks SCIM Connector in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the groups in Palo Alto Networks SCIM Connector for update operations. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department|String||</div><div class="diff-line diff-context">    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager|String||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    &gt; [!NOTE]</div><div class="diff-line diff-added">    &gt; **Schema Discovery** is enabled on this app. Hence you might see more attributes in the application than mentioned in the table above.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the group attributes that are synchronized from Microsoft Entra ID to Palo Alto Networks SCIM Connector in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the groups in Palo Alto Networks SCIM Connector for update operations. Select the **Save** button to commit any changes.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/customer-delegated-admin-relationship-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/customer-delegated-admin-relationship-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/customer-delegated-admin-relationship-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">author: FaithOmbongi</div><div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.commerce.tenantRelationships/customerDelegatedAdminPrivileges/allProperties/allTasks | Manage all aspects of granular delegated admin privileges (GDAP) relationships in a customer tenant. |</div><div class="diff-line diff-context">&gt; | microsoft.office365.webPortal/allEntities/standard/read | Read basic properties on all resources in the Microsoft 365 admin center |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: role-based-access-control</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">author: FaithOmbongi</div><div class="diff-line diff-context">ms.author: ombongifaith</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | --- | --- |</div><div class="diff-line diff-context">&gt; | microsoft.commerce.tenantRelationships/customerDelegatedAdminPrivileges/allProperties/allTasks | Manage all aspects of granular delegated admin privileges (GDAP) relationships in a customer tenant. |</div><div class="diff-line diff-context">&gt; | microsoft.office365.webPortal/allEntities/standard/read | Read basic properties on all resources in the Microsoft 365 admin center |</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/whats-new.md" target="_blank">docs/identity/role-based-access-control/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Apr 29, 2026 11:50 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Edits - Fetched new updates, picked up Agent Developer description changes - Excluded AI Administrator role to allow furtehr discussion with engineering team - Restored auditLogs permissions for Entra Backup roles - Removed AI Administrator role from what's new</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra RBAC documentation</div><div class="diff-line diff-context">description: Learn about the new features and documentation improvements in Microsoft Entra role-based access control (RBAC).</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-deleted">ms.date: 04/22/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Date | Area | Description |</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-deleted">| April 2026 | Roles | Updated permissions for the [AI Administrator](permissions-reference.md#ai-administrator) role to include capabilities to manage the lifecycle of agent users. |</div><div class="diff-line diff-context">| April 2026 | Roles | Added [AI Reader](permissions-reference.md#ai-reader) and [Customer Delegated Admin Relationship Administrator](permissions-reference.md#customer-delegated-admin-relationship-administrator) roles. |</div><div class="diff-line diff-context">| March 2026 | Roles | Added [Teams External Collaboration Administrator](permissions-reference.md#teams-external-collaboration-administrator) role. |</div><div class="diff-line diff-context">| March 2026 | Roles | Added [Entra Backup Administrator](permissions-reference.md#entra-backup-administrator) and [Entra Backup Reader](permissions-reference.md#entra-backup-reader) roles. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: What&#39;s new in Microsoft Entra RBAC documentation</div><div class="diff-line diff-context">description: Learn about the new features and documentation improvements in Microsoft Entra role-based access control (RBAC).</div><div class="diff-line diff-context">ms.topic: whats-new</div><div class="diff-line diff-added">ms.date: 04/29/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Date | Area | Description |</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-context">| April 2026 | Roles | Added [AI Reader](permissions-reference.md#ai-reader) and [Customer Delegated Admin Relationship Administrator](permissions-reference.md#customer-delegated-admin-relationship-administrator) roles. |</div><div class="diff-line diff-context">| March 2026 | Roles | Added [Teams External Collaboration Administrator](permissions-reference.md#teams-external-collaboration-administrator) role. |</div><div class="diff-line diff-context">| March 2026 | Roles | Added [Entra Backup Administrator](permissions-reference.md#entra-backup-administrator) and [Entra Backup Reader](permissions-reference.md#entra-backup-reader) roles. |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-explicit-forward-proxy.md" target="_blank">docs/global-secure-access/concept-explicit-forward-proxy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Apr 29, 2026 3:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-explicit-forward-proxy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yet another review update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Explicit Forward Proxy (preview) Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) is one of the traffic acquisition mechanisms that&#39;s useful in scenarios where installation of the Global Secure Access (GSA) client is difficult or not possible. EFP is an effective mechanism to protect internet traffic when users use browsers to access resources from:</div><div class="diff-line diff-context">* multi-session Virtual Desktop Infrastructure (VDI)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Explicit Forward Proxy (preview) overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) is one of the traffic acquisition mechanisms that&#39;s useful in scenarios where installation of the Global Secure Access (GSA) client is difficult or not possible. EFP is an effective mechanism to protect internet traffic when users use browsers to access resources from:</div><div class="diff-line diff-context">* multi-session Virtual Desktop Infrastructure (VDI)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-proxy-automatic-configuration-files.md" target="_blank">docs/global-secure-access/concept-proxy-automatic-configuration-files.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Apr 29, 2026 3:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/concept-proxy-automatic-configuration-files" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yet another review update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Introduction to Proxy Automatic Configuration (PAC) Files</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A PAC file is a mechanism used to automatically determine which proxy server a web browser or application should use for a given request. PAC files are an integral part of Explicit Forward Proxy configuration, enabling flexible and dynamic traffic steering decisions. In the context of Global Secure Access, PAC files are similar to the traffic forwarding policies of the GSA client.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.reviewer: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Introduction to Proxy Automatic Configuration (PAC) files</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A PAC file is a mechanism used to automatically determine which proxy server a web browser or application should use for a given request. PAC files are an integral part of Explicit Forward Proxy configuration, enabling flexible and dynamic traffic steering decisions. In the context of Global Secure Access, PAC files are similar to the traffic forwarding policies of the GSA client.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-conditional-access-policy-for-explicit-forward-proxy.md" target="_blank">docs/global-secure-access/how-to-configure-conditional-access-policy-for-explicit-forward-proxy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Apr 29, 2026 3:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-conditional-access-policy-for-explicit-forward-proxy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yet another review update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; The Explicit Forward Proxy feature is currently in PREVIEW.   </div><div class="diff-line diff-context">&gt; This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) for Microsoft Entra Internet Access relies on IP affinity, among other mechanisms, for session management. While not required, we recommend that you configure a Conditional Access policy that restricts the use of EFP on networks your organization trusts. Additionally, you use Conditional Access policies to assign the Microsoft Entra Internet Access security profiles to users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; The Explicit Forward Proxy feature is currently in PREVIEW.   </div><div class="diff-line diff-context">&gt; This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) for Microsoft Entra Internet Access relies on IP affinity, among other mechanisms, for session management. While not required, we recommend that you configure a Conditional Access policy that restricts the use of EFP on networks your organization trusts. Additionally, you use Conditional Access policies to assign the Microsoft Entra Internet Access security profiles to users. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-explicit-forward-proxy.md" target="_blank">docs/global-secure-access/how-to-configure-explicit-forward-proxy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Apr 29, 2026 3:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-explicit-forward-proxy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yet another review update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to Configure Explicit Forward Proxy (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) allows you to use Secure Web and AI Gateway capabilities of Microsoft Entra Internet Access without installing the Global Secure Access (GSA) client. EFP works with any browser that supports proxy automatic configuration (PAC).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to Configure Explicit Forward Proxy (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Explicit Forward Proxy (EFP) allows you to use Secure Web and AI Gateway capabilities of Microsoft Entra Internet Access without installing the Global Secure Access (GSA) client. EFP works with any browser that supports proxy automatic configuration (PAC).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
