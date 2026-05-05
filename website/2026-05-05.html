@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 3rd 2026, 10:22 PM PDT</p>
+        <p>Report generated on May 4th 2026, 10:22 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-tasks.md" target="_blank">docs/id-governance/lifecycle-workflow-tasks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on May 4, 2026 9:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-tasks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update lifecycle-workflow-tasks.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Update user attributes (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Lifecycle Workflows allow you to automate the updating of user attributes for users in your organization. You&#39;re able to customize the task name and description for this task in the Microsoft Entra admin center.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-task/update-user-attribute-task.png&quot; alt-text=&quot;Screenshot of the update user attribute task.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Update user attributes (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Lifecycle Workflows allow you to automate the updating of user attributes for users in your organization. You&#39;re able to customize the task name and description for this task in the Microsoft Entra admin center. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; This task does not currently support updating user attribute for synced users. For more information, see: [Update user attributes with Lifecycle Workflows (Preview)](how-to-lifecycle-workflow-update-user-attributes.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; source=&quot;media/lifecycle-workflow-task/update-user-attribute-task.png&quot; alt-text=&quot;Screenshot of the update user attribute task.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/recoverability-overview.md" target="_blank">docs/architecture/recoverability-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by bathawes on May 4, 2026 6:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/recoverability-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Incorporate Tenant Configuration Management APIs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Microsoft Graph APIs](/graph/overview) can be used to export the current state of many Microsoft Entra configurations.</div><div class="diff-line diff-context">- [Microsoft Entra Exporter](https://github.com/microsoft/entraexporter) is a tool you can use to export your configuration settings.</div><div class="diff-line diff-deleted">- [Microsoft 365 Desired State Configuration](https://github.com/microsoft/Microsoft365DSC/wiki/What-is-Microsoft365DSC) is a module of the PowerShell Desired State Configuration framework. You can use it to export configurations for reference and application of the prior state of many settings.</div><div class="diff-line diff-context">- [Conditional Access APIs](/graph/api/resources/conditionalaccesspolicy) can be used to manage your Conditional Access policies as code.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In the rare case that an API is not available for a certain configuration setting, screenshot(s) can be taken to enable manual recovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Settings in the legacy multifactor authentication portal for Application Proxy and federation settings might not be exported with the Microsoft Entra Exporter, or with the Microsoft Graph API.</div><div class="diff-line diff-deleted">The [Microsoft 365 Desired State Configuration](https://github.com/microsoft/Microsoft365DSC/wiki/What-is-Microsoft365DSC) module uses Microsoft Graph and PowerShell to retrieve the state of many of the configurations in Microsoft Entra ID. This information can be used as reference information or, by using PowerShell Desired State Configuration scripting, to reapply a known good state.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use [Conditional Access Graph APIs](/graph/api/resources/conditionalaccesspolicy) to manage policies like code.</div><div class="diff-line diff-context"> </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Microsoft Graph APIs](/graph/overview) can be used to export the current state of many Microsoft Entra configurations.</div><div class="diff-line diff-context">- [Microsoft Entra Exporter](https://github.com/microsoft/entraexporter) is a tool you can use to export your configuration settings.</div><div class="diff-line diff-added">- [Tenant Configuration Management APIs in Microsoft Graph](/graph/unified-tenant-configuration-management-concept-overview) let you define configuration baselines, monitor tenants for drift, and generate snapshots of current settings. You can download snapshots as JSON files for reference or to restore many settings to a previous state.</div><div class="diff-line diff-context">- [Conditional Access APIs](/graph/api/resources/conditionalaccesspolicy) can be used to manage your Conditional Access policies as code.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In the rare case that an API is not available for a certain configuration setting, screenshot(s) can be taken to enable manual recovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Settings in the legacy multifactor authentication portal for Application Proxy and federation settings might not be exported with the Microsoft Entra Exporter, or with the Microsoft Graph API.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use [Conditional Access Graph APIs](/graph/api/resources/conditionalaccesspolicy) to manage policies like code.</div><div class="diff-line diff-context"> </div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/managed-identities-status.md" target="_blank">docs/identity/managed-identities-azure-resources/managed-identities-status.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Downie on May 4, 2026 3:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identities-status" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove preview status from Azure Files MI</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Azure Event Grid                | [Event delivery with a managed identity](/azure/event-grid/managed-service-identity)|</div><div class="diff-line diff-context">| Azure Event Hubs                | [Authenticate a managed identity with Microsoft Entra ID to access Event Hubs Resources](/azure/event-hubs/authenticate-managed-identity)|</div><div class="diff-line diff-context">| Azure File Sync                 | [How to use managed identities with Azure File Sync](/azure/storage/file-sync/file-sync-managed-identities)|</div><div class="diff-line diff-deleted">| Azure Files                     | [Access SMB Azure file shares using managed identities with Microsoft Entra ID (preview)](/azure/storage/files/files-managed-identities)|</div><div class="diff-line diff-context">| Azure Health Data Services workspace services | [Authentication and authorization for Azure Health Data Services](/azure/healthcare-apis/authentication-authorization)|</div><div class="diff-line diff-context">| Azure Health Data Services de-identification service | [Use managed identities with the de-identification service](/azure/healthcare-apis/deidentification/managed-identities)|</div><div class="diff-line diff-context">| Azure Image Builder             | [Azure Image Builder overview](/azure/virtual-machines/image-builder-overview#permissions)                                                                                                    |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Azure Event Grid                | [Event delivery with a managed identity](/azure/event-grid/managed-service-identity)|</div><div class="diff-line diff-context">| Azure Event Hubs                | [Authenticate a managed identity with Microsoft Entra ID to access Event Hubs Resources](/azure/event-hubs/authenticate-managed-identity)|</div><div class="diff-line diff-context">| Azure File Sync                 | [How to use managed identities with Azure File Sync](/azure/storage/file-sync/file-sync-managed-identities)|</div><div class="diff-line diff-added">| Azure Files                     | [Access SMB Azure file shares using managed identities with Microsoft Entra ID](/azure/storage/files/files-managed-identities)|</div><div class="diff-line diff-context">| Azure Health Data Services workspace services | [Authentication and authorization for Azure Health Data Services](/azure/healthcare-apis/authentication-authorization)|</div><div class="diff-line diff-context">| Azure Health Data Services de-identification service | [Use managed identities with the de-identification service](/azure/healthcare-apis/deidentification/managed-identities)|</div><div class="diff-line diff-context">| Azure Image Builder             | [Azure Image Builder overview](/azure/virtual-machines/image-builder-overview#permissions)                                                                                                    |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/users-default-permissions.md" target="_blank">docs/fundamentals/users-default-permissions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Erin Greenlee on May 4, 2026 6:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/users-default-permissions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add permissions for agents in user permissions document</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Users and contacts | &lt;ul&gt;&lt;li&gt;Enumerate the list of all users and contacts&lt;li&gt;Read all public properties of users and contacts&lt;/li&gt;&lt;li&gt;Invite guests&lt;li&gt;Change their own password&lt;li&gt;Manage their own mobile phone number&lt;li&gt;Manage their own photo&lt;li&gt;Invalidate their own refresh tokens&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read their own properties&lt;li&gt;Read display name, email, sign-in name, photo, user principal name, and user type properties of other users and contacts&lt;li&gt;Change their own password&lt;li&gt;Search for another user by object ID (if allowed)&lt;li&gt;Read manager and direct report information of other users&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read their own properties&lt;li&gt;Change their own password&lt;/li&gt;&lt;li&gt;Manage their own mobile phone number&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Groups | &lt;ul&gt;&lt;li&gt;Create security groups&lt;li&gt;Create Microsoft 365 groups&lt;li&gt;Enumerate the list of all groups&lt;li&gt;Read all properties of groups&lt;li&gt;Read nonhidden group membership&lt;li&gt;Read hidden Microsoft 365 group membership for joined groups&lt;li&gt;Manage properties, ownership, and membership of groups that the user owns&lt;li&gt;Add guests to owned groups&lt;li&gt;Manage group membership settings&lt;li&gt;Delete owned groups&lt;li&gt;Restore owned Microsoft 365 groups&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of nonhidden groups, including membership and ownership (even nonjoined groups)&lt;li&gt;Read hidden Microsoft 365 group membership for joined groups&lt;li&gt;Search for groups by display name or object ID (if allowed)&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read object ID for joined groups&lt;li&gt;Read membership and ownership of joined groups in some Microsoft 365 apps (if allowed)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Applications | &lt;ul&gt;&lt;li&gt;Register (create) new applications&lt;li&gt;Enumerate the list of all applications&lt;li&gt;Read properties of registered and enterprise applications&lt;li&gt;Manage application properties, assignments, and credentials for owned applications&lt;li&gt;Create or delete application passwords for users&lt;li&gt;Delete owned applications&lt;li&gt;Restore owned applications&lt;li&gt;List permissions granted to applications&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of registered and enterprise applications&lt;li&gt;List permissions granted to applications&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of registered and enterprise applications&lt;/li&gt;&lt;li&gt;List permissions granted to applications&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Devices&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Enumerate the list of all devices&lt;li&gt;Read all properties of devices&lt;li&gt;Manage all properties of owned devices&lt;/li&gt;&lt;/ul&gt; | No permissions | No permissions |</div><div class="diff-line diff-context">| Organization | &lt;ul&gt;&lt;li&gt;Read all company information&lt;li&gt;Read all domains&lt;li&gt;Read configuration of certificate-based authentication&lt;li&gt;Read all partner contracts&lt;/li&gt;&lt;li&gt;Read multitenant organization basic details and active tenants&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read company display name&lt;li&gt;Read all domains&lt;li&gt;Read configuration of certificate-based authentication&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read company display name&lt;li&gt;Read all domains&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Roles and scopes | &lt;ul&gt;&lt;li&gt;Read all administrative roles and memberships&lt;li&gt;Read all properties and membership of administrative units&lt;/li&gt;&lt;/ul&gt; | No permissions | No permissions |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Users and contacts | &lt;ul&gt;&lt;li&gt;Enumerate the list of all users and contacts&lt;li&gt;Read all public properties of users and contacts&lt;/li&gt;&lt;li&gt;Invite guests&lt;li&gt;Change their own password&lt;li&gt;Manage their own mobile phone number&lt;li&gt;Manage their own photo&lt;li&gt;Invalidate their own refresh tokens&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read their own properties&lt;li&gt;Read display name, email, sign-in name, photo, user principal name, and user type properties of other users and contacts&lt;li&gt;Change their own password&lt;li&gt;Search for another user by object ID (if allowed)&lt;li&gt;Read manager and direct report information of other users&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read their own properties&lt;li&gt;Change their own password&lt;/li&gt;&lt;li&gt;Manage their own mobile phone number&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Groups | &lt;ul&gt;&lt;li&gt;Create security groups&lt;li&gt;Create Microsoft 365 groups&lt;li&gt;Enumerate the list of all groups&lt;li&gt;Read all properties of groups&lt;li&gt;Read nonhidden group membership&lt;li&gt;Read hidden Microsoft 365 group membership for joined groups&lt;li&gt;Manage properties, ownership, and membership of groups that the user owns&lt;li&gt;Add guests to owned groups&lt;li&gt;Manage group membership settings&lt;li&gt;Delete owned groups&lt;li&gt;Restore owned Microsoft 365 groups&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of nonhidden groups, including membership and ownership (even nonjoined groups)&lt;li&gt;Read hidden Microsoft 365 group membership for joined groups&lt;li&gt;Search for groups by display name or object ID (if allowed)&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read object ID for joined groups&lt;li&gt;Read membership and ownership of joined groups in some Microsoft 365 apps (if allowed)&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Applications | &lt;ul&gt;&lt;li&gt;Register (create) new applications&lt;li&gt;Enumerate the list of all applications&lt;li&gt;Read properties of registered and enterprise applications&lt;li&gt;Manage application properties, assignments, and credentials for owned applications&lt;li&gt;Create or delete application passwords for users&lt;li&gt;Delete owned applications&lt;li&gt;Restore owned applications&lt;li&gt;List permissions granted to applications&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of registered and enterprise applications&lt;li&gt;List permissions granted to applications&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read properties of registered and enterprise applications&lt;/li&gt;&lt;li&gt;List permissions granted to applications&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-added">| Agents | &lt;ul&gt;&lt;li&gt;Enumerate the list of all blueprints, blueprint principals, and agent identities&lt;li&gt;Read properties of blueprints, blueprint principals, and agent identities&lt;li&gt;Manage properties, assignments, and credentials for owned blueprints, blueprint principals, and agent identities&lt;li&gt;Delete owned blueprints, blueprint principals, and agent identities &lt;li&gt;Delete and update sponsors of blueprints, blueprint principals, and agent identities when listed as a sponsor &lt;li&gt;List permissions granted to blueprint principals and agent identities &lt;li&gt;Create blueprint principals and agent identities when owner of the blueprint &lt;li&gt;Create agent identities when owner of the blueprint principal &lt;/ul&gt; | None | None |</div><div class="diff-line diff-context">| Devices&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Enumerate the list of all devices&lt;li&gt;Read all properties of devices&lt;li&gt;Manage all properties of owned devices&lt;/li&gt;&lt;/ul&gt; | No permissions | No permissions |</div><div class="diff-line diff-context">| Organization | &lt;ul&gt;&lt;li&gt;Read all company information&lt;li&gt;Read all domains&lt;li&gt;Read configuration of certificate-based authentication&lt;li&gt;Read all partner contracts&lt;/li&gt;&lt;li&gt;Read multitenant organization basic details and active tenants&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read company display name&lt;li&gt;Read all domains&lt;li&gt;Read configuration of certificate-based authentication&lt;/li&gt;&lt;/ul&gt; | &lt;ul&gt;&lt;li&gt;Read company display name&lt;li&gt;Read all domains&lt;/li&gt;&lt;/ul&gt; |</div><div class="diff-line diff-context">| Roles and scopes | &lt;ul&gt;&lt;li&gt;Read all administrative roles and memberships&lt;li&gt;Read all properties and membership of administrative units&lt;/li&gt;&lt;/ul&gt; | No permissions | No permissions |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
