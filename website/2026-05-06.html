@@ -1,0 +1,762 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 4th 2026, 10:36 PM PDT</p>
+        <p>Report generated on May 5th 2026, 10:36 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">28</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">52</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/managed-identities-azure-resources/how-to-assign-managed-identity-via-azure-policy.md" target="_blank">docs/identity/managed-identities-azure-resources/how-to-assign-managed-identity-via-azure-policy.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 5:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-assign-managed-identity-via-azure-policy" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+25</span> / 
+              <span class="deletions">-23</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Address Acrolinx findings in how-to-assign-managed-identity-via-azure-policy</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Use Azure Policy to assign managed identities (preview)</div><div class="diff-line diff-context">description: Documentation for the Azure Policy that can be used to assign managed identities to Azure resources.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/23/2022</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Azure Monitoring Agents require a [managed identity](overview.md) on the monitored Azure Virtual Machines (VMs). This document describes the behavior of a built-in Azure Policy provided by Microsoft that helps ensure a managed identity, needed for these scenarios, is assigned to VMs at scale.</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">While using system-assigned managed identity is possible, when used at scale (for example, for all VMs in a subscription) it results in substantial number of identities created (and deleted) in Microsoft Entra ID. To avoid this churn of identities, it is recommended to use user-assigned managed identities, which can be created once and shared across multiple VMs.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Policy definition and details</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">When executed, the policy takes the following actions:</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">1. Create, if not exist, a new built-in user-assigned managed identity in the subscription and each Azure region based on the VMs that are in scope of the policy.</div><div class="diff-line diff-deleted">2. Once created, put a lock on the user-assigned managed identity so that it will not be accidentally deleted.</div><div class="diff-line diff-deleted">3. Assign the built-in user-assigned managed identity to Virtual Machines from the subscription and region based on the VMs that are in scope of the policy.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Use Azure Policy to assign managed identities (preview)</div><div class="diff-line diff-context">description: Documentation for the Azure Policy that can be used to assign managed identities to Azure resources.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">Azure Monitoring Agents require a [managed identity](overview.md) on the monitored Azure Virtual Machines (VMs). This document describes the behavior of a built-in Azure Policy provided by Microsoft that helps ensure a managed identity, needed for these scenarios, is assigned to VMs at scale.</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">While using a system-assigned managed identity is possible, when used at scale (for example, for all VMs in a subscription) it results in a substantial number of identities created (and deleted) in Microsoft Entra ID. To avoid this churn of identities, use user-assigned managed identities. They can be created once and shared across multiple VMs.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## Policy definition and details</div><div class="diff-line diff-context"></div><div class="diff-line diff-context"></div><div class="diff-line diff-context">When executed, the policy takes the following actions:</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">1. Create a new built-in user-assigned managed identity (if one doesn&#39;t exist) in the subscription. The identity is created in each Azure region based on the VMs that are in scope of the policy.</div><div class="diff-line diff-added">1. Lock the user-assigned managed identity to prevent accidental deletion.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/create-new-tenant.md" target="_blank">docs/fundamentals/create-new-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kenwith on May 5, 2026 6:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/create-new-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+26</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Inline create-new-tenant include and remove duplicate</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Quickstart - Access and create new tenant</div><div class="diff-line diff-context">description: Instructions about how to find Microsoft Entra ID and how to create a new tenant for your organization.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to create a new Microsoft Entra tenant so that I can set up a directory for my organization or development environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># [Workforce / B2C](#tab/workforce)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [Create](../includes/definitions/create-new-tenant.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># [Secure add-on tenant creation (preview)](#tab/governed-workforce)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Quickstart - Access and create new tenant</div><div class="diff-line diff-context">description: Instructions about how to find Microsoft Entra ID and how to create a new tenant for your organization.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-context">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to create a new Microsoft Entra tenant so that I can set up a directory for my organization or development environment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># [Workforce / B2C](#tab/workforce)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Azure portal](https://portal.azure.com).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. From the Azure portal menu, select **Microsoft Entra ID**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Navigate to **Entra ID** &gt; **Overview** &gt; **Manage tenants**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Select **Create**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">   :::image type=&quot;content&quot; source=&quot;media/create-new-tenant/portal.png&quot; alt-text=&quot;Screenshot of Microsoft Entra ID - Overview page - Create a tenant.&quot;:::</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-move-microsoft-365-admin-center.md" target="_blank">docs/includes/licensing-move-microsoft-365-admin-center.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kenwith on May 5, 2026 7:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-move-microsoft-365-admin-center" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar, malformed HTML, typos in 4 licensing-* includes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-deleted">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">    Invoke-MgGraphRequest -Uri &quot;https://graph.microsoft.com/v1.0/users/$userid/reprocessLicense </div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### What if I don’t have a Microsoft 365 Admin account or license and I manage licenses from the Azure portal?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For non-Microsoft 365 users, transitioning to managing licenses through a Microsoft 365 Admin Center account is essential.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID roles: Global Administrator, User Administrator, and License Administrator have access to the Microsoft 365 Admin Center to manage licenses using their existing Microsoft Entra ID account. You don&#39;t have to be a Microsoft 365 customer to use the Microsoft 365 admin center. You don&#39;t have to be a Microsoft 365 customer to use the Microsoft 365 admin center, and can manage licenses there regardless. You don&#39;t have to be a Microsoft 365 customer to use the Microsoft 365 admin center, and can manage licenses there regardless. All Microsoft Entra customers have access to the Microsoft 365 Admin Center for domain and license management.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I view license consumption and utilization now?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Known Issues:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">    Invoke-MgGraphRequest -Uri &quot;https://graph.microsoft.com/v1.0/users/$userid/reprocessLicense </div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### What if I don&#39;t have a Microsoft 365 Admin account or license and I manage licenses from the Azure portal?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For non-Microsoft 365 users, transitioning to managing licenses through a Microsoft 365 Admin Center account is essential.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID roles: Global Administrator, User Administrator, and License Administrator have access to the Microsoft 365 Admin Center to manage licenses using their existing Microsoft Entra ID account. You don&#39;t have to be a Microsoft 365 customer to use the Microsoft 365 admin center, and can manage licenses there regardless. All Microsoft Entra customers have access to the Microsoft 365 Admin Center for domain and license management.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### How can I view license consumption and utilization now?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Known Issues:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-change.md" target="_blank">docs/includes/licensing-change.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kenwith on May 5, 2026 7:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-change" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar, malformed HTML, typos in 4 licensing-* includes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-deleted">ms.date: 03/12/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Starting September 1, 2024, the Microsoft Entra ID Admin Center and the Microsoft Azure portal no longer supports license assignment through their user interfaces. To manage license assignments for users and groups, administrators must use the Microsoft 365 Admin Center. This update is designed to streamline the license management process within the Microsoft ecosystem. This change is limited to the user interface. API and PowerShell access remain unaffected. For detailed guidance on assigning licenses using the Microsoft 365 Admin Center, refer to the following resources:</div><div class="diff-line diff-context">&gt; - [Assign or Unassign Licenses for Users in the Microsoft 365 Admin Center](/microsoft-365/admin/manage/assign-licenses-to-users?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&gt; - [Add Users and Assign Licenses in Microsoft 365](/microsoft-365/admin/add-users/add-users?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&gt; - [Assign Licenses to a Group Using the Microsoft 365 Admin Center](~/identity/users/licensing-admin-center.md)</div><div class="diff-line diff-deleted"> &lt;/br&gt;We encourage all administrators to familiarize themselves with the new procedures to ensure a smooth transition. For any further assistance or inquiries, contact our [support team](https://support.microsoft.com/contactus).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Starting September 1, 2024, the Microsoft Entra ID Admin Center and the Microsoft Azure portal no longer support license assignment through their user interfaces. To manage license assignments for users and groups, administrators must use the Microsoft 365 Admin Center. This update is designed to streamline the license management process within the Microsoft ecosystem. This change is limited to the user interface. API and PowerShell access remain unaffected. For detailed guidance on assigning licenses using the Microsoft 365 Admin Center, refer to the following resources:</div><div class="diff-line diff-context">&gt; - [Assign or Unassign Licenses for Users in the Microsoft 365 Admin Center](/microsoft-365/admin/manage/assign-licenses-to-users?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&gt; - [Add Users and Assign Licenses in Microsoft 365](/microsoft-365/admin/add-users/add-users?view=o365-worldwide&amp;preserve-view=true)</div><div class="diff-line diff-context">&gt; - [Assign Licenses to a Group Using the Microsoft 365 Admin Center](~/identity/users/licensing-admin-center.md)</div><div class="diff-line diff-added"> &lt;br&gt;We encourage all administrators to familiarize themselves with the new procedures to ensure a smooth transition. For any further assistance or inquiries, contact our [support team](https://support.microsoft.com/contactus).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-pim.md" target="_blank">docs/includes/licensing-pim.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kenwith on May 5, 2026 7:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-pim" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar, malformed HTML, typos in 4 licensing-* includes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-deleted">ms.date: 08/12/2025</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-context">| Woodgrove Bank has 10 administrators for different departments and 2 [Privileged Role Administrators](/entra/identity/role-based-access-control/permissions-reference#privileged-role-administrator) that configure and manage PIM. They make five administrators eligible. | Five licenses for the administrators who are eligible | 5 |</div><div class="diff-line diff-context">| Graphic Design Institute has 25 administrators of which 14 are managed through PIM. Role activation requires approval and there are three different users in the organization who can approve activations. | 14 licenses for the eligible roles + three approvers | 17 |</div><div class="diff-line diff-deleted">| Contoso has 50 administrators of which 42 are managed through PIM. Role activation requires approval and there are five different users in the organization who can approve activations. Contoso also does monthly reviews of users assigned to administrator roles and reviewers are the users’ managers of which six aren&#39;t in administrator roles managed by PIM. | 42 licenses for the eligible roles + five approvers + six reviewers | 53 |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### When a license expires for PIM</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Permanent role assignments to Microsoft Entra roles are unaffected.</div><div class="diff-line diff-context">- The Privileged Identity Management service in the Microsoft Entra admin center, and the Graph API cmdlets and PowerShell interfaces of Privileged Identity Management, will no longer be available for users to activate privileged roles, manage privileged access, or perform access reviews of privileged roles.</div><div class="diff-line diff-deleted">- Eligible role assignments of Microsoft Entra roles are removed, as users no longer be able to activate privileged roles.</div><div class="diff-line diff-context">- Any ongoing access reviews of Microsoft Entra roles ends, and Privileged Identity Management configuration settings are removed.</div><div class="diff-line diff-context">- Privileged Identity Management no longer sends emails on role assignment changes.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">| --- | --- | --- |</div><div class="diff-line diff-context">| Woodgrove Bank has 10 administrators for different departments and 2 [Privileged Role Administrators](/entra/identity/role-based-access-control/permissions-reference#privileged-role-administrator) that configure and manage PIM. They make five administrators eligible. | Five licenses for the administrators who are eligible | 5 |</div><div class="diff-line diff-context">| Graphic Design Institute has 25 administrators of which 14 are managed through PIM. Role activation requires approval and there are three different users in the organization who can approve activations. | 14 licenses for the eligible roles + three approvers | 17 |</div><div class="diff-line diff-added">| Contoso has 50 administrators of which 42 are managed through PIM. Role activation requires approval and there are five different users in the organization who can approve activations. Contoso also does monthly reviews of users assigned to administrator roles and reviewers are the users&#39; managers of which six aren&#39;t in administrator roles managed by PIM. | 42 licenses for the eligible roles + five approvers + six reviewers | 53 |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### When a license expires for PIM</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Permanent role assignments to Microsoft Entra roles are unaffected.</div><div class="diff-line diff-context">- The Privileged Identity Management service in the Microsoft Entra admin center, and the Graph API cmdlets and PowerShell interfaces of Privileged Identity Management, will no longer be available for users to activate privileged roles, manage privileged access, or perform access reviews of privileged roles.</div><div class="diff-line diff-added">- Eligible role assignments of Microsoft Entra roles are removed, as users will no longer be able to activate privileged roles.</div><div class="diff-line diff-context">- Any ongoing access reviews of Microsoft Entra roles ends, and Privileged Identity Management configuration settings are removed.</div><div class="diff-line diff-context">- Privileged Identity Management no longer sends emails on role assignment changes.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-managed-identities.md" target="_blank">docs/includes/licensing-managed-identities.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kenwith on May 5, 2026 7:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-managed-identities" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix grammar, malformed HTML, typos in 4 licensing-* includes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-deleted">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">There are no licensing requirements for using Managed identities for Azure resources. Managed identities for Azure resources provide an automatically managed identity for applications to use when connecting to resources that support Microsoft Entra authentication. One of the benefits of using managed identities is that you don’t need to manage credentials, and they can be used at no extra cost. For more information, see [What is managed identities for Azure resources?](../identity/managed-identities-azure-resources/overview.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">author: kenwith</div><div class="diff-line diff-context">ms.author: kenwith</div><div class="diff-line diff-added">ms.date: 05/05/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">There are no licensing requirements for using Managed identities for Azure resources. Managed identities for Azure resources provide an automatically managed identity for applications to use when connecting to resources that support Microsoft Entra authentication. One of the benefits of using managed identities is that you don&#39;t need to manage credentials, and they can be used at no extra cost. For more information, see [What is managed identities for Azure resources?](../identity/managed-identities-azure-resources/overview.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-msi-tut-prereqs.md" target="_blank">docs/includes/entra-msi-tut-prereqs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-msi-tut-prereqs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: include file</div><div class="diff-line diff-context">description: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: Barclayn</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 01/09/2025</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: include file</div><div class="diff-line diff-context">description: include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 01/09/2025</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/entra-service-limits-include.md" target="_blank">docs/includes/entra-service-limits-include.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/entra-service-limits-include" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Include file</div><div class="diff-line diff-context">description: Include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 03/26/2026</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Here are the usage constraints and other service limits for the Microsoft Entra service.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Include file</div><div class="diff-line diff-context">description: Include file</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-context">ms.date: 03/26/2026</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Here are the usage constraints and other service limits for the Microsoft Entra service.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-app-provisioning.md" target="_blank">docs/includes/licensing-app-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-app-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-multi-tenant-organizations.md" target="_blank">docs/includes/licensing-multi-tenant-organizations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-multi-tenant-organizations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-role-based-access-control.md" target="_blank">docs/includes/licensing-role-based-access-control.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-role-based-access-control" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-roles.md" target="_blank">docs/includes/licensing-roles.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-roles" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.date: 01/31/2025</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-verified-id.md" target="_blank">docs/includes/licensing-verified-id.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-verified-id" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-context">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-context">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/managed-identity-ua-character-limits.md" target="_blank">docs/includes/managed-identity-ua-character-limits.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/managed-identity-ua-character-limits" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"> title: include file</div><div class="diff-line diff-context"> description: include file</div><div class="diff-line diff-context"> </div><div class="diff-line diff-deleted"> author: barclayn</div><div class="diff-line diff-context"> ms.service: msi</div><div class="diff-line diff-context"> ms.topic: include</div><div class="diff-line diff-context"> ms.date: 03/11/2024</div><div class="diff-line diff-deleted"> ms.author: barclayn</div><div class="diff-line diff-context"> ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"> title: include file</div><div class="diff-line diff-context"> description: include file</div><div class="diff-line diff-context"> </div><div class="diff-line diff-added"> author: kenwith</div><div class="diff-line diff-context"> ms.service: msi</div><div class="diff-line diff-context"> ms.topic: include</div><div class="diff-line diff-context"> ms.date: 03/11/2024</div><div class="diff-line diff-added"> ms.author: kenwith</div><div class="diff-line diff-context"> ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/secure-recommendations/21770.md" target="_blank">docs/includes/secure-recommendations/21770.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on May 5, 2026 4:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21770" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Reassign barclayn to kenwith in docs/includes metadata</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Inactive applications don’t have highly privileged Microsoft Graph API permissions </div><div class="diff-line diff-deleted">ms.author: barclayn</div><div class="diff-line diff-deleted">author: barclayn</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Inactive applications don’t have highly privileged Microsoft Graph API permissions </div><div class="diff-line diff-added">ms.author: kenwith</div><div class="diff-line diff-added">author: kenwith</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.topic: include</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/create-new-tenant.md
+            </div>
+            <div class="file-meta">
+              Deleted by kenwith on May 5, 2026 6:38 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/create-new-tenant</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-42 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Inline create-new-tenant include and remove duplicate</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/definitions/create-new-tenant.md
+            </div>
+            <div class="file-meta">
+              Deleted by kenwith on May 5, 2026 6:38 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/definitions/create-new-tenant</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-33 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Inline create-new-tenant include and remove duplicate</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/secure-recommendations/21782.md
+            </div>
+            <div class="file-meta">
+              Deleted by Ken Withee on May 5, 2026 6:14 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/secure-recommendations/21782</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-25 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Delete 3 orphan include files (zero consumers)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/entra-msi-tut-prereqs.md
+            </div>
+            <div class="file-meta">
+              Deleted by Ken Withee on May 5, 2026 6:14 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/entra-msi-tut-prereqs</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-13 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Delete 3 orphan include files (zero consumers)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/includes/licensing-application-proxy.md
+            </div>
+            <div class="file-meta">
+              Deleted by Ken Withee on May 5, 2026 6:14 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/includes/licensing-application-proxy</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-10 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Delete 3 orphan include files (zero consumers)</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
