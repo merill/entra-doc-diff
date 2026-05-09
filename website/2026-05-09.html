@@ -1,0 +1,686 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 7th 2026, 10:28 PM PDT</p>
+        <p>Report generated on May 8th 2026, 10:28 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">17</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">49</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-create-delete-users.md" target="_blank">docs/fundamentals/how-to-create-delete-users.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/how-to-create-delete-users" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+237 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/reference-user-permissions.md" target="_blank">docs/external-id/customers/reference-user-permissions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/reference-user-permissions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To better understand the typical use cases for users in an external tenant, we can categorize them as follows:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **External users** are consumers and business customers who use the apps registered in your external tenant. They typically retain default user permissions, meaning you don&#39;t assign them administrative roles. These users are usually created through self-service sign-up, but you can create them with the [Create new external user](~/fundamentals/how-to-create-delete-users.yml#create-a-new-external-user) option in the Microsoft Entra admin center or with Microsoft Graph. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Internal users** are usually admins to whom you assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md). You can create internal users and assign roles using the [Create new user](~/fundamentals/how-to-create-delete-users.yml#create-a-new-user) option in the admin center or with Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Invited users** are usually admins you invite to the external tenant and to whom you assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md). If they&#39;re not assigned a role, they have default user permissions. You can invite users and assign roles using the [Invite external user](~/fundamentals/how-to-create-delete-users.yml#invite-an-external-user) option in the admin center or with Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When users are created in an external tenant, they all start with default permissions. However, you can assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md) to those users who need to perform administrative tasks within the external tenant.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To better understand the typical use cases for users in an external tenant, we can categorize them as follows:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **External users** are consumers and business customers who use the apps registered in your external tenant. They typically retain default user permissions, meaning you don&#39;t assign them administrative roles. These users are usually created through self-service sign-up, but you can create them with the [Create new external user](~/fundamentals/how-to-create-delete-users.md#create-a-new-external-user) option in the Microsoft Entra admin center or with Microsoft Graph. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Internal users** are usually admins to whom you assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md). You can create internal users and assign roles using the [Create new user](~/fundamentals/how-to-create-delete-users.md#create-a-new-user) option in the admin center or with Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Invited users** are usually admins you invite to the external tenant and to whom you assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md). If they&#39;re not assigned a role, they have default user permissions. You can invite users and assign roles using the [Invite external user](~/fundamentals/how-to-create-delete-users.md#invite-an-external-user) option in the admin center or with Microsoft Graph.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When users are created in an external tenant, they all start with default permissions. However, you can assign [Microsoft Entra roles](~/identity/role-based-access-control/permissions-reference.md) to those users who need to perform administrative tasks within the external tenant.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-entra-id-federation-customers.md" target="_blank">docs/external-id/customers/how-to-entra-id-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Vimala Ranganathan on May 8, 2026 7:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-entra-id-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove 'Invite an external user through the admin center' section</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An external user can self-register in the External ID tenant by using the sign-up and sign-in user flow. When the user selects the federated Microsoft Entra ID identity provider on the sign-in page and authenticates with their organizational account, a user account is automatically created in the external tenant. For more information, see [Create a sign-up and sign-in user flow for customers](how-to-user-flow-sign-up-sign-in-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Invite an external user through the admin center</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">An admin can invite an external user from the Microsoft Entra admin center. The invited user receives an email invitation and can redeem it by selecting the invitation link, which creates the user account in the External ID tenant. For more information, see [Invite users to your external tenant](/entra/external-id/customers/how-to-manage-customer-accounts#invite-a-customer).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">### Create the user with Microsoft Graph API</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An admin can use the [Microsoft Graph API](/graph/api/user-post-users?tabs=http#example-3-create-a-customer-account-in-external-tenants) to create a user directly in the External ID tenant. This approach is useful for automated provisioning or migration scenarios.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An external user can self-register in the External ID tenant by using the sign-up and sign-in user flow. When the user selects the federated Microsoft Entra ID identity provider on the sign-in page and authenticates with their organizational account, a user account is automatically created in the external tenant. For more information, see [Create a sign-up and sign-in user flow for customers](how-to-user-flow-sign-up-sign-in-customers.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Create the user with Microsoft Graph API</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">An admin can use the [Microsoft Graph API](/graph/api/user-post-users?tabs=http#example-3-create-a-customer-account-in-external-tenants) to create a user directly in the External ID tenant. This approach is useful for automated provisioning or migration scenarios.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/workload-id/workload-identities-overview.md" target="_blank">docs/workload-id/workload-identities-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on May 8, 2026 4:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Incorporate feedback to remove blueprints from workload identities overview</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Workload identities</div><div class="diff-line diff-context">description: Understand the concepts and supported scenarios for using workload identity in Microsoft Entra.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 03/13/2025</div><div class="diff-line diff-context">ms.reviewer: arluca, ilanas, hosamsh</div><div class="diff-line diff-context">ms.custom: aaddev</div><div class="diff-line diff-context">#Customer intent: As a developer, I want workload identities so I can authenticate with Microsoft Entra ID and access Microsoft Entra protected resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">AI agents — autonomous software systems that reason, make decisions, and take actions on behalf of users or organizations — represent a distinct category of machine identity with unique security requirements. Unlike traditional workloads that execute predetermined logic, AI agents make dynamic decisions and adapt behavior, which requires purpose-built identity constructs with stronger governance controls.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">[Microsoft Entra Agent ID](~/agent-id/what-is-microsoft-entra-agent-id.md) provides these constructs through agent identities and agent identity blueprints. Agent identities offer enforced human sponsorship, lifecycle governance from provisioning through deactivation, and at-scale management through blueprints that apply centralized security policies across all agent instances of a given type. For more information, see [Microsoft Entra security for AI overview](~/agent-id/security-for-ai-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Workload identities</div><div class="diff-line diff-context">description: Understand the concepts and supported scenarios for using workload identity in Microsoft Entra.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 05/08/2026</div><div class="diff-line diff-context">ms.reviewer: arluca, ilanas, hosamsh</div><div class="diff-line diff-context">ms.custom: aaddev</div><div class="diff-line diff-context">#Customer intent: As a developer, I want workload identities so I can authenticate with Microsoft Entra ID and access Microsoft Entra protected resources.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">AI agents — autonomous software systems that reason, make decisions, and take actions on behalf of users or organizations — represent a distinct category of machine identity with unique security requirements. Unlike traditional workloads that execute predetermined logic, AI agents make dynamic decisions and adapt behavior, which requires purpose-built identity constructs with stronger governance controls.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[Microsoft Entra Agent ID](~/agent-id/what-is-microsoft-entra-agent-id.md) provides these constructs through agent identities. Agent identities offer enforced human sponsorship, lifecycle governance from provisioning through deactivation, and at-scale management that apply centralized security policies across all agent instances of a given type. For more information, see [Microsoft Entra security for AI overview](~/agent-id/security-for-ai-overview.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/entra-admin-center.md" target="_blank">docs/fundamentals/entra-admin-center.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/entra-admin-center" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Task | Description | Learn more |</div><div class="diff-line diff-context">|------|-------------|------------|</div><div class="diff-line diff-deleted">| Create or delete users | Add new members or guests to your organization, or remove existing users. | [Create or delete users](./how-to-create-delete-users.yml) |</div><div class="diff-line diff-context">| Manage groups | Create and manage groups to organize users for access management and licensing. | [Manage groups and group membership](./how-to-manage-groups.yml) |</div><div class="diff-line diff-context">| Assign roles | Delegate administrative responsibilities using built-in or custom roles. | [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md) |</div><div class="diff-line diff-context">| Manage applications | Register and configure applications for single sign-on and API access. | [What is application management?](~/identity/enterprise-apps/what-is-application-management.md) |</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [What is Microsoft Entra?](./what-is-entra.md)</div><div class="diff-line diff-deleted">* [Create or delete users](./how-to-create-delete-users.yml)</div><div class="diff-line diff-context">* [Manage groups and group membership](./how-to-manage-groups.yml)</div><div class="diff-line diff-context">* [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md)</div><div class="diff-line diff-context">* [What is Conditional Access?](~/identity/conditional-access/overview.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Task | Description | Learn more |</div><div class="diff-line diff-context">|------|-------------|------------|</div><div class="diff-line diff-added">| Create or delete users | Add new members or guests to your organization, or remove existing users. | [Create or delete users](./how-to-create-delete-users.md) |</div><div class="diff-line diff-context">| Manage groups | Create and manage groups to organize users for access management and licensing. | [Manage groups and group membership](./how-to-manage-groups.yml) |</div><div class="diff-line diff-context">| Assign roles | Delegate administrative responsibilities using built-in or custom roles. | [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md) |</div><div class="diff-line diff-context">| Manage applications | Register and configure applications for single sign-on and API access. | [What is application management?](~/identity/enterprise-apps/what-is-application-management.md) |</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [What is Microsoft Entra?](./what-is-entra.md)</div><div class="diff-line diff-added">* [Create or delete users](./how-to-create-delete-users.md)</div><div class="diff-line diff-context">* [Manage groups and group membership](./how-to-manage-groups.yml)</div><div class="diff-line diff-context">* [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md)</div><div class="diff-line diff-context">* [What is Conditional Access?](~/identity/conditional-access/overview.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/users-restore.md" target="_blank">docs/fundamentals/users-restore.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/users-restore" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">You can permanently delete a user from your organization without waiting the 30 days for automatic deletion. A permanently deleted user can&#39;t be restored by anyone, including Microsoft customer support.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; If you permanently delete a user by mistake, you have to create a new user and manually enter all the previous information. For more information about creating a new user, see [Add or delete users](./how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### To permanently delete a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Add or delete users](./how-to-create-delete-users.yml)</div><div class="diff-line diff-context">- [Assign roles to users](./how-subscriptions-associated-directory.md)</div><div class="diff-line diff-context">- [Add or change profile information](./how-to-manage-user-profile-info.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">You can permanently delete a user from your organization without waiting the 30 days for automatic deletion. A permanently deleted user can&#39;t be restored by anyone, including Microsoft customer support.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; If you permanently delete a user by mistake, you have to create a new user and manually enter all the previous information. For more information about creating a new user, see [Add or delete users](./how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### To permanently delete a user</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Add or delete users](./how-to-create-delete-users.md)</div><div class="diff-line diff-context">- [Assign roles to users](./how-subscriptions-associated-directory.md)</div><div class="diff-line diff-context">- [Add or change profile information](./how-to-manage-user-profile-info.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/quickstart-access-log-with-graph-api.md" target="_blank">docs/identity/monitoring-health/quickstart-access-log-with-graph-api.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/quickstart-access-log-with-graph-api" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">To complete the scenario in this quickstart, you need:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Access to a Microsoft Entra tenant**: If you don&#39;t have access to a Microsoft Entra tenant, see [Create your Azure free account today](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn). </div><div class="diff-line diff-deleted">- **A test account called Isabella Simonsen**: If you don&#39;t know how to create a test account, see [Add cloud-based users](../../fundamentals/how-to-create-delete-users.yml).</div><div class="diff-line diff-context">- **Access to the Microsoft Graph API**: If you don&#39;t have access yet, see [Microsoft Graph authentication and authorization basics](/graph/auth/auth-concepts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Perform a failed sign-in</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Clean up resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When no longer needed, delete the test user. If you don&#39;t know how to delete a Microsoft Entra user, see [Delete users from Microsoft Entra ID](../../fundamentals/how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">To complete the scenario in this quickstart, you need:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Access to a Microsoft Entra tenant**: If you don&#39;t have access to a Microsoft Entra tenant, see [Create your Azure free account today](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn). </div><div class="diff-line diff-added">- **A test account called Isabella Simonsen**: If you don&#39;t know how to create a test account, see [Add cloud-based users](../../fundamentals/how-to-create-delete-users.md).</div><div class="diff-line diff-context">- **Access to the Microsoft Graph API**: If you don&#39;t have access yet, see [Microsoft Graph authentication and authorization basics](/graph/auth/auth-concepts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Perform a failed sign-in</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Clean up resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When no longer needed, delete the test user. If you don&#39;t know how to delete a Microsoft Entra user, see [Delete users from Microsoft Entra ID](../../fundamentals/how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/quickstart-analyze-sign-in.md" target="_blank">docs/identity/monitoring-health/quickstart-analyze-sign-in.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/quickstart-analyze-sign-in" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- An Azure subscription. If you don&#39;t have one, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).</div><div class="diff-line diff-context">- A Microsoft Entra tenant with a [Premium P1 license](~/fundamentals/get-started-premium.md).</div><div class="diff-line diff-context">- A user with the **Reports Reader**, **Security Reader**, or **Security Administrator** role for the tenant.</div><div class="diff-line diff-deleted">- **A test account called Isabella Simonsen** - If you don&#39;t know how to create a test account, see [Add cloud-based users](~/fundamentals/how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Perform a failed sign-in</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Clean up resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When no longer needed, delete the test user. If you don&#39;t know how to delete a Microsoft Entra user, see [Delete users from Microsoft Entra ID](~/fundamentals/how-to-create-delete-users.yml). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- An Azure subscription. If you don&#39;t have one, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).</div><div class="diff-line diff-context">- A Microsoft Entra tenant with a [Premium P1 license](~/fundamentals/get-started-premium.md).</div><div class="diff-line diff-context">- A user with the **Reports Reader**, **Security Reader**, or **Security Administrator** role for the tenant.</div><div class="diff-line diff-added">- **A test account called Isabella Simonsen** - If you don&#39;t know how to create a test account, see [Add cloud-based users](~/fundamentals/how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Perform a failed sign-in</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Clean up resources</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When no longer needed, delete the test user. If you don&#39;t know how to delete a Microsoft Entra user, see [Delete users from Microsoft Entra ID](~/fundamentals/how-to-create-delete-users.md). </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on May 8, 2026 4:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/github-enterprise-managed-user-oidc-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update github-enterprise-managed-user-oidc-provisioning-tutorial.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add GitHub Enterprise Managed User (OIDC) from the Microsoft Entra application gallery to start managing provisioning to GitHub Enterprise Managed User (OIDC). If you have previously setup GitHub Enterprise Managed User (OIDC) for SSO, you can use the same application. However it&#39;s recommended that you create a separate app when testing out the integration initially. Learn more about adding an application from the gallery [here](~/identity/enterprise-apps/add-application-portal.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 4: Define who is in scope for provisioning</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [create-assign-users-provisioning.md](~/identity/saas-apps/includes/create-assign-users-provisioning.md)]</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Add GitHub Enterprise Managed User (OIDC) from the Microsoft Entra application gallery to start managing provisioning to GitHub Enterprise Managed User (OIDC). If you have previously setup GitHub Enterprise Managed User (OIDC) for SSO, you can use the same application. However it&#39;s recommended that you create a separate app when testing out the integration initially. Learn more about adding an application from the gallery [here](~/identity/enterprise-apps/add-application-portal.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; If you need another instance of the application then you can consent to  GitHub Enterprise Managed User (OIDC) - ghe.com and please work with GitHub account team to enable this feature for your instance.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Step 4: Define who is in scope for provisioning</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [create-assign-users-provisioning.md](~/identity/saas-apps/includes/create-assign-users-provisioning.md)]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/security-for-ai-overview.md" target="_blank">docs/agent-id/security-for-ai-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on May 8, 2026 6:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/security-for-ai-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Graph API link</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Ensure sponsors and owners are assigned and maintained for each agent identity, preventing orphaned agent identities.</div><div class="diff-line diff-context">- Enforce that agent access to resources is intentional, auditable, and time-bound through access packages.</div><div class="diff-line diff-context">- Apply Conditional Access rules, permissions, and governance controls at the [blueprint level](identity-platform/agent-blueprint.md) so all current and future agent instances inherit them automatically, with the ability to disable an entire class of agents in a single operation.</div><div class="diff-line diff-deleted">- Maintain a complete inventory of all agent identities through centralized discovery and management in the Microsoft Entra admin center and [Microsoft Graph](/graph/api/resources/agentidentity?view=graph-rest-beta&amp;preserve-view=true), preventing shadow AI and enabling organizations to track agents across the full lifecycle — from registration and credential management through deactivation and decommissioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Identity governance for agents](/entra/id-governance/agent-id-governance-overview).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Ensure sponsors and owners are assigned and maintained for each agent identity, preventing orphaned agent identities.</div><div class="diff-line diff-context">- Enforce that agent access to resources is intentional, auditable, and time-bound through access packages.</div><div class="diff-line diff-context">- Apply Conditional Access rules, permissions, and governance controls at the [blueprint level](identity-platform/agent-blueprint.md) so all current and future agent instances inherit them automatically, with the ability to disable an entire class of agents in a single operation.</div><div class="diff-line diff-added">- Maintain a complete inventory of all agent identities through centralized discovery and management in the Microsoft Entra admin center and [Microsoft Graph](/graph/api/resources/agentidentity), preventing shadow AI and enabling organizations to track agents across the full lifecycle — from registration and credential management through deactivation and decommissioning.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Identity governance for agents](/entra/id-governance/agent-id-governance-overview).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-overview.md" target="_blank">docs/id-governance/identity-governance-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on May 8, 2026 4:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Date update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Microsoft Entra ID Governance enables you to balance your organization&#39;s need for security and end user productivity with the right processes and visibility.</div><div class="diff-line diff-context">editor: markwahl-msft</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.reviewer: markwahl-msft</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to understand Microsoft Entra ID Governance so that I can balance security and end user productivity with the right processes and visibility.</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Microsoft Entra ID Governance enables you to balance your organization&#39;s need for security and end user productivity with the right processes and visibility.</div><div class="diff-line diff-context">editor: markwahl-msft</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 05/08/2026</div><div class="diff-line diff-context">ms.reviewer: markwahl-msft</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to understand Microsoft Entra ID Governance so that I can balance security and end user productivity with the right processes and visibility.</div><div class="diff-line diff-context">---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/id-protection-guide-introduction.md" target="_blank">docs/architecture/id-protection-guide-introduction.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/id-protection-guide-introduction" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    - [Conditional Access Administrator](../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator)</div><div class="diff-line diff-context">    - [Security Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">  - A test user who isn&#39;t an administrator to verify that policies work as expected before you deploy real users. To create a user, follow the steps in [How to create, invite, and delete users](../fundamentals/how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A group, and the user is a member. To create a group, see [Create a group and add members in Microsoft Entra ID](../fundamentals/how-to-manage-groups.yml).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    - [Conditional Access Administrator](../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator)</div><div class="diff-line diff-context">    - [Security Administrator](../identity/role-based-access-control/permissions-reference.md#security-administrator)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">  - A test user who isn&#39;t an administrator to verify that policies work as expected before you deploy real users. To create a user, follow the steps in [How to create, invite, and delete users](../fundamentals/how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A group, and the user is a member. To create a group, see [Create a group and add members in Microsoft Entra ID](../fundamentals/how-to-manage-groups.yml).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/b2b-quickstart-add-guest-users-portal.md" target="_blank">docs/external-id/b2b-quickstart-add-guest-users-portal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/b2b-quickstart-add-guest-users-portal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this quickstart, you&#39;ll learn how to add a new guest user to your Microsoft Entra directory in the Microsoft Entra admin center. You&#39;ll also send an invitation and see what the guest user&#39;s invitation redemption process looks like. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This guide provides the basic steps to invite an external user. To learn about all of the properties and settings that you can include when you invite an external user, see [How to create and delete a user](~/fundamentals/how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you don’t have an Azure subscription, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn) before you begin.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this quickstart, you&#39;ll learn how to add a new guest user to your Microsoft Entra directory in the Microsoft Entra admin center. You&#39;ll also send an invitation and see what the guest user&#39;s invitation redemption process looks like. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This guide provides the basic steps to invite an external user. To learn about all of the properties and settings that you can include when you invite an external user, see [How to create and delete a user](~/fundamentals/how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you don’t have an Azure subscription, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn) before you begin.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-manage-admin-accounts.md" target="_blank">docs/external-id/customers/how-to-manage-admin-accounts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-manage-admin-accounts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add an admin account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Use the following steps to create a new user account and to grant admin permissions to the account by adding a Microsoft Entra role. (Only required steps are described here. For a complete description of all properties, see the Microsoft Entra ID article [How to create users](~/fundamentals/how-to-create-delete-users.yml#create-a-new-user).)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Privileged Role Administrator](/entra/identity/role-based-access-control/permissions-reference#privileged-role-administrator).</div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to your external tenant from the **Directories + subscriptions** menu.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add an admin account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use the following steps to create a new user account and to grant admin permissions to the account by adding a Microsoft Entra role. (Only required steps are described here. For a complete description of all properties, see the Microsoft Entra ID article [How to create users](~/fundamentals/how-to-create-delete-users.md#create-a-new-user).)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Privileged Role Administrator](/entra/identity/role-based-access-control/permissions-reference#privileged-role-administrator).</div><div class="diff-line diff-context">1. If you have access to multiple tenants, use the **Settings** icon :::image type=&quot;icon&quot; source=&quot;media/common/admin-center-settings-icon.png&quot; border=&quot;false&quot;::: in the top menu to switch to your external tenant from the **Directories + subscriptions** menu.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/add-custom-domain.md" target="_blank">docs/fundamentals/add-custom-domain.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/add-custom-domain" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [How to assign roles and administrators](./how-subscriptions-associated-directory.md)</div><div class="diff-line diff-deleted">- [How to add or delete users](./how-to-create-delete-users.yml)</div><div class="diff-line diff-context">- [Managing custom domain names](~/identity/users/domains-manage.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [How to assign roles and administrators](./how-subscriptions-associated-directory.md)</div><div class="diff-line diff-added">- [How to add or delete users](./how-to-create-delete-users.md)</div><div class="diff-line diff-context">- [Managing custom domain names](~/identity/users/domains-manage.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/create-new-tenant.md" target="_blank">docs/fundamentals/create-new-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 8, 2026 3:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/create-new-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> create-delete-users-050826</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To change or add other domain names, see [How to add a custom domain name to Microsoft Entra ID](add-custom-domain.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- To add users, see [Add or delete a new user](./how-to-create-delete-users.yml).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To add groups and members, see [Create a basic group and add members](./how-to-manage-groups.yml).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To change or add other domain names, see [How to add a custom domain name to Microsoft Entra ID](add-custom-domain.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- To add users, see [Add or delete a new user](./how-to-create-delete-users.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To add groups and members, see [Create a basic group and add members](./how-to-manage-groups.yml).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
