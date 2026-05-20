@@ -1,0 +1,294 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 18th 2026, 11:17 PM PDT</p>
+        <p>Report generated on May 19th 2026, 11:17 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/overview-what-is-global-secure-access.md" target="_blank">docs/global-secure-access/overview-what-is-global-secure-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Dr Bill Mcilhargey on May 19, 2026 1:44 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/overview-what-is-global-secure-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+34</span> / 
+              <span class="deletions">-24</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update feature comparison table with links and licensing notes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Feature comparison table</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Feature                          | Entra P1/P2 License - Microsoft traffic profile | Internet Access License* - Internet Access profile | Private Access License* - Private Access profile |</div><div class="diff-line diff-context">|----------------------------------|:----------------------------------------------:|:-------------------------------------------------:|:-----------------------------------------------:|</div><div class="diff-line diff-deleted">| Windows client                   | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-deleted">| macOS client                     | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-deleted">| Mobile client (iOS, Android)     | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-deleted">| Traffic logs                     | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-deleted">| Remote network (branch connectivity) | ✅                                          | ✅                                               |                                                  |</div><div class="diff-line diff-deleted">| Universal Tenant Restrictions    | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-deleted">| Compliant network check          | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-deleted">| Source IP restoration            | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-deleted">| Microsoft 365 Enriched logs      | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-deleted">| Universal Conditional Access (CA)| ✅                                              | ✅                                               |                                                  |</div><div class="diff-line diff-deleted">| Context-aware network security   |                                                  | ✅                                               |                                                  |</div><div class="diff-line diff-deleted">| Web category filtering           |                                                  | ✅                                               |                                                  |</div><div class="diff-line diff-deleted">| Fully qualified domain name (FQDN) filtering |                                      | ✅                                               |                                                  |</div><div class="diff-line diff-deleted">| Universal Continuous Access Evaluation (CAE) | ✅                                   | ✅                                               | ✅                                              |</div><div class="diff-line diff-deleted">| VPN replacement with an identity-centric ZTNA |                                     |                                                   | ✅                                              |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Feature comparison table</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">| Feature                          | Entra P1/P2 License - Microsoft traffic profile | Internet Access License¹ - Internet Access profile | Private Access License¹ - Private Access profile |</div><div class="diff-line diff-context">|----------------------------------|:----------------------------------------------:|:-------------------------------------------------:|:-----------------------------------------------:|</div><div class="diff-line diff-added">| [Windows client](how-to-install-windows-client.md)                   | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-added">| [macOS client](how-to-install-macos-client.md)                     | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-added">| Mobile client ([iOS](how-to-install-ios-client.md), [Android](how-to-install-android-client.md))     | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-added">| [Traffic logs (Preview)](how-to-view-traffic-logs.md)           | ✅                                              | ✅                                               | ✅                                              |</div><div class="diff-line diff-added">| [Remote network (branch connectivity)](concept-remote-network-connectivity.md) | ✅                                          | ✅                                               |                                                  |</div><div class="diff-line diff-added">| [Direct Microsoft services connectivity](how-to-manage-microsoft-profile.md) | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-added">| [Universal Tenant Restrictions](how-to-universal-tenant-restrictions.md)    | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-added">| [Compliant network check](how-to-compliant-network.md)          | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-added">| [Source IP restoration](how-to-source-ip-restoration.md)            | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-added">| [Microsoft 365 Enriched logs](how-to-view-enriched-logs.md)      | ✅                                              |                                                   |                                                  |</div><div class="diff-line diff-added">| [Universal Conditional Access (CA)](concept-universal-conditional-access.md)| ✅                                              | ✅                                               |                                                  |</div><div class="diff-line diff-added">| [Context-aware network security](concept-internet-access.md)   |                                                  | ✅                                               |                                                  |</div><div class="diff-line diff-added">| [Web category filtering](how-to-configure-web-content-filtering.md)           |                                                  | ✅                                               |                                                  |</div><div class="diff-line diff-added">| [Fully qualified domain name (FQDN) filtering](how-to-configure-web-content-filtering.md) |                                      | ✅                                               |                                                  |</div><div class="diff-line diff-added">| [TLS inspection](tutorial-internet-access-tls-inspection.md) |                                                          | ✅                                               |                                                  |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/controls.md" target="_blank">docs/identity/conditional-access/controls.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 19, 2026 6:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/controls" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pm-revision</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Custom controls in Microsoft Entra Conditional Access</div><div class="diff-line diff-context">description: Learn how custom controls in Microsoft Entra Conditional Access work.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 05/13/2026</div><div class="diff-line diff-context">ms.reviewer: gkinasewitz</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Custom controls are a preview capability of Microsoft Entra ID. When you use custom controls, users are redirected to a compatible service to meet authentication requirements outside of Microsoft Entra ID. To meet this control, a user&#39;s browser redirects to the external service, performs any required authentication, and then redirects back to Microsoft Entra ID. Microsoft Entra ID verifies the response and, if the user is successfully authenticated or validated, the user continues in the Conditional Access flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Custom controls are deprecated and scheduled for retirement in late 2026. External MFA (previously known as external authentication methods) is now generally available and replaces custom controls. Existing custom controls continue to function during the transition period, but new implementations should use external MFA. Start planning your migration now.</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt; For step-by-step migration instructions, see [Migrate from custom controls to external MFA](how-to-migrate-custom-controls-external-mfa.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Manage external MFA in Microsoft Entra ID](../authentication/how-to-authentication-external-method-manage.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Custom controls in Microsoft Entra Conditional Access</div><div class="diff-line diff-context">description: Learn how custom controls in Microsoft Entra Conditional Access work.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 05/19/2026</div><div class="diff-line diff-context">ms.reviewer: gkinasewitz</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">Custom controls are a preview capability of Microsoft Entra ID. When you use custom controls, users are redirected to a compatible service to meet authentication requirements outside of Microsoft Entra ID. To meet this control, a user&#39;s browser redirects to the external service, performs any required authentication, and then redirects back to Microsoft Entra ID. Microsoft Entra ID verifies the response and, if the user is successfully authenticated or validated, the user continues in the Conditional Access flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Custom controls are deprecated. Adding new custom controls and editing existing custom controls will not be allowed starting September 2026. Full retirement is scheduled for early 2027. Start planning your migration now. For more information, see the [External MFA GA announcement](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/external-mfa-in-microsoft-entra-id-is-now-generally-available/4488926).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information, see [Manage external MFA in Microsoft Entra ID](../authentication/how-to-authentication-external-method-manage.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/agent-owners-sponsors-managers.md" target="_blank">docs/agent-id/agent-owners-sponsors-managers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Dr Bill Mcilhargey on May 19, 2026 12:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/agent-owners-sponsors-managers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update agent-owners-sponsors-managers.md to clarify owner and sponsor roles, including support for guest users</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Owners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Owners usually serve as technical administrators for agents, handling operational and configuration aspects. Individual users and service principals can be set as owners. Groups aren&#39;t supported as owners. Service principals as owners enable automated management of agent identities. Owners are optional for agent identity blueprints and agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Owner responsibilities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sponsors provide business accountability for agents, making lifecycle decisions without technical administrative access. They understand the business purpose of the agent, and they can determine whether an agent is still needed or requires access. Sponsors are required for agent identity blueprints and agent identities, ensuring every agent has a designated business owner.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Sponsorship should be maintained ensuring succession when an employee who&#39;s a sponsor moves or leaves. Both users and groups can be assigned as sponsors. When a group is assigned, all members of the group have sponsor rights over the Agent ID object. Not all group types are supported as sponsors. The following group types are allowed:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Dynamic membership groups (security or Microsoft 365)</div><div class="diff-line diff-context">- Assigned membership groups (Microsoft 365)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| | Agent user account sponsors | Agent identity, blueprint, blueprint principal sponsors |</div><div class="diff-line diff-context">|--|--|--|</div><div class="diff-line diff-deleted">| **Allowed types** | Users, groups (any) | Users, select groups (dynamic membership, Microsoft 365). Role-assignable groups not supported. |</div><div class="diff-line diff-context">| **Limits** | Maximum 5 sponsors | Maximum 100 sponsors, with no more than 5 groups |</div><div class="diff-line diff-context">| **Authorization** | No direct authorization to modify sponsors users | Delete or disable the agent identity and modify its sponsors |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Owners</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Owners usually serve as technical administrators for agents, handling operational and configuration aspects. Individual users (including guest users) and service principals can be set as owners. Groups aren&#39;t supported as owners. Service principals as owners enable automated management of agent identities. Owners are optional for agent identity blueprints and agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Owner responsibilities</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Sponsors provide business accountability for agents, making lifecycle decisions without technical administrative access. They understand the business purpose of the agent, and they can determine whether an agent is still needed or requires access. Sponsors are required for agent identity blueprints and agent identities, ensuring every agent has a designated business owner.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Sponsorship should be maintained ensuring succession when an employee who&#39;s a sponsor moves or leaves. Both users (including guest users) and groups can be assigned as sponsors. When a group is assigned, all members of the group have sponsor rights over the Agent ID object. Not all group types are supported as sponsors. The following group types are allowed:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Dynamic membership groups (security or Microsoft 365)</div><div class="diff-line diff-context">- Assigned membership groups (Microsoft 365)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| | Agent user account sponsors | Agent identity, blueprint, blueprint principal sponsors |</div><div class="diff-line diff-context">|--|--|--|</div><div class="diff-line diff-added">| **Allowed types** | Users (including guests), groups (any) | Users (including guests), select groups (dynamic membership, Microsoft 365). Role-assignable groups not supported. |</div><div class="diff-line diff-context">| **Limits** | Maximum 5 sponsors | Maximum 100 sponsors, with no more than 5 groups |</div><div class="diff-line diff-context">| **Authorization** | No direct authorization to modify sponsors users | Delete or disable the agent identity and modify its sponsors |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/how-to-migrate-custom-controls-external-mfa.md" target="_blank">docs/identity/conditional-access/how-to-migrate-custom-controls-external-mfa.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 19, 2026 6:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/how-to-migrate-custom-controls-external-mfa" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> pm-revision</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Migrate from custom controls to external MFA in Conditional Access</div><div class="diff-line diff-context">description: Learn how to migrate from custom controls to external multifactor authentication in Microsoft Entra Conditional Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/13/2026</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">External multifactor authentication (MFA) lets users choose an external provider to meet MFA requirements when they sign in with a work or school account. Custom controls in Microsoft Entra Conditional Access previously provided similar functionality, but with the general availability of external MFA (previously known as external authentication methods), custom controls are deprecated and scheduled for retirement. This guide provides the steps to migrate existing custom control Conditional Access policies to external MFA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Custom controls are deprecated and will be retired in September 2026. Start planning your migration now. For more information, see the [External MFA GA announcement](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/external-mfa-in-microsoft-entra-id-is-now-generally-available/4488926).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">*This guide is relevant only if your organization currently uses custom controls. If you don&#39;t use custom controls, no action is needed.*</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Migrate from custom controls to external MFA in Conditional Access</div><div class="diff-line diff-context">description: Learn how to migrate from custom controls to external multifactor authentication in Microsoft Entra Conditional Access.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 05/19/2026</div><div class="diff-line diff-context">ms.author: sarahlipsey</div><div class="diff-line diff-context">author: shlipsey3</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">External multifactor authentication (MFA) lets users choose an external provider to meet MFA requirements when they sign in with a work or school account. Custom controls in Microsoft Entra Conditional Access previously provided similar functionality, but with the general availability of external MFA (previously known as external authentication methods), custom controls are deprecated and scheduled for retirement. This guide provides the steps to migrate existing custom control Conditional Access policies to external MFA.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Custom controls are deprecated. Adding new custom controls and editing existing custom controls will not be allowed starting September 2026. Full retirement is scheduled for early 2027. Start planning your migration now. For more information, see the [External MFA GA announcement](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/external-mfa-in-microsoft-entra-id-is-now-generally-available/4488926).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">*This guide is relevant only if your organization currently uses custom controls. If you don&#39;t use custom controls, no action is needed.*</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/scripts/powershell-windows-client-install-proof-of-concept.md" target="_blank">docs/global-secure-access/scripts/powershell-windows-client-install-proof-of-concept.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jeffrey Bley on May 19, 2026 1:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/scripts/powershell-windows-client-install-proof-of-concept" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix typo in Chrome DoH settings PowerShell script</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Microsoft\Edge&quot;; Name=&quot;BuiltInDnsClientEnabled&quot;; Type=&quot;DWord&quot;; Value=0 },</div><div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Microsoft\Edge&quot;; Name=&quot;QuicAllowed&quot;; Type=&quot;DWord&quot;; Value=0 },</div><div class="diff-line diff-context">    # Chrome DoH and QUIC settings</div><div class="diff-line diff-deleted">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Google\Chrome&quot;; Name=&quot;DnsOverHttpsMode&quot;; ype=&quot;String&quot;; Value=&quot;off&quot; },</div><div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Google\Chrome&quot;; Name=&quot;QuicAllowed&quot;; Type=&quot;DWord&quot;; Value=0 }</div><div class="diff-line diff-context">)</div><div class="diff-line diff-context"># --- Track whether the IPv4-preferred setting was already correct ---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Microsoft\Edge&quot;; Name=&quot;BuiltInDnsClientEnabled&quot;; Type=&quot;DWord&quot;; Value=0 },</div><div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Microsoft\Edge&quot;; Name=&quot;QuicAllowed&quot;; Type=&quot;DWord&quot;; Value=0 },</div><div class="diff-line diff-context">    # Chrome DoH and QUIC settings</div><div class="diff-line diff-added">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Google\Chrome&quot;; Name=&quot;DnsOverHttpsMode&quot;; Type=&quot;String&quot;; Value=&quot;off&quot; },</div><div class="diff-line diff-context">    @{ Key=&quot;HKLM:\SOFTWARE\Policies\Google\Chrome&quot;; Name=&quot;QuicAllowed&quot;; Type=&quot;DWord&quot;; Value=0 }</div><div class="diff-line diff-context">)</div><div class="diff-line diff-context"># --- Track whether the IPv4-preferred setting was already correct ---</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
