@@ -1,0 +1,331 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 19th 2026, 11:19 PM PDT</p>
+        <p>Report generated on May 20th 2026, 11:19 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">19</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-mfa-registration-campaign.md" target="_blank">docs/identity/authentication/how-to-mfa-registration-campaign.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on May 20, 2026 3:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-mfa-registration-campaign" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add note about snooze count persistence in registration campaign</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Run a registration campaign to set up passkey or Microsoft Authenticator</div><div class="diff-line diff-context">description: Learn how to run a registration campaign in Microsoft Entra ID to nudge users toward passkeys or Microsoft Authenticator for stronger sign-in security.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/04/2026</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">ms.reviewer: marisanchez</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Registration campaigns support two authentication methods:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">- **Passkey (FIDO2)** — Nudge users to register a passkey, which includes both synced passkeys and device-bound passkeys.</div><div class="diff-line diff-deleted">- - **Microsoft Authenticator** — Nudge users to download and set up the Authenticator app for push notifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; A registration campaign can only target one authentication method at a time. You can&#39;t run campaigns for both Microsoft Authenticator and passkeys simultaneously in the same tenant.</div><div class="diff-line diff-context">   If the registration campaign state is set to **Enabled**, you can configure the experience for end users by using **Limited number of snoozes**:</div><div class="diff-line diff-context">   - If **Limited number of snoozes** is Enabled, users can skip the interrupt prompt 3 times, after which they&#39;re forced to register the targeted authentication method.</div><div class="diff-line diff-context">   - If **Limited number of snoozes** is Disabled, users can snooze an unlimited number of times and avoid registration.</div><div class="diff-line diff-context"> </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Run a registration campaign to set up passkey or Microsoft Authenticator</div><div class="diff-line diff-context">description: Learn how to run a registration campaign in Microsoft Entra ID to nudge users toward passkeys or Microsoft Authenticator for stronger sign-in security.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 05/20/2026</div><div class="diff-line diff-context">author: justinha</div><div class="diff-line diff-context">ms.reviewer: marisanchez</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Registration campaigns support two authentication methods:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Passkey (FIDO2)** — Nudge users to register a passkey, which includes both synced passkeys and device-bound passkeys.</div><div class="diff-line diff-added">- **Microsoft Authenticator** — Nudge users to download and set up the Authenticator app for push notifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; A registration campaign can only target one authentication method at a time. You can&#39;t run campaigns for both Microsoft Authenticator and passkeys simultaneously in the same tenant.</div><div class="diff-line diff-context">   If the registration campaign state is set to **Enabled**, you can configure the experience for end users by using **Limited number of snoozes**:</div><div class="diff-line diff-context">   - If **Limited number of snoozes** is Enabled, users can skip the interrupt prompt 3 times, after which they&#39;re forced to register the targeted authentication method.</div><div class="diff-line diff-context">   - If **Limited number of snoozes** is Disabled, users can snooze an unlimited number of times and avoid registration.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">   &gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-android-custom-headers.md" target="_blank">docs/identity-platform/tutorial-native-authentication-android-custom-headers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by henrymbuguakiarie on May 20, 2026 4:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-android-custom-headers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change native auth to native authentication</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Add custom headers to native auth requests in Android (Kotlin)</div><div class="diff-line diff-deleted">description: Learn how to attach custom x-* headers to native auth network requests in an Android (Kotlin) app to integrate fraud-detection SDKs with Microsoft Entra External ID.</div><div class="diff-line diff-context">author: henrymbuguakiarie</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-105</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-deleted">#Customer intent: As an Android developer, I want to attach custom headers to native auth network requests so that I can integrate fraud and bot-detection SDKs with my Microsoft Entra External ID app.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Tutorial: Add custom headers to native auth network requests in Android (Kotlin)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Add custom headers to native authentication requests in Android (Kotlin)</div><div class="diff-line diff-added">description: Learn how to attach custom x-* headers to native authentication network requests in an Android (Kotlin) app to integrate fraud-detection SDKs with Microsoft Entra External ID.</div><div class="diff-line diff-context">author: henrymbuguakiarie</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-105</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-added">#Customer intent: As an Android developer, I want to attach custom headers to native authentication network requests so that I can integrate fraud and bot-detection SDKs with my Microsoft Entra External ID app.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Tutorial: Add custom headers to native authentication network requests in Android (Kotlin)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-ios-swift-custom-headers.md" target="_blank">docs/identity-platform/tutorial-native-authentication-ios-swift-custom-headers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by henrymbuguakiarie on May 20, 2026 4:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-ios-swift-custom-headers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Change native auth to native authentication</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Add custom headers to native auth network requests in iOS (Swift)</div><div class="diff-line diff-deleted">description: Learn how to attach custom x-* headers to native auth network requests in an iOS (Swift) app to integrate fraud-detection SDKs with Microsoft Entra External ID.</div><div class="diff-line diff-context">author: henrymbuguakiarie</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-105</div><div class="diff-line diff-context">ms.date: 04/29/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-deleted">#Customer intent: As an iOS developer, I want to attach custom headers to native auth network requests so that I can integrate fraud and bot-detection SDKs with my Microsoft Entra External ID app.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Tutorial: Add custom headers to native auth network requests in iOS (Swift)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Add custom headers to native authentication network requests in iOS (Swift)</div><div class="diff-line diff-added">description: Learn how to attach custom x-* headers to native authentication network requests in an iOS (Swift) app to integrate fraud-detection SDKs with Microsoft Entra External ID.</div><div class="diff-line diff-context">author: henrymbuguakiarie</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-105</div><div class="diff-line diff-context">ms.date: 04/29/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-added">#Customer intent: As an iOS developer, I want to attach custom headers to native authentication network requests so that I can integrate fraud and bot-detection SDKs with my Microsoft Entra External ID app.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Tutorial: Add custom headers to native authentication network requests in iOS (Swift)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md" target="_blank">docs/external-id/customers/how-to-user-flow-sign-up-sign-in-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by garrodonnell on May 20, 2026 1:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-user-flow-sign-up-sign-in-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify 'Stay signed in?' prompt context (branding/MFA don't suppress it)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Control the &#39;Stay signed in?&#39; prompt</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">By default, after a customer signs in to an app that uses your user flow, they see a **Stay signed in?** prompt. The prompt appears regardless of whether the user flow is branded or whether multifactor authentication is required. If the user selects **Yes**, a persistent authentication cookie is issued and they remain signed in across browser sessions. If they select **No**, a non-persistent cookie is issued.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This prompt isn&#39;t a user flow setting. To change or suppress it, configure the **Persistent browser session** session control in a Conditional Access policy that targets your customers and apps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Always persistent**: The browser session is always persisted. The **Stay signed in?** prompt isn&#39;t shown.</div><div class="diff-line diff-context">- **Never persistent**: The browser session ends when the browser is closed. The **Stay signed in?** prompt isn&#39;t shown.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Control the &#39;Stay signed in?&#39; prompt</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">By default, after a customer signs in to an app that uses your user flow, they see a **Stay signed in?** prompt asking whether to stay signed in across browser sessions. If the user selects **Yes**, a persistent authentication cookie is issued and they remain signed in across browser sessions. If they select **No**, a non-persistent cookie is issued.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This prompt is the default behavior for every user flow. Applying custom branding to the user flow or requiring multifactor authentication doesn&#39;t change whether the prompt appears. It&#39;s shown in all cases unless you override it with a Conditional Access policy.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The prompt isn&#39;t a user flow setting. To change or suppress it, configure the **Persistent browser session** session control in a Conditional Access policy that targets your customers and apps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Always persistent**: The browser session is always persisted. The **Stay signed in?** prompt isn&#39;t shown.</div><div class="diff-line diff-context">- **Never persistent**: The browser session ends when the browser is closed. The **Stay signed in?** prompt isn&#39;t shown.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/direct-federation.md" target="_blank">docs/external-id/direct-federation.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by vimrang on May 20, 2026 8:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/direct-federation" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Domainless description in direct-federation.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. On the **New SAML/WS-Fed IdP** page, enter the following:</div><div class="diff-line diff-context">   - **Display name** - Enter a name to help you identify the partner&#39;s IdP.</div><div class="diff-line diff-context">   - **Identity provider protocol** - Select **SAML** or **WS-Fed**.</div><div class="diff-line diff-deleted">   - **Domainless** - Selecting **Domainless** enforces no domain check of the user&#39;s email address. For more details, see [Domainless SAML IdP federation](./direct-federation.md#domainless-saml-idp-federation).</div><div class="diff-line diff-context">   - **Domain name of federating IdP** - Enter your partner’s IdP target domain name for federation. During this initial configuration, enter just one domain name. You can add more domains later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/direct-federation/new-saml-wsfed-idp-parse.png&quot; alt-text=&quot;Screenshot showing the new SAML or WS-Fed IdP page.&quot;:::</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. On the **New SAML/WS-Fed IdP** page, enter the following:</div><div class="diff-line diff-context">   - **Display name** - Enter a name to help you identify the partner&#39;s IdP.</div><div class="diff-line diff-context">   - **Identity provider protocol** - Select **SAML** or **WS-Fed**.</div><div class="diff-line diff-added">   - **Domainless** - Selecting **Domainless** enforces no domain check of the user&#39;s email address. For more details, see [Domainless SAML IdP federation](./direct-federation.md#domainless-saml-idp-federation-preview).</div><div class="diff-line diff-context">   - **Domain name of federating IdP** - Enter your partner’s IdP target domain name for federation. During this initial configuration, enter just one domain name. You can add more domains later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    :::image type=&quot;content&quot; source=&quot;media/direct-federation/new-saml-wsfed-idp-parse.png&quot; alt-text=&quot;Screenshot showing the new SAML or WS-Fed IdP page.&quot;:::</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/samsara-tutorial.md" target="_blank">docs/identity/saas-apps/samsara-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Regan Downer on May 20, 2026 3:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/samsara-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @v-regandowner</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">	b. Copy the link from Post-back/ACS URL field in Samsara into the **Reply URL** text box in Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-deleted">	&gt; Update these values with the actual Reply URL and Identifier. Contact the [Samsara Client support team](mailto:support@samsara.com) to get these values, or in Samsara, go to **Settings** &gt; **Single-Sign-On** and select the connection you want to create in order to obtain the right ACS and Identifier URLs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set-up single sign-on with SAML** page, in the **SAML Signing Certificate** section,  find and copy the **App Federation Metadata URL** or download the **Federation Metadata XML**. In the Samsara dashboard in Settings &gt; Single Sign-on in the relevant SSO configuration (user or driver), paste the metadata URL or upload the file. Click **Save** to apply the changes.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">	b. Copy the link from Post-back/ACS URL field in Samsara into the **Reply URL** text box in Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	&gt; [!NOTE]</div><div class="diff-line diff-added">	&gt; Update these values with the actual Reply URL and Identifier. Contact the [Samsara Client support team](mailto:support@samsara.com) to get these values, or in Samsara, go to **Settings** &gt; **single-sign-on** and select the connection you want to create in order to obtain the right ACS and Identifier URLs.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set-up single sign-on with SAML** page, in the **SAML Signing Certificate** section,  find and copy the **App Federation Metadata URL** or download the **Federation Metadata XML**. In the Samsara dashboard in Settings &gt; Single Sign-on in the relevant SSO configuration (user or driver), paste the metadata URL or upload the file. Click **Save** to apply the changes.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
