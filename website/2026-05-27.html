@@ -1,0 +1,706 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 25th 2026, 11:36 PM PDT</p>
+        <p>Report generated on May 26th 2026, 11:36 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">42</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/includes/national-clouds-global-and-china.md" target="_blank">docs/identity/saas-apps/includes/national-clouds-global-and-china.md</a>
+            </div>
+            <div class="file-meta">
+              Added by omondiatieno on May 26, 2026 10:10 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/national-clouds-global-and-china" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add national cloud deployments include files for SaaS app tutorials</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/includes/national-clouds-global-and-usgov.md" target="_blank">docs/identity/saas-apps/includes/national-clouds-global-and-usgov.md</a>
+            </div>
+            <div class="file-meta">
+              Added by omondiatieno on May 26, 2026 10:10 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/national-clouds-global-and-usgov" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add national cloud deployments include files for SaaS app tutorials</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/includes/national-clouds-global-only.md" target="_blank">docs/identity/saas-apps/includes/national-clouds-global-only.md</a>
+            </div>
+            <div class="file-meta">
+              Added by omondiatieno on May 26, 2026 10:10 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/national-clouds-global-only" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add national cloud deployments include files for SaaS app tutorials</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/includes/national-clouds-global-usgov-and-china.md" target="_blank">docs/identity/saas-apps/includes/national-clouds-global-usgov-and-china.md</a>
+            </div>
+            <div class="file-meta">
+              Added by omondiatieno on May 26, 2026 10:10 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/national-clouds-global-usgov-and-china" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+13 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add national cloud deployments include files for SaaS app tutorials</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-agent-install.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-agent-install.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-agent-install" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+18</span> / 
+              <span class="deletions">-15</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Install the Microsoft Entra Connect Health agents in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to install the Microsoft Entra Connect Health agents for Active Directory Federation Services (AD FS) and for sync.</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.custom: sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Install the Microsoft Entra Connect Health agents</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra Connect Health is not available in the China sovereign cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following table lists requirements for using Microsoft Entra Connect Health:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| You have a Microsoft Entra ID P1 or P2 subscription. |Microsoft Entra Connect Health is a feature of Microsoft Entra ID P1 or P2. For more information, see [Sign up for Microsoft Entra ID P1 or P2](~/fundamentals/get-started-premium.md). &lt;br /&gt;&lt;br /&gt;To start a free 30-day trial, see [Start a trial](https://azure.microsoft.com/trial/get-started-active-directory/). |</div><div class="diff-line diff-context">| You&#39;re either a [Global Administrator](../../role-based-access-control/permissions-reference.md#global-administrator) or a [Hybrid Identity Administrator](../../role-based-access-control/permissions-reference.md#hybrid-identity-administrator) in Microsoft Entra ID. | By using Azure role-based access control (Azure RBAC), you can allow other users in your organization to access Microsoft Entra Connect Health. For more information, see [Azure RBAC for Microsoft Entra Connect Health](how-to-connect-health-operations.md#manage-access-with-azure-rbac). &lt;br /&gt;&lt;br /&gt;**Important**: Use a work or school account to install the agents. You can&#39;t use a Microsoft account to install the agents. For more information, see [Sign up for Azure as an organization](~/fundamentals/sign-up-organization.md). |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Install the Microsoft Entra Connect Health agents in Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to install the Microsoft Entra Connect Health agents for Active Directory Federation Services (AD FS) and for sync.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.custom: sfi-ga-nochange, msecd-doc-authoring-1012</div><div class="diff-line diff-added">#customer intent: As an identity administrator, I want to install the Microsoft Entra Connect Health agents on my on-premises servers so that I can monitor the health of my hybrid identity infrastructure (AD FS, sync, and AD DS) from the Microsoft Entra admin center.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Install the Microsoft Entra Connect Health agents</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra Connect Health is not available in the China sovereign cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following table lists requirements for using Microsoft Entra Connect Health:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-adfs.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-adfs.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-adfs" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health agents for AD FS</div><div class="diff-line diff-context">description: This is the Microsoft Entra Connect Health page how to monitor your on-premises AD FS infrastructure.</div><div class="diff-line diff-context">ms.reviewer: zhiweiwangmsft</div><div class="diff-line diff-context">ms.assetid: dc0e53d8-403e-462a-9543-164eaa7dd8b3</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-deleted">ms.custom: H1Hack27Feb2017, sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra Connect Health agents for AD FS</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra Connect Health is not available in the China sovereign cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following table lists requirements for using Microsoft Entra Connect Health:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health agents for AD FS</div><div class="diff-line diff-context">description: This is the Microsoft Entra Connect Health page how to monitor your on-premises AD FS infrastructure.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.reviewer: zhiweiwangmsft</div><div class="diff-line diff-context">ms.assetid: dc0e53d8-403e-462a-9543-164eaa7dd8b3</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-added">ms.custom: H1Hack27Feb2017, sfi-ga-nochange, sfi-image-nochange, msecd-doc-authoring-1012</div><div class="diff-line diff-added">#customer intent: As an identity administrator, I want to install the Microsoft Entra Connect Health agent on my AD FS and Web Application Proxy servers so that I can monitor my federation infrastructure from the Microsoft Entra admin center.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Microsoft Entra Connect Health agents for AD FS</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; Microsoft Entra Connect Health is not available in the China sovereign cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-ad-fs-sign-in.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-ad-fs-sign-in.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-ad-fs-sign-in" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+10</span> / 
+              <span class="deletions">-7</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: AD FS sign-ins in Microsoft Entra ID with Connect Health</div><div class="diff-line diff-context">description: This document describes how to integrate AD FS sign-ins with the Microsoft Entra Connect Health sign-ins report.</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-deleted">ms.custom: sfi-ga-nochange, sfi-ropc-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># AD FS sign-ins in Microsoft Entra ID with Connect Health - preview</div><div class="diff-line diff-context">The Connect Health for AD FS agent correlates multiple Event IDs from AD FS, dependent on the server version, to provide information about the request and error details if the request fails. This information is correlated to the Microsoft Entra sign-in report schema and displayed in the Microsoft Entra sign-in report UX. Alongside the report, a new Log Analytics stream is available with the AD FS data and a new Azure Monitor Workbook template. The template can be used and modified for an in-depth analysis for scenarios such as AD FS account lockouts, bad password attempts, and spikes of unexpected sign-in attempts.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-deleted">* Microsoft Entra Connect Health for AD FS installed and upgraded to the latest version (4.5.2466.0 or later).</div><div class="diff-line diff-deleted">*  Reports Reader role to view the Microsoft Entra sign-ins</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## What data is displayed in the report?</div><div class="diff-line diff-context">The data available mirrors the same data available for Microsoft Entra sign-ins. Five tabs with information are available based on the type of sign-in, either Microsoft Entra ID or AD FS. Connect Health correlates events from AD FS, dependent on the server version, and matches them to the AD FS schema. </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: AD FS sign-ins in Microsoft Entra ID with Connect Health</div><div class="diff-line diff-context">description: This document describes how to integrate AD FS sign-ins with the Microsoft Entra Connect Health sign-ins report.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-added">ms.custom: sfi-ga-nochange, sfi-ropc-nochange, msecd-doc-authoring-1012</div><div class="diff-line diff-added">#customer intent: As an IT administrator, I want to integrate AD FS sign-ins into the Microsoft Entra sign-ins report so that I can review federated and cloud authentication events in a single report.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># AD FS sign-ins in Microsoft Entra ID with Connect Health - preview</div><div class="diff-line diff-context">The Connect Health for AD FS agent correlates multiple Event IDs from AD FS, dependent on the server version, to provide information about the request and error details if the request fails. This information is correlated to the Microsoft Entra sign-in report schema and displayed in the Microsoft Entra sign-in report UX. Alongside the report, a new Log Analytics stream is available with the AD FS data and a new Azure Monitor Workbook template. The template can be used and modified for an in-depth analysis for scenarios such as AD FS account lockouts, bad password attempts, and spikes of unexpected sign-in attempts.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-added">* Microsoft Entra Connect Health for AD FS installed and upgraded to the latest version (4.5.2466.0 or higher).</div><div class="diff-line diff-added">* Reports Reader role to view the Microsoft Entra sign-ins report.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-sync.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-sync.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-sync" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Using Microsoft Entra Connect Health with sync</div><div class="diff-line diff-context">description: This is the Microsoft Entra Connect Health page that discusses how to monitor Microsoft Entra Connect Sync.</div><div class="diff-line diff-context">ms.assetid: 1dfbeaba-bda2-4f68-ac89-1dbfaf5b4015</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-deleted">ms.custom: H1Hack27Feb2017, sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Monitor Microsoft Entra Connect Sync with Microsoft Entra Connect Health</div><div class="diff-line diff-context">The following documentation is specific to monitoring Microsoft Entra Connect (Sync) with Microsoft Entra Connect Health. For information on monitoring AD FS with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health with AD FS](how-to-connect-health-adfs.md). Additionally, for information on monitoring Active Directory Domain Services with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health with AD DS](how-to-connect-health-adds.md).</div><div class="diff-line diff-context">## Object Level Synchronization Error Report</div><div class="diff-line diff-context">This feature provides a report about synchronization errors that can occur when identity data is synchronized between Windows Server AD and Microsoft Entra ID using Microsoft Entra Connect.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* The report covers errors recorded by the sync client (Microsoft Entra Connect version 2.5.79.0 or higher)</div><div class="diff-line diff-context">* It includes the errors that occurred in the last synchronization operation on the sync engine. (&quot;Export&quot; on the Microsoft Entra Connector.)</div><div class="diff-line diff-context">* Microsoft Entra Connect Health agent for sync must have outbound connectivity to the required end points for the report to include the latest data.</div><div class="diff-line diff-context">* The report is **updated after every 30 minutes** using the data uploaded by Microsoft Entra Connect Health agent for sync.</div><div class="diff-line diff-context">For specific duplicated attribute sync error scenario involving user Source Anchor update, you can fix them directly from the portal. </div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Using Microsoft Entra Connect Health with sync</div><div class="diff-line diff-context">description: This is the Microsoft Entra Connect Health page that discusses how to monitor Microsoft Entra Connect Sync.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.assetid: 1dfbeaba-bda2-4f68-ac89-1dbfaf5b4015</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-added">ms.custom: H1Hack27Feb2017, sfi-image-nochange, msecd-doc-authoring-1012</div><div class="diff-line diff-added">#customer intent: As an identity administrator, I want to monitor my Microsoft Entra Connect Sync deployment with Microsoft Entra Connect Health so that I can identify and resolve synchronization alerts and errors.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Monitor Microsoft Entra Connect Sync with Microsoft Entra Connect Health</div><div class="diff-line diff-context">The following documentation is specific to monitoring Microsoft Entra Connect (Sync) with Microsoft Entra Connect Health. For information on monitoring AD FS with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health with AD FS](how-to-connect-health-adfs.md). Additionally, for information on monitoring Active Directory Domain Services with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health with AD DS](how-to-connect-health-adds.md).</div><div class="diff-line diff-context">## Object Level Synchronization Error Report</div><div class="diff-line diff-context">This feature provides a report about synchronization errors that can occur when identity data is synchronized between Windows Server AD and Microsoft Entra ID using Microsoft Entra Connect.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* The report covers errors recorded by the sync client (Microsoft Entra Connect version [2.5.79.0 or higher](reference-connect-version-history.md))</div><div class="diff-line diff-context">* It includes the errors that occurred in the last synchronization operation on the sync engine. (&quot;Export&quot; on the Microsoft Entra Connector.)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-adfs-risky-ip-workbook.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-adfs-risky-ip-workbook.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-adfs-risky-ip-workbook" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health with AD FS risky IP report workbook</div><div class="diff-line diff-context">description: Describes the Microsoft Entra Connect Health AD FS risky IP report with Azure Monitor Workbooks.</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-deleted">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: </div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Customizable queries and expanded visualizations for further analysis</div><div class="diff-line diff-context">- Expanded functionality from the previous Risky IP report, which was deprecated after January 24, 2022.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Requirements</div><div class="diff-line diff-context">1. Connect Health for AD FS installed and updated to the latest agent.</div><div class="diff-line diff-context">2. A Log Analytics Workspace with the &quot;ADFSSignInLogs&quot; stream enabled.</div><div class="diff-line diff-context">3. Permissions to use the Microsoft Entra ID Monitor Workbooks. To use Workbooks, you need:</div><div class="diff-line diff-context">- Ensure no &quot;Health service isn&#39;t up to date&quot; alert active in your AD FS server list. Read more about [how to troubleshoot this alert](how-to-connect-health-data-freshness.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Microsoft Entra Connect Health with AD FS risky IP report workbook</div><div class="diff-line diff-context">description: Describes the Microsoft Entra Connect Health AD FS risky IP report with Azure Monitor Workbooks.</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 05/15/2026</div><div class="diff-line diff-added">ms.custom: sfi-image-nochange, msecd-doc-authoring-1012</div><div class="diff-line diff-context">ms.collection: </div><div class="diff-line diff-added">#customer intent: As an identity administrator, I want to use the Risky IP report workbook in Microsoft Entra Connect Health so that I can detect and respond to password spray or brute-force attacks against my AD FS endpoints.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Customizable queries and expanded visualizations for further analysis</div><div class="diff-line diff-context">- Expanded functionality from the previous Risky IP report, which was deprecated after January 24, 2022.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-context">1. Connect Health for AD FS installed and updated to the latest agent.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/groups-create-rule.md" target="_blank">docs/identity/users/groups-create-rule.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by mbhargav9 on May 26, 2026 7:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/groups-create-rule" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Enhance dynamic group rules section with cleanup note</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Using dynamic membership groups requires a Microsoft Entra ID P1 license or an Intune for Education license. For more information, see [Manage rules for dynamic membership groups in Microsoft Entra ID](./groups-dynamic-membership.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Rule builder in the Azure portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID provides a rule builder to create and update your important rules more quickly. The rule builder supports the construction of up to five expressions.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Using dynamic membership groups requires a Microsoft Entra ID P1 license or an Intune for Education license. For more information, see [Manage rules for dynamic membership groups in Microsoft Entra ID](./groups-dynamic-membership.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt; Dynamic group rules evaluate every user and device in your tenant, including objects that are inactive or no longer in use. Stale devices and stale users can inflate group membership and slow dynamic membership group processing. Before you create a rule, clean-up stale devices[stale devices](/entra/identity/devices/manage-stale-devices) and inactive users[inactive users](/entra/identity/monitoring-health/howto-manage-inactive-user-accounts) so your group reflects only the objects you intend to manage.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Rule builder in the Azure portal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Microsoft Entra ID provides a rule builder to create and update your important rules more quickly. The rule builder supports the construction of up to five expressions.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/plan-cloud-sync-topologies.md" target="_blank">docs/identity/hybrid/cloud-sync/plan-cloud-sync-topologies.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on May 26, 2026 7:16 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/plan-cloud-sync-topologies" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove stale YouTube video from cloud sync topologies page</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; Microsoft doesn&#39;t support modifying or operating Microsoft Entra Cloud Sync outside of the configurations or actions that are formally documented. Any of these configurations or actions might result in an inconsistent or unsupported state of Microsoft Entra Cloud Sync. As a result, Microsoft can&#39;t provide technical support for such deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information, see the following video.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!VIDEO https://learn-video.azurefd.net/vod/player?id=2b0047aa-84ba-430d-8ce9-39cfdc55276d]</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Things to remember about all scenarios and topologies</div><div class="diff-line diff-context">The following information should be kept in mind, when selecting a solution.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-context">&gt; Microsoft doesn&#39;t support modifying or operating Microsoft Entra Cloud Sync outside of the configurations or actions that are formally documented. Any of these configurations or actions might result in an inconsistent or unsupported state of Microsoft Entra Cloud Sync. As a result, Microsoft can&#39;t provide technical support for such deployments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Things to remember about all scenarios and topologies</div><div class="diff-line diff-context">The following information should be kept in mind, when selecting a solution.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-adds.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-adds.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 2:12 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-adds" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add Windows Server 2025 support to agent-install, AD DS, and Sync pages</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Using Microsoft Entra Connect Health with AD DS</div><div class="diff-line diff-deleted">The following documentation is specific to monitoring Active Directory Domain Services with Microsoft Entra Connect Health. The supported versions of AD DS are: Windows Server 2008 R2, Windows Server 2012, Windows Server 2012 R2, and Windows Server 2016.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on monitoring AD FS with Microsoft Entra Connect Health, see [Using Microsoft Entra Connect Health with AD FS](how-to-connect-health-adfs.md). Additionally, for information on monitoring Microsoft Entra Connect (Sync) with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health for Sync](how-to-connect-health-sync.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.tgt_pltfrm: na</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 05/26/2026</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Using Microsoft Entra Connect Health with AD DS</div><div class="diff-line diff-added">The following documentation is specific to monitoring Active Directory Domain Services with Microsoft Entra Connect Health. The supported versions of AD DS are Windows Server 2016, 2019, 2022, and 2025.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on monitoring AD FS with Microsoft Entra Connect Health, see [Using Microsoft Entra Connect Health with AD FS](how-to-connect-health-adfs.md). Additionally, for information on monitoring Microsoft Entra Connect (Sync) with Microsoft Entra Connect Health see [Using Microsoft Entra Connect Health for Sync](how-to-connect-health-sync.md).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/user-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/user-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on May 26, 2026 1:51 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/user-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove EM action from user admin</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: User Administrator</div><div class="diff-line diff-context">description: User Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 05/21/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | microsoft.directory/contacts/delete | Delete contacts |</div><div class="diff-line diff-context">&gt; | microsoft.directory/deletedItems.groups/restore | Restore soft deleted groups to original state |</div><div class="diff-line diff-context">&gt; | microsoft.directory/deletedItems.users/restore | Restore soft deleted users to original state |</div><div class="diff-line diff-deleted">&gt; | microsoft.directory/entitlementManagement/allProperties/allTasks | Create and delete resources, and read and update all properties in Microsoft Entra entitlement management&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups.unified/assignedLabels/update | Update the assigned labels property on Microsoft 365 groups of assigned membership type, excluding role-assignable groups |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups/assignLicense | Assign product licenses to groups for group-based licensing |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups/basic/update | Update basic properties on Security groups and Microsoft 365 groups, excluding role-assignable groups |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: User Administrator</div><div class="diff-line diff-context">description: User Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 01/26/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | microsoft.directory/contacts/delete | Delete contacts |</div><div class="diff-line diff-context">&gt; | microsoft.directory/deletedItems.groups/restore | Restore soft deleted groups to original state |</div><div class="diff-line diff-context">&gt; | microsoft.directory/deletedItems.users/restore | Restore soft deleted users to original state |</div><div class="diff-line diff-added">&gt; | microsoft.directory/entitlementManagement/allProperties/allTasks | Create and delete resources, and read and update all properties in Microsoft Entra entitlement management |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups.unified/assignedLabels/update | Update the assigned labels property on Microsoft 365 groups of assigned membership type, excluding role-assignable groups |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups/assignLicense | Assign product licenses to groups for group-based licensing |</div><div class="diff-line diff-context">&gt; | microsoft.directory/groups/basic/update | Update basic properties on Security groups and Microsoft 365 groups, excluding role-assignable groups |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/configure-inheritable-permissions-blueprints.md" target="_blank">docs/agent-id/configure-inheritable-permissions-blueprints.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on May 26, 2026 6:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/configure-inheritable-permissions-blueprints" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> edit</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Inheritable permissions limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Maximum of 50 resource apps per agent identity blueprint (for example, up to 60 entries in the *inheritablePermissions* collection). If you exceed this limit, reduce the number of resource apps to stay within the supported boundary.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Regularly review and monitor your inheritable permissions configuration. Reevaluate inherited scopes and roles to ensure they remain appropriate for your use case. Audit which inherited scopes and roles are being used by agents and remove any unused permissions from both the agent identity blueprint principal and the inheritable permissions list to maintain security hygiene.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Inheritable permissions limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Maximum of 50 resource apps per agent identity blueprint (for example, up to 50 entries in the *inheritablePermissions* collection). If you exceed this limit, reduce the number of resource apps to stay within the supported boundary.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Regularly review and monitor your inheritable permissions configuration. Reevaluate inherited scopes and roles to ensure they remain appropriate for your use case. Audit which inherited scopes and roles are being used by agents and remove any unused permissions from both the agent identity blueprint principal and the inheritable permissions list to maintain security hygiene.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-pta.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-pta.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by egreenberg14 on May 26, 2026 5:31 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-pta" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity/hybrid/connect/how-to-connect-pta.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Installing multiple agents provides high availability of sign-in requests.</div><div class="diff-line diff-context">- It [protects](~/identity/authentication/howto-password-smart-lockout.md) your on-premises accounts against brute force password attacks in the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Privacy Considerations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When a pass-through sign-in attempt from Tenant A (for example, Contoso) to Tenant B (for example, Fabrikam) fails, Microsoft Entra ID publishes the sign-in log to both tenants. For failed attempts, Microsoft Entra ID doesn&#39;t expose personally identifiable information (PII) to Tenant B, because the user in Tenant A never consented to share their identity with Tenant B. In these cases, attributes like the user principal name (UPN) are replaced with unresolved GUIDs.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Installing multiple agents provides high availability of sign-in requests.</div><div class="diff-line diff-context">- It [protects](~/identity/authentication/howto-password-smart-lockout.md) your on-premises accounts against brute force password attacks in the cloud.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Privacy considerations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When a pass-through sign-in attempt from Tenant A (for example, Contoso) to Tenant B (for example, Fabrikam) fails, Microsoft Entra ID publishes the sign-in log to both tenants. For failed attempts, Microsoft Entra ID doesn&#39;t expose personally identifiable information (PII) to Tenant B, because the user in Tenant A never consented to share their identity with Tenant B. In these cases, attributes like the user principal name (UPN) are replaced with unresolved GUIDs.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-health-data-freshness.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-health-data-freshness.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-health-data-freshness" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">* Make sure that Microsoft Entra Connect Health Agents services are **running** on the machine. For example, Connect Health for AD FS should have two services.</div><div class="diff-line diff-context">  ![Verify Microsoft Entra Connect Health](./media/how-to-connect-health-agent-install/install5.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* Make sure to go over and meet the [requirements section](how-to-connect-health-agent-install.md#requirements).</div><div class="diff-line diff-context">* Use [test connectivity tool](how-to-connect-health-agent-install.md#test-connectivity-to-azure-ad-connect-health-service) to discover connectivity issues.</div><div class="diff-line diff-context">* If you have an HTTP Proxy, follow these [configuration steps](how-to-connect-health-agent-install.md#configure-azure-ad-connect-health-agents-to-use-http-proxy). </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">* Make sure that Microsoft Entra Connect Health Agents services are **running** on the machine. For example, Connect Health for AD FS should have two services.</div><div class="diff-line diff-context">  ![Verify Microsoft Entra Connect Health](./media/how-to-connect-health-agent-install/install5.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* Make sure to go over and meet the [prerequisites](how-to-connect-health-agent-install.md#prerequisites).</div><div class="diff-line diff-context">* Use [test connectivity tool](how-to-connect-health-agent-install.md#test-connectivity-to-azure-ad-connect-health-service) to discover connectivity issues.</div><div class="diff-line diff-context">* If you have an HTTP Proxy, follow these [configuration steps](how-to-connect-health-agent-install.md#configure-azure-ad-connect-health-agents-to-use-http-proxy). </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-roadmap.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-roadmap.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-roadmap" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;download-and-install-azure-ad-connect-health-agent&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Download and install Microsoft Entra Connect Health Agent</div><div class="diff-line diff-deleted">* Make sure that you [satisfy the requirements](how-to-connect-health-agent-install.md#requirements) for Microsoft Entra Connect Health.</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD FS</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://www.microsoft.com/en-us/download/details.aspx?id=108565)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;download-and-install-azure-ad-connect-health-agent&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Download and install Microsoft Entra Connect Health Agent</div><div class="diff-line diff-added">* Make sure that you [satisfy the prerequisites](how-to-connect-health-agent-install.md#prerequisites) for Microsoft Entra Connect Health.</div><div class="diff-line diff-context">* Get started using Microsoft Entra Connect Health for AD FS</div><div class="diff-line diff-context">    * [Download Microsoft Entra Connect Health Agent for AD FS.](https://www.microsoft.com/en-us/download/details.aspx?id=108565)</div><div class="diff-line diff-context">    * [See the installation instructions](how-to-connect-health-agent-install.md#install-the-agent-for-ad-fs).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-ports.md" target="_blank">docs/identity/hybrid/connect/reference-connect-ports.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by omondiatieno on May 26, 2026 1:38 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-ports" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply copy-edit conventions across Connect Health audit articles</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;7b---endpoints-for-azure-ad-connect-health-agent-for-ad-fssync-and-azure-ad&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 7b - Endpoints for Microsoft Entra Connect Health agent for (AD FS/Sync) and Microsoft Entra ID</div><div class="diff-line diff-deleted">For a list of endpoints, see [the Requirements section for the Microsoft Entra Connect Health agent](how-to-connect-health-agent-install.md#requirements).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&lt;a name=&#39;7b---endpoints-for-azure-ad-connect-health-agent-for-ad-fssync-and-azure-ad&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### 7b - Endpoints for Microsoft Entra Connect Health agent for (AD FS/Sync) and Microsoft Entra ID</div><div class="diff-line diff-added">For a list of endpoints, see [the Prerequisites section for the Microsoft Entra Connect Health agent](how-to-connect-health-agent-install.md#prerequisites).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
