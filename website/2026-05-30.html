@@ -1,0 +1,257 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 28th 2026, 10:54 PM PDT</p>
+        <p>Report generated on May 29th 2026, 10:54 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">15</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">7</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on May 29, 2026 6:32 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+14</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Label update added</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### General Availability - Account Discovery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** General Availability  </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Public Preview - Sensitivity labels for Microsoft Entra security groups</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** Group Management </div><div class="diff-line diff-added">**Product capability:** Platform    </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID now supports applying Microsoft Purview sensitivity labels to Entra cloud security groups in public preview.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Administrators can use labels to govern security group settings such as guest access using the same labels and policies that apply to Microsoft 365 groups today. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Labels can be managed in Microsoft Purview and applied through the Microsoft Entra Admin Center, Azure Portal, and Microsoft Graph. For more information, see: [Assign sensitivity labels to Microsoft Entra security groups (preview)](/entra/identity/users/groups-sensitivity-labels).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">---</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">### General Availability - Account Discovery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Type:** General Availability  </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-overview.md" target="_blank">docs/identity/multi-tenant-organizations/cross-tenant-synchronization-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on May 29, 2026 12:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/multi-tenant-organizations/cross-tenant-synchronization-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update cross-tenant-synchronization-overview.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: What is cross-tenant synchronization in Microsoft Entra ID?</div><div class="diff-line diff-context">description: Learn about cross-tenant synchronization in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 04/27/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">#customer intent: As a development, DevOps, or IT admin, I want to understand what cross-tenant synchronization is so that I can manage Microsoft Entra B2B collaboration across tenants in my organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Group synchronization</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Group synchronization is currently in preview. This information relates to a prerelease product that might be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">#### Is synchronization of groups supported?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Yes, cross-tenant synchronization can create security groups in the target tenant. This capability is currently in preview.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When a group is synchronized, all members of the group who are in scope for synchronization are synchronized. For more information, see [Configure cross-tenant synchronization](cross-tenant-synchronization-configure.md?pivots=same-cloud-synchronization).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: What is cross-tenant synchronization in Microsoft Entra ID?</div><div class="diff-line diff-context">description: Learn about cross-tenant synchronization in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 05/29/2026</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">#customer intent: As a development, DevOps, or IT admin, I want to understand what cross-tenant synchronization is so that I can manage Microsoft Entra B2B collaboration across tenants in my organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Group synchronization</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#### Is synchronization of groups supported?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Yes, cross-tenant synchronization can create security groups in the target tenant. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When a group is synchronized, all members of the group who are in scope for synchronization are synchronized. For more information, see [Configure cross-tenant synchronization](cross-tenant-synchronization-configure.md?pivots=same-cloud-synchronization).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md" target="_blank">docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on May 29, 2026 12:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/multi-tenant-organizations/cross-tenant-synchronization-configure" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update cross-tenant-synchronization-configure.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">::: zone pivot=&quot;same-cloud-synchronization&quot;</div><div class="diff-line diff-context">## Step 2: Enable user and group synchronization in the target tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Group synchronization is currently in PREVIEW.</div><div class="diff-line diff-deleted">&gt; This information relates to a prerelease product that may be substantially modified before it&#39;s released. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.</div><div class="diff-line diff-context">::: zone-end</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">::: zone pivot=&quot;cross-cloud-synchronization&quot;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">::: zone pivot=&quot;same-cloud-synchronization&quot;</div><div class="diff-line diff-context">## Step 2: Enable user and group synchronization in the target tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">::: zone-end</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">::: zone pivot=&quot;cross-cloud-synchronization&quot;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/using-facecheck.md" target="_blank">docs/verified-id/using-facecheck.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on May 29, 2026 2:21 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/verified-id/using-facecheck" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update using-facecheck.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Face Check is a premium feature within Verified ID. If you are a Microsoft Entra Suite customer, Face Check is included as part of the Suite. If you&#39;re not using Microsoft Entra Suite, you need to enable the Face Check Add-on in your Microsoft Entra Verified ID setup before doing Face Check verifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Make sure Microsoft Entra Verified ID is [set up in your tenant](verifiable-credentials-configure-tenant-quick.md) before using Face Check.</div><div class="diff-line diff-context">- [Associate or add an Azure subscription to your Microsoft Entra tenant](/entra/fundamentals/how-subscriptions-associated-directory)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Face Check is a premium feature within Verified ID. If you&#39;re a Microsoft Entra Suite customer, Face Check is included as part of the Suite. If you&#39;re not using Microsoft Entra Suite, you need to enable the Face Check Add-on in your Microsoft Entra Verified ID setup before doing Face Check verifications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Make sure Microsoft Entra Verified ID is [set up in your tenant](verifiable-credentials-configure-tenant-quick.md) before using Face Check.</div><div class="diff-line diff-context">- [Associate or add an Azure subscription to your Microsoft Entra tenant](/entra/fundamentals/how-subscriptions-associated-directory)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
