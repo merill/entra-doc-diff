@@ -1,0 +1,516 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since May 31st 2026, 11:50 PM PDT</p>
+        <p>Report generated on June 1st 2026, 11:50 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">23</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-sso-how-it-works.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-sso-how-it-works.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Vimala Ranganathan on Jun 1, 2026 6:39 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sso-how-it-works" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Seamless SSO encryption type guidance with July 2026 changes</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-context">&gt; The `AZUREADSSOACC` computer account needs to be strongly protected for security reasons. Only Domain Admins should be able to manage the computer account. Ensure that Kerberos delegation on the computer account is disabled, and that no other account in Active Directory has delegation permissions on the `AZUREADSSOACC` computer account.. Store the computer account in an Organization Unit (OU) where they are safe from accidental deletions and where only Domain Admins have access. The Kerberos decryption key on the computer account should also be treated as sensitive. We highly recommend that you [roll over the Kerberos decryption key](how-to-connect-sso-faq.yml) of the `AZUREADSSOACC` computer account at least every 30 days.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Seamless SSO supports the `AES256_HMAC_SHA1`, `AES128_HMAC_SHA1` and `RC4_HMAC_MD5` encryption types for Kerberos. It is recommended that the encryption type for the `AzureADSSOAcc$` account is set to `AES256_HMAC_SHA1`, or one of the AES types vs. RC4 for added security. The encryption type is stored on the `msDS-SupportedEncryptionTypes` attribute of the account in your Active Directory.  If the `AzureADSSOAcc$` account encryption type is set to `RC4_HMAC_MD5`, and you want to change it to one of the AES encryption types, please make sure that you first roll over the Kerberos decryption key of the `AzureADSSOAcc$` account as explained in the [FAQ document](how-to-connect-sso-faq.yml) under the relevant question, otherwise Seamless SSO will not happen.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once the set-up is complete, Seamless SSO works the same way as any other sign-in that uses integrated Windows authentication (IWA).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&gt;[!IMPORTANT]</div><div class="diff-line diff-context">&gt; The `AZUREADSSOACC` computer account needs to be strongly protected for security reasons. Only Domain Admins should be able to manage the computer account. Ensure that Kerberos delegation on the computer account is disabled, and that no other account in Active Directory has delegation permissions on the `AZUREADSSOACC` computer account.. Store the computer account in an Organization Unit (OU) where they are safe from accidental deletions and where only Domain Admins have access. The Kerberos decryption key on the computer account should also be treated as sensitive. We highly recommend that you [roll over the Kerberos decryption key](how-to-connect-sso-faq.yml) of the `AZUREADSSOACC` computer account at least every 30 days.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Seamless SSO supports the following Kerberos encryption types: `AES256_HMAC_SHA1`, `AES128_HMAC_SHA1`, and `RC4_HMAC_MD5`. For enhanced security, Microsoft recommends configuring the `AzureADSSOAcc$` account to use `AES256_HMAC_SHA1` or another AES-based encryption type instead of RC4. The configured encryption type is stored in the `msDS-SupportedEncryptionTypes` attribute of the account in Active Directory Domain Services (AD DS).</div><div class="diff-line diff-added">&gt;</div><div class="diff-line diff-added">&gt; Starting with the July 2026 Windows Server update, the default Kerberos encryption type in AD DS will change from RC4 to AES-256. Organizations that continue to use RC4 may experience authentication or Seamless SSO issues after this update is applied. To help ensure uninterrupted SSO access, Microsoft recommends migrating the `AzureADSSOAcc$` account to AES-256 as soon as possible.</div><div class="diff-line diff-added">&gt;</div><div class="diff-line diff-added">&gt; If the `AzureADSSOAcc$` account is currently configured to use `RC4_HMAC_MD5` and you plan to switch to an AES-based encryption type, you must first roll over the Kerberos decryption key for the `AzureADSSOAcc$` account, as described in the [FAQ documentation](how-to-connect-sso-faq.yml). Failing to roll over the key before changing the encryption type can prevent Seamless SSO from functioning correctly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once the set-up is complete, Seamless SSO works the same way as any other sign-in that uses integrated Windows authentication (IWA).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-web-content-filtering.md" target="_blank">docs/global-secure-access/how-to-configure-web-content-filtering.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 1, 2026 8:30 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-web-content-filtering" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+6</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add temporary notice for erroneous WCF V1 'Deprecating soon' label AB#583992</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: How to configure Global Secure Access web content filtering</div><div class="diff-line diff-context">description: &quot;Control internet access based on website categories, URLs, and FQDNs. Configure granular, user-aware filtering policies using security profiles and Conditional Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/29/2026</div><div class="diff-line diff-context">ms.subservice: entra-internet-access </div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to configure Global Secure Access web content filtering</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Web content filtering empowers you to implement granular Internet access controls for your organization based on website categorization.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: How to configure Global Secure Access web content filtering</div><div class="diff-line diff-context">description: &quot;Control internet access based on website categories, URLs, and FQDNs. Configure granular, user-aware filtering policies using security profiles and Conditional Access.&quot;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 06/01/2026</div><div class="diff-line diff-context">ms.subservice: entra-internet-access </div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># How to configure Global Secure Access web content filtering</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&lt;!-- TEMPORARY NOTICE: Remove this IMPORTANT alert after the erroneous &quot;Deprecating soon&quot; label on Web Content Filtering Policy (V1) is fixed in the Microsoft Entra admin center. Tracking with PM Michael Aldridge / engineering. --&gt;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; You might see a red **Deprecating soon** label next to **Web Content Filtering Policy (V1)** in the Microsoft Entra admin center. This label is displayed in error. Your existing web content filtering policies aren&#39;t affected, continue to work as configured, and no action is required at this time. This article is updated when the display issue is resolved.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Web content filtering empowers you to implement granular Internet access controls for your organization based on website categorization.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-custom-oidc-federation-customers.md" target="_blank">docs/external-id/customers/how-to-custom-oidc-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Vimala Ranganathan on Jun 1, 2026 9:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-custom-oidc-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove private_key_jwt references from OIDC federation docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; To federate with a Microsoft Entra ID tenant, see [Add a Microsoft Entra ID tenant as an OpenID Connect identity provider](how-to-entra-id-federation-customers.md). OIDC federation also isn&#39;t compatible with the [Invite external user (preview)](/entra/external-id/customers/concept-supported-features-customers#identity-providers-and-authentication-methods) feature.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   - **Client ID** and **Client Secret** are the identifiers your identity provider uses to identify the registered application service. Provide a client secret if you select `client_secret` authentication. If you select `private_key_jwt`, the public key needs to be provided in the OpenID provider metadata (well-known endpoint), retrievable via the property `jwks_uri`.</div><div class="diff-line diff-deleted">   - **Client Authentication** is the type of client authentication method to be used to authenticate with your identity provider using the token endpoint. `client_secret_post`, `client_secret_jwt`, and `private_key_jwt` authentication methods are supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; Due to possible security problems, the `client_secret_basic` client authentication method isn&#39;t supported.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; To federate with a Microsoft Entra ID tenant, see [Add a Microsoft Entra ID tenant as an OpenID Connect identity provider](how-to-entra-id-federation-customers.md). OIDC federation also isn&#39;t compatible with the [Invite external user (preview)](/entra/external-id/customers/concept-supported-features-customers#identity-providers-and-authentication-methods) feature.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">   - **Client ID** and **Client Secret** are the identifiers your identity provider uses to identify the registered application service. Provide a client secret when you select a `client_secret`-based authentication method.</div><div class="diff-line diff-added">   - **Client Authentication** is the type of client authentication method to be used to authenticate with your identity provider using the token endpoint. `client_secret_post` and `client_secret_jwt` authentication methods are supported. Although the admin center UI might display `private_key_jwt` as an option, this method isn&#39;t currently supported and shouldn&#39;t be selected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context">   &gt; Due to possible security problems, the `client_secret_basic` client authentication method isn&#39;t supported.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-operate-private-access.md" target="_blank">docs/global-secure-access/how-to-operate-private-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Janice Ricketts on Jun 1, 2026 2:06 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-operate-private-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update links to Private Access Sizing Planner</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Check | Role | Automated by | Procedure | What to do if it fails |</div><div class="diff-line diff-context">| --- | --- | --- | --- | --- |</div><div class="diff-line diff-deleted">| Connector resource utilization trend | Network Ops L2 | Azure Monitor alert ([Playbook 5](#playbook-5-connector-group-capacity-alert)) | Review the week&#39;s alert history for sustained trends, not isolated spikes. | If any host trends above 70% CPU or 80% memory, plan to add a connector. Use the [Private Access Sizing Planner](https://github.com/FranckhDev/GSA-Private-Access-Sizing-Planner). |</div><div class="diff-line diff-context">| Policy efficacy digest | IAM Admin | [Playbook 9: Weekly policy-efficacy digest](#playbook-9-weekly-policy-efficacy-digest) (email) | Review the weekly digest of top denied apps/users. | Adjust policies for persistent false positives. Investigate repeated unauthorized access attempts. |</div><div class="diff-line diff-context">| Configuration backup compliance | Network Ops L2 | [Playbook 3](#playbook-3-weekly-configuration-backup) + `Test-GsaBackupCompliance.ps1` | Backup compliance script runs after Playbook 3 and alerts if files are missing or stale. | Troubleshoot the runbook or script. Manually export via Graph API as a fallback. |</div><div class="diff-line diff-context">| Alert noise ratio | SOC | `Test-GsaAlertNoiseRatio.ps1` scheduled weekly | Script reports analytic-rule-to-incident ratio per Private Access rule. | Tune high-noise rules. Close the loop with Sentinel tuning recommendations. |</div><div class="diff-line diff-context">&lt;!-- Configure the CPU and memory thresholds in Azure Monitor metric alerts on each connector host virtual machine (VM) as described in [Playbook 5: Connector group capacity alert](#playbook-5-connector-group-capacity-alert); use the Sentinel integration in this guide for log collection, incident correlation, and workflow automation, not for the host metric thresholds themselves. --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-deleted">&gt; Connector sizing depends on the host server specifications and workload. Use the [Private Access Sizing Planner](https://github.com/FranckhDev/GSA-Private-Access-Sizing-Planner) to estimate connector requirements based on your user counts and application patterns. For general connector architecture guidance, see [Understand the Microsoft Entra private network connector](/entra/global-secure-access/concept-connectors). As a starting point, a 4-vCPU / 16-GB RAM server can handle approximately 200–300 concurrent connections, but always validate with your own workload.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Integration and automation</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Check | Role | Automated by | Procedure | What to do if it fails |</div><div class="diff-line diff-context">| --- | --- | --- | --- | --- |</div><div class="diff-line diff-added">| Connector resource utilization trend | Network Ops L2 | Azure Monitor alert ([Playbook 5](#playbook-5-connector-group-capacity-alert)) | Review the week&#39;s alert history for sustained trends, not isolated spikes. | If any host trends above 70% CPU or 80% memory, plan to add a connector. Use the [Private Access Sizing Planner](https://aka.ms/gsaPAPlanner). |</div><div class="diff-line diff-context">| Policy efficacy digest | IAM Admin | [Playbook 9: Weekly policy-efficacy digest](#playbook-9-weekly-policy-efficacy-digest) (email) | Review the weekly digest of top denied apps/users. | Adjust policies for persistent false positives. Investigate repeated unauthorized access attempts. |</div><div class="diff-line diff-context">| Configuration backup compliance | Network Ops L2 | [Playbook 3](#playbook-3-weekly-configuration-backup) + `Test-GsaBackupCompliance.ps1` | Backup compliance script runs after Playbook 3 and alerts if files are missing or stale. | Troubleshoot the runbook or script. Manually export via Graph API as a fallback. |</div><div class="diff-line diff-context">| Alert noise ratio | SOC | `Test-GsaAlertNoiseRatio.ps1` scheduled weekly | Script reports analytic-rule-to-incident ratio per Private Access rule. | Tune high-noise rules. Close the loop with Sentinel tuning recommendations. |</div><div class="diff-line diff-context">&lt;!-- Configure the CPU and memory thresholds in Azure Monitor metric alerts on each connector host virtual machine (VM) as described in [Playbook 5: Connector group capacity alert](#playbook-5-connector-group-capacity-alert); use the Sentinel integration in this guide for log collection, incident correlation, and workflow automation, not for the host metric thresholds themselves. --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!TIP]</div><div class="diff-line diff-added">&gt; Connector sizing depends on the host server specifications and workload. Use the [Private Access Sizing Planner](https://aka.ms/gsaPAPlanner) to estimate connector requirements based on your user counts and application patterns. For general connector architecture guidance, see [Understand the Microsoft Entra private network connector](/entra/global-secure-access/concept-connectors). As a starting point, a 4-vCPU / 16-GB RAM server can handle approximately 200–300 concurrent connections, but always validate with your own workload.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Integration and automation</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-sspr-authenticationdata.md" target="_blank">docs/identity/authentication/howto-sspr-authenticationdata.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tim Larson on Jun 1, 2026 2:06 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-sspr-authenticationdata" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update howto-sspr-authenticationdata.md (#13242)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some organizations prefer to bootstrap this process through synchronization of authentication data that already exists in Active Directory Domain Services. This synchronized data is made available to Microsoft Entra ID and SSPR without requiring user interaction. When users need to change or reset their password, they can do so even if they haven&#39;t previously registered their contact information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can prepopulate authentication contact information if you meet the following requirements:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* You formatted the data in your on-premises directory properly.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Some organizations prefer to bootstrap this process through synchronization of authentication data that already exists in Active Directory Domain Services. This synchronized data is made available to Microsoft Entra ID and SSPR without requiring user interaction. When users need to change or reset their password, they can do so even if they haven&#39;t previously registered their contact information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Starting **July 6, 2026**, a registration campaign will prompt affected users to register methods ahead of enforcement. Ensure users have registered at least one method that satisfies your SSPR policy. For more information, see [How to manage authentication methods](how-to-authentication-methods-manage.md).</div><div class="diff-line diff-added">&gt; Starting **September 7, 2026**, SSPR will only accept explicitly registered authentication methods. Directory-sourced properties — such as `mobilePhone`, `businessPhone`, and `otherMails` — that were never registered will no longer work for SSPR verification. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">You can prepopulate authentication contact information if you meet the following requirements:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* You formatted the data in your on-premises directory properly.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/concept-soft-delete-devices.md" target="_blank">docs/identity/devices/concept-soft-delete-devices.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jun 1, 2026 7:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/concept-soft-delete-devices" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add hybrid joined devices to supported soft delete types</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">During the preview, device soft delete is supported for the following device types:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Entra joined devices** &amp;mdash; Enterprise-managed devices directly joined to Microsoft Entra ID.</div><div class="diff-line diff-context">- **Microsoft Entra registered devices** &amp;mdash; Personal or BYOD devices registered with a work or school account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following device types aren&#39;t currently supported for soft delete and are hard deleted immediately when removed:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Microsoft Entra hybrid joined devices &lt;!-- TODO: Confirm whether hybrid-joined device soft delete support is available at public preview. --&gt;</div><div class="diff-line diff-context">- Devices without a recognized trust type, such as those created directly via Microsoft Graph API</div><div class="diff-line diff-context">- Certain specialty device types, including secure VMs with managed identities, non-persistent VDI instances, and printers</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">During the preview, device soft delete is supported for the following device types:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Microsoft Entra joined devices** &amp;mdash; Enterprise-managed devices directly joined to Microsoft Entra ID.</div><div class="diff-line diff-added">- **Microsoft Entra hybrid joined devices** &amp;mdash; Enterprise-managed devices joined to your on-premises Active Directory domain and registered with Microsoft Entra ID.</div><div class="diff-line diff-context">- **Microsoft Entra registered devices** &amp;mdash; Personal or BYOD devices registered with a work or school account.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following device types aren&#39;t currently supported for soft delete and are hard deleted immediately when removed:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Devices without a recognized trust type, such as those created directly via Microsoft Graph API</div><div class="diff-line diff-context">- Certain specialty device types, including secure VMs with managed identities, non-persistent VDI instances, and printers</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-conditional-access-report-only.md" target="_blank">docs/identity/conditional-access/concept-conditional-access-report-only.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jun 1, 2026 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-report-only" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Date update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/24/2026</div><div class="diff-line diff-context">ms.reviewer: kvenkit</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: conditional-access</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 06/01/2026</div><div class="diff-line diff-context">ms.reviewer: kvenkit</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/plan-conditional-access.md" target="_blank">docs/identity/conditional-access/plan-conditional-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jun 1, 2026 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Date update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Plan Your Microsoft Entra Conditional Access Deployment</div><div class="diff-line diff-context">description: Plan your Conditional Access policies to balance security and productivity. Learn how to design and deploy effective policies for your organization.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/24/2026</div><div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.reviewer: joflore</div><div class="diff-line diff-context">ms.custom:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Plan Your Microsoft Entra Conditional Access Deployment</div><div class="diff-line diff-context">description: Plan your Conditional Access policies to balance security and productivity. Learn how to design and deploy effective policies for your organization.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 06/01/2026</div><div class="diff-line diff-context">manager: martinco</div><div class="diff-line diff-context">ms.reviewer: joflore</div><div class="diff-line diff-context">ms.custom:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/best-practices.md" target="_blank">docs/identity/role-based-access-control/best-practices.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jun 1, 2026 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/best-practices" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Date update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Best practices for Microsoft Entra roles</div><div class="diff-line diff-context">description: Best practices for using Microsoft Entra roles.</div><div class="diff-line diff-context">ms.topic: best-practice</div><div class="diff-line diff-deleted">ms.date: 03/30/2025</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Best practices for Microsoft Entra roles</div><div class="diff-line diff-context">description: Best practices for using Microsoft Entra roles.</div><div class="diff-line diff-context">ms.topic: best-practice</div><div class="diff-line diff-added">ms.date: 06/01/2026</div><div class="diff-line diff-context">ms.reviewer: vincesm</div><div class="diff-line diff-context">ms.custom: it-pro, sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/custom-overview.md" target="_blank">docs/identity/role-based-access-control/custom-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by rolyon on Jun 1, 2026 5:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/custom-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Date update</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Overview of Microsoft Entra role-based access control (RBAC)</div><div class="diff-line diff-context">description: Learn how to understand the parts of a role assignment and restricted scope in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 03/30/2025</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Overview of Microsoft Entra role-based access control (RBAC)</div><div class="diff-line diff-context">description: Learn how to understand the parts of a role assignment and restricted scope in Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 06/01/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: it-pro, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-image-nochange</div><div class="diff-line diff-context">ai-usage: ai-assisted</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-entra-id-federation-customers.md" target="_blank">docs/external-id/customers/how-to-entra-id-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Vimala Ranganathan on Jun 1, 2026 2:53 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-entra-id-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove (Preview) tag from Entra ID federation article</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, DevOps, or IT administrator, I want to learn how to add a Microsoft Entra ID tenant as an OpenID Connect identity provider in my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Add a Microsoft Entra ID tenant as an OpenID Connect identity provider (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, DevOps, or IT administrator, I want to learn how to add a Microsoft Entra ID tenant as an OpenID Connect identity provider in my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Add a Microsoft Entra ID tenant as an OpenID Connect identity provider</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
