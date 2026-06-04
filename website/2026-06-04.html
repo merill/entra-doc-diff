@@ -1,0 +1,405 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since June 2nd 2026, 11:51 PM PDT</p>
+        <p>Report generated on June 3rd 2026, 11:51 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">35</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/agent-id.md" target="_blank">docs/identity/conditional-access/agent-id.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 3, 2026 6:48 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/agent-id" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+16</span> / 
+              <span class="deletions">-62</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> ca-agents-trim-link-060326</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access is an intelligent policy engine that helps organizations control how users and agents access corporate resources. It brings together real-time signals such as user&#39;s and agent&#39;s context, device, location, and session risk information to determine when to allow, block, or limit access, or require more verification steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Learn about Conditional Access for agents:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- High-level overview of Conditional Access: [What is Conditional Access?](overview.md)</div><div class="diff-line diff-context">- Guide to managing agent identities across your organization: [Manage agent identities in your organization](../../agent-id/manage-agent-identities-admin.md).</div><div class="diff-line diff-deleted">- Securing agent flows using Conditional Access:</div><div class="diff-line diff-deleted">    - [Configure policies for autonomous agent access](policy-autonomous-agents.md)</div><div class="diff-line diff-deleted">    - [Configure policies for on-behalf-of agent access](policy-on-behalf-of-agents.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How Conditional Access evaluates agent access requests</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### On-behalf-of flow</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The most common access is the on-behalf-of signed-in user (OBO) flow. In this flow, the agent accesses resources with the user&#39;s identity and permissions to retrieve data or perform actions that the user can also can do. For example, when an agent reads your emails, the agent is accessing your mailbox *on your behalf*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The on-behalf-of flow is also known as delegated access. Agents using this type of access are sometimes called interactive agents or assistive agents, as they involve a user interface for human interaction.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access is an intelligent policy engine that helps organizations control how users and agents access corporate resources. It brings together real-time signals such as user&#39;s and agent&#39;s context, device, location, and session risk information to determine when to allow, block, or limit access, or require more verification steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Conditional Access for agents requires Microsoft Entra ID P1 or P2 and a Microsoft Agent 365 license for each user. Enforcement of Agent 365 licensing is coming soon. Network controls for agents require Microsoft Entra Internet Access. For more information, see [What is Microsoft Entra Agent ID](../../agent-id/what-is-microsoft-entra-agent-id.md#how-to-get-started).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">Learn about Conditional Access for agents:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- High-level overview of Conditional Access: [What is Conditional Access?](overview.md)</div><div class="diff-line diff-context">- Guide to managing agent identities across your organization: [Manage agent identities in your organization](../../agent-id/manage-agent-identities-admin.md).</div><div class="diff-line diff-added">- [Configure policies for autonomous agent access](policy-autonomous-agents.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How Conditional Access evaluates agent access requests</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### On-behalf-of flow</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">The most common access pattern is the on-behalf-of (OBO) flow. In this flow, a user signs in to an agent application, and the agent accesses downstream resources using the user&#39;s identity and delegated permissions. For example, when an agent reads your emails, it accesses your mailbox *on your behalf*.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; The on-behalf-of flow is also known as delegated access. Agents using this type of access are sometimes called interactive agents or assistive agents, as they involve a user interface for human interaction.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Jun 3, 2026 11:28 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+49</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Whats New missed items</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Public Preview - Workload identity-based authentication for SAP SuccessFactors provisioning integrations </div><div class="diff-line diff-context"></div><div class="diff-line diff-context">**Type:** New feature  </div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">### General Availability - NetBiosName resolution test now informational</div><div class="diff-line diff-added"></div><div class="diff-line diff-added">**Type:** Changed feature  </div><div class="diff-line diff-added">**Service category:** Entra Connect  </div><div class="diff-line diff-added">**Product capability:** Entra Connect    </div><div class="diff-line diff-added"></div><div class="diff-line diff-added">The “NetBIOS Name Sysvol Connectivity resolution” test in the AD DS health monitoring agent has been _reclassified_ from an alerting test to an informational test. Going forward, if this test fails, it will no longer generate an alert or require remediation action on your part. Instead, the test runs in the background and logs results for your information only.  </div><div class="diff-line diff-added"></div><div class="diff-line diff-added">**What Changed**</div><div class="diff-line diff-added"></div><div class="diff-line diff-added"></div><div class="diff-line diff-added">**The NetBIOS Name Sysvol Connectivity test is now _informational-only_**. Previously, when this test failed (e.g. if a domain controller couldn’t resolve the **NetBIOS name** to access its **SYSVOL share**), an **alert was triggered** in Connect Health, prompting you for action. Now, **failures in this test will not raise an alert** in Microsoft Entra Connect Health.</div><div class="diff-line diff-added"></div><div class="diff-line diff-added">**Why We Made This Change**</div><div class="diff-line diff-added"></div><div class="diff-line diff-added"></div><div class="diff-line diff-added">**NetBIOS is a legacy networking protocol that is not critical in modern Active Directory environments.** Many organizations no longer rely on NetBIOS name resolution in day-to-day operations. **Reclassifying this test as informational reduces noise in your alert feed and allows you to focus on issues that are genuinely critical to your identity infrastructure.** In short, we want to ensure that Connect Health alerts highlight _meaningful issues_ and help you prioritize real problems, rather than flagging non-essential conditions.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/policy-autonomous-agents.md" target="_blank">docs/identity/conditional-access/policy-autonomous-agents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 3, 2026 7:10 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-autonomous-agents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+28</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> revisions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- Target all agent users or select specific agent users</div><div class="diff-line diff-context">- Apply policies using custom security attributes</div><div class="diff-line diff-context">- Apply agent risk conditions to block risky agents</div><div class="diff-line diff-deleted">- Scope policies by agent execution environment (cloud, cloud-hosted VMs, end-user devices, on-premises)</div><div class="diff-line diff-deleted">- Enforce device compliance for agents running on managed endpoints</div><div class="diff-line diff-context">- Enforce compliant network locations for agents with a Global Secure Access client</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a Conditional Access policy for agents operating with their own identity, use the following settings:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [conditional-access-report-only-mode](../../includes/conditional-access-report-only-mode.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Manage agent identities in your organization](/entra/agent-id/manage-agent-identities-organization) - Overview of agent management across the full lifecycle.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- Target all agent users or select specific agent users</div><div class="diff-line diff-context">- Apply policies using custom security attributes</div><div class="diff-line diff-context">- Apply agent risk conditions to block risky agents</div><div class="diff-line diff-added">- Use the agent execution environments condition to scope policies to agents running on endpoints</div><div class="diff-line diff-added">- Enforce device compliance for agents running on managed endpoints (Windows 365 Cloud PCs)</div><div class="diff-line diff-context">- Enforce compliant network locations for agents with a Global Secure Access client</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a Conditional Access policy for agents operating with their own identity, use the following settings:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [conditional-access-report-only-mode](../../includes/conditional-access-report-only-mode.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Require a compliant network for agents&#39; user accounts</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Similar to device compliance, you can require agents running on endpoints to connect through a compliant network using [Global Secure Access](/entra/global-secure-access/overview-what-is-global-secure-access). The Global Secure Access client installed on the endpoint provides the network location signal that Conditional Access evaluates.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Use the **Agent execution environments (Preview)** condition to scope this policy to endpoint-based sessions only. Without this condition, cloud-native agents without a Global Secure Access client are blocked with no path to compliance.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Conditional Access Administrator](../role-based-access-control/permissions-reference.md#conditional-access-administrator).</div><div class="diff-line diff-added">1. Browse to **Entra ID** &gt; **Conditional Access** &gt; **Policies**.</div><div class="diff-line diff-added">1. Select **New policy**.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-password-smart-lockout.md" target="_blank">docs/identity/authentication/howto-password-smart-lockout.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 3, 2026 5:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-password-smart-lockout" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add SSPR recovery guidance to smart lockout article (WI 583955)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Prevent attacks using smart lockout</div><div class="diff-line diff-context">description: Learn how Microsoft Entra smart lockout helps protect your organization from brute-force attacks that try to guess user passwords.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/29/2025</div><div class="diff-line diff-context">ms.reviewer: rogoya</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Protect user accounts from attacks with Microsoft Entra smart lockout</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  To refrain the system from locking out a user signing in from an unfamiliar location, they must use the correct password to avoid being locked out and have a low number of previous lockout attempts from unfamiliar locations. If the user is locked out from an unfamiliar location, the user should consider SSPR to reset the lockout counter.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* After an account lockout, the user can initiate self-service password reset (SSPR) to sign in again. If the user chooses **I forgot my password** during SSPR, the duration of the lockout is reset to 0 seconds. If the user chooses **I know my password** during SSPR, the lockout timer continues, and the duration of the lockout isn&#39;t reset. To reset the duration and sign in again, the user needs to change their password.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Smart lockout can be integrated with hybrid deployments that use password hash sync or pass-through authentication to protect on-premises Active Directory Domain Services (AD DS) accounts from being locked out by attackers. By setting smart lockout policies in Microsoft Entra ID appropriately, attacks can be filtered out before they reach on-premises AD DS.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Prevent attacks using smart lockout</div><div class="diff-line diff-context">description: Learn how Microsoft Entra smart lockout helps protect your organization from brute-force attacks that try to guess user passwords.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 06/03/2026</div><div class="diff-line diff-context">ms.reviewer: rogoya</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Protect user accounts from attacks with Microsoft Entra smart lockout</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">  To refrain the system from locking out a user signing in from an unfamiliar location, they must use the correct password to avoid being locked out and have a low number of previous lockout attempts from unfamiliar locations. If the user is locked out from an unfamiliar location, the user should consider SSPR to reset the lockout counter.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* After an account lockout, the user can initiate self-service password reset (SSPR) to sign in again. SSPR lets users reset or change their own passwords without help desk or administrator assistance. If the user chooses **I forgot my password** during SSPR, the duration of the lockout is reset to 0 seconds, so the user doesn&#39;t need to wait for the lockout duration to expire. If the user chooses **I know my password** during SSPR, the lockout timer continues and the duration of the lockout isn&#39;t reset. In that case, to regain access the user should either change their password or wait until the configured lockout duration expires.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Smart lockout can be integrated with hybrid deployments that use password hash sync or pass-through authentication to protect on-premises Active Directory Domain Services (AD DS) accounts from being locked out by attackers. By setting smart lockout policies in Microsoft Entra ID appropriately, attacks can be filtered out before they reach on-premises AD DS.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-sync-service-manager-ui-connectors.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-sync-service-manager-ui-connectors.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Josh Villagomez on Jun 3, 2026 2:34 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sync-service-manager-ui-connectors" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @omondiatieno</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-deleted">&gt; Deleting a connector or connector space is **$\color{red} unsupported$**. Performing these actions may have serious consequences and damage your hybrid identity environment. These actions should **never** be a troubleshooting step.</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure Run Profiles</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!WARNING]</div><div class="diff-line diff-added">&gt; Deleting a connector or connector space is **not supported** and can have serious consequences for your hybrid identity environment. Don&#39;t use these actions as a troubleshooting step.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Configure Run Profiles</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-sign-in-with-passkey.md" target="_blank">docs/external-id/customers/how-to-sign-in-with-passkey.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 3, 2026 8:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-sign-in-with-passkey" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix link to passkey management sample app</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- View their registered passkeys.</div><div class="diff-line diff-context">- Delete a passkey.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For a complete reference implementation, see the [passkey management sample app on GitHub](https://github.com/Azure-Samples/ms-eeid-passkey-sample-app). The sample is a React single-page application (SPA) that demonstrates how to sign in users with Microsoft Entra External ID and manage passkey credentials by using the Microsoft Graph API.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## User experience</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- View their registered passkeys.</div><div class="diff-line diff-context">- Delete a passkey.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For a complete reference implementation, see the [passkey management sample app on GitHub](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/tree/main/passkey-sample). The sample is a React single-page application (SPA) that demonstrates how to sign in users with Microsoft Entra External ID and manage passkey credentials by using the Microsoft Graph API.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## User experience</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/officespace-software-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/officespace-software-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Regan Downer on Jun 3, 2026 3:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/officespace-software-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @v-regandowner</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the **Tenant URL** field, input your OfficeSpace Software Tenant URL (the format should be [https://(YOURTENANTNAME).officespacesoftware.com/api/scim/v2/](https://(YOURTENANTNAME).officespacesoftware.com/api/scim/v2/) ) and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to OfficeSpace Software. If the connection fails, ensure your OfficeSpace Software account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">	![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **Tenant URL** field, input your OfficeSpace Software Tenant URL (the format should be &#39;https://(YOURTENANTNAME).officespacesoftware.com/api/scim/v2/&#39;) and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to OfficeSpace Software. If the connection fails, ensure your OfficeSpace Software account has the required admin permissions and try again.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/agent-access-packages.md" target="_blank">docs/agent-id/agent-access-packages.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Regan Downer on Jun 3, 2026 3:02 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/agent-id/agent-access-packages" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Apply suggestion from @Dickson-Mwendia</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">1. Select **Next: Resource roles**. On the **Resource roles** tab, you select the resource roles to include in the access package. Access packages for agent identities can have security group memberships, directory roles, or API permissions as resource roles. For more information, see [add a group](/entra/id-governance/entitlement-management-access-package-resources#add-a-group-or-team-resource-role), [add a Microsoft Entra role](/entra/id-governance/entitlement-management-access-package-resources#add-a-microsoft-entra-role-assignment), and [add an API permission](/entra/id-governance/entitlement-management-access-package-resources#add-an-api-permission-preview). Don&#39;t add application roles, SAP roles, or SharePoint Online site roles to an access package for agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!TIP]</div><div class="diff-line diff-deleted">    &gt; If you&#39;re not sure which resource roles to include, you can skip adding them while creating the access package, and then [add them](/entra/id-governance/entitlement-management-access-package-resources) later. For API permissions, resource ownership validation occurs both during onboarding the permissions to an access package and again when adding permissions to an access package. This additional validation helps ensure that only authorized resource owners can introduce or expand access to API Permissions through access packages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next: Requests**. On the **Requests** tab, you create the first policy to specify who can request the access package. in the **Who can get access** section, select **For users, service principals, and agent identities in your directory**. In **Select specific scope**, select the option of **All agents**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">1. Select **Next: Resource roles**. On the **Resource roles** tab, you select the resource roles to include in the access package. Access packages for agent identities can have security group memberships, directory roles, or API permissions as resource roles. For more information, see [add a group](/entra/id-governance/entitlement-management-access-package-resources#add-a-group-or-team-resource-role), [add a Microsoft Entra role](/entra/id-governance/entitlement-management-access-package-resources#add-a-microsoft-entra-role-assignment), and [add an API permission](/entra/id-governance/entitlement-management-access-package-resources#add-an-api-permission-preview). Don&#39;t add application roles, SAP roles, or SharePoint Online site roles to an access package for agent identities.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    &gt; [!TIP]</div><div class="diff-line diff-added">    &gt; If you&#39;re not sure which resource roles to include, you can skip adding them while creating the access package, and then [add them](/entra/id-governance/entitlement-management-access-package-resources) later. For API permissions, resource ownership validation occurs both when you onboard permissions to an access package and when you add them to an access package. This validation helps ensure that only authorized resource owners can introduce or expand access to API permissions through access packages.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next: Requests**. On the **Requests** tab, you create the first policy to specify who can request the access package. in the **Who can get access** section, select **For users, service principals, and agent identities in your directory**. In **Select specific scope**, select the option of **All agents**.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
