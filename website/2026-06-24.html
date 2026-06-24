@@ -1,0 +1,743 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since June 22nd 2026, 11:14 PM PDT</p>
+        <p>Report generated on June 23rd 2026, 11:14 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">49</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">48</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-manage-groups.md" target="_blank">docs/fundamentals/how-to-manage-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Added by shlipsey3 on Jun 23, 2026 9:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/how-to-manage-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+217 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> yml-conversion1-061926 (#13583)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/plan-sso-integration-isv.md" target="_blank">docs/identity/enterprise-apps/plan-sso-integration-isv.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jackline Omondi on Jun 23, 2026 2:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/plan-sso-integration-isv" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+213 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add SSO onboarding articles for ISV app developers (#13546)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/understand-microsoft-sso-model.md" target="_blank">docs/identity/enterprise-apps/understand-microsoft-sso-model.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jackline Omondi on Jun 23, 2026 2:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/understand-microsoft-sso-model" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+104 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add SSO onboarding articles for ISV app developers (#13546)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/saml-vs-oidc-decision-guide.md" target="_blank">docs/identity/enterprise-apps/saml-vs-oidc-decision-guide.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Jackline Omondi on Jun 23, 2026 2:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/saml-vs-oidc-decision-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+94 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add SSO onboarding articles for ISV app developers (#13546)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new.md" target="_blank">docs/fundamentals/whats-new.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Jun 23, 2026 10:29 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1209</span> / 
+              <span class="deletions">-1258</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Archive December 2025 entries from whats-new.md (#13614)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-deleted">title: Microsoft Entra releases and announcements</div><div class="diff-line diff-deleted">description: Learn what is new with Microsoft Entra, such as the latest release notes, known issues, bug fixes, deprecated functionality, and upcoming changes.</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-deleted">featureFlags:</div><div class="diff-line diff-deleted"> - clicktale</div><div class="diff-line diff-deleted">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-deleted">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 06/17/2026</div><div class="diff-line diff-deleted">ms.reviewer: dhanyahk</div><div class="diff-line diff-deleted">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-deleted">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted">#Customer Intent: As an IT admin, I want to review the latest Microsoft Entra releases and announcements so that I can stay current with product updates.</div><div class="diff-line diff-deleted"></div><div class="diff-line diff-deleted"># Microsoft Entra releases and announcements</div><div class="diff-line diff-deleted"></div><div class="diff-line diff-deleted">This article provides information about the latest releases and change announcements across the Microsoft Entra family of products over the last six months (updated monthly). If you&#39;re looking for information that&#39;s older than six months, see: [Archive for What&#39;s new in Microsoft Entra](whats-new-archive.md).</div><div class="diff-line diff-deleted"></div><div class="diff-line diff-deleted">&gt; Get notified about when to revisit this page for updates by copying and pasting this URL: `https://learn.microsoft.com/api/search/rss?search=%22Release+notes+-+Azure+Active+Directory%22&amp;locale=en-us` into your ![RSS feed reader icon](./media/whats-new/feed-icon-16x16.png) feed reader.</div><div class="diff-line diff-deleted"></div><div class="diff-line diff-deleted">## May 2026</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-added">---</div><div class="diff-line diff-added">title: Microsoft Entra releases and announcements</div><div class="diff-line diff-added">description: Learn what is new with Microsoft Entra, such as the latest release notes, known issues, bug fixes, deprecated functionality, and upcoming changes.</div><div class="diff-line diff-added">manager: dougeby</div><div class="diff-line diff-added">featureFlags:</div><div class="diff-line diff-added"> - clicktale</div><div class="diff-line diff-added">ms.assetid: 06a149f7-4aa1-4fb9-a8ec-ac2633b031fb</div><div class="diff-line diff-added">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 06/17/2026</div><div class="diff-line diff-added">ms.reviewer: dhanyahk</div><div class="diff-line diff-added">ms.custom: it-pro, has-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-added">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">#Customer Intent: As an IT admin, I want to review the latest Microsoft Entra releases and announcements so that I can stay current with product updates.</div><div class="diff-line diff-added">---</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added"># Microsoft Entra releases and announcements</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This article provides information about the latest releases and change announcements across the Microsoft Entra family of products over the last six months (updated monthly). If you&#39;re looking for information that&#39;s older than six months, see: [Archive for What&#39;s new in Microsoft Entra](whats-new-archive.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; Get notified about when to revisit this page for updates by copying and pasting this URL: `https://learn.microsoft.com/api/search/rss?search=%22Release+notes+-+Azure+Active+Directory%22&amp;locale=en-us` into your ![RSS feed reader icon](./media/whats-new/feed-icon-16x16.png) feed reader.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/whats-new-archive.md" target="_blank">docs/fundamentals/whats-new-archive.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ortagus Winfrey on Jun 23, 2026 10:29 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/whats-new-archive" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+136</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Archive December 2025 entries from whats-new.md (#13614)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## November 2025</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Public Preview - Microsoft Entra ID Account Recovery</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## December 2025</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### General Availability - Modernizing Microsoft Entra ID auth flows with WebView2 in Windows 11</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Type:** New feature  </div><div class="diff-line diff-added">**Service category:** Authentications (Logins)  </div><div class="diff-line diff-added">**Product capability:** SSO  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Windows has many user experiences that use webview’s to gather web information to present web information to users that looks like native content. One of the common scenarios for this is for authentication flows, where a user is prompted for their username and provides credentials. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID app sign-in through Web Account Manager (WAM) now has the option to be powered by WebView2, the Chromium-based web control, starting with [KB5072033 (OS Builds 26200.7462 and 26100.7462) or later](https://support.microsoft.com/topic/december-9-2025-kb5072033-os-builds-26200-7462-and-26100-7462-0c1a4334-19ba-406d-bb1e-88fcffc87b79). This release marks a significant step forward in delivering a secure, modern, and consistent sign-in experience across apps and services.  </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">WebView2 will become the default framework for WAM authentication in an expected future Windows release, with the EdgeHTML WebView being deprecated. Therefore, we encourage users to deploy now and participate in the opt-in process, enable this experience in their environments, and make any necessary adjustments — such as updating proxy rules or modifying code in services involved in the sign in process. Contact Customer Support Services if you&#39;d like to provide feedback.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Moving to WebView2 is more than a technical upgrade, it’s a strategic investment in secure, user-friendly identity experiences. We’re committed to evolving Microsoft Entra ID to meet the needs of modern organizations and developers.  </div><div class="diff-line diff-added">  </div><div class="diff-line diff-added">For more information, see:  </div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/what-is-single-sign-on.md" target="_blank">docs/identity/enterprise-apps/what-is-single-sign-on.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jackline Omondi on Jun 23, 2026 2:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-single-sign-on" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+82</span> / 
+              <span class="deletions">-31</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add SSO onboarding articles for ISV app developers (#13546)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: What is single sign-on?</div><div class="diff-line diff-deleted">description: Learn about single sign-on for enterprise applications in Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-deleted">ms.date: 09/30/2024</div><div class="diff-line diff-context">ms.reviewer: alamaral</div><div class="diff-line diff-deleted">ms.custom: enterprise-apps-article</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Customer intent: As an IT admin responsible for managing user access to applications, I want to understand the different single sign-on (SSO) options available in Microsoft Entra ID, so that I can plan and deploy SSO for our organization&#39;s applications efficiently.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># What is single sign-on in Microsoft Entra ID?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article provides you with information about the single sign-on (SSO) options that are available to you. It also outlines an introduction to planning a single sign-on deployment when using Microsoft Entra ID. Single sign-on is an authentication method that allows users to sign in using one set of credentials to multiple independent software systems. Using SSO means a user doesn&#39;t have to sign in to every application they use. With SSO, users can access all needed applications without being required to authenticate using different credentials. For a brief introduction, see [Microsoft Entra single sign-on](https://azure.microsoft.com/services/active-directory/sso/#overview).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Many applications already exist in Microsoft Entra ID that you can use with SSO. You have several options for SSO depending on the needs of the application and how it&#39;s implemented. Take time to plan your SSO deployment before you create applications in Microsoft Entra ID. The management of applications can be made easier by using the My Apps portal.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Single sign-on options</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: What is single sign-on (SSO) in Microsoft Entra ID?</div><div class="diff-line diff-added">description: Learn about single sign-on for enterprise applications in Microsoft Entra ID, including SAML and OpenID Connect protocols.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">author: omondiatieno</div><div class="diff-line diff-added">manager: mwongerapk</div><div class="diff-line diff-added">ms.service: entra-id</div><div class="diff-line diff-added">ms.subservice: enterprise-apps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: overview</div><div class="diff-line diff-added">ms.date: 06/04/2026</div><div class="diff-line diff-added">ms.author: jomondi</div><div class="diff-line diff-context">ms.reviewer: alamaral</div><div class="diff-line diff-added">ms.custom: enterprise-apps-article, msecd-doc-authoring-1013</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Customer intent: As an ISV application developer or IT administrator, I want to understand what single sign-on is, its benefits, and available options in Microsoft Entra ID, so I can implement or manage SSO effectively for my application or organization.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># What is single sign-on in Microsoft Entra ID?</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/v2-howto-app-gallery-listing.md" target="_blank">docs/identity/enterprise-apps/v2-howto-app-gallery-listing.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jackline Omondi on Jun 23, 2026 2:27 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/v2-howto-app-gallery-listing" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+37</span> / 
+              <span class="deletions">-24</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add SSO onboarding articles for ISV app developers (#13546)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn how to publish your application in Microsoft Entra application gallery.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">ms.date: 10/09/2024</div><div class="diff-line diff-context">ms.reviewer: jeedes</div><div class="diff-line diff-context">ms.custom: kr2b-contr-experiment, enterprise-apps-article</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, I want to learn about the requirement for submitting my application to the Microsoft Entra application gallery, so that it can be publicly available for users to add to their tenants.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can sign up for a free, test Development account. It&#39;s free for 90 days and you get all of the premium Microsoft Entra features with it. You can also extend the account if you use it for development work: [Join the Microsoft 365 Developer Program](/office/developer-program/microsoft-365-developer-program).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">### Checklist for applications supporting SSO</div><div class="diff-line diff-deleted">Here&#39;s the quick checklist for you before you submit the application request to list your application in Microsoft Entra App Gallery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### SAML single sign-on application requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The following requirements apply to SAML-based SSO applications.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#### Authentication requirements</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn how to publish your application in Microsoft Entra application gallery.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">ms.date: 06/22/2026</div><div class="diff-line diff-context">ms.reviewer: jeedes</div><div class="diff-line diff-context">ms.custom: kr2b-contr-experiment, enterprise-apps-article</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, I want to learn about the requirement for submitting my application to the Microsoft Entra application gallery, so that it can be publicly available for users to add to their tenants.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can sign up for a free, test Development account. It&#39;s free for 90 days and you get all of the premium Microsoft Entra features with it. You can also extend the account if you use it for development work: [Join the Microsoft 365 Developer Program](/office/developer-program/microsoft-365-developer-program).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Checklist for applications that support SSO</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Review this checklist before you submit a request to list your application in the Microsoft Entra application gallery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### SAML SSO requirements</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">These requirements apply to SAML-based single sign-on (SSO) applications.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-entra-passkeys-on-windows.md" target="_blank">docs/identity/authentication/how-to-authentication-entra-passkeys-on-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jun 23, 2026 9:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-entra-passkeys-on-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+49</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add AAGUID-targeting passkey profile examples for Windows (#13481)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-106</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Enable Microsoft Entra passkey on Windows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Attestation isn&#39;t supported for Microsoft Entra passkey on Windows. As a result, if **Enforce attestation** is selected in a passkey profile, passkey registration attempts to Windows Hello will fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## How to configure passkeys on Windows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To enable registration, you need to meet all of the following prerequisites and configuration requirements.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">:::image type=&quot;content&quot; border=&quot;true&quot; source=&quot;media/how-to-authentication-entra-passkeys-on-windows/passkey-on-windows-profile.png&quot; alt-text=&quot;Screenshot of the Add passkey profile settings showing Enforce attestation cleared and Passkey types set to Device-bound.&quot;:::</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## FAQ</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**Question**: What is the use case for Microsoft Entra passkey on Windows?</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.collection: msec-ai-copilot</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-106</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Enable Microsoft Entra passkey on Windows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Attestation isn&#39;t supported for Microsoft Entra passkey on Windows. As a result, if **Enforce attestation** is selected in a passkey profile, passkey registration attempts to Windows Hello will fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Supported Windows Hello passkey Authenticator Attestation GUIDs (AAGUIDs)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">During public preview, Windows Hello passkeys are identified and controlled by using the following AAGUIDs. These AAGUIDs must be explicitly allowed in a passkey profile to enable registration.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">| Windows Hello authenticator | AAGUID | Description |</div><div class="diff-line diff-added">|----|----|----|</div><div class="diff-line diff-added">| Windows Hello Hardware Authenticator | 08987058-cadc-4b81-b6e1-30de50dcbe96 | Private key stored in a hardware-based Trusted Platform Module (TPM). |</div><div class="diff-line diff-added">| Windows Hello VBS Hardware Authenticator | 9ddd1817-af5a-4672-a2b9-3e3dd95000a9 | Virtualization-based Security (VBS) uses hardware virtualization and the Windows hypervisor to store private keys in the host machine&#39;s TPM. |</div><div class="diff-line diff-added">| Windows Hello Software Authenticator | 6028b017-b1d4-4c02-b4b3-afcdafc96bb2 | Private key stored in a software-based TPM. |</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/domain-services/administration-concepts.md" target="_blank">docs/identity/domain-services/administration-concepts.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jun 23, 2026 10:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/domain-services/administration-concepts" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+25</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add capacity guidance note to Domain Services SKUs table (#13602)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Management concepts for Microsoft Entra Domain Services | Microsoft Docs</div><div class="diff-line diff-context">description: Learn about how to administer a Microsoft Entra Domain Services managed domain and the behavior of user accounts and passwords</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 01/21/2025</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Management concepts for user accounts, passwords, and administration in Microsoft Entra Domain Services</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Domain management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">A managed domain is a DNS namespace and matching directory. In a managed domain, the domain controllers (DCs) that contain all the resources like users and groups, credentials, and policies are part of the managed service. For redundancy, two DCs are created as part of a managed domain. You can&#39;t sign in to these DCs to perform management tasks. Instead, you create a management VM that&#39;s joined to the managed domain, then install your regular AD DS management tools. You can use the Active Directory Administrative Center or Microsoft Management Console (MMC) snap-ins like DNS or Group Policy objects, for example.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## User account creation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">User accounts can be created in a managed domain in multiple ways. Most user accounts are synchronized in from Microsoft Entra ID, which can also include user account synchronized from an on-premises AD DS environment. You can also manually create accounts directly in the managed domain. Some features, like initial password synchronization or password policy, behave differently depending on how and where user accounts are created.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">* The user account can be synchronized in from Microsoft Entra ID. This includes cloud-only user accounts created directly in Microsoft Entra ID, and hybrid user accounts synchronized from an on-premises AD DS environment using Microsoft Entra Connect.</div><div class="diff-line diff-deleted">    * The majority of user accounts in a managed domain are created through the synchronization process from Microsoft Entra ID.</div><div class="diff-line diff-deleted">* The user account can be manually created in a managed domain, and doesn&#39;t exist in Microsoft Entra ID.</div><div class="diff-line diff-deleted">    * If you need to create service accounts for applications that only run in the managed domain, you can manually create them in the managed domain. As synchronization is one way from Microsoft Entra ID, user accounts created in the managed domain aren&#39;t synchronized back to Microsoft Entra ID.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Management concepts for Microsoft Entra Domain Services | Microsoft Docs</div><div class="diff-line diff-context">description: Learn about how to administer a Microsoft Entra Domain Services managed domain and the behavior of user accounts and passwords</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 06/22/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Management concepts for user accounts, passwords, and administration in Microsoft Entra Domain Services</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Domain management</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">A managed domain is a DNS namespace and matching directory. In a managed domain, the domain controllers (DCs) that contain all the resources like users and groups, credentials, and policies are part of the managed service. For redundancy, two DCs are created as part of a managed domain. You can&#39;t sign in to these DCs to perform management tasks. Instead, you create a management virtual machine (VM) that&#39;s joined to the managed domain, then install your regular AD DS management tools. You can use the Active Directory Administrative Center or Microsoft Management Console (MMC) snap-ins like DNS or Group Policy objects, for example.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## User account creation</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">User accounts can be created in a managed domain in multiple ways. Most user accounts are synchronized in from Microsoft Entra ID, which can also include user account synchronized from an on-premises AD DS environment. You can also manually create accounts directly in the managed domain. Some features, like initial password synchronization or password policy, behave differently depending on how and where user accounts are created.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">* The user account can be synchronized in from Microsoft Entra ID. It can be created directly in Microsoft Entra ID synchronized from an on-premises AD DS environment by using Microsoft Entra Connect.</div><div class="diff-line diff-added">* The user account can be manually created in a managed domain, and not exist in Microsoft Entra ID. If you need to create service accounts for applications that only run in the managed domain, you can manually create them in the managed domain. Synchronization is only one-way from Microsoft Entra ID, so user accounts that you create in the managed domain aren&#39;t synchronized back to Microsoft Entra ID.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-version-history.md" target="_blank">docs/identity/hybrid/connect/reference-connect-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jackline Omondi on Jun 23, 2026 11:33 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-40</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update version history and remove 2.6.79.0 details</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article lists all releases of Microsoft Entra Connect and Azure AD Sync.</div><div class="diff-line diff-context">ms.assetid: ef2797d7-d440-4a9a-a648-db32ad137494</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 06/22/2026</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-context">|[2.5.190.0](#251900)|02 Feb 2027 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)|10 Mar 2027 (12 months after release of 2.6.3.0)|</div><div class="diff-line diff-deleted">|[2.6.3.0](#2630)|22 Jun 2027 (12 months after release of 2.6.79.0)|</div><div class="diff-line diff-deleted">|[2.6.79.0](#26790)||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To read more about autoupgrade, see [Microsoft Entra Connect: Automatic upgrade](how-to-connect-install-automatic-upgrade.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article lists all releases of Microsoft Entra Connect and Azure AD Sync.</div><div class="diff-line diff-context">ms.assetid: ef2797d7-d440-4a9a-a648-db32ad137494</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 06/23/2026</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-context">|[2.5.190.0](#251900)|02 Feb 2027 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)|10 Mar 2027 (12 months after release of 2.6.3.0)|</div><div class="diff-line diff-added">|[2.6.3.0](#2630)||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To read more about autoupgrade, see [Microsoft Entra Connect: Automatic upgrade](how-to-connect-install-automatic-upgrade.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[!IMPORTANT]</div><div class="diff-line diff-added">Version 2.6.79.0 is no longer available for download. An issue was identified after release and the installer was recalled. Customers who had installed this version should un-install and install [latest available version (2.6.3.0)](#2630) of Microsoft Entra Connect Sync.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/concept-learn-about-groups.md" target="_blank">docs/fundamentals/concept-learn-about-groups.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 23, 2026 9:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/concept-learn-about-groups" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yml-conversion1-061926 (#13583)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  - For more information, see [Learn about Microsoft 365 Groups](https://support.office.com/article/learn-about-office-365-groups-b565caa1-5c40-40ef-9915-60fdb2d97fa2).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; When nesting an existing security group to another security group, only members in the parent group have access to shared resources and applications. For more info about managing nested groups, see [How to manage groups](how-to-manage-groups.yml#add-a-group-to-another-group).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Membership types</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;how-access-management-in-azure-ad-works&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra ID helps you give access to your organization&#39;s resources by providing access rights to a single user or a group. Using groups lets the resource owner or Microsoft Entra directory owner assign a set of access permissions to all members of the group. The resource or directory owner can also grant group management rights to someone such as a department manager or a help desk administrator, which allows that person to add and remove members. For more information about how to manage group owners, see the [Manage groups](how-to-manage-groups.yml) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The resources that Microsoft Entra groups can manage access to can be:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Direct assignment**: The resource owner directly assigns the user to the resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Group assignment.** The resource owner assigns a Microsoft Entra group to the resource, which automatically gives all of the group members access to the resource. Both the group owner and the resource owner manage group membership, letting either owner add or remove members from the group. For more information about managing group membership, see the [Managed groups](how-to-manage-groups.yml) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Rule-based assignment**: The resource owner creates a group and uses a rule to define which users are assigned to a specific resource. The rule is based on attributes that are assigned to individual users. The resource owner manages the rule, determining which attributes and values are required to allow access the resource. For more information, see [Create a dynamic group](..//identity/users/groups-create-rule.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  - For more information, see [Learn about Microsoft 365 Groups](https://support.office.com/article/learn-about-office-365-groups-b565caa1-5c40-40ef-9915-60fdb2d97fa2).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; When nesting an existing security group to another security group, only members in the parent group have access to shared resources and applications. For more info about managing nested groups, see [How to manage groups](how-to-manage-groups.md#add-a-group-to-another-group).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Membership types</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;a name=&#39;how-access-management-in-azure-ad-works&#39;&gt;&lt;/a&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra ID helps you give access to your organization&#39;s resources by providing access rights to a single user or a group. Using groups lets the resource owner or Microsoft Entra directory owner assign a set of access permissions to all members of the group. The resource or directory owner can also grant group management rights to someone such as a department manager or a help desk administrator, which allows that person to add and remove members. For more information about how to manage group owners, see the [Manage groups](how-to-manage-groups.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The resources that Microsoft Entra groups can manage access to can be:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Direct assignment**: The resource owner directly assigns the user to the resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **Group assignment.** The resource owner assigns a Microsoft Entra group to the resource, which automatically gives all of the group members access to the resource. Both the group owner and the resource owner manage group membership, letting either owner add or remove members from the group. For more information about managing group membership, see the [Managed groups](how-to-manage-groups.md) article.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Rule-based assignment**: The resource owner creates a group and uses a rule to define which users are assigned to a specific resource. The rule is based on attributes that are assigned to individual users. The resource owner manages the rule, determining which attributes and values are required to allow access the resource. For more information, see [Create a dynamic group](..//identity/users/groups-create-rule.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/entra-admin-center.md" target="_blank">docs/fundamentals/entra-admin-center.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 23, 2026 9:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/entra-admin-center" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yml-conversion1-061926 (#13583)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Task | Description | Learn more |</div><div class="diff-line diff-context">|------|-------------|------------|</div><div class="diff-line diff-context">| Create or delete users | Add new members or guests to your organization, or remove existing users. | [Create or delete users](./how-to-create-delete-users.md) |</div><div class="diff-line diff-deleted">| Manage groups | Create and manage groups to organize users for access management and licensing. | [Manage groups and group membership](./how-to-manage-groups.yml) |</div><div class="diff-line diff-context">| Assign roles | Delegate administrative responsibilities using built-in or custom roles. | [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md) |</div><div class="diff-line diff-context">| Manage applications | Register and configure applications for single sign-on and API access. | [What is application management?](~/identity/enterprise-apps/what-is-application-management.md) |</div><div class="diff-line diff-context">| Create a Conditional Access policy | Define access controls based on conditions such as user, device, location, and risk. | [What is Conditional Access?](~/identity/conditional-access/overview.md) |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [What is Microsoft Entra?](./what-is-entra.md)</div><div class="diff-line diff-context">* [Create or delete users](./how-to-create-delete-users.md)</div><div class="diff-line diff-deleted">* [Manage groups and group membership](./how-to-manage-groups.yml)</div><div class="diff-line diff-context">* [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md)</div><div class="diff-line diff-context">* [What is Conditional Access?](~/identity/conditional-access/overview.md)</div><div class="diff-line diff-context">* [What is Identity Secure Score?](~/identity/monitoring-health/concept-identity-secure-score.md)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Task | Description | Learn more |</div><div class="diff-line diff-context">|------|-------------|------------|</div><div class="diff-line diff-context">| Create or delete users | Add new members or guests to your organization, or remove existing users. | [Create or delete users](./how-to-create-delete-users.md) |</div><div class="diff-line diff-added">| Manage groups | Create and manage groups to organize users for access management and licensing. | [Manage groups and group membership](./how-to-manage-groups.md) |</div><div class="diff-line diff-context">| Assign roles | Delegate administrative responsibilities using built-in or custom roles. | [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md) |</div><div class="diff-line diff-context">| Manage applications | Register and configure applications for single sign-on and API access. | [What is application management?](~/identity/enterprise-apps/what-is-application-management.md) |</div><div class="diff-line diff-context">| Create a Conditional Access policy | Define access controls based on conditions such as user, device, location, and risk. | [What is Conditional Access?](~/identity/conditional-access/overview.md) |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [What is Microsoft Entra?](./what-is-entra.md)</div><div class="diff-line diff-context">* [Create or delete users](./how-to-create-delete-users.md)</div><div class="diff-line diff-added">* [Manage groups and group membership](./how-to-manage-groups.md)</div><div class="diff-line diff-context">* [Overview of role-based access control](~/identity/role-based-access-control/custom-overview.md)</div><div class="diff-line diff-context">* [What is Conditional Access?](~/identity/conditional-access/overview.md)</div><div class="diff-line diff-context">* [What is Identity Secure Score?](~/identity/monitoring-health/concept-identity-secure-score.md)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/my-access-approver-details.md" target="_blank">docs/id-governance/my-access-approver-details.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by learn-build-service-prod[bot] on Jun 23, 2026 4:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/my-access-approver-details" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Confirm merge from repo_sync_working_branch to main to sync with https://github.com/MicrosoftDocs/entra-docs (branch main) (#13621)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to configure whether requestors can see approver details in the My Access portal so that I can control the visibility of approval information.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Configure whether requestors can see approver details (Preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This feature will be widely available beginning in September 2025.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the Microsoft Entra admin center, go to **Identity Governance** &gt; **Entitlement management** &gt; **Control configurations**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">2. Under **My Access settings for end users**, find **Show approver details to members on pending access package requests (preview).**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Choose the desired behavior:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to configure whether requestors can see approver details in the My Access portal so that I can control the visibility of approval information.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Configure whether requestors can see approver details</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This feature will be widely available beginning in September 2025.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In the Microsoft Entra admin center, go to **Identity Governance** &gt; **Entitlement management** &gt; **Control configurations**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">2. Under **My Access settings for end users**, find **Show approver details to members on pending access package requests.**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">3. Choose the desired behavior:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/zscaler-internet-access-zsnet-tutorial.md" target="_blank">docs/identity/saas-apps/zscaler-internet-access-zsnet-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hamsika45 on Jun 23, 2026 7:27 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/zscaler-internet-access-zsnet-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> label mismatched</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Zscaler Internet Access ZSNet is available in the following [national cloud deployments](/graph/deployments).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Global service | US Government | China operated by 21Vianet |</div><div class="diff-line diff-deleted">|-----------------|------------------------|----------------------------|</div><div class="diff-line diff-deleted">| :white_check_mark: |     | :white_check_mark:    |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Zscaler Internet Access ZSNet is available in the following [national cloud deployments](/graph/deployments).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">[!INCLUDE [national-clouds-global-and-china](~/identity/saas-apps/includes/national-clouds-global-and-china.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">The scenario outlined in this article assumes that you already have the following prerequisites:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/zoom-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/zoom-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jackline Omondi on Jun 23, 2026 11:22 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/zoom-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove redundant globally-declared metadata (docfx.json fileMetadata)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Configure Zoom for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Zoom.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">author: jeevansd</div><div class="diff-line diff-deleted">manager: pmwongera</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 06/11/2026</div><div class="diff-line diff-deleted">ms.author: jeedes</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Zoom so that I can streamline the user management process and ensure that users have the appropriate access to Zoom.</div><div class="diff-line diff-context">---</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Configure Zoom for automatic user provisioning with Microsoft Entra ID</div><div class="diff-line diff-context">description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Zoom.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.date: 06/11/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Zoom so that I can streamline the user management process and ensure that users have the appropriate access to Zoom.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/how-to-account-discovery.md" target="_blank">docs/identity/app-provisioning/how-to-account-discovery.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on Jun 23, 2026 10:15 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/how-to-account-discovery" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update account discovery documentation with new features</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- ServiceNow  </div><div class="diff-line diff-context">- Amazon Web Services (AWS)</div><div class="diff-line diff-context">- Snowflake</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### All other connectors</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- ServiceNow  </div><div class="diff-line diff-context">- Amazon Web Services (AWS)</div><div class="diff-line diff-context">- Snowflake</div><div class="diff-line diff-added">- Cross-tenant synchronization</div><div class="diff-line diff-added">- Cloud sync</div><div class="diff-line diff-added">- Group provisioning to AD</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### All other connectors</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/governance-deployment-employee-access.md" target="_blank">docs/architecture/governance-deployment-employee-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 23, 2026 9:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/governance-deployment-employee-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yml-conversion1-061926 (#13583)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">   [ ![Screenshot of the Create auto assignment policy tab on the Edit policy dialog.](media/governance-deployment/edit-policy.png)](media/governance-deployment/edit-policy-expanded.png#lightbox)</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">For more information, you can learn about [groups and access rights in Microsoft Entra ID](../fundamentals/how-to-manage-groups.yml)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">See the following video to learn more about policy assignment.&lt;/br&gt;&lt;/br&gt;</div><div class="diff-line diff-context"></div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context"></div><div class="diff-line diff-context">   [ ![Screenshot of the Create auto assignment policy tab on the Edit policy dialog.](media/governance-deployment/edit-policy.png)](media/governance-deployment/edit-policy-expanded.png#lightbox)</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">For more information, you can learn about [groups and access rights in Microsoft Entra ID](../fundamentals/how-to-manage-groups.md)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">See the following video to learn more about policy assignment.&lt;/br&gt;&lt;/br&gt;</div><div class="diff-line diff-context"></div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/gsa-deployment-guide-internet-access.md" target="_blank">docs/architecture/gsa-deployment-guide-internet-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shlipsey3 on Jun 23, 2026 9:35 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/gsa-deployment-guide-internet-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> yml-conversion1-061926 (#13583)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">At this point, you completed initiate and plan stages of your Secure Access Services Edge (SASE) deployment project. You understand what you need to implement for whom. You defined which users to enable in each wave. You have a schedule for each wave&#39;s deployment. You have met [licensing requirements](../global-secure-access/overview-what-is-global-secure-access.md#licensing-overview). You&#39;re ready to enable Microsoft Entra Internet Access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Complete the Global Secure Access [prerequisites](../global-secure-access/quickstart-access-admin-center.md#prerequisites).</div><div class="diff-line diff-deleted">1. [Create a Microsoft Entra group](../fundamentals/how-to-manage-groups.yml) that includes your pilot users.</div><div class="diff-line diff-context">1. Enable the Microsoft Entra Internet access and Microsoft traffic forwarding profiles. Assign your pilot group to each profile.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">At this point, you completed initiate and plan stages of your Secure Access Services Edge (SASE) deployment project. You understand what you need to implement for whom. You defined which users to enable in each wave. You have a schedule for each wave&#39;s deployment. You have met [licensing requirements](../global-secure-access/overview-what-is-global-secure-access.md#licensing-overview). You&#39;re ready to enable Microsoft Entra Internet Access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Complete the Global Secure Access [prerequisites](../global-secure-access/quickstart-access-admin-center.md#prerequisites).</div><div class="diff-line diff-added">1. [Create a Microsoft Entra group](../fundamentals/how-to-manage-groups.md) that includes your pilot users.</div><div class="diff-line diff-context">1. Enable the Microsoft Entra Internet access and Microsoft traffic forwarding profiles. Assign your pilot group to each profile.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
