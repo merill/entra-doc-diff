@@ -1,0 +1,483 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since June 23rd 2026, 11:16 PM PDT</p>
+        <p>Report generated on June 24th 2026, 11:16 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">22</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">11</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-security-operations.md" target="_blank">docs/global-secure-access/how-to-security-operations.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Ken Withee on Jun 24, 2026 6:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-security-operations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1156 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add security operations for network access guide (#13531)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-execution-limits.md" target="_blank">docs/id-governance/lifecycle-workflow-execution-limits.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Ortagus Winfrey on Jun 24, 2026 6:58 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-execution-limits" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+124 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add how-to guide for Lifecycle Workflows execution limits (#13633)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-ios-macos-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-ios-macos-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Jun 24, 2026 2:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-ios-macos-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+74</span> / 
+              <span class="deletions">-34</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Merge username alias sign-up into Android native auth tutorial (#13494)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Add sign-up in native iOS/macOS app</div><div class="diff-line diff-deleted">description: Learn how to add sign-up using email one-time passcode or email and password, and collect user attributes in an iOS/macOS mobile app using native authentication.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 08/19/2024</div><div class="diff-line diff-deleted">ms.custom:</div><div class="diff-line diff-deleted">#Customer intent: As a dev, devops, I want to learn how to add sign-up using email one-time passcode or email and password, and collect user attributes in an iOS/macOS mobile app using native authentication.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Tutorial: Add sign-up in an iOS/macOS app using native authentication</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This tutorial demonstrates how to sign up a user using email one-time passcode or username (email) and password, and collects user attributes in your iOS/macOS app using native authentication.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Add sign-up in an iOS/macOS app by using native authentication</div><div class="diff-line diff-added">description: Learn how to sign up users with email one-time passcode or email and password, and collect user attributes including a username (alias), in an iOS/macOS app by using native authentication.</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 06/17/2026</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">#Customer intent: As a developer, I want to add sign-up with email one-time passcode or email and password, and collect user attributes including a username (alias), in my iOS/macOS app by using native authentication so that users can create accounts with flexible identity options.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Tutorial: Add sign-up in an iOS/macOS app by using native authentication</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This tutorial demonstrates how to sign up a user by using email one-time passcode or username (email) and password in your iOS/macOS app by using native authentication. You also learn how to collect user attributes during sign-up, including a username (alias), and handle errors.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">In this tutorial, you:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-android-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-android-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Jun 24, 2026 2:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-android-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+71</span> / 
+              <span class="deletions">-27</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Merge username alias sign-up into Android native auth tutorial (#13494)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Add sign-up in an Android app using native authentication</div><div class="diff-line diff-deleted">description: Learn how to add sign-up using email one-time passcode or email and password, and collect user attributes in an Android mobile app using native authentication.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 08/01/2024</div><div class="diff-line diff-deleted">ms.custom:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">#Customer intent: As a dev, devops, I want to add sign-up with email one-time passcode or email and password, and collect user attributes in your Android mobile app using native authentication.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Add sign-up in an Android mobile app using native authentication</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Add sign-up in an Android app by using native authentication</div><div class="diff-line diff-added">description: Learn how to sign up users with email one-time passcode or email and password, and collect user attributes including a username (alias), in an Android app by using native authentication.</div><div class="diff-line diff-context">manager: pmwongera</div><div class="diff-line diff-context">ms.service: identity-platform</div><div class="diff-line diff-context">ms.subservice: external</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 06/16/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">#Customer intent: As a developer, I want to add sign-up with email one-time passcode or email and password, and collect user attributes including a username (alias), in my Android mobile app by using native authentication so that users can create accounts with flexible identity options.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Tutorial: Add sign-up in an Android mobile app using native authentication</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [applies-to-external-only](../external-id/includes/applies-to-external-only.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This tutorial demonstrates how to sign up a user by using email one-time passcode or username (email) and password in your Android mobile app using native authentication. You also learn how to collect user attributes during sign-up, including a username (alias), and handle errors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">In this tutorial, you: </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-single-page-app-react-sdk-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-single-page-app-react-sdk-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kengaderdus on Jun 24, 2026 9:30 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-single-page-app-react-sdk-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+45</span> / 
+              <span class="deletions">-35</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Move username (alias) sign-up guidance into its own section (React)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create *sign-up/components/InitialForm.tsx* file, then paste the code from [sign-up/components/InitialForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/sign-up/components/InitialForm.tsx). This component displays a form that collects user sign-up attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    If you want to let users sign up with a username (alias), add a text input to this form to collect the username (alias) value. For example:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">    ```tsx</div><div class="diff-line diff-deleted">    &lt;input</div><div class="diff-line diff-deleted">        type=&quot;text&quot;</div><div class="diff-line diff-deleted">        placeholder=&quot;Username (alias)&quot;</div><div class="diff-line diff-deleted">        value={flatUsername}</div><div class="diff-line diff-deleted">        onChange={(e) =&gt; setFlatUsername(e.target.value)}</div><div class="diff-line diff-deleted">        style={styles.input}</div><div class="diff-line diff-deleted">    /&gt;</div><div class="diff-line diff-deleted">    ```</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">1. Create a *sign-up/components/CodeForm.tsx* file, then paste the code from [sign-up/components/CodeForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/shared/components/CodeForm.tsx). This component displays a form that collects a one-time passcode sent to the user. You require this form for either email with password or email with one-time passcode authentication method. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If your choice of authentication method is *email with password*, create a *sign-up/components/PasswordForm.tsx* file, then paste the code from [sign-up/components/PasswordForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/shared/components/PasswordForm.tsx). This component displays a password input form. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create *sign-up/components/InitialForm.tsx* file, then paste the code from [sign-up/components/InitialForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/sign-up/components/InitialForm.tsx). This component displays a form that collects user sign-up attributes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Create a *sign-up/components/CodeForm.tsx* file, then paste the code from [sign-up/components/CodeForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/shared/components/CodeForm.tsx). This component displays a form that collects a one-time passcode sent to the user. You require this form for either email with password or email with one-time passcode authentication method.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. If your choice of authentication method is *email with password*, create a *sign-up/components/PasswordForm.tsx* file, then paste the code from [sign-up/components/PasswordForm.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/shared/components/PasswordForm.tsx). This component displays a password input form. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-context">    The SDK&#39;s instance method, `signUp()` starts the sign-up flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- To handle the one-time passcode submission, use the following code snippet. See a full example at [sign-up/page.tsx](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/react-nextjs-sample/src/app/sign-up/page.tsx) to learn where to place the code snippet:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    ```typescript</div><div class="diff-line diff-context">        return &lt;SignUpResultPage/&gt;;</div><div class="diff-line diff-context">    }</div><div class="diff-line diff-context">    ```</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Collect a username (alias) during sign-up</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can let users sign up with a username (alias) in addition to their email. The username (alias) is an alternate sign-in identifier, such as a customer ID, account number, or another value that you choose.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up.md" target="_blank">docs/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by kengaderdus on Jun 24, 2026 9:17 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-single-page-app-angular-sign-up" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+38</span> / 
+              <span class="deletions">-27</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Move username (alias) sign-up guidance into its own section (Angular)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">        ```</div><div class="diff-line diff-context">        The SDK&#39;s instance method, `signUp()` starts the sign-up flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">        If you want to let users sign up with a username (alias), add a `flatUsername` field to the sign-up component, then include the `flatusername` attribute in the `UserAccountAttributes` you pass to `signUp()`:</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">        ```typescript</div><div class="diff-line diff-deleted">        flatUsername = &quot;&quot;;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">        const attributes: UserAccountAttributes = {</div><div class="diff-line diff-deleted">            givenName: this.firstName,</div><div class="diff-line diff-deleted">            surname: this.lastName,</div><div class="diff-line diff-deleted">            jobTitle: this.jobTitle,</div><div class="diff-line diff-deleted">            city: this.city,</div><div class="diff-line diff-deleted">            country: this.country,</div><div class="diff-line diff-deleted">            flatusername: this.flatUsername,</div><div class="diff-line diff-deleted">        };</div><div class="diff-line diff-deleted">        ```</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">        Add an alias input to *sign-up.component.html* alongside the existing fields:</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">        ```</div><div class="diff-line diff-context">        The SDK&#39;s instance method, `signUp()` starts the sign-up flow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    - If you want the user to start sign-in flow immediately after sign-up is completed, use this snippet:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">        ```html</div><div class="diff-line diff-context">5. Open the *src/app/app.component.scss* file, then add the following [styles file](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/blob/main/typescript/native-auth/angular-sample/src/app/app.component.scss).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Collect a username (alias) during sign-up</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">You can let users sign up with a username (alias) in addition to their email. The username (alias) is an alternate sign-in identifier, such as a customer ID, account number, or another value that you choose.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">During sign-up, the username (email) is always required as the primary identifier, and the username (alias) doesn&#39;t replace it. By default, the username (alias) is optional, though an administrator can configure it as required. Your app always collects the username (email) and collects the alias as an attribute alongside the email. At sign-in, the user can then sign in with either their username (email) or their username (alias). To learn how the **Username** attribute is configured as optional or required, see [Configure the user input types and page layout](../external-id/customers/how-to-define-custom-attributes.md#configure-the-user-input-types-and-page-layout).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To collect a username (alias) during sign-up:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Make sure the **Username** built-in user attribute is enabled in your sign-up user flow. For the steps, see [Enable username in the sign-in identifier policy](../external-id/customers/how-to-sign-in-alias.md#enable-username-in-sign-in-identifier-policy).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Add a `flatUsername` field to the sign-up component, then include the `flatusername` attribute in the `UserAccountAttributes` you pass to `signUp()`:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md" target="_blank">docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by learn-build-service-prod[bot] on Jun 24, 2026 9:36 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Confirm merge from repo_sync_working_branch to main to sync with https://github.com/MicrosoftDocs/entra-docs (branch main) (#13642)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| 300,000–600,000 |1.6 GHz |32 GB |450 GB |</div><div class="diff-line diff-context">| More than 600,000 |1.6 GHz |32 GB |500 GB |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The specifications listed above represent combined hardware requirements for the Microsoft Entra Connect server hosting both the synchronization application and the SQL Server database (either the built-in SQL Express or a full SQL Server instance installed locally).</div><div class="diff-line diff-deleted">If the SQL Server database is hosted remotely on a separate server, the Entra Connect application server may require fewer resources, while the SQL Server will need its own compute, memory, and storage capacity according to SQL Server sizing best practices.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The minimum requirements for computers running AD FS or Web Application Proxy servers are:</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| 300,000–600,000 |1.6 GHz |32 GB |450 GB |</div><div class="diff-line diff-context">| More than 600,000 |1.6 GHz |32 GB |500 GB |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The minimum requirements for computers running AD FS or Web Application Proxy servers are:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/overview-operations.md" target="_blank">docs/global-secure-access/overview-operations.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 24, 2026 6:49 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/overview-operations" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add security operations for network access guide (#13531)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">| Guide | What it covers |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Common operations](how-to-operations-common.md) | RACI matrix (responsible, accountable, consulted, informed) for roles and responsibilities, change management process, metrics and reporting framework, continuous improvement |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Capability-specific operations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you completed deployment, follow this sequence:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. **Establish your team**—Assign roles using the [RACI matrix](how-to-operations-common.md#raci-matrix). Ensure at least two people cover each role.</div><div class="diff-line diff-deleted">2. **Configure alerting**—Set up the critical alerts listed in each capability guide: [Private Access](how-to-operate-private-access.md#alerting-and-monitoring), [Internet Access](how-to-operate-internet-access.md#alerting-and-monitoring), [Remote Networks](how-to-operate-remote-networks.md#alerting-and-monitoring), and [Microsoft Traffic](how-to-operate-microsoft-traffic.md#alerting-and-monitoring). Don&#39;t rely on dashboards for issue detection.</div><div class="diff-line diff-context">3. **Establish baselines**—Collect a 30-day performance baseline for traffic volume, latency, and usage. Calibrate alert thresholds against this baseline. Each capability guide includes Kusto Query Language (KQL) queries for baseline establishment.</div><div class="diff-line diff-context">4. **Set up automation**—Start with configuration backups and alert notifications. Expand to the full automation playbook list over time.</div><div class="diff-line diff-context">5. **Schedule recurring checks**—Implement the daily, weekly, and monthly checklists from each capability guide.</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">| Guide | What it covers |</div><div class="diff-line diff-context">| --- | --- |</div><div class="diff-line diff-context">| [Common operations](how-to-operations-common.md) | RACI matrix (responsible, accountable, consulted, informed) for roles and responsibilities, change management process, metrics and reporting framework, continuous improvement |</div><div class="diff-line diff-added">| [Security operations for network access](how-to-security-operations.md) | Security monitoring, detection patterns, Sentinel analytics rules, and cross-signal investigation guidance for Global Secure Access |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Capability-specific operations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you completed deployment, follow this sequence:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. **Establish your team**—Assign roles using the [RACI matrix](how-to-operations-common.md#raci-matrix). Ensure at least two people cover each role.</div><div class="diff-line diff-added">2. **Configure alerting**—Set up the critical alerts listed in the [Security operations for network access](how-to-security-operations.md) guide and each capability guide: [Private Access](how-to-operate-private-access.md#alerting-and-monitoring), [Internet Access](how-to-operate-internet-access.md#alerting-and-monitoring), [Remote Networks](how-to-operate-remote-networks.md#alerting-and-monitoring), and [Microsoft Traffic](how-to-operate-microsoft-traffic.md#alerting-and-monitoring). Don&#39;t rely on dashboards for issue detection.</div><div class="diff-line diff-context">3. **Establish baselines**—Collect a 30-day performance baseline for traffic volume, latency, and usage. Calibrate alert thresholds against this baseline. Each capability guide includes Kusto Query Language (KQL) queries for baseline establishment.</div><div class="diff-line diff-context">4. **Set up automation**—Start with configuration backups and alert notifications. Expand to the full automation playbook list over time.</div><div class="diff-line diff-context">5. **Schedule recurring checks**—Implement the daily, weekly, and monthly checklists from each capability guide.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-sspr-authenticationdata.md" target="_blank">docs/identity/authentication/howto-sspr-authenticationdata.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Tim Larson on Jun 24, 2026 2:07 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-sspr-authenticationdata" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise SSPR registration campaign dates and requirements</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">Some organizations prefer to bootstrap this process through synchronization of authentication data that already exists in Active Directory Domain Services. This synchronized data is made available to Microsoft Entra ID and SSPR without requiring user interaction. When users need to change or reset their password, they can do so even if they haven&#39;t previously registered their contact information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; Starting **July 6, 2026**, a registration campaign will prompt affected users to register methods ahead of enforcement. Ensure users have registered at least one method that satisfies your SSPR policy. For more information, see [How to manage authentication methods](how-to-authentication-methods-manage.md).</div><div class="diff-line diff-context">&gt; Starting **September 7, 2026**, SSPR will only accept explicitly registered authentication methods. Directory-sourced properties — such as `mobilePhone`, `businessPhone`, and `otherMails` — that were never registered will no longer work for SSPR verification. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can prepopulate authentication contact information if you meet the following requirements:</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">Some organizations prefer to bootstrap this process through synchronization of authentication data that already exists in Active Directory Domain Services. This synchronized data is made available to Microsoft Entra ID and SSPR without requiring user interaction. When users need to change or reset their password, they can do so even if they haven&#39;t previously registered their contact information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Starting **Aug 6, 2026**, If your SSPR settings require users to register during sign-in, and enabled users do not have enough methods to complete SSPR, a registration campaign will prompt affected users to register methods ahead of enforcement. Ensure users have registered at least one method that satisfies your SSPR policy. For more information, see [How to manage authentication methods](how-to-authentication-methods-manage.md).</div><div class="diff-line diff-added">&gt; </div><div class="diff-line diff-context">&gt; Starting **September 7, 2026**, SSPR will only accept explicitly registered authentication methods. Directory-sourced properties — such as `mobilePhone`, `businessPhone`, and `otherMails` — that were never registered will no longer work for SSPR verification. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can prepopulate authentication contact information if you meet the following requirements:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-android-sign-in-sign-out.md" target="_blank">docs/identity-platform/tutorial-native-authentication-android-sign-in-sign-out.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Jun 24, 2026 2:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-android-sign-in-sign-out" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Merge username alias sign-up into Android native auth tutorial (#13494)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user using username (email) and password, collect the email and password from the user. If the username and password are valid, the app signs in the user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user, you need to: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create a user interface (UI) to:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user using username (email) and password, collect the email and password from the user. If the username and password are valid, the app signs in the user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If the **Username** built-in user attribute is enabled in your tenant&#39;s sign-up user flow, the `username` parameter in sign-in accepts either the user&#39;s email address or their username (alias). No separate sign-in logic is needed to support alias-based sign-in.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">To sign in a user, you need to: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create a user interface (UI) to:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-native-authentication-ios-macos-sign-in-sign-out.md" target="_blank">docs/identity-platform/tutorial-native-authentication-ios-macos-sign-in-sign-out.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Henry Mbugua on Jun 24, 2026 2:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-native-authentication-ios-macos-sign-in-sign-out" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Merge username alias sign-up into Android native auth tutorial (#13494)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user using the **Email with password** flow, capture the email and password. If the username and password are valid, the app signs in the user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user, you need to: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create a user interface (UI) to:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in a user using the **Email with password** flow, capture the email and password. If the username and password are valid, the app signs in the user.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If the **Username** built-in user attribute is enabled in your tenant&#39;s sign-up user flow, the `username` parameter in sign-in accepts either the user&#39;s email address or their username (alias). No separate sign-in logic is needed to support alias-based sign-in.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">To sign in a user, you need to: </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Create a user interface (UI) to:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
