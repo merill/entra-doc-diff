@@ -1,0 +1,686 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since June 25th 2026, 11:00 PM PDT</p>
+        <p>Report generated on June 26th 2026, 11:00 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">30</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">264</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/recoverability-tenant.md" target="_blank">docs/architecture/recoverability-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Lynne O'Connor on Jun 26, 2026 7:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/recoverability-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+268 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> new and updated articles per Ben Athawes (ADO 28575) (#13644)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/tutorial-directory-extension-group-provisioning.md" target="_blank">docs/identity/hybrid/cloud-sync/tutorial-directory-extension-group-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jun 26, 2026 8:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/tutorial-directory-extension-group-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+24</span> / 
+              <span class="deletions">-22</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix style and accuracy issues in cloud sync group provisioning docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Scenario - Using directory extensions with group provisioning to Active Directory</div><div class="diff-line diff-context">description: This topic describes how to extend the schema of a group with a new attribute. Then use the new attribute to filter groups for provisioning to Active Directory.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-deleted">ms.date: 04/09/2025</div><div class="diff-line diff-context">ms.subservice: hybrid-cloud-sync</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; For a better experience executing Microsoft Graph PowerShell SDK cmdlets, use Visual Studio Code with `ms-vscode.powershell` extension in [ISE Mode](/powershell/scripting/dev-cross-plat/vscode/how-to-replicate-the-ise-experience-in-vscode).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create two groups in Microsoft Entra ID</div><div class="diff-line diff-context">To begin, create two groups in Microsoft Entra ID. One group is Sales and the Other is Marketing.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create two groups, follow these steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Hybrid Identity Administrator](~/identity/role-based-access-control/permissions-reference.md#hybrid-identity-administrator).</div><div class="diff-line diff-context">2. Browse to **Entra ID** &gt; **Groups** &gt; **All groups**.</div><div class="diff-line diff-deleted">3. At the top, click **New group**.</div><div class="diff-line diff-context">4. Make sure the **Group type** is set to **security**.</div><div class="diff-line diff-context">5. For the **Group Name** enter **Sales**</div><div class="diff-line diff-context">6. For **Membership type** keep it at assigned.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Scenario - Using directory extensions with group provisioning to Active Directory</div><div class="diff-line diff-context">description: This topic describes how to extend the schema of a group with a new attribute. Then use the new attribute to filter groups for provisioning to Active Directory.</div><div class="diff-line diff-context">ms.topic: tutorial</div><div class="diff-line diff-added">ms.date: 06/26/2026</div><div class="diff-line diff-context">ms.subservice: hybrid-cloud-sync</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; For a better experience executing Microsoft Graph PowerShell SDK cmdlets, use Visual Studio Code with `ms-vscode.powershell` extension in [ISE Mode](/powershell/scripting/dev-cross-plat/vscode/how-to-replicate-the-ise-experience-in-vscode).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Create two groups in Microsoft Entra ID</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">To begin, create two groups in Microsoft Entra ID. One group is Sales and the Other is Marketing.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create two groups, follow these steps.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Hybrid Identity Administrator](~/identity/role-based-access-control/permissions-reference.md#hybrid-identity-administrator).</div><div class="diff-line diff-context">2. Browse to **Entra ID** &gt; **Groups** &gt; **All groups**.</div><div class="diff-line diff-added">3. At the top, select **New group**.</div><div class="diff-line diff-context">4. Make sure the **Group type** is set to **security**.</div><div class="diff-line diff-context">5. For the **Group Name** enter **Sales**</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/reference-connect-version-history.md" target="_blank">docs/identity/hybrid/connect/reference-connect-version-history.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Eunice Waweru on Jun 26, 2026 2:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-version-history" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-43</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revert "Update version history for Microsoft Entra Connect"</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: This article lists all releases of Microsoft Entra Connect and Azure AD Sync.</div><div class="diff-line diff-context">ms.assetid: ef2797d7-d440-4a9a-a648-db32ad137494</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 06/26/2026</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-context">|[2.5.190.0](#251900)|02 Feb 2027 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)|10 Mar 2027 (12 months after release of 2.6.3.0)|</div><div class="diff-line diff-deleted">|[2.6.3.0](#2630)|26 Jun 2027 (12 months after release of 2.6.80.0)|</div><div class="diff-line diff-deleted">|[2.6.80.0](#26800)||</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To read more about autoupgrade, see [Microsoft Entra Connect: Automatic upgrade](how-to-connect-install-automatic-upgrade.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## 2.6.80.0</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: This article lists all releases of Microsoft Entra Connect and Azure AD Sync.</div><div class="diff-line diff-context">ms.assetid: ef2797d7-d440-4a9a-a648-db32ad137494</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 06/23/2026</div><div class="diff-line diff-context">ms.subservice: hybrid-connect</div><div class="diff-line diff-context">ms.custom: no-azure-ad-ps-ref, sfi-ga-nochange</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|[2.5.79.0](#25790)|23 Oct 2026 (12 months after release of 2.5.190.0)|</div><div class="diff-line diff-context">|[2.5.190.0](#251900)|02 Feb 2027 (12 months after release of 2.6.1.0)|</div><div class="diff-line diff-context">|[2.6.1.0](#2610)|10 Mar 2027 (12 months after release of 2.6.3.0)|</div><div class="diff-line diff-added">|[2.6.3.0](#2630)||</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">**All other versions are not supported**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To read more about autoupgrade, see [Microsoft Entra Connect: Automatic upgrade](how-to-connect-install-automatic-upgrade.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; Version 2.6.79.0 is no longer available for download. An issue was identified after release and the installer was recalled. Customers who had installed this version should un-install and install [latest available version (2.6.3.0)](#2630) of Microsoft Entra Connect Sync.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/recoverability-overview.md" target="_blank">docs/architecture/recoverability-overview.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Lynne O'Connor on Jun 26, 2026 7:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/recoverability-overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> new and updated articles per Ben Athawes (ADO 28575) (#13644)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The impact of deletions depends on the object type.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Users, Microsoft 365 Groups, cloud security groups, and applications can be soft deleted. Soft-deleted items are sent to the Microsoft Entra ID recycle bin. While in the recycle bin, items aren&#39;t available for use. However, they retain all their properties and can be restored via a Microsoft Graph API call or in the Azure portal. Items in the soft-delete state that aren&#39;t restored within 30 days are permanently, or hard, deleted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Diagram that shows that users, Microsoft 365 Groups, cloud security groups, and applications are soft deleted and then hard deleted after 30 days.](media/recoverability/overview-deletes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on misconfigurations and how to recover from them, see [Recover from misconfigurations](recover-from-misconfigurations.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Shared responsibility</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Recoverability is a shared responsibility between Microsoft as your cloud service provider and your organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Document known good states</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Document the state of your tenant and its objects regularly. Then if a hard delete or misconfiguration occurs, you have a roadmap to recovery. The following tools can help you document your current state:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Graph APIs](/graph/overview) can be used to export the current state of many Microsoft Entra configurations.</div><div class="diff-line diff-deleted">- [Microsoft Entra Exporter](https://github.com/microsoft/entraexporter) is a tool you can use to export your configuration settings.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The impact of deletions depends on the object type.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can soft delete object types that include Users, Microsoft 365 Groups, cloud security groups, and applications. Soft-deleted items go to the Microsoft Entra ID recycle bin. While in the recycle bin, items aren&#39;t available for use, but they retain all their properties. You can restore them with a Microsoft Graph API call or from the Microsoft Entra admin center. If you don&#39;t restore items in the soft-delete state within 30 days, Microsoft Entra ID permanently hard-deletes them. [Recover from deletions in Microsoft Entra ID](recover-from-deletions.md#properties-maintained-with-soft-delete) provides a table of objects that support soft deletion.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">![Diagram that shows that users, Microsoft 365 Groups, cloud security groups, and applications are soft deleted and then hard deleted after 30 days.](media/recoverability/overview-deletes.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For more information on misconfigurations and how to recover from them, see [Recover from misconfigurations](recover-from-misconfigurations.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Unlike deletions, misconfigurations modify objects in place rather than moving them to the recycle bin. For supported affected object types, use [Microsoft Entra Backup and Recovery](../backup/overview.md) difference reports to identify changed attributes and link edits. You can then run a recovery job to roll an object back to a previous state. For configurations that Microsoft Entra Backup and Recovery doesn&#39;t support, reapply settings from your documented known-good state.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Shared responsibility</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Recoverability is a shared responsibility between Microsoft as your cloud service provider and your organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Document known good states</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Regularly document and maintain the state of your tenant and its objects in an external versioned repository. If a hard delete or misconfiguration occurs, your documentation serves as your roadmap to recovery. </div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/tutorial-web-app-node-sign-in-sign-out.md" target="_blank">docs/identity-platform/tutorial-web-app-node-sign-in-sign-out.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by learn-build-service-prod[bot] on Jun 26, 2026 9:40 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-web-app-node-sign-in-sign-out" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Confirm merge from repo_sync_working_branch to main to sync with https://github.com/MicrosoftDocs/entra-docs (branch main) (#13679)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">                /**</div><div class="diff-line diff-context">                 * By default, MSAL Node will add OIDC scopes to the auth code url request. For more information, visit:</div><div class="diff-line diff-deleted">                 * https://docs.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes</div><div class="diff-line diff-context">                 */</div><div class="diff-line diff-context">                scopes: [],</div><div class="diff-line diff-context">            };</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">                /**</div><div class="diff-line diff-context">                 * By default, MSAL Node will add OIDC scopes to the auth code request. For more information, visit:</div><div class="diff-line diff-deleted">                 * https://docs.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes</div><div class="diff-line diff-context">                 */</div><div class="diff-line diff-context">                scopes: [],</div><div class="diff-line diff-context">            };</div><div class="diff-line diff-context">            /**</div><div class="diff-line diff-context">             * Construct a logout URI and redirect the user to end the</div><div class="diff-line diff-context">             * session with Microsoft Entra ID. For more information, visit:</div><div class="diff-line diff-deleted">             * https://docs.microsoft.com/azure/active-directory/develop/v2-protocols-oidc#send-a-sign-out-request</div><div class="diff-line diff-context">             */</div><div class="diff-line diff-context">            //For external tenant</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    </div><div class="diff-line diff-context">                /**</div><div class="diff-line diff-context">                 * By default, MSAL Node will add OIDC scopes to the auth code url request. For more information, visit:</div><div class="diff-line diff-added">                 * https://learn.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes</div><div class="diff-line diff-context">                 */</div><div class="diff-line diff-context">                scopes: [],</div><div class="diff-line diff-context">            };</div><div class="diff-line diff-context">    </div><div class="diff-line diff-context">                /**</div><div class="diff-line diff-context">                 * By default, MSAL Node will add OIDC scopes to the auth code request. For more information, visit:</div><div class="diff-line diff-added">                 * https://learn.microsoft.com/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes</div><div class="diff-line diff-context">                 */</div><div class="diff-line diff-context">                scopes: [],</div><div class="diff-line diff-context">            };</div><div class="diff-line diff-context">            /**</div><div class="diff-line diff-context">             * Construct a logout URI and redirect the user to end the</div><div class="diff-line diff-context">             * session with Microsoft Entra ID. For more information, visit:</div><div class="diff-line diff-added">             * https://learn.microsoft.com/azure/active-directory/develop/v2-protocols-oidc#send-a-sign-out-request</div><div class="diff-line diff-context">             */</div><div class="diff-line diff-context">            //For external tenant</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/licensing-service-plan-reference.md" target="_blank">docs/identity/users/licensing-service-plan-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 7:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update licensing service plan reviewer</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">keywords: Azure Active Directory licensing service plans</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 03/16/2026</div><div class="diff-line diff-deleted">ms.reviewer: Nicholak-MS</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted">#Nick Kramer is minding this reference until it can be automated</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Product names and service plan identifiers for licensing</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">keywords: Azure Active Directory licensing service plans</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-context">ms.date: 03/16/2026</div><div class="diff-line diff-added">ms.reviewer: shegu</div><div class="diff-line diff-context">ms.custom: it-pro</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">#Shelley Gu is minding this reference until it can be automated</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Product names and service plan identifiers for licensing</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-authentication-qr-code.md" target="_blank">docs/identity/authentication/concept-authentication-qr-code.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 5:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-qr-code" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify QR code authentication strength guidance</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: QR code authentication method in Microsoft Entra ID </div><div class="diff-line diff-context">description: Learn about using QR code authentication method in Microsoft Entra ID to help improve and secure sign-in events for frontline workers.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 07/24/2025</div><div class="diff-line diff-context">contributors: minatoruan</div><div class="diff-line diff-context">ms.reviewer: anjusingh</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enforce QR code sign-in with a custom authentication strength</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To require QR code sign-in for a specific resource, create a custom Conditional Access authentication strength that includes **QR code** under **Single factor authentication**. Then use the custom authentication strength in a Conditional Access policy for the resources and users that need QR code sign-in. For steps, see [Create and manage custom Conditional Access authentication strengths](concept-authentication-strength-advanced-options.md#create-a-custom-authentication-strength).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## QR code configurations in the Authentication method policy</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: QR code authentication method in Microsoft Entra ID </div><div class="diff-line diff-context">description: Learn about using QR code authentication method in Microsoft Entra ID to help improve and secure sign-in events for frontline workers.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 06/26/2026</div><div class="diff-line diff-context">contributors: minatoruan</div><div class="diff-line diff-context">ms.reviewer: anjusingh</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Enforce QR code sign-in with a custom authentication strength</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To require QR code sign-in for a specific group of users, such as frontline workers, a specific resource, or both, create a custom Conditional Access authentication strength that includes **QR code** under **Single factor authentication**. Then use the custom authentication strength in a Conditional Access policy for the resources and users that need QR code sign-in. For steps, see [Create and manage custom Conditional Access authentication strengths](concept-authentication-strength-advanced-options.md#create-a-custom-authentication-strength).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## QR code configurations in the Authentication method policy</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-authentication-strength-advanced-options.md" target="_blank">docs/identity/authentication/concept-authentication-strength-advanced-options.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 5:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-strength-advanced-options" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify QR code authentication strength guidance</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Create and Manage Custom Conditional Access Authentication Strengths</div><div class="diff-line diff-context">description: Learn how admins can create custom authentication strengths with advanced options for passkey (FIDO2) security keys and certificate-based authentication.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/15/2025</div><div class="diff-line diff-context">ms.reviewer: inbarc</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For **Description**, you can provide an optional description.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select the available methods that you want to allow. For example, to create a custom authentication strength for QR code sign-in, expand **Single factor authentication**, and then select **QR code**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next** and review the policy configuration.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Create and Manage Custom Conditional Access Authentication Strengths</div><div class="diff-line diff-context">description: Learn how admins can create custom authentication strengths with advanced options for passkey (FIDO2) security keys and certificate-based authentication.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 06/26/2026</div><div class="diff-line diff-context">ms.reviewer: inbarc</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. For **Description**, you can provide an optional description.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select the available methods that you want to allow. For example, to create a custom authentication strength that requires QR code sign-in for a group of users such as frontline workers, expand **Single factor authentication**, and then select **QR code**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Next** and review the policy configuration.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-azure-role-assignments.md" target="_blank">docs/id-governance/entitlement-management-azure-role-assignments.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-azure-role-assignments" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE - METADATA ONLY] Remove duplicate ownership metadata (#13675)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Assign Azure Role-based access control (RBAC) Roles - Entitlement management (Preview)</div><div class="diff-line diff-context">description: Assign Azure RBAC roles to access packages and catalogs in Microsoft Entra Entitlement Management. Learn how to manage access with least privilege principles.</div><div class="diff-line diff-deleted">author: owinfreyATL</div><div class="diff-line diff-deleted">ms.author: owinfrey</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: entitlement-management</div><div class="diff-line diff-context">ms.topic: how-to #Required; leave this attribute/value as-is</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Assign Microsoft Entra roles (Preview)](entitlement-management-roles.md)</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Assign Azure Role-based access control (RBAC) Roles - Entitlement management (Preview)</div><div class="diff-line diff-context">description: Assign Azure RBAC roles to access packages and catalogs in Microsoft Entra Entitlement Management. Learn how to manage access with least privilege principles.</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: entitlement-management</div><div class="diff-line diff-context">ms.topic: how-to #Required; leave this attribute/value as-is</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Assign Microsoft Entra roles (Preview)](entitlement-management-roles.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-ad-group-enforcement.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-ad-group-enforcement.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jun 26, 2026 8:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-ad-group-enforcement" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix style and accuracy issues in cloud sync group provisioning docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">.\Set-CloudSyncSOAPolicy.ps1 -EnforcementMode Audit -Credential (Get-Credential -Message &quot;Enter Domain Admin credentials (format: DOMAIN\Username)&quot;)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&lt;!-- TODO PM: Confirm whether re-running the script is the supported way to switch modes, or whether a different parameter or procedure applies. --&gt;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Add a break-glass account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can add the SID of an additional authorized user to the policy so that the user can make changes to enforced groups on-premises.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">.\Set-CloudSyncSOAPolicy.ps1 -EnforcementMode Audit -Credential (Get-Credential -Message &quot;Enter Domain Admin credentials (format: DOMAIN\Username)&quot;)</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Add a break-glass account</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You can add the SID of an additional authorized user to the policy so that the user can make changes to enforced groups on-premises.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/tutorial-group-provisioning.md" target="_blank">docs/identity/hybrid/cloud-sync/tutorial-group-provisioning.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justinha on Jun 26, 2026 8:56 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/tutorial-group-provisioning" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Fix style and accuracy issues in cloud sync group provisioning docs</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [pre-requisites](../includes/gpad-prereqs.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Group and User SOA Scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use case | Parent group type | User member group type | Sync Direction | How sync works </div><div class="diff-line diff-context">----------|--------------------|-------------------------|----------------|----------------</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [pre-requisites](../includes/gpad-prereqs.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Group and user SOA scenarios</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use case | Parent group type | User member group type | Sync Direction | How sync works </div><div class="diff-line diff-context">----------|--------------------|-------------------------|----------------|----------------</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/licensing-fundamentals.md" target="_blank">docs/id-governance/licensing-fundamentals.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/licensing-fundamentals" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE - METADATA ONLY] Remove duplicate ownership metadata (#13675)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: &#39;Microsoft Entra ID Governance licensing fundamentals&#39;</div><div class="diff-line diff-context">description: This article describes shows the licensing requirements for Microsoft Entra ID Governance features.</div><div class="diff-line diff-deleted">author: owinfreyATL</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/27/2026</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: &#39;Microsoft Entra ID Governance licensing fundamentals&#39;</div><div class="diff-line diff-context">description: This article describes shows the licensing requirements for Microsoft Entra ID Governance features.</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 03/27/2026</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-execution-limits.md" target="_blank">docs/id-governance/lifecycle-workflow-execution-limits.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-execution-limits" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE - METADATA ONLY] Remove duplicate ownership metadata (#13675)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure execution limits for Lifecycle Workflows</div><div class="diff-line diff-context">description: Learn how to set tenant-wide and workflow-specific execution limits and manage quarantined workflows in Lifecycle Workflows to prevent large-scale impact.</div><div class="diff-line diff-deleted">author: owinfreyATL</div><div class="diff-line diff-deleted">ms.author: owinfrey</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: how-to</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Configure execution limits for Lifecycle Workflows</div><div class="diff-line diff-context">description: Learn how to set tenant-wide and workflow-specific execution limits and manage quarantined workflows in Lifecycle Workflows to prevent large-scale impact.</div><div class="diff-line diff-context">ms.service: entra-id-governance</div><div class="diff-line diff-context">ms.subservice: lifecycle-workflows</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/ai-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/ai-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jun 26, 2026 6:17 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/ai-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-0</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update AI Administrator role responsibilities</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Manage all aspects of Microsoft 365 Copilot</div><div class="diff-line diff-context">- Manage AI-related enterprise services, extensibility, and copilot agents from the Integrated apps page in the Microsoft 365 admin center</div><div class="diff-line diff-context">- Approve and publish line-of-business copilot agents</div><div class="diff-line diff-context">- Allow users to install an app or install an app for users in the organization if the app does not require permission</div><div class="diff-line diff-context">- Read and configure Azure and Microsoft 365 service health dashboards</div><div class="diff-line diff-context">- View usage reports, adoption insights, and organizational insight</div><div class="diff-line diff-context">- Create and manage support tickets in Azure and the Microsoft 365 admin center</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Manage all aspects of Microsoft 365 Copilot</div><div class="diff-line diff-context">- Manage AI-related enterprise services, extensibility, and copilot agents from the Integrated apps page in the Microsoft 365 admin center</div><div class="diff-line diff-added">- Manage admin consent request policies in Microsoft Entra ID</div><div class="diff-line diff-context">- Approve and publish line-of-business copilot agents</div><div class="diff-line diff-context">- Allow users to install an app or install an app for users in the organization if the app does not require permission</div><div class="diff-line diff-context">- Read and configure Azure and Microsoft 365 service health dashboards</div><div class="diff-line diff-context">- View usage reports, adoption insights, and organizational insight</div><div class="diff-line diff-context">- Create and manage support tickets in Azure and the Microsoft 365 admin center</div><div class="diff-line diff-added">- Manage the full lifecycle of agent identities, agent identity blueprints, agent identity blueprint principals, and agent users including restoration of deleted items</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/ai-reader.md" target="_blank">docs/identity/role-based-access-control/includes/ai-reader.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Faith Moraa Ombongi on Jun 26, 2026 6:15 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/ai-reader" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise AI Reader role permissions</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Read all aspects of Microsoft 365 Copilot</div><div class="diff-line diff-context">- Read AI-related enterprise services, extensibility, and copilot agents</div><div class="diff-line diff-deleted">- Read all properties of agent identities, agent identity blueprint principals, and agent identity blueprints</div><div class="diff-line diff-context">- Read and configure Azure and Microsoft 365 service health dashboards</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Read all aspects of Microsoft 365 Copilot</div><div class="diff-line diff-context">- Read AI-related enterprise services, extensibility, and copilot agents</div><div class="diff-line diff-added">- Read information for directory objects including applications, users, groups, agent identities, agent identity blueprints, agent identity blueprint principals, and agent users</div><div class="diff-line diff-context">- Read and configure Azure and Microsoft 365 service health dashboards</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- autogenerated content starts here --&gt;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/concept-choose-authentication-approach.md" target="_blank">docs/external-id/customers/concept-choose-authentication-approach.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jun 26, 2026 6:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/concept-choose-authentication-approach" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> [BULK UPDATE - METADATA ONLY] Remove duplicate ownership metadata (#13675)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Compare browser-delegated and native authentication in Microsoft Entra External ID and choose the right approach for your customer-facing app.</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">manager: dougeby</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/16/2026</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Compare browser-delegated and native authentication in Microsoft Entra External ID and choose the right approach for your customer-facing app.</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/16/2026</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
