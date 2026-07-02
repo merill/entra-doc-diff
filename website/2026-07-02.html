@@ -1,0 +1,316 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since June 30th 2026, 11:07 PM PDT</p>
+        <p>Report generated on July 1st 2026, 11:07 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">16</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">1</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">6</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/governance-policy-templates.md" target="_blank">docs/id-governance/tenant-governance/governance-policy-templates.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jul 1, 2026 4:54 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/governance-policy-templates" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+12</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Document Tenant Governance policy template limits</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn about governance policy templates and how to use them to enforce consistent governance across tenants in Microsoft Entra</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/10/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- source: Governance policy templates.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Configuration required**: You must configure the default policy template before you can use it.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Governance relationships](governance-relationships.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn about governance policy templates and how to use them to enforce consistent governance across tenants in Microsoft Entra</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 07/01/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&lt;!-- source: Governance policy templates.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Configuration required**: You must configure the default policy template before you can use it.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Limitations</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The following limitations apply to governance policy templates:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">| Limit | Value |</div><div class="diff-line diff-added">| --- | --- |</div><div class="diff-line diff-added">| Maximum number of multitenant applications per template | 10 |</div><div class="diff-line diff-added">| Maximum number of permissions per multitenant application | 100 |</div><div class="diff-line diff-added">| Maximum number of role assignments per template | 10 |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/permissions-reference.md" target="_blank">docs/identity/role-based-access-control/permissions-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by FaithOmbongi on Jul 1, 2026 1:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-6</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed Entra Customer Lockbox Approver - Removed role and actions until the team give the go-ahead.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra built-in roles</div><div class="diff-line diff-context">description: Describes the Microsoft Entra built-in roles and permissions.</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-deleted">ms.date: 06/30/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | [Edge Administrator](#edge-administrator) | Manage all aspects of Microsoft Edge. | 3f1acade-1e04-4fbc-9b69-f0302cd84aef |</div><div class="diff-line diff-context">&gt; | [Entra Backup Administrator](#entra-backup-administrator) | Manage all aspects of Microsoft Entra Backup, such as create recovery jobs and manage backup snapshots. | b6a27b2b-f905-4b2e-81b5-0d90e0ef1fdb |</div><div class="diff-line diff-context">&gt; | [Entra Backup Reader](#entra-backup-reader) | Read all aspects of Microsoft Entra Backup, such as list all preview jobs, recovery jobs, backup snapshots, and create preview jobs. | f42252d9-5400-4d7b-b9ef-cc582dbb8577 |</div><div class="diff-line diff-deleted">&gt; | [Entra Customer Lockbox Approver](#entra-customer-lockbox-approver) | Can approve customer lockbox requests for accessing customer data in Entra ID. | d35481f7-cda1-4fa2-8344-5a21f7f3724d |</div><div class="diff-line diff-context">&gt; | [Exchange Administrator](#exchange-administrator) | Can manage all aspects of the Exchange product. | 29232cdf-9323-42fd-ade2-1d097af3e4de |</div><div class="diff-line diff-context">&gt; | [Exchange Backup Administrator](#exchange-backup-administrator) | Back up and restore content (including granular restore) for Exchange in Microsoft 365 Backup | 49eb8f75-97e9-4e37-9b2b-6c3ebfcffa31 |</div><div class="diff-line diff-context">&gt; | [Exchange Recipient Administrator](#exchange-recipient-administrator) | Can create or update Exchange Online recipients within the Exchange Online organization. | 31392ffb-586c-42d1-9346-e59415a2cc4e |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [entra-backup-reader](includes/entra-backup-reader.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Entra Customer Lockbox Approver</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">[!INCLUDE [entra-customer-lockbox-approver](includes/entra-customer-lockbox-approver.md)]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Microsoft Entra built-in roles</div><div class="diff-line diff-context">description: Describes the Microsoft Entra built-in roles and permissions.</div><div class="diff-line diff-context">ms.topic: reference</div><div class="diff-line diff-added">ms.date: 07/01/2026</div><div class="diff-line diff-context">ms.reviewer: abhijeetsinha</div><div class="diff-line diff-context">ms.custom: generated, it-pro, fasttrack-edit, has-azure-ad-ps-ref, azure-ad-ref-level-one-done, sfi-ga-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt; | [Edge Administrator](#edge-administrator) | Manage all aspects of Microsoft Edge. | 3f1acade-1e04-4fbc-9b69-f0302cd84aef |</div><div class="diff-line diff-context">&gt; | [Entra Backup Administrator](#entra-backup-administrator) | Manage all aspects of Microsoft Entra Backup, such as create recovery jobs and manage backup snapshots. | b6a27b2b-f905-4b2e-81b5-0d90e0ef1fdb |</div><div class="diff-line diff-context">&gt; | [Entra Backup Reader](#entra-backup-reader) | Read all aspects of Microsoft Entra Backup, such as list all preview jobs, recovery jobs, backup snapshots, and create preview jobs. | f42252d9-5400-4d7b-b9ef-cc582dbb8577 |</div><div class="diff-line diff-context">&gt; | [Exchange Administrator](#exchange-administrator) | Can manage all aspects of the Exchange product. | 29232cdf-9323-42fd-ade2-1d097af3e4de |</div><div class="diff-line diff-context">&gt; | [Exchange Backup Administrator](#exchange-backup-administrator) | Back up and restore content (including granular restore) for Exchange in Microsoft 365 Backup | 49eb8f75-97e9-4e37-9b2b-6c3ebfcffa31 |</div><div class="diff-line diff-context">&gt; | [Exchange Recipient Administrator](#exchange-recipient-administrator) | Can create or update Exchange Online recipients within the Exchange Online organization. | 31392ffb-586c-42d1-9346-e59415a2cc4e |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [entra-backup-reader](includes/entra-backup-reader.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Exchange Administrator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [exchange-administrator](includes/exchange-administrator.md)]</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/includes/global-administrator.md" target="_blank">docs/identity/role-based-access-control/includes/global-administrator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by FaithOmbongi on Jul 1, 2026 1:43 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/global-administrator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Removed Entra Customer Lockbox Approver - Removed role and actions until the team give the go-ahead.</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Global Administrator</div><div class="diff-line diff-context">description: Global Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-deleted">ms.date: 06/30/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | microsoft.directory/hybridAuthenticationPolicy/allProperties/allTasks | Manage hybrid authentication policy in Microsoft Entra ID&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/identityProtection/allProperties/allTasks | Create and delete all resources, and read and update standard properties in Microsoft Entra ID Protection&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/lifecycleWorkflows/workflows/allProperties/allTasks | Manage all aspects of lifecycle workflows and tasks in Microsoft Entra ID |</div><div class="diff-line diff-deleted">&gt; | microsoft.directory/lockbox/requests/update | Update Customer Lockbox requests for Microsoft Entra resources |</div><div class="diff-line diff-context">&gt; | microsoft.directory/loginOrganizationBranding/allProperties/allTasks | Create and delete loginTenantBranding, and read and update all properties |</div><div class="diff-line diff-context">&gt; | microsoft.directory/multiTenantOrganization/basic/update | Update basic properties of a multi-tenant organization |</div><div class="diff-line diff-context">&gt; | microsoft.directory/multiTenantOrganization/create | Create a multi-tenant organization |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Global Administrator</div><div class="diff-line diff-context">description: Global Administrator</div><div class="diff-line diff-context">ms.topic: include</div><div class="diff-line diff-added">ms.date: 07/01/2026</div><div class="diff-line diff-context">ms.custom: include file</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; | microsoft.directory/hybridAuthenticationPolicy/allProperties/allTasks | Manage hybrid authentication policy in Microsoft Entra ID&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/identityProtection/allProperties/allTasks | Create and delete all resources, and read and update standard properties in Microsoft Entra ID Protection&lt;br/&gt;[![Privileged label icon.](../media/permissions-reference/privileged-label.png)](../privileged-roles-permissions.md) |</div><div class="diff-line diff-context">&gt; | microsoft.directory/lifecycleWorkflows/workflows/allProperties/allTasks | Manage all aspects of lifecycle workflows and tasks in Microsoft Entra ID |</div><div class="diff-line diff-context">&gt; | microsoft.directory/loginOrganizationBranding/allProperties/allTasks | Create and delete loginTenantBranding, and read and update all properties |</div><div class="diff-line diff-context">&gt; | microsoft.directory/multiTenantOrganization/basic/update | Update basic properties of a multi-tenant organization |</div><div class="diff-line diff-context">&gt; | microsoft.directory/multiTenantOrganization/create | Create a multi-tenant organization |</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/harness-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/harness-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Jeevan Desarda on Jul 1, 2026 8:20 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/harness-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove preview label from Harness provisioning tutorial</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This article describes a connector that is built on top of the Microsoft Entra user provisioning service. For information about this service, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-deleted">&gt;</div><div class="diff-line diff-deleted">&gt; This connector is currently in preview. For more information about previews, see [Universal License Terms For Online Services](https://www.microsoft.com/licensing/terms/product/ForOnlineServices/all).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div><div class="diff-line diff-context">&gt; This article describes a connector that is built on top of the Microsoft Entra user provisioning service. For information about this service, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/reference-office-365-application-contents.md" target="_blank">docs/identity/conditional-access/reference-office-365-application-contents.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Ken Withee on Jul 1, 2026 7:01 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/reference-office-365-application-contents" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update link format for Microsoft applications in reports</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">- [Office 365 app in Conditional Access](concept-conditional-access-cloud-apps.md#office-365)</div><div class="diff-line diff-context">- [Service dependencies in Conditional Access](service-dependencies.md)</div><div class="diff-line diff-context">- [What is Conditional Access?](overview.md)</div><div class="diff-line diff-deleted">- [Verify first-party Microsoft applications in sign-in reports](https://learn.microsoft.com/troubleshoot/azure/entra/entra-id/governance/verify-first-party-apps-sign-in)</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">- [Office 365 app in Conditional Access](concept-conditional-access-cloud-apps.md#office-365)</div><div class="diff-line diff-context">- [Service dependencies in Conditional Access](service-dependencies.md)</div><div class="diff-line diff-context">- [What is Conditional Access?](overview.md)</div><div class="diff-line diff-added">- [Verify first-party Microsoft applications in sign-in reports](/troubleshoot/azure/entra/entra-id/governance/verify-first-party-apps-sign-in)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/role-based-access-control/includes/entra-customer-lockbox-approver.md
+            </div>
+            <div class="file-meta">
+              Deleted by FaithOmbongi on Jul 1, 2026 1:43 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/includes/entra-customer-lockbox-approver</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-18 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Removed Entra Customer Lockbox Approver - Removed role and actions until the team give the go-ahead.</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
