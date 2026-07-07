@@ -1,0 +1,766 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 5th 2026, 11:17 PM PDT</p>
+        <p>Report generated on July 6th 2026, 11:17 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">27</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">5</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">14</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">8</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/migrate-from-cognito-to-external-id.md" target="_blank">docs/external-id/customers/migrate-from-cognito-to-external-id.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Mick Alberts on Jul 6, 2026 9:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/migrate-from-cognito-to-external-id" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+729 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Migration Hub: Amazon Cognito migration to Entra ID external (#13677)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-synced-passkeys.md" target="_blank">docs/identity/authentication/how-to-synced-passkeys.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Justin Hall on Jul 6, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-synced-passkeys" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+97 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (1/5): synced passkey register/sign-in + remove mobile article (#13773)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-security-key-sign-in.md" target="_blank">docs/identity/authentication/how-to-security-key-sign-in.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Justin Hall on Jul 6, 2026 8:56 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-security-key-sign-in" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+58 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (4/5): FIDO2 security key (enable/register/sign-in) (#13776)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-register-entra-passkey-windows.md" target="_blank">docs/identity/authentication/how-to-register-entra-passkey-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Justin Hall on Jul 6, 2026 5:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-register-entra-passkey-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+54 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (3/5): Microsoft Entra passkey on Windows (enable/register/sign-in) (#13775)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-sign-in-entra-passkey-windows.md" target="_blank">docs/identity/authentication/how-to-sign-in-entra-passkey-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Justin Hall on Jul 6, 2026 5:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-sign-in-entra-passkey-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+35 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (3/5): Microsoft Entra passkey on Windows (enable/register/sign-in) (#13775)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-enable-authenticator-passkey.md" target="_blank">docs/identity/authentication/how-to-enable-authenticator-passkey.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-enable-authenticator-passkey" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+148</span> / 
+              <span class="deletions">-56</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (2/5): Passkey in Microsoft Authenticator (enable/register/sign-in) (#13774)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Enable passkeys in Authenticator for Microsoft Entra ID</div><div class="diff-line diff-deleted">description: Learn about how to enable passkeys in Microsoft Authenticator for Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/05/2026</div><div class="diff-line diff-deleted">ms.reviewer: mjsantani</div><div class="diff-line diff-deleted">ms.custom: sfi-ga-nochange, sfi-image-nochange</div><div class="diff-line diff-deleted"># Customer intent: As a Microsoft Entra administrator, I want to learn how to enable and enforce passkeys in Microsoft Authenticator sign-in for users.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Enable passkeys in Authenticator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article lists steps to enable and enforce use of passkeys in Authenticator for Microsoft Entra ID. First, you update the Authentication methods policy to allow users to register and sign in with passkeys in Authenticator. Then you can use Conditional Access authentication strengths policies to enforce passkey sign-in when users access a sensitive resource.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Requirements</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Microsoft Entra multifactor authentication (MFA)](howto-mfa-getstarted.md).</div><div class="diff-line diff-context">- Android 14 and later or iOS 17 and later.</div><div class="diff-line diff-context">- For cross-device registration and authentication:</div><div class="diff-line diff-context">  - Make sure that Bluetooth and an active internet connection are enabled on both devices. </div><div class="diff-line diff-context">  &gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Enable and support passkeys in Authenticator for Microsoft Entra ID</div><div class="diff-line diff-added">description: Learn about Authenticator-specific requirements, configuration, and troubleshooting for passkeys in Microsoft Authenticator for Microsoft Entra ID.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-added">ms.reviewer: mjsantani, calui, tilarso</div><div class="diff-line diff-added">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ms.custom: sfi-ga-nochange, sfi-image-nochange, msecd-doc-authoring-1013</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added"># Customer intent: As a Microsoft Entra administrator, I want to learn about Authenticator-specific requirements for passkeys so I can enable and support them for my users.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Enable passkeys in Authenticator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article covers Authenticator-specific requirements and configuration for passkeys in Microsoft Authenticator for Microsoft Entra ID.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Before you follow the steps in this article, enable passkeys and create a passkey profile. For steps, see [Enable passkeys (FIDO2) in Microsoft Entra ID](how-to-authentication-passkeys-fido2.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites for passkeys in Authenticator</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- An account with at least [Authentication Policy Administrator](/entra/identity/role-based-access-control/permissions-reference#authentication-policy-administrator) permissions to configure authentication methods.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-register-passkey-authenticator.md" target="_blank">docs/identity/authentication/how-to-register-passkey-authenticator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-register-passkey-authenticator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+121</span> / 
+              <span class="deletions">-71</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (2/5): Passkey in Microsoft Authenticator (enable/register/sign-in) (#13774)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Register passkeys in Authenticator on Android and iOS devices</div><div class="diff-line diff-deleted">description: Registration and management of passkeys with Microsoft Authenticator on Android and iOS devices.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/05/2026</div><div class="diff-line diff-context">ms.reviewer: hanki77, tilarso</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an identity administrator, I want to understand how users can register passkeys in Microsoft Authenticator.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Register passkeys in Authenticator on Android or iOS devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article shows how to register a passkey by using Authenticator on your iOS or Android device by directly signing in to the Authenticator app or by using [Security info](https://aka.ms/mysecurityinfo). For more information about the availability of Microsoft Entra ID passkey (FIDO2) authentication across native apps, web browsers, and operating systems, see [Support for FIDO2 authentication with Microsoft Entra ID](concept-fido2-compatibility.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">*The easiest and fastest way to add a passkey is to add it directly in the Authenticator app.*</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Alternatively, you can add a passkey from your mobile device browser or through cross-device registration by using another device, such as a laptop. Your mobile device needs to run iOS version 17 or Android version 14, or later. </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">| Scenario | iOS | Android |</div><div class="diff-line diff-deleted">|------------------|---------------------------------|----------------|</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Register passkeys in Authenticator on Android and iOS devices</div><div class="diff-line diff-added">description: Learn how to register passkeys in Microsoft Authenticator on Android and iOS. Sign in to the app, use Security info, or register cross-device.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.reviewer: hanki77, tilarso</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ms.custom: sfi-image-nochange, msecd-doc-authoring-1013</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context"># Customer intent: As an identity administrator, I want to understand how users can register passkeys in Microsoft Authenticator.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Register passkeys in Authenticator on Android and iOS devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article shows how to register a passkey in Microsoft Authenticator on your iOS or Android device.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## [**iOS**](#tab/iOS)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can register by signing in to the Authenticator app directly, by using [Security info](https://aka.ms/mysecurityinfo), or from your mobile device browser or through cross-device registration by using another device, such as a laptop. Your mobile device needs to run iOS version 17 or later.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Use Authenticator (iOS)](#use-authenticator-ios)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-ad-group-enforcement.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-ad-group-enforcement.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on Jul 6, 2026 6:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-ad-group-enforcement" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+99</span> / 
+              <span class="deletions">-72</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Revise AD group enforcement documentation (#13637)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">ms.subservice: hybrid-cloud-sync</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-deleted">ms.date: 06/09/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a hybrid identity administrator, I want to restrict modifications of synced Active Directory groups to the Microsoft Entra Cloud Sync provisioning service so that on-premises changes can&#39;t bypass Microsoft Entra governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure AD group enforcement in Microsoft Entra Cloud Sync (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Microsoft Entra Cloud Sync can provision cloud groups to on-premises Active Directory (AD). AD group enforcement lets you designate specific synced groups so that modifications can only be performed through the Microsoft Entra provisioning service. This alignment between Microsoft Entra ID and AD groups removes the need for a separate reconciliation process and helps ensure that all access is granted through Microsoft Entra.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; AD group enforcement is currently in PREVIEW. See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Prerequisite | Details |</div><div class="diff-line diff-deleted">|---|---|</div><div class="diff-line diff-deleted">| Domain controller operating system | Windows Server 2022 or Windows Server 2025. |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">ms.subservice: hybrid-cloud-sync</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-added">ms.date: 07/06/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a hybrid identity administrator, I want to restrict modifications of synced Active Directory groups to the Microsoft Entra Cloud Sync provisioning service so that on-premises changes can&#39;t bypass Microsoft Entra governance.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Configure AD group enforcement in Microsoft Entra Cloud Sync (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Microsoft Entra Cloud Sync can provision cloud groups to on-premises Active Directory (AD). AD group enforcement lets you designate specific synced groups so that modifications can only be performed through the Microsoft Entra provisioning service. This alignment between Microsoft Entra ID and AD groups reduces the need for a separate reconciliation process and helps ensure that all access is granted through Microsoft Entra.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; AD group enforcement is currently in **PREVIEW**. The preview spans two parts that you configure together: the **Active Directory enforcement engine** on your domain controllers (the code ships in a cumulative Windows Server update but is disabled by default and turned on by a Group Policy package during the preview) and the **Microsoft Entra Cloud Sync** configuration that marks groups for enforcement. See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## How AD group enforcement works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Enforcement is evaluated by Active Directory **at the point of an LDAP write, on whichever domain controller processes that write**. When a change targets a group that&#39;s marked for enforcement, the domain controller checks whether the calling identity is authorized by the policy. If it isn&#39;t, the change is blocked (Enforced mode) or logged (Audit mode) before any *drift* (a divergence between the group&#39;s state in Microsoft Entra and its state in AD) can occur.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Two pieces work together:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/howto-authentication-passwordless-security-key-windows.md" target="_blank">docs/identity/authentication/howto-authentication-passwordless-security-key-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:56 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/howto-authentication-passwordless-security-key-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+107</span> / 
+              <span class="deletions">-36</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (4/5): FIDO2 security key (enable/register/sign-in) (#13776)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: FIDO2 security key sign-in to Windows</div><div class="diff-line diff-deleted">description: Learn how to enable passwordless security key sign-in to Windows with Microsoft Entra ID using FIDO2 security keys. </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/04/2025</div><div class="diff-line diff-context">ms.reviewer: librown, aakapo</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Enable FIDO2 security key sign-in to Windows 10 and 11 devices with Microsoft Entra ID </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">This document focuses on enabling FIDO2 security key based passwordless authentication with Windows 10 and 11 devices. After completing the steps in this article, you&#39;re able to sign in to both your Microsoft Entra ID and Microsoft Entra hybrid joined Windows devices with your Microsoft Entra account using a FIDO2 security key.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## Requirements</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">| Device Type | Microsoft Entra joined | Microsoft Entra hybrid joined |</div><div class="diff-line diff-deleted">| --- | --- | --- |</div><div class="diff-line diff-deleted">| [Microsoft Entra multifactor authentication](howto-mfa-getstarted.md) | X | X |</div><div class="diff-line diff-deleted">| [Combined security information registration](concept-registration-mfa-sspr-combined.md) | X | X |</div><div class="diff-line diff-deleted">| Compatible [FIDO2 security keys](concept-authentication-passkeys-fido2.md) | X | X |</div><div class="diff-line diff-deleted">| WebAuthN requires Windows 10 version 1903 or higher | X | X |</div><div class="diff-line diff-deleted">| [Microsoft Entra joined devices](~/identity/devices/concept-directory-join.md) require Windows 10 version 1909 or higher | X |   |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: FIDO2 security key sign-in to Windows</div><div class="diff-line diff-added">description: Learn how to enable passwordless security key sign-in to Windows with Microsoft Entra ID using FIDO2 security keys.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.reviewer: librown, aakapo</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Enable FIDO2 security key sign-in to Windows 10 and 11 devices with Microsoft Entra ID</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This article focuses on enabling FIDO2 security key-based passwordless authentication with Windows 10 and 11 devices. After completing the steps in this article, you can sign in to both your Microsoft Entra ID and Microsoft Entra hybrid joined Windows devices with your Microsoft Entra account using a FIDO2 security key.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Prerequisites for FIDO2 security keys</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- An account with at least [Authentication Policy Administrator](/entra/identity/role-based-access-control/permissions-reference#authentication-policy-administrator) permissions to configure authentication methods.</div><div class="diff-line diff-added">- You need to [enable passkey sign-in](how-to-authentication-passkeys-fido2.md#enable-passkey-profiles) in the **Passkey (FIDO2)** policy in **Authentication methods** in the Microsoft Entra admin center.</div><div class="diff-line diff-added">- Devices need to meet the following requirements:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">  | Device Type | Microsoft Entra joined | Microsoft Entra hybrid joined |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-entra-passkeys-on-windows.md" target="_blank">docs/identity/authentication/how-to-authentication-entra-passkeys-on-windows.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 5:03 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-entra-passkeys-on-windows" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+72</span> / 
+              <span class="deletions">-61</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (3/5): Microsoft Entra passkey on Windows (enable/register/sign-in) (#13775)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Enable Microsoft Entra passkey on Windows devices</div><div class="diff-line diff-deleted">description: Learn how to enable Microsoft Entra passkey on Windows devices for phishing-resistant multifactor authentication with work or school accounts.</div><div class="diff-line diff-deleted">#customer intent: As an administrator, I want to enable Microsoft Entra passkeys so users with work and school accounts can sign in by using phishing-resistant multifactor authentication.</div><div class="diff-line diff-deleted">ms.reviewer: kimhana</div><div class="diff-line diff-deleted">ms.date: 02/18/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.collection: msec-ai-copilot</div><div class="diff-line diff-deleted">ms.custom: msecd-doc-authoring-106</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Enable Microsoft Entra passkey on Windows</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes Microsoft Entra passkey on Windows. It covers how they work, how they differ from Windows Hello for Business, and how to configure passkey profiles to allow Windows Hello as a passkey provider.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Enable Microsoft Entra passkey on Windows (preview)</div><div class="diff-line diff-added">description: Learn how Microsoft Entra passkey on Windows enables phishing-resistant authentication with work or school accounts by using Windows Hello as a FIDO2 passkey provider.</div><div class="diff-line diff-added">#customer intent: As an administrator, I want to understand Microsoft Entra passkeys on Windows so users with work and school accounts can sign in by using phishing-resistant multifactor authentication.</div><div class="diff-line diff-added">author: hanki71</div><div class="diff-line diff-added">ms.author: justinha</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-context">ms.service: entra-id</div><div class="diff-line diff-context">ms.subservice: authentication</div><div class="diff-line diff-context">ms.collection: msec-ai-copilot</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Enable Microsoft Entra passkey on Windows (preview)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes Microsoft Entra passkey on Windows, how it works, and how it differs from Windows Hello for Business.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To configure passkey profiles that allow Windows Hello as a FIDO2 passkey provider, see [Configure a profile for Microsoft Entra passkey on Windows](#configure-a-profile-for-microsoft-entra-passkey-on-windows).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-sign-in-passkey.md" target="_blank">docs/identity/authentication/how-to-sign-in-passkey.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-sign-in-passkey" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+55</span> / 
+              <span class="deletions">-41</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (1/5): synced passkey register/sign-in + remove mobile article (#13773)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title:  Sign in with a passkey (FIDO2) for your work or school account</div><div class="diff-line diff-deleted">description: Learn how to sign in with a passkey (FIDO2) for your work or school account.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">services: active-directory</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/10/2025</div><div class="diff-line diff-context">ms.reviewer: kimhana</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted"># Customer intent: As an identity administrator, I want to understand how users will sign in with a security key. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Sign in with a passkey (FIDO2) for your work or school account </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article covers different ways that users can sign in to Microsoft Entra ID with a passkey. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Sign in with a passkey (FIDO2) saved on the same device](#sign-in-with-a-passkey-fido2-saved-on-the-same-device)</div><div class="diff-line diff-deleted">- [Sign in with a passkey (FIDO2) saved on another device](#sign-in-with-a-passkey-fido2-saved-on-another-device)</div><div class="diff-line diff-deleted">- [Sign in with a passkey (FIDO2) saved on a security key](#sign-in-with-a-passkey-fido2-saved-on-a-security-key)</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Sign in with a synced passkey (FIDO2)</div><div class="diff-line diff-added">description: Learn how to sign in to Microsoft Entra ID with a synced passkey (FIDO2) for your work or school account by using a browser on Windows, iOS, or Android.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.reviewer: kimhana</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-added"># Customer intent: As an identity administrator, I want to understand how users will sign in with a passkey.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Sign in with a synced passkey (FIDO2)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This article describes how to sign in to your work or school account with a synced passkey.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Your passkey can be synced to the same device where you want to sign in, or it can be synced to another device.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- [Use a passkey from the same device](#use-a-passkey-from-the-same-device)</div><div class="diff-line diff-added">- [Use a passkey from another device](#use-a-passkey-from-another-device)</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-register-passkey.md" target="_blank">docs/identity/authentication/how-to-register-passkey.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-register-passkey" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+56</span> / 
+              <span class="deletions">-32</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (1/5): synced passkey register/sign-in + remove mobile article (#13773)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title:  Register a Passkey (FIDO2) </div><div class="diff-line diff-deleted">description: Registration and management of a passkey (FIDO2).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">services: active-directory</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 11/10/2025</div><div class="diff-line diff-deleted">ms.reviewer: kimhana</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted"># Customer intent: As an identity administrator, I want to understand how users will register a passkey using a browser or with a security key. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Register a passkey (FIDO2)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article shows how users can register a passkey (FIDO2) by using the **Passkey** flow. For registration on a mobile device, see [Register a passkey using a mobile device](how-to-register-passkey-mobile.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt;[!NOTE]</div><div class="diff-line diff-deleted">&gt;Looking to provide passkeys (FIDO2) on behalf of users? Use our [APIs](https://aka.ms/passkeyprovision).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For more information about enabling passkeys in Microsoft Authenticator, see [How to enable passkeys in Microsoft Authenticator](how-to-enable-authenticator-passkey.md).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Register a synced passkey (FIDO2)</div><div class="diff-line diff-added">description: Learn how to register a synced passkey (FIDO2) as an authentication method on Windows, iOS, or Android by using a browser for phishing-resistant sign-in.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-added">ms.reviewer: kimhana, calui, tilarso</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ms.custom: sfi-image-nochange, msecd-doc-authoring-1013</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added"># Customer intent: As an identity administrator, I want to understand how users will register a passkey using a browser on Windows, iOS, or Android.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Register a synced passkey (FIDO2)</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">This article shows how users can register a synced passkey (FIDO2) by using the **Passkey** flow. A synced passkey is stored in a passkey provider (such as iCloud Keychain or Google Password Manager) and syncs across the user&#39;s devices. For an overview of synced passkeys, see [Synced passkeys in Microsoft Entra ID](how-to-synced-passkeys.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">&gt; [!NOTE]</div><div class="diff-line diff-added">&gt; Looking to provide passkeys (FIDO2) on behalf of users? Use our [APIs](https://aka.ms/passkeyprovision).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-register-passkey-with-security-key.md" target="_blank">docs/identity/authentication/how-to-register-passkey-with-security-key.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:56 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-register-passkey-with-security-key" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+29</span> / 
+              <span class="deletions">-41</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (4/5): FIDO2 security key (enable/register/sign-in) (#13776)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Register a passkey (FIDO2) with a FIDO2 security key</div><div class="diff-line diff-deleted">description: User registration of a passkey (FIDO2) with a FIDO2 security key.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">services: active-directory</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 10/28/2025</div><div class="diff-line diff-context">ms.reviewer: kimhana</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-deleted"># Customer intent: As an identity administrator, I want to understand... </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-deleted"># Register a passkey (FIDO2) with a FIDO2 security key</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article shows how to register a passkey as an authentication method by using a FIDO2 security key. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## First-time registration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. First-time users need to register a passkey (FIDO2) as an authentication method by navigating and completing the process from a browser at [Security info](https://mysignins.microsoft.com/security-info).</div><div class="diff-line diff-deleted">1. Tap **Add sign-in method** &gt; **Choose a method** &gt; **Passkey** &gt; **Add**.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Register a passkey with a FIDO2 security key</div><div class="diff-line diff-added">description: Learn how to register a passkey with a FIDO2 security key in Microsoft Entra ID. Use Security info or a prompted sign-in flow.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.reviewer: kimhana</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-added"># Customer intent: As an identity administrator, I want to understand how users register a passkey with a FIDO2 security key.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">---</div><div class="diff-line diff-added"># Register a passkey with a FIDO2 security key</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">FIDO2 security keys are device-bound passkeys stored on a physical authenticator. The private key never leaves the security key, which provides strong protection against remote phishing attacks. Security keys are recommended for highly regulated industries or users with elevated privileges.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article shows how to register a passkey as an authentication method by using a FIDO2 security key. After registration, you can [sign in with the security key](how-to-security-key-sign-in.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## First-time registration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-sign-in-passkey-authenticator.md" target="_blank">docs/identity/authentication/how-to-sign-in-passkey-authenticator.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-sign-in-passkey-authenticator" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+22</span> / 
+              <span class="deletions">-23</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (2/5): Passkey in Microsoft Authenticator (enable/register/sign-in) (#13774)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Sign in with passkeys in Authenticator for Android and iOS devices </div><div class="diff-line diff-deleted">description: Learn how to sign in with passkeys for Android and iOS devices with Microsoft Authenticator.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">services: active-directory</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 10/14/2025</div><div class="diff-line diff-context">ms.reviewer: mjsantani, calui</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sign in with passkeys in Authenticator for Android and iOS devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article explains the sign-in experience when you use passkeys in Authenticator with Microsoft Entra ID. For more information about the availability of Microsoft Entra ID passkey (FIDO2) authentication across native applications, web browsers, and operating systems, see [Support for FIDO2 authentication with Microsoft Entra ID](concept-fido2-compatibility.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">| Scenario | iOS | Android |</div><div class="diff-line diff-deleted">|------------------|---------------------------------|----------------|</div><div class="diff-line diff-deleted">| Same-device authentication in a browser              | &amp;#x2705;          | &amp;#x2705;&lt;sup&gt;1&lt;/sup&gt;       |</div><div class="diff-line diff-deleted">| Same-device authentication in native Microsoft applications            | &amp;#x2705; | &amp;#x2705;    |</div><div class="diff-line diff-deleted">| Cross-device authentication  | &amp;#x2705;  | &amp;#x2705;    |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Sign in with passkeys in Authenticator for Android and iOS devices</div><div class="diff-line diff-added">description: Learn how to sign in with passkeys in Microsoft Authenticator for Android and iOS. Use same-device, cross-device, or native app authentication.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/05/2026</div><div class="diff-line diff-context">ms.reviewer: mjsantani, calui</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1013</div><div class="diff-line diff-added"># Customer intent: As a user, I want to sign in with a passkey in Microsoft Authenticator so that I can authenticate securely without a password.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Sign in with passkeys in Authenticator for Android and iOS devices</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article explains the sign-in experience when you use passkeys in Authenticator with Microsoft Entra ID. For more information about the availability of Microsoft Entra ID passkey (FIDO2) authentication across native applications, web browsers, and operating systems, see [Support for FIDO2 authentication with Microsoft Entra ID](concept-fido2-compatibility.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## [**iOS**](#tab/iOS)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To sign in with a passkey in Authenticator, your iOS device needs to run iOS 17 or later.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/snowflake-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/snowflake-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ArvindHarinder1 on Jul 6, 2026 5:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/snowflake-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update docs/identity/saas-apps/snowflake-provisioning-tutorial.md</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With Privileged Identity Management (PIM) for Groups, you can provide just-in-time access to groups in Snowflake and reduce the number of users who have permanent access to privileged groups in Snowflake.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">**Configure your enterprise application for SSO and provisioning**</div><div class="diff-line diff-deleted">1. Add Snowflake to your tenant, configure it for provisioning as described in the article above, and start provisioning. </div><div class="diff-line diff-context">1. Configure [single sign-on](snowflake-tutorial.md) for Snowflake.</div><div class="diff-line diff-context">1. Create a [group](/entra/fundamentals/how-to-manage-groups) that provides all users access to the application.</div><div class="diff-line diff-context">1. Assign the group to the Snowflake application.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">With Privileged Identity Management (PIM) for Groups, you can provide just-in-time access to groups in Snowflake and reduce the number of users who have permanent access to privileged groups in Snowflake.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**Configure your enterprise application for single sign-on (SSO) and provisioning**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To set up persistent, non-admin access in Snowflake, complete these steps:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Add Snowflake to your tenant, configure it for provisioning as described in the previous steps of this tutorial, and start provisioning.</div><div class="diff-line diff-context">1. Configure [single sign-on](snowflake-tutorial.md) for Snowflake.</div><div class="diff-line diff-context">1. Create a [group](/entra/fundamentals/how-to-manage-groups) that provides all users access to the application.</div><div class="diff-line diff-context">1. Assign the group to the Snowflake application.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-mandatory-multifactor-authentication.md" target="_blank">docs/identity/authentication/concept-mandatory-multifactor-authentication.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by learn-build-service-prod[bot] on Jul 6, 2026 4:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+2</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Confirm merge from repo_sync_working_branch to main to sync with https://github.com/MicrosoftDocs/entra-docs (branch main) (#13778)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">description: Learn about mandatory multifactor authentication (MFA) enforcement for Azure, Microsoft 365, and other admin portals, and how to prepare your tenant.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/03/2026</div><div class="diff-line diff-deleted">ms.reviewer: shahjoy</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, msecd-doc-authoring-106</div><div class="diff-line diff-context"># Customer intent: As an identity administrator, I want to plan for mandatory MFA for users who sign in to Azure portal so that my organization is prepared before enforcement begins.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access requires a Microsoft Entra ID P1 or P2 license. If you can&#39;t use Conditional Access, enable [security defaults](~/fundamentals/security-defaults.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">You can self-enforce MFA by using built-in definitions in Azure Policy. To learn more and follow a step-by-step overview to apply these policy assignments in your environment, see [Tutorial: Apply MFA self-enforcement through Azure Policy](/azure/governance/policy/tutorials/mfa-enforcement).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For the best compatibility experience, ensure users in your tenant are using Azure CLI version 2.76 and Azure PowerShell version 14.3 or later. Otherwise, you can expect to see error messages as explained in these topics: </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">description: Learn about mandatory multifactor authentication (MFA) enforcement for Azure, Microsoft 365, and other admin portals, and how to prepare your tenant.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-context">ms.date: 04/03/2026</div><div class="diff-line diff-added">ms.reviewer: shahjoy, nehakulkarni</div><div class="diff-line diff-context">ms.custom: sfi-ga-nochange, msecd-doc-authoring-106</div><div class="diff-line diff-context"># Customer intent: As an identity administrator, I want to plan for mandatory MFA for users who sign in to Azure portal so that my organization is prepared before enforcement begins.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Conditional Access requires a Microsoft Entra ID P1 or P2 license. If you can&#39;t use Conditional Access, enable [security defaults](~/fundamentals/security-defaults.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can self-enforce MFA by using built-in definitions in Azure Policy. To learn more and follow a step-by-step overview to apply these policy assignments in your environment, see [Tutorial: Apply MFA self-enforcement through Azure Policy](/azure/governance/policy/tutorials/mfa-enforcement). Azure Policy supports both the `Audit` effect (which reports noncompliance in policy compliance results) and the `Deny` effect, which blocks noncompliant requests.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For the best compatibility experience, ensure users in your tenant are using Azure CLI version 2.76 and Azure PowerShell version 14.3 or later. Otherwise, you can expect to see error messages as explained in these topics: </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/macos-psso-deployment-eocustomers.md" target="_blank">docs/identity/devices/macos-psso-deployment-eocustomers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/macos-psso-deployment-eocustomers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (1/5): synced passkey register/sign-in + remove mobile article (#13773)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">    * [Federated MFA](/windows-server/identity/ad-fs/operations/configure-ad-fs-and-azure-mfa)</div><div class="diff-line diff-context">    * [External Auth Methods](../authentication/how-to-authentication-external-method-manage.md)</div><div class="diff-line diff-context">* [Microsoft Intune Company Portal app version 5.2408.0](/mem/intune/apps/apps-company-portal-macos) or later installed. This version is required before users are targeted for PSSO.</div><div class="diff-line diff-deleted">* (Highly recommended) Users are advised to [register a passkey on their mobile devices.](../authentication/how-to-register-passkey-mobile.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Authentication Method Selection</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">    * [Federated MFA](/windows-server/identity/ad-fs/operations/configure-ad-fs-and-azure-mfa)</div><div class="diff-line diff-context">    * [External Auth Methods](../authentication/how-to-authentication-external-method-manage.md)</div><div class="diff-line diff-context">* [Microsoft Intune Company Portal app version 5.2408.0](/mem/intune/apps/apps-company-portal-macos) or later installed. This version is required before users are targeted for PSSO.</div><div class="diff-line diff-added">* (Highly recommended) Users are advised to [register a passkey on their mobile devices.](../authentication/how-to-register-passkey.md)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Authentication Method Selection</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/concept-primary-refresh-token.md" target="_blank">docs/identity/devices/concept-primary-refresh-token.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by learn-build-service-prod[bot] on Jul 6, 2026 4:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/devices/concept-primary-refresh-token" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Confirm merge from repo_sync_working_branch to main to sync with https://github.com/MicrosoftDocs/entra-docs (branch main) (#13778)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| **Term** | **Description** |</div><div class="diff-line diff-context">| :--- | --- |</div><div class="diff-line diff-deleted">| **broker** | An identity broker is a service that acts as an intermediary between an identity providers (IdPs) and service providers (SPs), simplifying authentication and authorization . Web Account Manager is an example of an identity broker.|</div><div class="diff-line diff-context">| **Cloud Authentication Provider (CloudAP)**| CloudAP is the modern authentication provider for Windows sign in, that verifies users logging to a Windows 10 or newer device. CloudAP provides a plugin framework that identity providers can build on to enable authentication to Windows using that identity provider&#39;s credentials. |</div><div class="diff-line diff-context">| **Web Account Manager (WAM)**| WAM is the default token broker on Windows 10 or newer devices. WAM also provides a plugin framework that identity providers can build on and enable SSO to their applications relying on that identity provider.|</div><div class="diff-line diff-context">| **Microsoft Entra CloudAP plugin**| A Microsoft Entra specific plugin built on the CloudAP framework that verifies user credentials with Microsoft Entra ID during Windows sign in.|</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| **Term** | **Description** |</div><div class="diff-line diff-context">| :--- | --- |</div><div class="diff-line diff-added">| **broker** | An identity broker is a service that acts as an intermediary between identity providers (IdPs) and service providers (SPs), simplifying authentication and authorization. Web Account Manager is an example of an identity broker.|</div><div class="diff-line diff-context">| **Cloud Authentication Provider (CloudAP)**| CloudAP is the modern authentication provider for Windows sign in, that verifies users logging to a Windows 10 or newer device. CloudAP provides a plugin framework that identity providers can build on to enable authentication to Windows using that identity provider&#39;s credentials. |</div><div class="diff-line diff-context">| **Web Account Manager (WAM)**| WAM is the default token broker on Windows 10 or newer devices. WAM also provides a plugin framework that identity providers can build on and enable SSO to their applications relying on that identity provider.|</div><div class="diff-line diff-context">| **Microsoft Entra CloudAP plugin**| A Microsoft Entra specific plugin built on the CloudAP framework that verifies user credentials with Microsoft Entra ID during Windows sign in.|</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/troubleshoot.md" target="_blank">docs/external-id/troubleshoot.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Justin Hall on Jul 6, 2026 8:03 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/troubleshoot" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (2/5): Passkey in Microsoft Authenticator (enable/register/sign-in) (#13774)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Users get in a loop when they try to add passkey in Authenticator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Organizations that are deploying passkeys and have Conditional Access policies that require phishing-resistant authentication when accessing **All resources (formerly &#39;All cloud apps&#39;)** can run into a looping issue when users attempt to add a passkey to Microsoft Authenticator. For more information and possible workarounds, see [Workarounds for an authentication strength Conditional Access policy loop](~/identity/authentication/how-to-support-authenticator-passkey.md#workarounds-for-an-authentication-strength-conditional-access-policy-loop).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Invitation is blocked due missing cross-tenant access settings </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Users get in a loop when they try to add passkey in Authenticator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations that are deploying passkeys and have Conditional Access policies that require phishing-resistant authentication when accessing **All resources (formerly &#39;All cloud apps&#39;)** can run into a looping issue when users attempt to add a passkey to Microsoft Authenticator. For more information and possible workarounds, see [Workarounds for an authentication strength Conditional Access policy loop](~/identity/authentication/how-to-enable-authenticator-passkey.md#workarounds-for-an-authentication-strength-conditional-access-policy-loop).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Invitation is blocked due missing cross-tenant access settings </div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>🗑️ Deleted Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/authentication/how-to-support-authenticator-passkey.md
+            </div>
+            <div class="file-meta">
+              Deleted by Justin Hall on Jul 6, 2026 8:03 AM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-support-authenticator-passkey</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-92 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (2/5): Passkey in Microsoft Authenticator (enable/register/sign-in) (#13774)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="deleted-badge">DELETED</span>
+              docs/identity/authentication/how-to-register-passkey-mobile.md
+            </div>
+            <div class="file-meta">
+              Deleted by Justin Hall on Jul 6, 2026 4:29 PM
+              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-register-passkey-mobile</span>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="deletions">-74 lines removed</span>
+            </div>
+            <div><strong>Commit:</strong> Split passkey docs (1/5): synced passkey register/sign-in + remove mobile article (#13773)</div>
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
