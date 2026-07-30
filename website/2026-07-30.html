@@ -1,0 +1,613 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 28th 2026, 8:12 PM PDT</p>
+        <p>Report generated on July 29th 2026, 8:12 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">24</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">3</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">12</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/workload-id/workload-identities-federated-credential-mutable-subjects.md" target="_blank">docs/workload-id/workload-identities-federated-credential-mutable-subjects.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Ahmed Mohamed on Jul 29, 2026 9:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-federated-credential-mutable-subjects" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+134 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add workload identity immutable subject articles (#13956)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/workload-id/workload-identities-github-immutable-subjects.md" target="_blank">docs/workload-id/workload-identities-github-immutable-subjects.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Ahmed Mohamed on Jul 29, 2026 9:23 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-github-immutable-subjects" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+106 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add workload identity immutable subject articles (#13956)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-investigate-related-tenants-api.md" target="_blank">docs/id-governance/tenant-governance/how-to-investigate-related-tenants-api.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Akhil Potturi on Jul 29, 2026 2:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-investigate-related-tenants-api" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+83 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> akhil potturi/tenant governance drilldown docs (#13860)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/cross-tenant-delegated-administration.md" target="_blank">docs/id-governance/tenant-governance/cross-tenant-delegated-administration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hannah Fowler on Jul 29, 2026 8:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/cross-tenant-delegated-administration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+53</span> / 
+              <span class="deletions">-29</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Tenant Governance GDAP relationship docs (#13934)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Cross-tenant delegated administration</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-deleted">description: Learn about cross-tenant delegated administration and how it enables centralized management across tenants in Microsoft Entra</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/10/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&lt;!-- source: Cross-tenant delegated administration.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Cross-tenant delegated administration is a capability within Tenant Governance that enables administrators to monitor and manage multiple tenants using accounts from a central governing tenant. Administrators don&#39;t need to create local accounts or business-to-business (B2B) guest accounts in every governed tenant. This capability uses granular delegated admin privileges (GDAP) technology to provide secure, least-privileged access across tenant boundaries.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Before you can use cross-tenant delegated administration, you must first create a governance relationship between the governing tenant and each governed tenant. The governance relationship establishes the trust boundary. It also defines the delegated administration policies that control which roles and permissions are available to governing tenant administrators.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Cross-tenant delegated administration also gives governed tenants full visibility into governing tenant admin activity within their environment. The governed tenant&#39;s sign-in and audit logs capture all actions that delegated administrators perform, ensuring that governed tenant stakeholders can independently monitor, review, and audit administrative operations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## How cross-tenant delegated administration works</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Cross-tenant delegated administration</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-added">description: Learn about cross-tenant delegated administration and the GDAP-based permission model for managing tenants in Microsoft Entra.</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 07/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&lt;!-- source: Cross-tenant delegated administration - GDAP documentation draft.md --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Cross-tenant delegated administration is a capability in Tenant Governance that enables administrators in one tenant to manage another tenant by using their home tenant credentials. Administrators don&#39;t need local accounts or business-to-business (B2B) guest accounts in every tenant. This capability uses granular delegated admin privileges (GDAP) technology to provide delegated, least-privileged administration and access across tenant boundaries.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article explains the GDAP-based permission model that Tenant Governance and other Microsoft services use. It serves as the central reference for customers, partners, and Microsoft workloads that expose delegated administration capabilities through their own products and services.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## How the permission model works</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Cross-tenant delegated administration has two permission layers:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-universal-tenant-restrictions.md" target="_blank">docs/global-secure-access/how-to-universal-tenant-restrictions.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Jul 29, 2026 7:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-universal-tenant-restrictions" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-50</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-universal-tenant-restrictions.md (#13959)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Global Secure Access and Universal Tenant Restrictions</div><div class="diff-line diff-context">description: Learn about how Global Secure Access helps secure access to your corporate network by restricting access to external tenants.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 04/03/2026</div><div class="diff-line diff-context">ms.author: alexpav</div><div class="diff-line diff-context">ms.reviewer: dhruvinrshah</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Turn on universal tenant restrictions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Universal tenant restrictions enhance the functionality of [tenant restrictions v2](https://aka.ms/tenant-restrictions-enforcement). They use Global Secure Access to tag all traffic no matter the operating system, browser, or device form factor. They allow support for both client and remote network connectivity.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Administrators no longer have to manage proxy server configurations or complex network configurations. They can apply tenant restrictions v2 on any platform by using the Global Secure Access client or remote networks.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">When you enable universal tenant restrictions, Global Secure Access adds policy information for tenant restrictions v2 to the authentication plane&#39;s network traffic. This traffic is from Microsoft Entra ID and Microsoft Graph. As a result, users who use devices and networks in your organization must use only authorized external tenants. This restriction helps prevent data exfiltration for any application integrated with your Microsoft Entra ID tenant through single sign-on (SSO).</div><div class="diff-line diff-deleted">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Global Secure Access and Universal Tenant Restrictions</div><div class="diff-line diff-context">description: Learn about how Global Secure Access helps secure access to your corporate network by restricting access to external tenants.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-context">ms.author: alexpav</div><div class="diff-line diff-context">ms.reviewer: dhruvinrshah</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Turn on Universal Tenant Restrictions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Overview</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Universal Tenant Restrictions (UTR) enhance the functionality of [tenant restrictions v2 (TRv2)](https://aka.ms/tenant-restrictions-enforcement). UTR applies tenant restrictions policies to any devices with the GSA client or on the GSA Remote Network, without having to steer network traffic through company-managed proxy service.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you enable UTR, Microsoft Entra ID tenant restrictions policy is applied to all applications protected by Entra ID. Users on your devices with GSA or GSA Remote Networks can only sign in to tenants and applications authorized in your TRv2 policy.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-delegated-administration.md" target="_blank">docs/id-governance/tenant-governance/how-to-delegated-administration.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hannah Fowler on Jul 29, 2026 8:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-delegated-administration" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+36</span> / 
+              <span class="deletions">-8</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Tenant Governance GDAP relationship docs (#13934)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to use cross-tenant delegated administration to sign in to and manage governed tenants using your governing tenant credentials</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/10/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Use cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Sign in to a governed tenant as a delegated administrator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">After the governance relationship is active and GDAP role assignments are in place, members of the configured security group can sign in to the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Confirm that your account is a member of a security group in the governing tenant that is assigned roles in the governance policy template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Open a supported admin portal URL and append the domain or tenant ID of the governed tenant. For a list of supported portals and workloads, see [GDAP supported workloads](/partner-center/customers/gdap-supported-workloads). For example:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   `https://entra.microsoft.com/{governed-tenant-domain-or-id}`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in with your governing tenant credentials.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to use cross-tenant delegated administration to sign in to and manage governed tenants using your governing tenant credentials</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/27/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Use cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Sign in to a governed tenant as a delegated administrator</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After the governance relationship is active and GDAP role assignments are in place, members of the configured security group can sign in to the governed tenant. Confirm that your account is a member of a security group in the governing tenant that&#39;s assigned roles in the governance policy template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">You can sign in to a governed tenant in two ways:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">- From the **Governed tenants** page in the Microsoft Entra admin center.</div><div class="diff-line diff-added">- By opening a supported admin portal URL directly.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">### Sign in from the Microsoft Entra admin center</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/lifecycle-workflow-tasks.md" target="_blank">docs/id-governance/lifecycle-workflow-tasks.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kristina Smith on Jul 29, 2026 7:17 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/lifecycle-workflow-tasks" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+28</span> / 
+              <span class="deletions">-11</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> docs: expand dynamic attributes table in lifecycle-workflow-tasks</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Dynamic attributes within email</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">With customized emails, you&#39;re able to include dynamic attributes within the subject and body to personalize these emails. The list of dynamic attributes that can be included are as follows:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Attribute  |Definition  |</div><div class="diff-line diff-context">|---------|---------|</div><div class="diff-line diff-deleted">|userDisplayName     | The user’s display name.        |</div><div class="diff-line diff-deleted">|userEmployeeHireDate     | The user’s employee hire date.        |</div><div class="diff-line diff-deleted">|userEmployeeLeaveDateTime     | The user’s employee leave date and time.        |</div><div class="diff-line diff-deleted">|managerDisplayName     |  The display name of the user’s manager.        |</div><div class="diff-line diff-deleted">|temporaryAccessPass     |  The generated Temporary Access Pass. Only available with the **Generate TAP And Send Email** task.       |</div><div class="diff-line diff-deleted">|userPrincipalName     |  The user’s userPrincipalName.       |</div><div class="diff-line diff-deleted">|managerEmail     |  The manager’s email.        |</div><div class="diff-line diff-deleted">|userSurname     |  User’s family name.       |</div><div class="diff-line diff-deleted">|userGivenName     | User’s first name.        |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&gt; [!NOTE]</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Dynamic attributes within email</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">With customized emails, you&#39;re able to include dynamic attributes within the subject and body to personalize these emails. You can include built-in user attributes, custom security attributes, directory extensions, and on-premises extension attributes. The list of dynamic attributes that can be included are as follows:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**User attributes**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">|Attribute  |Definition  |</div><div class="diff-line diff-context">|---------|---------|</div><div class="diff-line diff-added">|`{{user.displayName}}`     | The user&#39;s display name.        |</div><div class="diff-line diff-added">|`{{user.userPrincipalName}}`     | The user&#39;s user principal name.        |</div><div class="diff-line diff-added">|`{{user.employeeHireDate}}`     | The user&#39;s employee hire date.        |</div><div class="diff-line diff-added">|`{{user.employeeLeaveDateTime}}`     | The user&#39;s employee leave date and time.        |</div><div class="diff-line diff-added">|`{{user.createdDateTime}}`     | The date and time the user was created.        |</div><div class="diff-line diff-added">|`{{user.employeeType}}`     | The user&#39;s employee type.        |</div><div class="diff-line diff-added">|`{{user.department}}`     | The user&#39;s department.        |</div><div class="diff-line diff-added">|`{{user.companyName}}`     | The user&#39;s company name.        |</div><div class="diff-line diff-added">|`{{user.jobTitle}}`     | The user&#39;s job title.        |</div><div class="diff-line diff-added">|`{{temporaryAccessPass}}`     | The generated Temporary Access Pass. Only available with the **Generate TAP And Send Email** task.        |</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-interpret-discovery-data.md" target="_blank">docs/id-governance/tenant-governance/how-to-interpret-discovery-data.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Akhil Potturi on Jul 29, 2026 2:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-interpret-discovery-data" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+28</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> akhil potturi/tenant governance drilldown docs (#13860)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to interpret tenant discovery data, signals, and metrics in Microsoft Entra Tenant Governance to assess related tenants</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/05/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Interpret tenant discovery data</div><div class="diff-line diff-context">- **How many related tenants exist**</div><div class="diff-line diff-context">- **Which signals caused discovery**</div><div class="diff-line diff-context">- **Whether the tenant appears active or historical**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This step establishes scope, not judgment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A tenant with recent, increasing activity typically warrants closer scrutiny than one with only historical, initial signals. For example, a tenant with active B2B guest users, active administrative sign-ins, and a shared billing account represents a stronger operational relationship. Compare this to a tenant surfaced only through historical B2B guest user presence captured at the time of discovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Step 4: Classify the related tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Based on signals and metrics, classify each related tenant into one of three practical categories.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to interpret tenant discovery data, signals, and metrics in Microsoft Entra Tenant Governance to assess related tenants</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/14/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Interpret tenant discovery data</div><div class="diff-line diff-context">- **How many related tenants exist**</div><div class="diff-line diff-context">- **Which signals caused discovery**</div><div class="diff-line diff-context">- **Whether the tenant appears active or historical**</div><div class="diff-line diff-added">- **Whether the tenant is Microsoft managed** (a Microsoft-owned infrastructure tenant)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This step establishes scope, not judgment.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">A tenant with recent, increasing activity typically warrants closer scrutiny than one with only historical, initial signals. For example, a tenant with active B2B guest users, active administrative sign-ins, and a shared billing account represents a stronger operational relationship. Compare this to a tenant surfaced only through historical B2B guest user presence captured at the time of discovery.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Step 4: Drill into a signal to see the underlying entities</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Discovery metrics are aggregated to orders of magnitude. For example, a returned value of 100 represents an actual value between 100 and 999. To move from a high-level count to specific evidence, drill into a signal to see the underlying users or applications that contribute to it.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-sms-voice-retirement.md" target="_blank">docs/identity/authentication/concept-sms-voice-retirement.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by marinasanchezz1 on Jul 29, 2026 6:42 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sms-voice-retirement" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+19</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Add passkeyDynamicMigration opt-out details to SMS/voice retirement FAQ</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Passkeys by default and retirement of Microsoft-provided SMS and voice authentication</div><div class="diff-line diff-context">description: Learn how to prepare for the retirement of Microsoft provided SMS and Voice authentication in Microsoft Entra ID and migrate users to passkeys.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 06/10/2026</div><div class="diff-line diff-context">author: marinasanchezz1</div><div class="diff-line diff-context">ms.author: marisanchez</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What if I have different plans for my tenant than enabling passkeys for SMS/voice users (such as configuring a customer configured telecom provider or migrating users to another authentication method)?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">A temporary opt-out will be available for the September 1, 2026 through February 1, 2027 changes. This allows you to delay passkey and Registration Campaign enablement while you complete transition activities, such as configuring customer-managed telecom providers or migrating to other authentication methods. API support and information for opting out will be available starting August 1, 2026. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">However, if your tenant still has users enabled for Microsoft-managed SMS or voice on February 1, 2027, and you have not configured a customer-managed telecom provider through the Security Store, those users will no longer be able to use SMS or voice to satisfy MFA requirements and continue signing in. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Passkeys by default and retirement of Microsoft-provided SMS and voice authentication</div><div class="diff-line diff-context">description: Learn how to prepare for the retirement of Microsoft provided SMS and Voice authentication in Microsoft Entra ID and migrate users to passkeys.</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-context">author: marinasanchezz1</div><div class="diff-line diff-context">ms.author: marisanchez</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### What if I have different plans for my tenant than enabling passkeys for SMS/voice users (such as configuring a customer configured telecom provider or migrating users to another authentication method)?</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">A temporary opt-out will be available for the September 1, 2026 through February 1, 2027 changes. This allows you to delay passkey and Registration Campaign enablement while you complete transition activities, such as configuring customer-managed telecom providers or migrating to other authentication methods.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To opt out, update your authentication methods policy using Microsoft Graph and set the `passkeyDynamicMigration` property to `true`.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Request**</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">```http</div><div class="diff-line diff-added">PATCH https://graph.microsoft.com/beta/policies/authenticationmethodspolicy</div><div class="diff-line diff-added">Content-Type: application/json</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/customize-workflow-email.md" target="_blank">docs/id-governance/customize-workflow-email.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kristina Smith on Jul 29, 2026 7:13 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/customize-workflow-email" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> docs: expand dynamic attribute support in lifecycle workflow custom emails</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Format attributes within customized emails</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To further personalize customized emails, you can take advantage of dynamic attributes. By placing dynamic attributes in your emails, you can specifically call out values such as a user&#39;s name, their generated Temporary Access Pass, or even their manager&#39;s email.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">To use dynamic attributes within your customized emails, you must follow formatting rules. The proper format is:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">`{{dynamic attribute}}`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following screenshot is an example of the proper format for dynamic attributes within a customized email:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you&#39;re typing a dynamic attribute, the email is written in the following way:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```html</div><div class="diff-line diff-deleted">Welcome to the team, {{userGivenName}}</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">We&#39;re excited to have you join our growing team and look forward to a successful and memorable journey together.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Format attributes within customized emails</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">In the message body, you can customize the email text to personalize it for each recipient. You can optionally include built-in user attributes, custom security attributes, directory extensions, and on-premises extension attributes by embedding them in the text. Before the email is sent, the placeholders are replaced with the actual user information.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">To use dynamic attributes within your customized emails, you must follow formatting rules. The proper format for user attributes is:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">`{{user.graphPropertyName}}`</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The following screenshot is an example of the proper format for dynamic attributes within a customized email:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you&#39;re typing a dynamic attribute, the email is written in the following way:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```html</div><div class="diff-line diff-added">Welcome to the team, {{user.displayName}}</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">We&#39;re excited to have you join our growing team and look forward to a successful and memorable journey together.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">```</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-custom-oidc-federation-customers.md" target="_blank">docs/external-id/customers/how-to-custom-oidc-federation-customers.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Vimala Ranganathan on Jul 29, 2026 6:04 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-custom-oidc-federation-customers" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+11</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update OIDC federation known limitations</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Add OIDC for customer sign-in</div><div class="diff-line diff-context">description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 09/15/2025</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro, msecd-doc-authoring-1012</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, devops, or it administrator, I want to learn how to add an OpenID Connect identity provider for my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Conditional Access policies that require MFA registration don&#39;t function as expected when an External ID tenant is federated with an external identity provider (IdP). This can result in one of the following behaviors:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Users are unable to register an MFA method and can&#39;t complete sign-in, often encountering an error.</div><div class="diff-line diff-deleted">- Users aren&#39;t redirected to the MFA registration (sign-up) flow during sign-in as expected.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Add OIDC for customer sign-in</div><div class="diff-line diff-context">description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. </div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-context">ms.reviewer: brozbab</div><div class="diff-line diff-context">ms.custom: it-pro, msecd-doc-authoring-1012</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">#customer intent: As a developer, devops, or it administrator, I want to learn how to add an OpenID Connect identity provider for my external tenant.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Known limitations</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### Issuer URI updates</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you update the Issuer URI for an existing OIDC identity provider (IdP), the updated configuration might not automatically take effect in user flows. As a result, the IdP sign-in option might not appear on the sign-in page.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">To apply the change:</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Disable the IdP in the user flow.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/related-tenants.md" target="_blank">docs/id-governance/tenant-governance/related-tenants.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Akhil Potturi on Jul 29, 2026 2:15 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/related-tenants" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+9</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> akhil potturi/tenant governance drilldown docs (#13860)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how Microsoft Entra Tenant Governance discovers related tenants through identity, application, and billing signals across your organization</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-deleted">ms.date: 03/10/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Related tenants in Tenant Governance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">These metrics describe how tenants are connected. They don&#39;t assign qualitative scores or imply that every related tenant must be governed. Instead, they provide the evidence needed to determine whether governance action is warranted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Why related tenants matter</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Related tenants provide value in several key areas, from surfacing unsanctioned tenants to enabling informed governance decisions.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how Microsoft Entra Tenant Governance discovers related tenants through identity, application, and billing signals across your organization</div><div class="diff-line diff-context">ms.topic: concept-article</div><div class="diff-line diff-added">ms.date: 07/14/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Related tenants in Tenant Governance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">These metrics describe how tenants are connected. They don&#39;t assign qualitative scores or imply that every related tenant must be governed. Instead, they provide the evidence needed to determine whether governance action is warranted.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Microsoft-managed tenants</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Some discovered related tenants are Microsoft-owned infrastructure tenants rather than tenants that belong to your organization or your partners. Tenant Governance identifies these tenants and flags them as **Microsoft managed**.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Microsoft-managed tenants appear because routine Microsoft cloud operations create observable cross-tenant activity. They&#39;re expected and generally require no governance action. The **Microsoft managed** indicator helps you quickly recognize and set aside this class of related tenant so you can focus on tenants that need attention.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">The Microsoft managed indicator is available to administrators who have a Tenant Governance license and permission to read related tenants.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Why related tenants matter</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-prerequisites.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-prerequisites.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by copilot-swe-agent[bot] on Jul 29, 2026 1:31 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-prerequisites" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Remove obsolete KB5070773 Windows Server 2025 callout</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra Cloud Sync agent must be installed on a domain-joined server. We recommend using Windows Server 2025 or Windows Server 2022. You can also deploy Microsoft Entra Cloud Sync on older Windows Server versions that are in extended support; however, support for this configuration may require [a paid support program](/lifecycle/policies/fixed#extended-support).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">  &gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">  &gt; There is a known issue on Windows Server 2025 that can cause Microsoft Entra Cloud Sync to encounter synchronization problems. If you&#39;re running Windows Server 2025, make sure you have installed [October 20, 2025 - KB5070773](https://support.microsoft.com/topic/october-20-2025-kb5070773-os-build-26100-6901-out-of-band-f8effaa1-1c73-41e5-bcb3-e58a46c7601e) update, or later. After installing this update, restart the server for the changes to take effect.</div><div class="diff-line diff-deleted">  </div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">- This server should be a tier 0 server based on the [Active Directory administrative tier model](/security/privileged-access-workstations/privileged-access-access-model). Installing the agent on a domain controller is supported.  For more information, see [Harden your Microsoft Entra provisioning agent server](#harden-your-microsoft-entra-provisioning-agent-server)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The Active Directory Schema is required to have the attribute msDS-ExternalDirectoryObjectId, which is available in Windows Server 2016 and later.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Microsoft Entra Cloud Sync agent must be installed on a domain-joined server. We recommend using Windows Server 2025 or Windows Server 2022. You can also deploy Microsoft Entra Cloud Sync on older Windows Server versions that are in extended support; however, support for this configuration may require [a paid support program](/lifecycle/policies/fixed#extended-support).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- This server should be a tier 0 server based on the [Active Directory administrative tier model](/security/privileged-access-workstations/privileged-access-access-model). Installing the agent on a domain controller is supported.  For more information, see [Harden your Microsoft Entra provisioning agent server](#harden-your-microsoft-entra-provisioning-agent-server)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- The Active Directory Schema is required to have the attribute msDS-ExternalDirectoryObjectId, which is available in Windows Server 2016 and later.</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/governance-policy-templates.md" target="_blank">docs/id-governance/tenant-governance/governance-policy-templates.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Hannah Fowler on Jul 29, 2026 8:14 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/governance-policy-templates" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update Tenant Governance GDAP relationship docs (#13934)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Manage the governed tenant without needing a local or business-to-business (B2B) account in that tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Each group can have multiple role assignments, and each policy template can have multiple groups defined. When you create the governance relationship, Tenant Governance creates [granular delegated admin privileges (GDAP)](/partner-center/customers/gdap-introduction) role assignments in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Multitenant application configuration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Manage the governed tenant without needing a local or business-to-business (B2B) account in that tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Each group can have multiple role assignments, and each policy template can have multiple groups defined. When you create the governance relationship, Tenant Governance creates [granular delegated admin privileges (GDAP)](cross-tenant-delegated-administration.md) role assignments in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Multitenant application configuration</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/gsa-poc-internet-access.md" target="_blank">docs/architecture/gsa-poc-internet-access.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Alexander Pavlovsky on Jul 29, 2026 7:05 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/gsa-poc-internet-access" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+0</span> / 
+              <span class="deletions">-2</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update how-to-universal-tenant-restrictions.md (#13959)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your test device and use a private browser window to sign in to any application that is protected by Entra ID in a different tenant, using member account credentials from that tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. [Validate Universal Tenant Restrictions enforcement](../global-secure-access/how-to-universal-tenant-restrictions.md#validate-tenant-restrictions-enforcement).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Troubleshoot</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you have problems with your PoC, these articles can help you with troubleshooting, logging, and monitoring:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Sign in to your test device and use a private browser window to sign in to any application that is protected by Entra ID in a different tenant, using member account credentials from that tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Troubleshoot</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">If you have problems with your PoC, these articles can help you with troubleshooting, logging, and monitoring:</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
