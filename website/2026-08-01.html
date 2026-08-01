@@ -1,0 +1,653 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since July 30th 2026, 8:12 PM PDT</p>
+        <p>Report generated on July 31st 2026, 8:12 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">13</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">9</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/reference-microsoft-defender-cloud-apps-coexistence.md" target="_blank">docs/global-secure-access/reference-microsoft-defender-cloud-apps-coexistence.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Thomas Detzner on Jul 31, 2026 3:59 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/reference-microsoft-defender-cloud-apps-coexistence" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+223 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add GSA and Defender for Cloud Apps coexistence guidance (#13973)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-collaborating.md" target="_blank">docs/architecture/tenant-estate-collaborating.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-collaborating" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+126 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-guide.md" target="_blank">docs/architecture/tenant-estate-guide.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+123 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-nonproduction.md" target="_blank">docs/architecture/tenant-estate-nonproduction.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-nonproduction" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+111 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-business-partner.md" target="_blank">docs/architecture/tenant-estate-business-partner.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-business-partner" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+108 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-primary.md" target="_blank">docs/architecture/tenant-estate-primary.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-primary" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+108 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-critical-production.md" target="_blank">docs/architecture/tenant-estate-critical-production.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-critical-production" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+96 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-create-snapshots.md" target="_blank">docs/id-governance/tenant-governance/how-to-create-snapshots.md</a>
+            </div>
+            <div class="file-meta">
+              Added by tafra00 on Jul 31, 2026 2:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-create-snapshots" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+67 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Tenant Governance config management GA how-to updates (#13965)</div>
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/tenant-estate-hybrid-identity.md" target="_blank">docs/architecture/tenant-estate-hybrid-identity.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Marsh Macy on Jul 31, 2026 8:41 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/tenant-estate-hybrid-identity" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+55 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> New multitenant arch guide per Ben Athawes, Ramiro Calderon (#13857)</div>
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-create-monitor.md" target="_blank">docs/id-governance/tenant-governance/how-to-create-monitor.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 2:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-create-monitor" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+34</span> / 
+              <span class="deletions">-46</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Tenant Governance config management GA how-to updates (#13965)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Create a monitor</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-deleted">description: Learn how to create and configure a tenant configuration monitor in Microsoft Entra Tenant Governance to track configuration drift</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/10/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&lt;!-- source: Create_and_Update_Configuration_Monitor_LearnStyle.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Create and update a configuration monitor</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to create and update a configuration monitor in the [Microsoft Entra admin center](https://entra.microsoft.com). A configuration monitor periodically evaluates your tenant configuration against a configuration baseline. It records configuration drifts when the actual state differs from the desired state.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Before you begin</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Global Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Verify that your tenant has a license for Microsoft Entra Tenant Governance.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Create a configuration monitor</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-added">description: Learn how to create a configuration monitor in Microsoft Entra Tenant Governance to evaluate a tenant against a configuration baseline and report drift</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/28/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&lt;!-- source: Tenant Governance - Create a new configuration monitor how-to.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Create a configuration monitor</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Configuration monitors evaluate a tenant against a configuration baseline and report configuration drift. Use a monitor when you want to track whether a tenant stays aligned with a known-good configuration.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- The tenant has licenses for **Tenant Governance Basic** or **Tenant Governance Premium**. For current licensing requirements, see [Microsoft Entra Tenant Governance licensing](licensing.md).</div><div class="diff-line diff-added">- Tenant Governance Basic includes a quota for the number of resources that you can monitor. If the resources in the monitor cause the tenant to exceed its quota, monitor creation fails. An organization gets additional quota for monitored resources for each Tenant Governance Premium license it has.</div><div class="diff-line diff-added">- The signed-in user is in a Microsoft Entra privileged role and has permission to create configuration monitors. The user must also have read permissions for the resource types included in the monitor&#39;s configuration baseline.</div><div class="diff-line diff-added">- The Tenant Configuration Management service has permissions for the workloads and resource types included in the monitor baseline. To assign or remove permissions for the service, see [Configure configuration management service permissions](how-to-set-up-permissions-tenant-monitoring.md).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-see-monitor-results.md" target="_blank">docs/id-governance/tenant-governance/how-to-see-monitor-results.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 2:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-see-monitor-results" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+45</span> / 
+              <span class="deletions">-25</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Tenant Governance config management GA how-to updates (#13965)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: See monitor results and configuration drifts</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-deleted">description: Learn how to view monitor results and detect configuration drifts in Microsoft Entra Tenant Governance using the admin center</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/05/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># See monitor results and configuration drifts</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to view monitor results and configuration drifts in the [Microsoft Entra admin center](https://entra.microsoft.com). Each time the monitoring service runs (currently every six hours), it publishes run statistics as a monitor result. When the monitoring service detects that a resource&#39;s actual state differs from the configuration baseline, it creates a configuration drift.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Global Administrator](~/identity/role-based-access-control/permissions-reference.md#global-administrator).</div><div class="diff-line diff-deleted">- Your tenant must have a license for Microsoft Entra Tenant Governance.</div><div class="diff-line diff-deleted">- At least one configuration monitor must exist in your tenant and must have run at least once.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Browse to monitors</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: View monitor results and manage monitors</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-added">description: Learn how to view monitor results and configuration drifts and manage configuration monitors in Microsoft Entra Tenant Governance</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/28/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&lt;!-- source: Tenant Governance - View monitor results and manage monitors how-to.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># View monitor results and manage monitors</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Use the monitor experience to review monitor definitions, monitor run results, configuration drifts, baseline details, permissions readiness, settings, and audit logs. This article describes how to use the monitor pages after a monitor is created.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- At least one configuration monitor exists in the tenant.</div><div class="diff-line diff-added">- You can sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) with a role that can view Tenant Governance monitor data.</div><div class="diff-line diff-added">- The Tenant Configuration Management service has the permissions required to run the monitor. If a monitor run fails because of missing service permissions, [update the service permissions](how-to-set-up-permissions-tenant-monitoring.md) before you rely on later run results.</div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-set-up-permissions-tenant-monitoring.md" target="_blank">docs/id-governance/tenant-governance/how-to-set-up-permissions-tenant-monitoring.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 2:50 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-set-up-permissions-tenant-monitoring" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+32</span> / 
+              <span class="deletions">-37</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Tenant Governance config management GA how-to updates (#13965)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-deleted">title: Set up permissions for tenant monitoring</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-deleted">description: Learn how to set up the required application permissions and roles for tenant monitoring in Microsoft Entra Tenant Governance</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/05/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted"># Set up permissions for tenant monitoring</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to manage the permissions that the configuration management service needs to access resources identified in a monitor. An administrator must assign these permissions manually. Two types of permissions can be managed in the Microsoft Entra admin center: application permissions and Microsoft Entra roles.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">The permission type you assign depends on the services you need to monitor:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **Microsoft Entra ID and Intune**: Assign application permissions. This approach is the least-privileged way to enable monitoring. For example, to monitor conditional access policies, the configuration management service needs the `Policy.Read.All` application permission. If your policies reference other resource types, you might also need permissions like `User.Read.All` or `RoleManagement.Read.All`.</div><div class="diff-line diff-deleted">- **Teams**: Assign the Teams Reader role. Teams doesn&#39;t have granular application permissions, so assigning the configuration management service to the Teams Reader role is the least-privileged way to enable monitoring.</div><div class="diff-line diff-deleted">- **Exchange, Security, and Compliance (Purview and Defender)**: Assign permissions locally within the admin experiences for those services. Built-in Microsoft Entra roles grant more permissions than needed for these monitoring scenarios.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; Monitoring Exchange also requires that you assign the `Exchange.ManageAsApp` permission to the configuration management service, which enables a service principal to authenticate to Exchange APIs. This assignment is independent of any permissions you assign locally to the configuration management service.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-added">title: Configure configuration management service permissions</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-added">description: Learn how to assign or remove the application permissions and roles that the Tenant Configuration Management service uses to create snapshots and run monitors</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/28/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&lt;!-- source: Tenant Governance - Configure configuration management service permissions how-to.docx --&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added"># Configure configuration management service permissions</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Use the **Configuration management permissions** page to assign or remove permissions for the Tenant Configuration Management service. The service uses these permissions to create snapshots and run monitors.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Configure service permissions before you create snapshots or monitors that include the corresponding workload resources. Missing service permissions can cause a snapshot to be incomplete or a monitor run to fail.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you create a monitor or snapshot, the **Permissions** step shows whether the service has the least-privilege permissions for the resource types you selected. This step is read-only. If the wizard shows that required least-privilege permissions are missing, use the **Configuration management permissions** page to add them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-create-tenant.md" target="_blank">docs/id-governance/tenant-governance/how-to-create-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 8:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-create-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+18</span> / 
+              <span class="deletions">-5</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify secure tenant creation prerequisites (#13971)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Create a governed workforce tenant</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-deleted">description: Learn how to create a new Microsoft Entra tenant using the secure add-on tenant creation workflow in Tenant Governance</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/12/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Create a governed workforce tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">When you create a tenant using the **Governed Workforce** option in the Microsoft Entra admin center, the secure add-on tenant creation flow automatically:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Creates the new workforce tenant</div><div class="diff-line diff-context">- Establishes a [governance relationship](governance-relationships.md) between your home tenant and the new tenant based on your [governance policy template](governance-policy-templates.md)</div><div class="diff-line diff-context">- Provisions a Microsoft Entra ID Free [billing asset](signals-metrics.md) under your selected Azure subscription and resource group</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- You must have at least **Tenant Contributor** permissions on at least one Microsoft Customer Agreement (MCA) subscription.</div><div class="diff-line diff-deleted">- Enterprise Agreement (EA) subscriptions aren&#39;t supported.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">title: Create a governed workforce tenant</div><div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-added">description: Learn how to securely create a governed Microsoft Entra workforce tenant and establish governance from your home tenant.</div><div class="diff-line diff-added">author: tafra00</div><div class="diff-line diff-added">ms.author: tazkiaafra</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1018</div><div class="diff-line diff-added">#customer intent: As an IT administrator, I want to create a governed workforce tenant so that my organization can manage it through a governance relationship.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Create a governed workforce tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article is for IT administrators who need to create an add-on tenant that is governed from an existing Microsoft Entra tenant. Review the prerequisites before you use the secure add-on tenant creation flow.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">When you create a tenant using the **Governed Workforce** option in the Microsoft Entra admin center, the secure add-on tenant creation flow automatically:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Creates the new workforce tenant</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/road-to-the-cloud-introduction.md" target="_blank">docs/architecture/road-to-the-cloud-introduction.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by ichristian01 on Jul 31, 2026 9:33 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/road-to-the-cloud-introduction" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+15</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Update road-to-the-cloud-introduction.md (#13968)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Road to the cloud: Introduction</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Some organizations set goals to remove Active Directory and their on-premises IT footprint. Others take advantage of some cloud-based capabilities to reduce the Active Directory footprint, but not to completely remove their on-premises environments. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This content provides guidance to move:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Transformation must be aligned with and achieve business objectives, including increased productivity, reduced costs and complexity, and improved security posture. To better understand the costs versus value of moving to the cloud, see [Forrester TEI for Microsoft Entra ID](https://www.microsoft.com/security/business/forrester-tei-study) and [Cloud economics](https://azure.microsoft.com/overview/cloud-economics/).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">* [Cloud transformation posture](road-to-the-cloud-posture.md)</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">---</div><div class="diff-line diff-context"># Road to the cloud: Introduction</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Organizations are increasingly modernizing identity, access, and device management by reducing their dependence on on-premises Active Directory and adopting cloud-native capabilities in Microsoft Entra ID. Whether the goal is complete Active Directory retirement or a smaller, more secure on-premises footprint, this guidance helps you plan and execute that transformation. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This content provides guidance to move:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Transformation must be aligned with and achieve business objectives, including increased productivity, reduced costs and complexity, and improved security posture. To better understand the costs versus value of moving to the cloud, see [Forrester TEI for Microsoft Entra ID](https://www.microsoft.com/security/business/forrester-tei-study) and [Cloud economics](https://azure.microsoft.com/overview/cloud-economics/).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## The AD minimization journey</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">Moving from Active Directory to Microsoft Entra ID progresses through five stages. Each stage describes where your environment is on the journey and is paired with a single strategic phase that describes the primary focus of work in that stage. Across every stage, three streams of progress (users and groups, applications, and devices) advance, and they can move independently of one another. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. **Cloud Attached (Identification):** Establish a baseline by discovering your current identity, application, and device landscape. Active Directory Domain Services remains authoritative while cloud identity is attached but not yet primary. The focus is on visibility and determining which workloads are ready to move. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. **Hybrid (Modernization):** Move beyond synchronizing identities and begin using cloud identity to strengthen security, resilience, and user experience while on-premises environments remain in place. Identify dependent apps and services, and enable capabilities such as conditional access and self-service password reset. </div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. **Cloud-First (Adoption):** Treat Microsoft Entra ID as the default authority for new investments and shift the identity control plane to the cloud. New users, groups, applications, and devices are provisioned as cloud-native by default. </div><div class="diff-line diff-added">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/create-new-tenant.md" target="_blank">docs/fundamentals/create-new-tenant.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 8:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/fundamentals/create-new-tenant" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+4</span> / 
+              <span class="deletions">-4</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify secure tenant creation prerequisites (#13971)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">title: Quickstart - Access and create new tenant</div><div class="diff-line diff-context">description: Instructions about how to find Microsoft Entra ID and how to create a new tenant for your organization.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-deleted">ms.date: 06/19/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-deleted">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to create a new Microsoft Entra tenant so that I can set up a directory for my organization or development environment.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt; - If you&#39;re unable to create a Microsoft Entra ID or Azure AD B2C tenant, review your user settings page to ensure that tenant creation isn&#39;t switched off. If it isn&#39;t enabled you must be assigned at least the [Tenant Creator](../identity/role-based-access-control/permissions-reference.md#tenant-creator) role.</div><div class="diff-line diff-context">&gt; - This article doesn&#39;t cover creating an *external* tenant configuration for consumer-facing apps; learn more about using [Microsoft Entra External ID](~/external-id/customers/overview-customers-ciam.md) for your customer identity and access management (CIAM) scenarios.</div><div class="diff-line diff-deleted">&gt; - If you&#39;re unable to create a Governed Workforce tenant, verify your billing account permissions. You must have at least Tenant Contributor permissions on at least one Microsoft Customer Agreement (MCA) subscription. Enterprise Agreement (EA) subscriptions aren&#39;t currently supported for this scenario.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### To create a new tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - Select your desired cloud subscription and resource group for storing the Microsoft Entra ID Free billing asset for your new tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-deleted">   &gt; The subscription must be a Microsoft Customer Agreement (MCA) subscription. Other subscription types aren&#39;t currently supported.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">title: Quickstart - Access and create new tenant</div><div class="diff-line diff-context">description: Instructions about how to find Microsoft Entra ID and how to create a new tenant for your organization.</div><div class="diff-line diff-context">ms.topic: quickstart</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-context">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: it-pro, fasttrack-edit, mode-other, sfi-image-nochange, msecd-doc-authoring-1018</div><div class="diff-line diff-context">ms.collection: M365-identity-device-management</div><div class="diff-line diff-context">#Customer Intent: As an IT admin, I want to create a new Microsoft Entra tenant so that I can set up a directory for my organization or development environment.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&gt;</div><div class="diff-line diff-context">&gt; - If you&#39;re unable to create a Microsoft Entra ID or Azure AD B2C tenant, review your user settings page to ensure that tenant creation isn&#39;t switched off. If it isn&#39;t enabled you must be assigned at least the [Tenant Creator](../identity/role-based-access-control/permissions-reference.md#tenant-creator) role.</div><div class="diff-line diff-context">&gt; - This article doesn&#39;t cover creating an *external* tenant configuration for consumer-facing apps; learn more about using [Microsoft Entra External ID](~/external-id/customers/overview-customers-ciam.md) for your customer identity and access management (CIAM) scenarios.</div><div class="diff-line diff-added">&gt; - If you&#39;re unable to create a Governed Workforce tenant, verify that you have either an [Enterprise Agreement (EA)](/azure/cost-management-billing/manage/understand-ea-roles) or [Pay-As-You-Go](https://azure.microsoft.com/pricing/offers/ms-azr-0003p?cid=msft_learn) subscription. Both [Microsoft Online Subscription Agreement (MOSA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-online-services-program) and [Microsoft Customer Agreement (MCA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-customer-agreement) billing accounts are supported. You also need the required Azure Resource Manager (ARM) permissions for the selected subscription through the Tenant Contributor or Subscription Owner/Creator role. To identify your billing account type, see [View your billing accounts in the Azure portal](/azure/cost-management-billing/manage/view-all-accounts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### To create a new tenant</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - Select your desired cloud subscription and resource group for storing the Microsoft Entra ID Free billing asset for your new tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-added">   &gt; Use either an [Enterprise Agreement (EA)](/azure/cost-management-billing/manage/understand-ea-roles) or [Pay-As-You-Go](https://azure.microsoft.com/pricing/offers/ms-azr-0003p?cid=msft_learn) subscription. Both [Microsoft Online Subscription Agreement (MOSA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-online-services-program) and [Microsoft Customer Agreement (MCA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-customer-agreement) billing accounts are supported. You also need the required Azure Resource Manager (ARM) permissions for the selected subscription through the Tenant Contributor or Subscription Owner/Creator role. To identify your billing account type, see [View your billing accounts in the Azure portal](/azure/cost-management-billing/manage/view-all-accounts).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/deployment-guide.md" target="_blank">docs/id-governance/tenant-governance/deployment-guide.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 8:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/deployment-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+5</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify secure tenant creation prerequisites (#13971)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to deploy Microsoft Entra Tenant Governance from setup through tenant discovery, governance, and configuration monitoring</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/17/2026</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Deploy Microsoft Entra Tenant Governance end to end</div><div class="diff-line diff-context">- A Microsoft Entra tenant with the appropriate license for Tenant Governance. For details, see [Microsoft Entra licensing](~/fundamentals/licensing.md#microsoft-entra-tenant-governance).</div><div class="diff-line diff-context">- An account with the Tenant Governance Administrator or Global Administrator role.</div><div class="diff-line diff-context">- For configuration management: an account with the Global Administrator or Privileged Role Administrator role.</div><div class="diff-line diff-deleted">- For secure tenant creation: at least Tenant Contributor permissions on a Microsoft Customer Agreement (MCA) subscription. Enterprise Agreement (EA) subscriptions aren&#39;t supported.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Phase 1: Enable related tenant discovery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use the secure add-on tenant creation feature to create new tenants that are immediately governed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) with at least Tenant Contributor permissions on a Microsoft Customer Agreement subscription.</div><div class="diff-line diff-context">1. Create a new tenant using the **Governed Workforce** option.</div><div class="diff-line diff-context">1. Select the Azure subscription and resource group for the Microsoft Entra ID Free billing asset.</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">titleSuffix: Microsoft Entra ID Governance</div><div class="diff-line diff-context">description: Learn how to deploy Microsoft Entra Tenant Governance from setup through tenant discovery, governance, and configuration monitoring</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 07/29/2026</div><div class="diff-line diff-added">ai-usage: ai-assisted</div><div class="diff-line diff-added">ms.custom: msecd-doc-authoring-1018</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Deploy Microsoft Entra Tenant Governance end to end</div><div class="diff-line diff-context">- A Microsoft Entra tenant with the appropriate license for Tenant Governance. For details, see [Microsoft Entra licensing](~/fundamentals/licensing.md#microsoft-entra-tenant-governance).</div><div class="diff-line diff-context">- An account with the Tenant Governance Administrator or Global Administrator role.</div><div class="diff-line diff-context">- For configuration management: an account with the Global Administrator or Privileged Role Administrator role.</div><div class="diff-line diff-added">- For secure tenant creation: either a paid [Enterprise Agreement (EA)](/azure/cost-management-billing/manage/understand-ea-roles) or [Pay-As-You-Go](https://azure.microsoft.com/pricing/offers/ms-azr-0003p?cid=msft_learn) subscription. Both [Microsoft Online Subscription Agreement (MOSA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-online-services-program) and [Microsoft Customer Agreement (MCA)](/azure/cost-management-billing/manage/view-all-accounts#microsoft-customer-agreement) billing accounts are supported. You also need the required Azure Resource Manager (ARM) permissions for the selected subscription through the Tenant Contributor or Subscription Owner/Creator role. To identify your billing account type, see [View your billing accounts in the Azure portal](/azure/cost-management-billing/manage/view-all-accounts).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Phase 1: Enable related tenant discovery</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Use the secure add-on tenant creation feature to create new tenants that are immediately governed.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) with the Tenant Contributor or Subscription Owner/Creator role for the selected subscription.</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/how-to-lifecycle-workflow-unsponsored-guest-removal.md" target="_blank">docs/id-governance/how-to-lifecycle-workflow-unsponsored-guest-removal.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Kristina Smith on Jul 31, 2026 4:06 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/how-to-lifecycle-workflow-unsponsored-guest-removal" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-3</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> docs: move guest billing note under prerequisites</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article walks you through managing unsponsored guests using the **Unsponsored guest cleanup (Preview)** workflow template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!IMPORTANT]</div><div class="diff-line diff-deleted">&gt; This functionality is subject to the guest billing model. For details, see [Microsoft Entra ID Governance licensing for guest users](microsoft-entra-id-governance-licensing-for-guest-users.md).</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [Microsoft Entra ID Governance license](~/includes/entra-entra-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Manage unsponsored guests using the Microsoft Entra admin center</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a workflow for managing unsponsored guests:</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article walks you through managing unsponsored guests using the **Unsponsored guest cleanup (Preview)** workflow template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [Microsoft Entra ID Governance license](~/includes/entra-entra-governance-license.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt; [!IMPORTANT]</div><div class="diff-line diff-added">&gt; This functionality is subject to the guest billing model. For details, see [Microsoft Entra ID Governance licensing for guest users](microsoft-entra-id-governance-licensing-for-guest-users.md).</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">## Manage unsponsored guests using the Microsoft Entra admin center</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To create a workflow for managing unsponsored guests:</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/customize-application-attributes.md" target="_blank">docs/identity/app-provisioning/customize-application-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Adelle Ingrid Dimitui on Jul 31, 2026 7:24 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/customize-application-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+3</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added notes about custom call-outs to existing attribute mappings article</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-context">  &gt; The maximum supported length for a single attribute mapping expression is **10,000 characters**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **None** - the target attribute is left unmodified. However, if the target attribute is ever empty, it populates with the default value that you specify.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with these four basic types, custom attribute-mappings support the concept of an optional **default** value assignment. The default value assignment ensures that a target attribute is populated with a value if there&#39;s not a value in Microsoft Entra ID or on the target object. The most common configuration is to leave this blank. For more information about mapping attributes, see [How Application Provisioning works in Microsoft Entra ID](~/identity/app-provisioning/how-provisioning-works.md#mapping-attributes).</div><div class="diff-line diff-context">- **The value in the source and the target don&#39;t have to match exactly:** The value in the target can be a function of the value in the source. So, one could have an emailAddress attribute in the source and the userPrincipalName in the target, and match by a function of the emailAddress attribute that replaces some characters with some constant value.  </div><div class="diff-line diff-context">- **Matching based on a combination of attributes isn&#39;t supported:** Most applications don&#39;t support querying based on two properties. Therefore, it&#39;s not possible to match based on a combination of attributes. It&#39;s possible to evaluate single properties on after another.</div><div class="diff-line diff-context">- **All users must have a value for at least one matching attribute:** If you define one matching attribute, all users must have a value for that attribute in the source system. If for example, you define userPrincipalName as the matching attribute, all users must have a userPrincipalName. If you define multiple matching attributes (for example, both extensionAttribute1 and mail), not all users have to have the same matching attribute. One user could have a extensionAttribute1 but not mail while another user could have mail but no extensionAttribute1. </div><div class="diff-line diff-deleted">- **The target application must support filtering on the matching attribute:** Application developers allow filtering for a subset of attributes on their user or group API. For applications in the gallery, we ensure that the default attribute mapping is for an attribute that the target application&#39;s API does support filtering on. When changing the default matching attribute for the target application, check the non-Microsoft API documentation to ensure that the attribute can be filtered on.  </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Editing group attribute-mappings</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div><div class="diff-line diff-empty">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-context">  &gt; The maximum supported length for a single attribute mapping expression is **10,000 characters**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **LCW extensibility workflow** - The target attribute is populated with the value generated by an Azure Logic app, which is triggered by an LCW extensibility workflow.</div><div class="diff-line diff-context">- **None** - the target attribute is left unmodified. However, if the target attribute is ever empty, it populates with the default value that you specify.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with these four basic types, custom attribute-mappings support the concept of an optional **default** value assignment. The default value assignment ensures that a target attribute is populated with a value if there&#39;s not a value in Microsoft Entra ID or on the target object. The most common configuration is to leave this blank. For more information about mapping attributes, see [How Application Provisioning works in Microsoft Entra ID](~/identity/app-provisioning/how-provisioning-works.md#mapping-attributes).</div><div class="diff-line diff-context">- **The value in the source and the target don&#39;t have to match exactly:** The value in the target can be a function of the value in the source. So, one could have an emailAddress attribute in the source and the userPrincipalName in the target, and match by a function of the emailAddress attribute that replaces some characters with some constant value.  </div><div class="diff-line diff-context">- **Matching based on a combination of attributes isn&#39;t supported:** Most applications don&#39;t support querying based on two properties. Therefore, it&#39;s not possible to match based on a combination of attributes. It&#39;s possible to evaluate single properties on after another.</div><div class="diff-line diff-context">- **All users must have a value for at least one matching attribute:** If you define one matching attribute, all users must have a value for that attribute in the source system. If for example, you define userPrincipalName as the matching attribute, all users must have a userPrincipalName. If you define multiple matching attributes (for example, both extensionAttribute1 and mail), not all users have to have the same matching attribute. One user could have a extensionAttribute1 but not mail while another user could have mail but no extensionAttribute1. </div><div class="diff-line diff-added">- **The target application must support filtering on the matching attribute:** Application developers allow filtering for a subset of attributes on their user or group API. For applications in the gallery, we ensure that the default attribute mapping is for an attribute that the target application&#39;s API does support filtering on. When changing the default matching attribute for the target application, check the non-Microsoft API documentation to ensure that the attribute can be filtered on.</div><div class="diff-line diff-added">- **An attribute with the LCW extensibility workflow mapping type cannot be used as a matching attribute:** If the value of an attribute is set using the LCW extensibility workflow mapping type (where an Azure Logic app generates the value), the attribute cannot be used as a matching attribute.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Editing group attribute-mappings</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/automatic-governance-relationships.md" target="_blank">docs/id-governance/tenant-governance/automatic-governance-relationships.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by tafra00 on Jul 31, 2026 8:46 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/automatic-governance-relationships" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Clarify secure tenant creation prerequisites (#13971)</div>
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID Free billing asset</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">When you create a new Microsoft Entra tenant using the secure add-on tenant creation feature, you&#39;re prompted to select an existing [Microsoft Customer Agreement (MCA) subscription](/azure/cost-management-billing/manage/create-subscription) and resource group from your billing account. When you create your new tenant, Microsoft generates a new billing asset called **Entra ID Free** under that subscription and resource group, which links to the newly created tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The subscription tracks new tenants created with the same billing account, allowing you to maintain an inventory of all new tenants. The subscription also helps prove tenant ownership and helps regain administrative access if you ever lose it. To learn more, see [Microsoft Entra ID Free](/azure/cost-management-billing/manage/microsoft-entra-id-free).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Microsoft Entra ID Free billing asset</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When you create a new Microsoft Entra tenant using the secure add-on tenant creation feature, you&#39;re prompted to select an existing subscription and resource group from your billing account. When you create your new tenant, Microsoft generates a new billing asset called **Entra ID Free** under that subscription and resource group, which links to the newly created tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">The subscription tracks new tenants created with the same billing account, allowing you to maintain an inventory of all new tenants. The subscription also helps prove tenant ownership and helps regain administrative access if you ever lose it. To learn more, see [Microsoft Entra ID Free](/azure/cost-management-billing/manage/microsoft-entra-id-free).</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
