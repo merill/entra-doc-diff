@@ -4,7 +4,9 @@ const path = require('path');
 
 class DiscordPublisher {
   constructor(options = {}) {
-    this.webhookUrl = options.webhookUrl || process.env.DISCORD_ENTRA_DOCS_WEBHOOK_URL || '';
+    this.webhookUrl = options.webhookUrl || process.env.DISCORD_ENTRA_SCOUT_WEBHOOK_URL || process.env.DISCORD_ENTRA_DOCS_WEBHOOK_URL || '';
+    this.webhookName = options.webhookName || process.env.DISCORD_ENTRA_SCOUT_NAME || 'Entra Scout';
+    this.avatarUrl = options.avatarUrl || process.env.DISCORD_ENTRA_SCOUT_AVATAR_URL || 'https://raw.githubusercontent.com/merill/entra-doc-diff/main/design/entra-scout-avatar-1024.png';
     this.enabled = options.enabled ?? (process.env.DISCORD_ENABLED !== 'false' && Boolean(this.webhookUrl));
     this.dryRun = options.dryRun ?? (process.env.DISCORD_DRY_RUN === 'true');
     this.statePath = options.statePath || path.join('website', 'discord-state.json');
@@ -27,12 +29,12 @@ class DiscordPublisher {
     try {
       url = new URL(this.webhookUrl);
     } catch {
-      throw new Error('DISCORD_ENTRA_DOCS_WEBHOOK_URL is not a valid URL');
+      throw new Error('DISCORD_ENTRA_SCOUT_WEBHOOK_URL is not a valid URL');
     }
 
     const allowedHosts = new Set(['discord.com', 'www.discord.com', 'discordapp.com', 'www.discordapp.com']);
     if (url.protocol !== 'https:' || !allowedHosts.has(url.hostname) || !url.pathname.startsWith('/api/webhooks/')) {
-      throw new Error('DISCORD_ENTRA_DOCS_WEBHOOK_URL must be an HTTPS Discord webhook URL');
+      throw new Error('DISCORD_ENTRA_SCOUT_WEBHOOK_URL must be an HTTPS Discord webhook URL');
     }
 
     return true;
@@ -135,6 +137,8 @@ class DiscordPublisher {
   buildPayload(event) {
     if (event.type === 'bulk') {
       return {
+        username: this.truncate(this.webhookName, 80),
+        avatar_url: this.avatarUrl,
         allowed_mentions: { parse: [] },
         embeds: [{
           title: this.truncate(event.title, 256),
@@ -146,12 +150,14 @@ class DiscordPublisher {
             value: this.truncate(`${group.summary}\n[View the daily EntraDiff report](${event.url})`, 1024),
             inline: false
           })),
-          footer: { text: 'EntraDiff grouped digest · AI-generated with GPT-5.6 Luna' }
+          footer: { text: 'Entra Docs digest · AI-generated with GPT-5.6 Luna' }
         }]
       };
     }
 
     return {
+      username: this.truncate(this.webhookName, 80),
+      avatar_url: this.avatarUrl,
       allowed_mentions: { parse: [] },
       embeds: [{
         title: this.truncate(event.title, 256),
@@ -175,7 +181,7 @@ class DiscordPublisher {
             inline: false
           }
         ],
-        footer: { text: `${event.category} · AI-generated with GPT-5.6 Luna` },
+        footer: { text: `Entra Docs · ${event.category} · AI-generated with GPT-5.6 Luna` },
         timestamp: this.getTimestamp(event.publishedAt)
       }]
     };
@@ -265,7 +271,7 @@ class DiscordPublisher {
     if (events.length === 0) return { published: 0, pending: 0, skipped: 0 };
 
     if (!this.enabled) {
-      console.log('ℹ️ Discord publishing is disabled or DISCORD_ENTRA_DOCS_WEBHOOK_URL is not configured');
+      console.log('ℹ️ Discord publishing is disabled or DISCORD_ENTRA_SCOUT_WEBHOOK_URL is not configured');
       return { published: 0, pending: 0, skipped: events.length };
     }
 

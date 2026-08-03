@@ -27,7 +27,7 @@ Add these secrets:
 - `AZURE_TENANT_ID`: Your Azure tenant ID
 - `SENDER_EMAIL`: Your authorized sender email
 - `OPENAI_API_KEY`: Your OpenAI project API key for generating per-diff and grouped English summaries
-- `DISCORD_ENTRA_DOCS_WEBHOOK_URL`: Incoming webhook for the Discord Entra updates channel
+- `DISCORD_ENTRA_SCOUT_WEBHOOK_URL`: Shared Entra Scout incoming webhook for the Discord Entra updates channel. Store the same URL under this secret name in the Message Center repository.
 
 The workflow uses the OpenAI Responses API with `gpt-5.6-luna` and medium reasoning. It summarizes every diff separately and makes one additional grouping request when multiple diffs are detected. If the key is missing or an API request fails, the site, JSON, Discord feed, and email use deterministic fallback text.
 

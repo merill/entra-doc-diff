@@ -69,7 +69,7 @@ Go to your repository settings → Secrets and variables → Actions, and add:
 - **`AZURE_TENANT_ID`**: Your Azure/Microsoft 365 tenant ID
 - **`SENDER_EMAIL`**: Email address to send from (must exist in your tenant)
 - **`OPENAI_API_KEY`**: OpenAI project API key used to generate per-diff and grouped plain-English summaries
-- **`DISCORD_ENTRA_DOCS_WEBHOOK_URL`**: Incoming webhook for the Discord channel that receives Entra documentation updates
+- **`DISCORD_ENTRA_SCOUT_WEBHOOK_URL`**: Shared Entra Scout incoming webhook for the Discord channel that receives both documentation and Message Center updates
 
 The recipient email (`merill@merill.net`) is already configured in the workflow.
 
@@ -78,9 +78,12 @@ The workflow defaults to `gpt-5.6-luna` with medium reasoning and three concurre
 ### Discord setup
 
 1. Create the target text channel in your Discord server.
-2. Open **Edit Channel → Integrations → Webhooks** and create an `Entra Docs` webhook.
-3. Store its URL in the repository Actions secret `DISCORD_ENTRA_DOCS_WEBHOOK_URL`.
-4. Run the workflow manually. It posts one grouped digest when there are multiple changes, followed by one rich embed per diff.
+2. Open **Edit Channel → Integrations → Webhooks** and create one webhook named `Entra Scout`.
+3. Store its URL in this repository as the Actions secret `DISCORD_ENTRA_SCOUT_WEBHOOK_URL`.
+4. Store the same URL under the same secret name in the Message Center repository. GitHub secrets are repository-scoped, but both values point to the single Discord webhook.
+5. Run the workflow manually. Documentation messages use Entra Docs titles and footers; Message Center messages use their own archive and classification fields.
+
+Both publishers override the webhook identity to `Entra Scout` and use the repository's `design/entra-scout-avatar-1024.png` artwork. Set `DISCORD_ENTRA_SCOUT_NAME` or `DISCORD_ENTRA_SCOUT_AVATAR_URL` only if you want to override those defaults.
 
 Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same change. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 

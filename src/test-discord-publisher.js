@@ -58,6 +58,8 @@ test('Discord events include one bulk digest followed by every diff', () => {
   assert.match(events[1].reportUrl, /2026-08-03\.html#change-/);
 
   const payload = publisher.buildPayload(events[1]);
+  assert.equal(payload.username, 'Entra Scout');
+  assert.match(payload.avatar_url, /entra-scout-avatar-1024\.png$/);
   assert.deepEqual(payload.allowed_mentions, { parse: [] });
   assert.match(payload.embeds[0].fields[2].value, /Microsoft Learn/);
 });
