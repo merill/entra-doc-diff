@@ -1636,12 +1636,12 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
   buildEmailMessage(subject, emailHtml) {
     return {
       subject: subject,
-      // "normal" is Graph's explicit no-sensitivity value; Graph has no "none"
-      // or "public" message sensitivity value.
+      // Omit the optional sensitivity property so the message does not request
+      // a personal, private, or confidential Outlook sensitivity. The Graph
+      // sendMail endpoint used by this monitor rejects sensitivity in practice.
       // Microsoft Purview or Exchange transport rules can still apply encryption
       // after Graph accepts the message; the custom headers below let a narrowly
       // scoped mail-flow exception identify these automated reports.
-      sensitivity: 'normal',
       importance: 'normal',
       internetMessageHeaders: [
         {

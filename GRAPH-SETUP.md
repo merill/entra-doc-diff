@@ -61,14 +61,14 @@ This guide will help you set up an Entra ID app registration to send emails via 
 
 ## ✉️ Step 4: Keep Monitor Reports Unencrypted
 
-The monitor sends each Graph message with `sensitivity: normal` and these custom headers:
+The monitor omits the optional Graph `sensitivity` property and sends these custom headers:
 
 ```text
 x-entra-docs-monitor: daily-report
 x-entra-docs-encryption: none
 ```
 
-`normal` is Microsoft Graph's explicit no-sensitivity value. Graph doesn't provide `none` or `public` message-sensitivity values. This prevents the message itself from requesting a personal, private, or confidential Outlook sensitivity, but it can't override encryption that Microsoft Purview or an Exchange Online mail flow rule applies after Graph accepts the message.
+Microsoft Graph doesn't provide `none` or `public` message-sensitivity values. Omitting the property means the monitor does not request a personal, private, or confidential Outlook sensitivity, and it avoids the `sendMail` payload rejection seen when the property is supplied. This can't override encryption that Microsoft Purview or an Exchange Online mail flow rule applies after Graph accepts the message.
 
 If your organization automatically encrypts these reports, configure Exchange Online so that the monitor message is exempt:
 

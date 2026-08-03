@@ -34,7 +34,7 @@ function createAnalysis(files = [createFile()]) {
   };
 }
 
-test('email messages request normal sensitivity and carry the mail-flow marker', () => {
+test('email messages omit sensitivity and carry the mail-flow marker', () => {
   const previousRecipient = process.env.RECIPIENT_EMAIL;
   const previousSender = process.env.SENDER_EMAIL;
 
@@ -45,7 +45,7 @@ test('email messages request normal sensitivity and carry the mail-flow marker',
     const monitor = new EntraDocsMonitor();
     const message = monitor.buildEmailMessage('Daily update', '<p>Report</p>');
 
-    assert.equal(message.sensitivity, 'normal');
+    assert.equal(Object.hasOwn(message, 'sensitivity'), false);
     assert.equal(message.importance, 'normal');
     assert.deepEqual(message.internetMessageHeaders, [
       { name: 'x-entra-docs-monitor', value: 'daily-report' },
