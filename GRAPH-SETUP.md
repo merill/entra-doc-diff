@@ -59,4 +59,25 @@ This guide will help you set up an Entra ID app registration to send emails via 
    - Confirm by clicking **"Yes"**
    - Ensure the status shows **"Granted for [Your Organization]"** with a green checkmark
 
+## ✉️ Step 4: Keep Monitor Reports Unencrypted
 
+The monitor sends each Graph message with `sensitivity: normal` and these custom headers:
+
+```text
+x-entra-docs-monitor: daily-report
+x-entra-docs-encryption: none
+```
+
+`normal` is Microsoft Graph's explicit no-sensitivity value. Graph doesn't provide `none` or `public` message-sensitivity values. This prevents the message itself from requesting a personal, private, or confidential Outlook sensitivity, but it can't override encryption that Microsoft Purview or an Exchange Online mail flow rule applies after Graph accepts the message.
+
+If your organization automatically encrypts these reports, configure Exchange Online so that the monitor message is exempt:
+
+1. In the Exchange admin center, go to **Mail flow** > **Rules**.
+2. Locate the rule that applies Microsoft Purview Message Encryption and add an exception for the mailbox configured as `SENDER_EMAIL`.
+3. If a sender-only exception is too broad, instead create a narrowly scoped rule that requires both:
+   - The sender is the mailbox configured as `SENDER_EMAIL`.
+   - The `x-entra-docs-encryption` header contains `none`.
+4. Use **Remove Office 365 Message Encryption and rights protection applied by the organization** as the action. Make sure the removal rule runs after the rule that adds encryption and that an earlier rule doesn't stop rule processing.
+5. Send a test report and confirm in message trace that no encryption or rights-protection rule was applied.
+
+Always scope the exception to the authenticated monitor sender. Don't exempt messages based only on a custom header, because an external sender could spoof it.

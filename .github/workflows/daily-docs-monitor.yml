@@ -9,6 +9,10 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual triggering for testing
 
+concurrency:
+  group: entra-docs-monitor
+  cancel-in-progress: false
+
 jobs:
   monitor-docs:
     runs-on: ubuntu-latest
@@ -23,7 +27,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         
     - name: Install dependencies
@@ -34,6 +38,11 @@ jobs:
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_SUMMARY_MODEL: "gpt-5.6-luna"
+        OPENAI_SUMMARY_REASONING_EFFORT: "medium"
+        OPENAI_SUMMARY_CONCURRENCY: "3"
+        DISCORD_ENTRA_DOCS_WEBHOOK_URL: ${{ secrets.DISCORD_ENTRA_DOCS_WEBHOOK_URL }}
         RECIPIENT_EMAIL: "merill@merill.net"
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         GITHUB_ACTIONS: "true"

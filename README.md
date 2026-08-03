@@ -10,6 +10,7 @@ An automated GitHub Actions workflow that monitors the [Microsoft Entra document
 - **💡 Change Summaries**: Provides detailed summaries of what changed in each modified file
 - **📊 Visual Reports**: Clean, responsive HTML reports with statistics and direct GitHub links
 - **📁 Archive**: Saves historical reports as GitHub Actions artifacts
+- **✨ Plain-English Digest**: Uses the OpenAI Responses API to explain the day's material changes for Entra administrators
 
 ## 📋 What You Get
 
@@ -67,8 +68,21 @@ Go to your repository settings → Secrets and variables → Actions, and add:
 - **`AZURE_CLIENT_SECRET`**: Your Entra ID app registration client secret
 - **`AZURE_TENANT_ID`**: Your Azure/Microsoft 365 tenant ID
 - **`SENDER_EMAIL`**: Email address to send from (must exist in your tenant)
+- **`OPENAI_API_KEY`**: OpenAI project API key used to generate per-diff and grouped plain-English summaries
+- **`DISCORD_ENTRA_DOCS_WEBHOOK_URL`**: Incoming webhook for the Discord channel that receives Entra documentation updates
 
 The recipient email (`merill@merill.net`) is already configured in the workflow.
+
+The workflow defaults to `gpt-5.6-luna` with medium reasoning and three concurrent per-diff requests. Every material diff receives its own English summary. When a report contains multiple diffs, one additional Luna request groups related changes into a daily digest. You can override `OPENAI_SUMMARY_MODEL`, `OPENAI_SUMMARY_REASONING_EFFORT`, and `OPENAI_SUMMARY_CONCURRENCY`, or disable AI generation with `OPENAI_SUMMARY_ENABLED=false`. Deterministic fallbacks keep report generation, Discord delivery, and email working if OpenAI is unavailable.
+
+### Discord setup
+
+1. Create the target text channel in your Discord server.
+2. Open **Edit Channel → Integrations → Webhooks** and create an `Entra Docs` webhook.
+3. Store its URL in the repository Actions secret `DISCORD_ENTRA_DOCS_WEBHOOK_URL`.
+4. Run the workflow manually. It posts one grouped digest when there are multiple changes, followed by one rich embed per diff.
+
+Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same change. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 
 ### 3. **Microsoft Graph Setup**
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
@@ -97,8 +111,11 @@ Based on analysis of Microsoft's documentation repository patterns:
 
 Test the monitor manually:
 ```bash
-# Run the monitor
-npm start
+# Unit tests do not call OpenAI, Discord, or Microsoft Graph
+npm test
+
+# End-to-end local run without sending email or Discord messages
+DRY_RUN=true DISCORD_DRY_RUN=true LOCAL_REPO_PATH=/path/to/entra-docs npm start
 ```
 
 Or trigger the GitHub Action manually:
@@ -124,10 +141,11 @@ entra-doc-diff/
 1. **GitHub Actions Trigger**: Runs daily at scheduled time
 2. **Fetch Commits**: Uses GitHub API to get last 24 hours of commits
 3. **Filter Files**: Focuses on `.md` files in the `docs/` directory
-4. **Analyze Changes**: Categorizes and summarizes file modifications
-5. **Generate Report**: Creates beautiful HTML email with change summaries
-6. **Send Email**: Delivers via SendGrid to specified recipient
-7. **Archive**: Saves report as GitHub Actions artifact
+4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
+5. **Group Changes**: For multiple diffs, asks Luna for one additional product/documentation-area digest
+6. **Publish**: Writes the summaries into the HTML and JSON reports and posts deduplicated Discord embeds
+7. **Send Email**: Delivers the complete report through Microsoft Graph
+8. **Archive**: Saves the report as a GitHub Actions artifact
 
 ## 🔧 Configuration Options
 
