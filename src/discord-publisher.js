@@ -6,7 +6,9 @@ class DiscordPublisher {
   constructor(options = {}) {
     this.webhookUrl = options.webhookUrl || process.env.DISCORD_ENTRA_SCOUT_WEBHOOK_URL || process.env.DISCORD_ENTRA_DOCS_WEBHOOK_URL || '';
     this.webhookName = options.webhookName || process.env.DISCORD_ENTRA_SCOUT_NAME || 'Entra Scout';
-    this.avatarUrl = options.avatarUrl || process.env.DISCORD_ENTRA_SCOUT_AVATAR_URL || 'https://raw.githubusercontent.com/merill/entra-doc-diff/main/design/entra-scout-avatar-1024.png';
+    // Leave avatar_url out by default so Discord uses the image configured on
+    // the webhook. A public URL can still be supplied as an explicit override.
+    this.avatarUrl = options.avatarUrl ?? process.env.DISCORD_ENTRA_SCOUT_AVATAR_URL ?? '';
     this.enabled = options.enabled ?? (process.env.DISCORD_ENABLED !== 'false' && Boolean(this.webhookUrl));
     this.dryRun = options.dryRun ?? (process.env.DISCORD_DRY_RUN === 'true');
     this.statePath = options.statePath || path.join('website', 'discord-state.json');
@@ -135,10 +137,17 @@ class DiscordPublisher {
   }
 
   buildPayload(event) {
+    const identity = {
+      username: this.truncate(this.webhookName, 80)
+    };
+
+    if (this.avatarUrl) {
+      identity.avatar_url = this.avatarUrl;
+    }
+
     if (event.type === 'bulk') {
       return {
-        username: this.truncate(this.webhookName, 80),
-        avatar_url: this.avatarUrl,
+        ...identity,
         allowed_mentions: { parse: [] },
         embeds: [{
           title: this.truncate(event.title, 256),
@@ -156,8 +165,7 @@ class DiscordPublisher {
     }
 
     return {
-      username: this.truncate(this.webhookName, 80),
-      avatar_url: this.avatarUrl,
+      ...identity,
       allowed_mentions: { parse: [] },
       embeds: [{
         title: this.truncate(event.title, 256),

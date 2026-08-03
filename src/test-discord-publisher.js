@@ -59,9 +59,24 @@ test('Discord events include one bulk digest followed by every diff', () => {
 
   const payload = publisher.buildPayload(events[1]);
   assert.equal(payload.username, 'Entra Scout');
-  assert.match(payload.avatar_url, /entra-scout-avatar-1024\.png$/);
+  assert.equal(Object.hasOwn(payload, 'avatar_url'), false);
   assert.deepEqual(payload.allowed_mentions, { parse: [] });
   assert.match(payload.embeds[0].fields[2].value, /Microsoft Learn/);
+});
+
+test('Discord payload accepts an explicit public avatar URL override', () => {
+  const publisher = new DiscordPublisher({
+    enabled: true,
+    avatarUrl: 'https://cdn.example.com/entra-scout.png'
+  });
+  const events = publisher.createEvents(createAnalysis(), {
+    websiteUrl: 'https://entradiff.merill.net/2026-08-03.html'
+  });
+
+  assert.equal(
+    publisher.buildPayload(events[0]).avatar_url,
+    'https://cdn.example.com/entra-scout.png'
+  );
 });
 
 test('Discord publisher retries rate limits and does not republish delivered event IDs', async () => {

@@ -83,7 +83,7 @@ The workflow defaults to `gpt-5.6-luna` with medium reasoning and three concurre
 4. Store the same URL under the same secret name in the Message Center repository. GitHub secrets are repository-scoped, but both values point to the single Discord webhook.
 5. Run the workflow manually. Documentation messages use Entra Docs titles and footers; Message Center messages use their own archive and classification fields.
 
-Both publishers override the webhook identity to `Entra Scout` and use the repository's `design/entra-scout-avatar-1024.png` artwork. Set `DISCORD_ENTRA_SCOUT_NAME` or `DISCORD_ENTRA_SCOUT_AVATAR_URL` only if you want to override those defaults.
+Both publishers override the webhook name to `Entra Scout` but omit `avatar_url`, so Discord uses the image configured directly on the shared webhook. Set `DISCORD_ENTRA_SCOUT_NAME` to change the name, or set `DISCORD_ENTRA_SCOUT_AVATAR_URL` to a publicly accessible image URL only when you intentionally want a per-message avatar override.
 
 Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same change. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 
