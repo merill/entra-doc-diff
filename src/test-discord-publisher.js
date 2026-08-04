@@ -54,7 +54,7 @@ test('Discord publishes one daily summary without per-diff sections or a footer'
 
   assert.equal(events.length, 1);
   assert.equal(events[0].type, 'daily');
-  assert.equal(events[0].url, 'https://daily.entra.news/2026-08-03');
+  assert.equal(events[0].url, 'https://daily.entra.news/day/2026-08-03/');
 
   const payload = publisher.buildPayload(events[0]);
   const embed = payload.embeds[0];

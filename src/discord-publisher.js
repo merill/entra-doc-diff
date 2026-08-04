@@ -52,7 +52,7 @@ class DiscordPublisher {
   }
 
   getReportUrl(dateForUrl) {
-    return `${this.siteBaseUrl}/${dateForUrl}`;
+    return `${this.siteBaseUrl}/day/${dateForUrl}/`;
   }
 
   createDailySummaryEvent(analysis, dateForUrl) {
