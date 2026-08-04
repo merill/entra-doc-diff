@@ -192,6 +192,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   const result = await generator.build();
   assert.equal(result.messageCenter, 1);
   const indexHtml = await fs.readFile(path.join(websiteDir, 'index.html'), 'utf8');
+  const dayIndexHtml = await fs.readFile(path.join(websiteDir, 'day', 'index.html'), 'utf8');
   const dayHtml = await fs.readFile(path.join(websiteDir, 'day', '2026-08-01', 'index.html'), 'utf8');
   const weekIndexHtml = await fs.readFile(path.join(websiteDir, 'week', 'index.html'), 'utf8');
   const monthHtml = await fs.readFile(path.join(websiteDir, 'month', '2026-08', 'index.html'), 'utf8');
@@ -210,6 +211,17 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /href="https:\/\/merill\.net"/);
   assert.doesNotMatch(indexHtml, /class="story-time"|class="source-label"/);
   assert.match(indexHtml, /class="product-update-group"/);
+  assert.match(indexHtml, /class="landing-intro"/);
+  assert.match(indexHtml, /Keep up with Microsoft Entra/);
+  assert.match(indexHtml, /Microsoft Entra changes every day/);
+  assert.match(indexHtml, /Learn more about this project →/);
+  assert.match(dayIndexHtml, /class="landing-intro"/);
+  assert.match(dayIndexHtml, /href="\/about\/">Learn more about this project →<\/a>/);
+  assert.doesNotMatch(dayHtml, /class="landing-intro"|Keep up with Microsoft Entra/);
+  for (const html of [indexHtml, dayIndexHtml, dayHtml]) {
+    assert.match(html, /Microsoft Entra daily update/);
+    assert.doesNotMatch(html, /Plain-English daily brief/);
+  }
   assert.match(indexHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.match(indexHtml, /class="right-rail month-stats-rail period-product-rail day-rail"/);
   assert.match(indexHtml, /Day by product/);
@@ -319,6 +331,9 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
   assert.match(indexHtml, /href="https:\/\/maester\.cloud"/);
+  assert.match(indexHtml, /class="footer-feature-logo" src="\/assets\/ui\/maester\.png"/);
+  assert.match(indexHtml, /Everyone loves using Maester to track their Microsoft Entra and Microsoft 365 tenant security configuration/);
+  assert.match(indexHtml, /5\+ years of history, drift detection, and alerts when your posture changes/);
   assert.match(indexHtml, /Graph Permissions Explorer/);
   assert.match(indexHtml, /M365 Message Center Archive/);
   assert.match(indexHtml, /Shout me a cup of coffee/);
@@ -354,6 +369,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'newspaper.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'microphone.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'entra-news-logo.png'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'maester.png'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'book-bookmark.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'calendar-days.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chevron-down.svg'))).size > 0, true);
