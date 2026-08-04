@@ -284,3 +284,32 @@ No actionable P0, P1, or P2 differences remain.
 - All 19 automated tests pass and the full static build generated 1,852 URLs.
 
 final result: passed
+
+## Week and month period selectors — 4 August 2026
+
+### Evidence
+
+- Right-rail reference: `/Users/merill/.codex/generated_images/019fc04c-db70-7ba2-87f9-0a636ce5004f/exec-f62233ea-21cb-4926-971d-a532f91f4f74.png`.
+- Week-picker reference: `/Users/merill/.codex/generated_images/019fc04c-db70-7ba2-87f9-0a636ce5004f/exec-fbd480fb-60f9-4d94-83d3-df453896488c.png`.
+- Month-picker reference: `/Users/merill/.codex/generated_images/019fc04c-db70-7ba2-87f9-0a636ce5004f/exec-8797f86a-0fd7-4f00-8141-5b76d34e24e8.png`.
+- Week implementation: `/tmp/daily-entra-week-picker-matched.png`; combined comparison: `/tmp/daily-entra-week-design-comparison.jpg`.
+- Month implementation: `/tmp/daily-entra-month-picker-matched.png`; combined comparison: `/tmp/daily-entra-month-design-comparison.jpg`.
+- Mobile captures: `/tmp/daily-entra-week-picker-mobile.png` and `/tmp/daily-entra-month-picker-mobile.png`.
+- Desktop implementation viewport: 1487 × 1058 CSS pixels at density 1; mobile viewport: 390 × 844 CSS pixels at density 1.
+- State: latest archive period selected with its picker open.
+
+### Findings
+
+No actionable P0, P1, or P2 differences remain.
+
+- The existing editorial typography, spacing, and forest-green accent are preserved. The centered period trigger and popover match the chosen compact picker direction.
+- Week pages show a six-week month calendar, highlight the selected ISO week, expose update dots, and route every date to its corresponding static week.
+- Month pages show a compact 12-month grid, selected-month highlight, update counts, and year navigation.
+- The right rail now starts with a six-period timeline, followed by the existing product icon/count index and subscription block. Month pages no longer show `By topic`.
+- Product links retain current-page fragment scrolling and the rail keeps the same order when it moves below the content.
+- Both popovers close after selection, on outside click, and on Escape. Triggers expose `aria-expanded`, controls have descriptive labels and focus states, and browser console checks returned no errors.
+- The first tablet-width comparison found that the month popover could clip against the content column. It was changed to viewport-centered positioning below 1050 pixels and rechecked at desktop and mobile sizes.
+- Static generation now fills every ISO week between the first and last archived update; automated tests verify empty-week routes, year-boundary labels, picker behavior, six-row timelines, product anchors, and the removal of legacy controls.
+- All 24 automated tests pass, `node --check src/static-site.js` passes, and `git diff --check` passes.
+
+final result: passed

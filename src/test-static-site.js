@@ -147,6 +147,19 @@ test('static generator writes indexable archive and detail pages', async () => {
       }
     }]
   }));
+  for (const date of ['2026-06-15','2026-06-29','2026-07-06','2026-07-13','2026-07-20']) {
+    await fs.writeFile(path.join(websiteDir, `${date}.json`), JSON.stringify({
+      newFiles: [],
+      deletedFiles: [],
+      modifiedFiles: [{
+        filename: `docs/identity/archive-update-${date}.md`,
+        patch: `+title: Archive update ${date}\n+description: Historical archive navigation fixture`,
+        additions: 2,
+        deletions: 0,
+        publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/identity/'
+      }]
+    }));
+  }
   await fs.writeFile(path.join(websiteDir, '2026-07-31.html'), 'legacy daily report');
   await fs.writeFile(path.join(mcDataPath, 'messages.json'), JSON.stringify([]));
   await fs.writeFile(path.join(websiteDir, 'period-summaries.json'), JSON.stringify({
@@ -227,12 +240,34 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(dayHtml, /class="change-pill updated">Updated/);
   assert.match(dayHtml, /class="change-pill new">New/);
   assert.match(dayHtml, /<time datetime="2026-08-01T08:15:00Z" data-local-day>/);
-  assert.match(weekIndexHtml, /Week by product/);
-  assert.match(weekIndexHtml, /Week of 27 July 2026/);
+  assert.match(dayHtml, /class="theme-picker" role="group" aria-label="Color theme"/);
+  assert.match(dayHtml, /data-theme-option="light"[^>]*aria-pressed="false"/);
+  assert.match(dayHtml, /data-theme-option="dark"[^>]*aria-pressed="false"/);
+  assert.equal(dayHtml.indexOf("localStorage.getItem('entra-news-theme')") < dayHtml.indexOf('/assets/site.css'), true);
+  assert.match(weekIndexHtml, /data-period-picker="week"/);
+  assert.match(weekIndexHtml, /27 July–2 August 2026/);
+  assert.match(weekIndexHtml, /class="period-picker-popover"[^>]*role="dialog"/);
+  assert.match(weekIndexHtml, /class="period-picker-day outside selected-week"/);
+  assert.match(weekIndexHtml, /class="period-picker-update-dot"/);
+  assert.match(weekIndexHtml, /<h2 class="rail-heading">Browse weeks<\/h2>/);
+  assert.match(weekIndexHtml, /<h2 class="rail-heading">By product<\/h2>/);
+  assert.equal((weekIndexHtml.match(/<li(?: class="selected")?><a href="\/week\//g) || []).length, 6);
+  assert.match(weekIndexHtml, /<li class="selected"><a href="\/week\/2026-07-27\/" aria-current="page">/);
+  assert.equal(weekIndexHtml.indexOf('Browse weeks') < weekIndexHtml.indexOf('By product'), true);
+  assert.doesNotMatch(weekIndexHtml, /Week by product|Previous week|Next week/);
   assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
   assert.match(weekIndexHtml, /class="period-key-changes"/);
+  assert.equal((await fs.stat(path.join(websiteDir, 'week', '2026-06-22', 'index.html'))).size > 0, true);
+  const emptyWeekHtml = await fs.readFile(path.join(websiteDir, 'week', '2026-06-22', 'index.html'), 'utf8');
+  assert.match(emptyWeekHtml, /No tracked updates/);
+  assert.match(generator.periodPicker([{ date: '2026-01-02' }], 'week', '2025-12-29'), /29 December 2025–4 January 2026/);
   assert.match(monthHtml, /Identity governance and passkeys shape August/);
   assert.match(monthHtml, /For Entra administrators/);
+  assert.match(monthHtml, /data-period-picker="month"/);
+  assert.match(monthHtml, /class="period-picker-month selected" href="\/month\/2026-08\/"/);
+  assert.match(monthHtml, /<h2 class="rail-heading">Browse months<\/h2>/);
+  assert.equal(monthHtml.indexOf('Browse months') < monthHtml.indexOf('By product'), true);
+  assert.doesNotMatch(monthHtml, /<h2 class="rail-heading">By topic<\/h2>|Previous month|Next month/);
   assert.equal(generator.resolveDayDate([{ date: '2026-08-01' }], '2026-08-04'), '2026-08-01');
   const calendarHtml = generator.miniMonthCalendar([
     { date: '2026-07-31' },
@@ -254,6 +289,8 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(siteCss, /\.editorial-summary\{[^}]*border-radius:6px;overflow:hidden/);
   assert.match(siteCss, /\.doc-source-intro p\{width:100%;max-width:none/);
   assert.match(siteCss, /@media\(max-width:760px\)\{\.editorial-summary\{display:block;width:100%\}/);
+  assert.match(siteCss, /\.theme-option\[aria-pressed="true"\]/);
+  assert.match(siteCss, /:root\[data-theme="dark"\]\{color-scheme:dark/);
   assert.match(docDetailHtml, /class="doc-source-intro"/);
   assert.match(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content/);
   assert.match(docDetailHtml, /<a href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer">Open the full article<\/a> for complete context/);
@@ -265,7 +302,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(monthHtml, /August 2026/);
   assert.match(monthHtml, /class="feature period-brief"/);
   assert.match(monthHtml, /class="calendar-count"/);
-  assert.match(monthHtml, /class="right-rail month-stats-rail"/);
+  assert.match(monthHtml, /class="right-rail month-stats-rail period-product-rail"/);
   assert.match(monthHtml, /href="#product-id-governance"/);
   assert.match(monthHtml, /updates by product/);
   assert.match(monthHtml, /class="product-update-group"/);
@@ -307,12 +344,20 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(siteJs, /timeZoneName/);
   assert.match(siteJs, /data-local-day/);
   assert.match(siteJs, /hours ago|'in '/);
+  assert.match(siteJs, /data-period-picker/);
+  assert.match(siteJs, /event\.key!==['"]Escape['"]/);
+  assert.match(siteJs, /aria-expanded/);
+  assert.match(siteJs, /localStorage\.setItem\(THEME_STORAGE_KEY,value\)/);
+  assert.match(siteJs, /data-theme-option/);
   assert.equal((await fs.stat(path.join(websiteDir, 'favicon.ico'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'og-image.png'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'newspaper.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'microphone.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'entra-news-logo.png'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'book-bookmark.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'calendar-days.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chevron-down.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chevron-right.svg'))).size > 0, true);
   await assert.rejects(fs.stat(path.join(websiteDir, '2026-07-31.html')), { code: 'ENOENT' });
   assert.equal((await fs.readFile(path.join(websiteDir, 'CNAME'), 'utf8')).trim(), 'daily.entra.news');
 });
