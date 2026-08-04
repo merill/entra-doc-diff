@@ -87,6 +87,8 @@ Both publishers override the webhook name to `Entra Scout` but omit `avatar_url`
 
 Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same change. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 
+Documentation notifications link directly to the matching change on the canonical `https://daily.entra.news/YYYY-MM-DD` daily page.
+
 ### 3. **Microsoft Graph Setup**
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
 2. Add **Mail.Send** application permission

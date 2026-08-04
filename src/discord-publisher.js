@@ -12,7 +12,7 @@ class DiscordPublisher {
     this.enabled = options.enabled ?? (process.env.DISCORD_ENABLED !== 'false' && Boolean(this.webhookUrl));
     this.dryRun = options.dryRun ?? (process.env.DISCORD_DRY_RUN === 'true');
     this.statePath = options.statePath || path.join('website', 'discord-state.json');
-    this.siteBaseUrl = (options.siteBaseUrl || process.env.ENTRA_DIFF_SITE_URL || 'https://entradiff.merill.net').replace(/\/$/, '');
+    this.siteBaseUrl = (options.siteBaseUrl || process.env.ENTRA_DIFF_SITE_URL || 'https://daily.entra.news').replace(/\/$/, '');
     this.fetchImpl = options.fetchImpl || global.fetch;
     this.sleep = options.sleep || (milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)));
     this.maximumAttempts = options.maximumAttempts || 4;
@@ -52,7 +52,7 @@ class DiscordPublisher {
   }
 
   getReportUrl(dateForUrl) {
-    return `${this.siteBaseUrl}/${dateForUrl}.html`;
+    return `${this.siteBaseUrl}/${dateForUrl}`;
   }
 
   getChangeLabel(file) {
@@ -84,7 +84,7 @@ class DiscordPublisher {
     const summary = file.englishSummary || {};
     const reportUrl = `${this.getReportUrl(dateForUrl)}#${this.getDiffAnchor(file)}`;
     const links = [
-      `[EntraDiff](${reportUrl})`,
+      `[View diff](${reportUrl})`,
       file.publicDocsUrl ? `[Microsoft Learn](${file.publicDocsUrl})` : null,
       file.githubUrl ? `[GitHub](${file.githubUrl})` : null
     ].filter(Boolean).join(' · ');
@@ -156,7 +156,7 @@ class DiscordPublisher {
           color: 0x6f42c1,
           fields: (event.groups || []).slice(0, 25).map(group => ({
             name: this.truncate(`${group.category ? `[${group.category}] ` : ''}${group.title}`, 256),
-            value: this.truncate(`${group.summary}\n[View the daily EntraDiff report](${event.url})`, 1024),
+            value: this.truncate(`${group.summary}\n[View the daily report](${event.url})`, 1024),
             inline: false
           })),
           footer: { text: 'Entra Docs digest · AI-generated with GPT-5.6 Luna' }

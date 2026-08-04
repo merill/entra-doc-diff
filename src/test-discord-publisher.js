@@ -55,12 +55,16 @@ test('Discord events include one bulk digest followed by every diff', () => {
   assert.equal(events.length, 3);
   assert.equal(events[0].type, 'bulk');
   assert.equal(events[1].type, 'diff');
-  assert.match(events[1].reportUrl, /2026-08-03\.html#change-/);
+  assert.equal(events[0].url, 'https://daily.entra.news/2026-08-03');
+  assert.match(events[1].reportUrl, /^https:\/\/daily\.entra\.news\/2026-08-03#change-[a-f0-9]{12}$/);
+  assert.match(events[1].links, /^\[View diff\]\(https:\/\/daily\.entra\.news\/2026-08-03#change-/);
+  assert.doesNotMatch(events[1].links, /EntraDiff/);
 
   const payload = publisher.buildPayload(events[1]);
   assert.equal(payload.username, 'Entra Scout');
   assert.equal(Object.hasOwn(payload, 'avatar_url'), false);
   assert.deepEqual(payload.allowed_mentions, { parse: [] });
+  assert.match(payload.embeds[0].fields[2].value, /View diff/);
   assert.match(payload.embeds[0].fields[2].value, /Microsoft Learn/);
 });
 
