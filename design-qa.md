@@ -131,6 +131,28 @@ No actionable P0, P1, or P2 differences remain.
 
 final result: passed
 
+## Daily landing context and Maester Cloud footer — 5 August 2026
+
+### Evidence
+
+- Desktop landing: `/tmp/daily-entra-landing-desktop-viewport.jpg`.
+- Mobile landing: `/tmp/daily-entra-landing-mobile.jpg`.
+- Isolated preview: `http://127.0.0.1:4174/`.
+- Reviewed at 1,440 × 900 and 390 × 844 CSS pixels.
+
+### Findings
+
+No actionable P0, P1, or P2 differences remain.
+
+- The default landing routes now provide a concise explanation of Daily.Entra.News and link to the About page; dated day pages remain focused on that day's updates.
+- The daily editorial section is labeled `Microsoft Entra daily update`, replacing the generic `Plain-English daily brief` label.
+- The footer uses the authoritative Maester logo and the revised Maester Cloud copy alongside the existing call to action.
+- The mobile view has no horizontal overflow, and the footer logo loads at its intended responsive size.
+- All 26 automated tests pass, the full static build generated 1,906 URLs, and browser console checks returned no errors.
+- `website/period-summaries.json` remained byte-for-byte unchanged throughout this refinement.
+
+final result: passed
+
 ## AI editorial panels and Learn extract context — 4 August 2026
 
 ### Evidence
