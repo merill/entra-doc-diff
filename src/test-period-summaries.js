@@ -100,6 +100,33 @@ test('max reasoning retries an incomplete response with a larger token allowance
   assert.equal(generator.runUsage.outputTokens, 12600);
 });
 
+test('an incomplete 25000-token response retries with a doubled allowance', async () => {
+  const requests = [];
+  const client = { responses: { create: async request => {
+    requests.push(request);
+    return requests.length === 1
+      ? { status: 'incomplete', usage: { input_tokens: 500, output_tokens: 25000 } }
+      : {
+          status: 'completed', model: 'gpt-5.6-luna',
+          output_text: JSON.stringify({
+            headline: 'Large summary completed', overview: 'The summary completed with a larger token allowance.',
+            adminImpact: 'Review the completed period briefing.',
+            keyChanges: [{ title: 'Larger allowance used', detail: 'The retry doubled the configured output allowance.', product: 'Entra ID' }]
+          }),
+          usage: { input_tokens: 500, output_tokens: 600 }
+        };
+  } } };
+  const generator = new PeriodSummaryGenerator({ client, maxOutputTokens: 25000, budgetUsd: 5, logger: { log() {}, warn() {} } });
+  const item = {
+    id: 'doc-large', date: '2026-08-01', source: 'docs', changeType: 'Updated', additions: 4,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+    title: 'Large period', summary: 'A large period needs more reasoning tokens.', adminImpact: 'Review the briefing.'
+  };
+  const summary = await generator.generateOne('week', '2026-07-27', [item], { weeks: {}, months: {} });
+  assert.equal(summary.headline, 'Large summary completed');
+  assert.deepEqual(requests.map(request => request.max_output_tokens), [25000, 50000]);
+});
+
 test('transient API overloads are retried without discarding the period', async () => {
   let attempts = 0;
   const warnings = [];
@@ -129,4 +156,36 @@ test('transient API overloads are retried without discarding the period', async 
   assert.equal(summary.headline, 'Service recovered');
   assert.equal(attempts, 3);
   assert.equal(warnings.length, 2);
+});
+
+test('connection timeouts are retried without discarding the period', async () => {
+  let attempts = 0;
+  const warnings = [];
+  const client = { responses: { create: async () => {
+    attempts += 1;
+    if (attempts === 1) throw Object.assign(new Error('Request timed out.'), { name: 'APIConnectionTimeoutError' });
+    return {
+      status: 'completed', model: 'gpt-5.6-luna',
+      output_text: JSON.stringify({
+        headline: 'Timeout recovered', overview: 'The period summary completed after a connection timeout.',
+        adminImpact: 'No administrator action is needed for the retry.',
+        keyChanges: [{ title: 'Summary completed', detail: 'The timed-out request was retried without discarding progress.', product: 'Entra ID' }]
+      }),
+      usage: { input_tokens: 300, output_tokens: 400 }
+    };
+  } } };
+  const generator = new PeriodSummaryGenerator({
+    client, transientRetries: 3, sleep: async () => {},
+    logger: { log() {}, warn(message) { warnings.push(message); } }
+  });
+  const item = {
+    id: 'doc-timeout', date: '2026-08-01', source: 'docs', changeType: 'Updated', additions: 1,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'General' },
+    title: 'Timeout example', summary: 'A summary used to test timeout recovery.', adminImpact: 'None.'
+  };
+  const summary = await generator.generateOne('week', '2026-07-27', [item], { weeks: {}, months: {} });
+  assert.equal(summary.headline, 'Timeout recovered');
+  assert.equal(attempts, 2);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /timed out/);
 });

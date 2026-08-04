@@ -91,14 +91,16 @@ class PeriodSummaryGenerator {
         return await this.client.responses.create(request);
       } catch (error) {
         const status = Number(error.status || error.statusCode || 0);
-        const transient = status === 429 || status === 408 || status >= 500;
+        const timedOut = error.name === 'APIConnectionTimeoutError' || /\b(?:request\s+)?timed?\s*out\b/i.test(error.message || '');
+        const transient = timedOut || status === 429 || status === 408 || status >= 500;
         if (!transient || attempt >= this.transientRetries) throw error;
         const retryHeader = error.headers?.get?.('retry-after') || error.headers?.['retry-after'];
         const retrySeconds = Number(retryHeader);
         const delay = Number.isFinite(retrySeconds) && retrySeconds > 0
           ? Math.min(30000, retrySeconds * 1000)
           : Math.min(30000, 2000 * (2 ** attempt));
-        this.logger.warn(`↻ ${label} received HTTP ${status || 'error'}; retrying in ${Math.round(delay / 1000)} seconds (${attempt + 1}/${this.transientRetries}).`);
+        const reason = timedOut ? 'timed out' : `received HTTP ${status || 'error'}`;
+        this.logger.warn(`↻ ${label} ${reason}; retrying in ${Math.round(delay / 1000)} seconds (${attempt + 1}/${this.transientRetries}).`);
         await this.sleep(delay);
       }
     }
@@ -228,7 +230,7 @@ class PeriodSummaryGenerator {
     if (Number(this.baseUsage.costUsd || 0) + this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached`);
     const evidence = this.buildEvidence(kind, key, items, store);
     this.logger.log(`🧠 Writing ${kind} brief for ${key} with ${this.model} (${this.reasoningEffort} reasoning, ${items.length} updates)...`);
-    const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens, 25000)])];
+    const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens * 2, 25000)])];
     for (let attempt = 0; attempt < tokenLimits.length; attempt += 1) {
       const maxOutputTokens = tokenLimits[attempt];
       const response = await this.createResponse({
