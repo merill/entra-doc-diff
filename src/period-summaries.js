@@ -91,14 +91,16 @@ class PeriodSummaryGenerator {
         return await this.client.responses.create(request);
       } catch (error) {
         const status = Number(error.status || error.statusCode || 0);
-        const transient = status === 429 || status === 408 || status >= 500;
+        const timedOut = error.name === 'APIConnectionTimeoutError' || /\b(?:request\s+)?timed?\s*out\b/i.test(error.message || '');
+        const transient = timedOut || status === 429 || status === 408 || status >= 500;
         if (!transient || attempt >= this.transientRetries) throw error;
         const retryHeader = error.headers?.get?.('retry-after') || error.headers?.['retry-after'];
         const retrySeconds = Number(retryHeader);
         const delay = Number.isFinite(retrySeconds) && retrySeconds > 0
           ? Math.min(30000, retrySeconds * 1000)
           : Math.min(30000, 2000 * (2 ** attempt));
-        this.logger.warn(`↻ ${label} received HTTP ${status || 'error'}; retrying in ${Math.round(delay / 1000)} seconds (${attempt + 1}/${this.transientRetries}).`);
+        const reason = timedOut ? 'timed out' : `received HTTP ${status || 'error'}`;
+        this.logger.warn(`↻ ${label} ${reason}; retrying in ${Math.round(delay / 1000)} seconds (${attempt + 1}/${this.transientRetries}).`);
         await this.sleep(delay);
       }
     }
