@@ -62,6 +62,20 @@ test('email messages omit sensitivity and carry the mail-flow marker', () => {
   }
 });
 
+test('email online report link uses the static daily route', async () => {
+  const monitor = new EntraDocsMonitor();
+  const analysis = createAnalysis();
+  let sentPayload;
+  monitor.initializeGraphClient = async () => ({
+    api: () => ({ post: async payload => { sentPayload = payload; } })
+  });
+
+  await monitor.sendEmail('', analysis, { dateForUrl: '2026-08-04' });
+
+  assert.match(sentPayload.message.body.content, /https:\/\/daily\.entra\.news\/day\/2026-08-04\//);
+  assert.doesNotMatch(sentPayload.message.body.content, /entradiff\.merill\.net|2026-08-04\.html/);
+});
+
 test('each diff receives its own Luna English summary', async () => {
   const monitor = new EntraDocsMonitor();
   const analysis = createAnalysis();
@@ -205,4 +219,3 @@ test('rendered summaries escape model-provided HTML', () => {
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /Safe &amp; useful/);
 });
-

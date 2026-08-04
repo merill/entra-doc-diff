@@ -3,6 +3,7 @@ const path = require('path');
 const moment = require('moment-timezone');
 const { marked } = require('marked');
 const { parse } = require('node-html-parser');
+const htmlDiff = require('node-htmldiff');
 
 const SITE = {
   name: 'Entra.News Daily',
@@ -65,6 +66,13 @@ function escapeHtml(value = '') {
 
 function stripHtml(value = '') {
   return parse(String(value)).text.replace(/\s+/g, ' ').trim();
+}
+
+function firstTwoSentences(value = '') {
+  const text = String(value).replace(/\s+/g, ' ').trim();
+  const sentences = text.match(/[^.!?]+[.!?]+(?=\s|$)/g) || [];
+  if (sentences.length) return sentences.slice(0, 2).join(' ').trim();
+  return text;
 }
 
 function truncate(value = '', length = 220) {
@@ -147,7 +155,10 @@ function extractMarkdownMetadata(patch = '', filename = '') {
   const description = joined.match(/^description:\s*["']?(.+?)["']?\s*$/mi)?.[1]
     || usable.find(line => line && !/^(---|title:|titleSuffix:|description:|ms\.|#|<!--|\[!)/i.test(line.trim()))
     || `A Microsoft Entra documentation page was updated: ${title}.`;
-  return { title: truncate(title.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1'), 150), description: truncate(description, 260) };
+  return {
+    title: truncate(title.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1'), 150),
+    description: String(description).replace(/\s+/g, ' ').trim()
+  };
 }
 
 function tokenize(value = '') {
@@ -242,54 +253,65 @@ function stripFrontMatter(records) {
     if (looksLikeMetadata) return records.slice(closing + 1);
   }
 
+  // A hunk can begin inside front matter and omit both delimiters. In that
+  // case, remove the leading metadata run but preserve the Markdown that
+  // follows the first blank line.
+  const firstBlank = records.findIndex(record => !record.value.trim());
+  if (firstBlank > 0) {
+    const prefix = records.slice(0, firstBlank).filter(record => record.value.trim());
+    const metadataPrefix = prefix.length && prefix.every(record =>
+      /^[a-z][\w.-]*\s*:/i.test(record.value.trim()) || /^\s+[-\w]/.test(record.value)
+    );
+    if (metadataPrefix) return records.slice(firstBlank + 1);
+  }
+
   // Metadata-only hunks don't always include either delimiter.
   const meaningful = records.filter(record => record.value.trim());
   if (meaningful.length && meaningful.every(record => /^[a-z][\w.-]*\s*:/i.test(record.value.trim()))) return [];
   return records;
 }
 
-function tableDivider(value = '') {
-  const cells = value.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
-  return cells.length > 1 && cells.every(cell => /^:?-{3,}:?$/.test(cell));
-}
+function renderLearnDocumentMarkdown(markdown = '') {
+  const lines = String(markdown).split('\n');
+  const blocks = [];
+  let regular = [];
+  const flushRegular = () => {
+    if (regular.some(line => line.trim())) blocks.push(renderLearnMarkdown(regular.join('\n')));
+    regular = [];
+  };
 
-function diffKind(records) {
-  const kinds = new Set(records.filter(record => record.value.trim()).map(record => record.kind));
-  if (kinds.size === 1) return [...kinds][0];
-  if (kinds.has('added') && !kinds.has('removed')) return 'added';
-  if (kinds.has('removed') && !kinds.has('added')) return 'removed';
-  return 'changed';
-}
-
-function renderDiffRuns(records, className = 'rendered-change') {
-  const groups = [];
-  for (const record of records) {
-    let current = groups[groups.length - 1];
-    if (!current || current.kind !== record.kind) {
-      current = { kind: record.kind, lines: [] };
-      groups.push(current);
+  for (let index = 0; index < lines.length;) {
+    const alert = lines[index].trim().match(/^>\s*\[!(NOTE|TIP|IMPORTANT|CAUTION|WARNING)\]\s*$/i);
+    if (!alert) {
+      regular.push(lines[index]);
+      index += 1;
+      continue;
     }
-    current.lines.push(record.value);
+
+    flushRegular();
+    let end = index + 1;
+    while (end < lines.length && (!lines[end].trim() || /^>/.test(lines[end].trimStart()))) end += 1;
+    const type = alert[1].toUpperCase();
+    const label = type.charAt(0) + type.slice(1).toLowerCase();
+    const body = lines.slice(index + 1, end).map(line => line.replace(/^\s*>\s?/, '')).join('\n');
+    blocks.push(`<aside class="learn-alert learn-alert-${type.toLowerCase()}"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>${label}</span></div><div class="learn-alert-body">${renderLearnMarkdown(body)}</div></aside>`);
+    index = end;
   }
-  return groups.filter(group => group.lines.some(line => line.trim())).map(group =>
-    `<div class="${className} ${group.kind}">${renderLearnMarkdown(group.lines.join('\n'))}</div>`
-  ).join('');
+  flushRegular();
+  return blocks.join('');
 }
 
-function renderTableDiff(records) {
-  const root = parse(renderLearnMarkdown(records.map(record => record.value).join('\n')));
-  const bodyRows = root.querySelectorAll('tbody tr');
-  records.slice(2).filter(record => record.value.trim()).forEach((record, index) => {
-    if (bodyRows[index]) bodyRows[index].setAttribute('class', `diff-row ${record.kind}`);
-  });
-  return `<div class="rendered-change rendered-table ${diffKind(records)}">${root.toString()}</div>`;
-}
-
-function renderLearnAlert(type, records) {
-  const label = type.charAt(0) + type.slice(1).toLowerCase();
-  const body = records.slice(1).map(record => ({ ...record, value: record.value.replace(/^>\s?/, '') }));
-  const renderedBody = renderDiffRuns(body, 'learn-alert-change') || '<p class="quiet">Alert content changed.</p>';
-  return `<aside class="learn-alert learn-alert-${type.toLowerCase()} diff-${diffKind(records)}"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>${label}</span></div><div class="learn-alert-body">${renderedBody}</div></aside>`;
+function repairBlockDiffHtml(value = '') {
+  let html = String(value);
+  const paragraphHeadingOverlap = /(<p\b[^>]*>)([\s\S]*?)(<h([1-6])\b[^>]*>)([\s\S]*?)(<\/p>)([\s\S]*?)(<\/h\4>)/gi;
+  let previous;
+  do {
+    previous = html;
+    html = html.replace(paragraphHeadingOverlap, (_match, paragraphOpen, paragraphBody, headingOpen, _level, headingBody, _paragraphClose, headingRemainder, headingClose) =>
+      `${paragraphOpen}${paragraphBody}</p>${headingOpen}${headingBody}${headingRemainder}${headingClose}`
+    );
+  } while (html !== previous);
+  return html.replace(/<p(?:\s[^>]*)?><\/p>/g, '');
 }
 
 function formattedDiff(patch = '') {
@@ -303,43 +325,31 @@ function formattedDiff(patch = '') {
   }
 
   const content = stripFrontMatter(records);
-  const blocks = [];
-  let regular = [];
-  const flushRegular = () => {
-    if (regular.length) blocks.push(renderDiffRuns(regular));
-    regular = [];
-  };
+  const oldMarkdown = content.filter(record => record.kind !== 'added').map(record => record.value).join('\n');
+  const newMarkdown = content.filter(record => record.kind !== 'removed').map(record => record.value).join('\n');
+  const rendered = repairBlockDiffHtml(htmlDiff(
+    renderLearnDocumentMarkdown(oldMarkdown),
+    renderLearnDocumentMarkdown(newMarkdown)
+  ));
+  return rendered.trim()
+    ? `<div class="rich-diff">${rendered}</div>`
+    : '<p class="quiet">No content changes were available in this diff.</p>';
+}
 
-  for (let index = 0; index < content.length;) {
-    const alert = content[index].value.trim().match(/^>\s*\[!(NOTE|TIP|IMPORTANT|CAUTION|WARNING)\]\s*$/i);
-    if (alert) {
-      flushRegular();
-      let end = index + 1;
-      while (end < content.length) {
-        const nextValue = content[end].value.trim();
-        if (end > index + 1 && /^>\s*\[!(NOTE|TIP|IMPORTANT|CAUTION|WARNING)\]\s*$/i.test(nextValue)) break;
-        if (!/^>/.test(content[end].value.trimStart()) && nextValue) break;
-        end += 1;
-      }
-      blocks.push(renderLearnAlert(alert[1].toUpperCase(), content.slice(index, end)));
-      index = end;
-      continue;
-    }
-
-    if (index + 1 < content.length && content[index].value.includes('|') && tableDivider(content[index + 1].value)) {
-      flushRegular();
-      let end = index + 2;
-      while (end < content.length && content[end].value.trim() && content[end].value.includes('|')) end += 1;
-      blocks.push(renderTableDiff(content.slice(index, end)));
-      index = end;
-      continue;
-    }
-
-    regular.push(content[index]);
-    index += 1;
-  }
-  flushRegular();
-  return blocks.filter(Boolean).slice(0, 80).join('') || '<p class="quiet">No content changes were available in this diff.</p>';
+function renderMarkdownDiff(patch = '') {
+  const lines = String(patch).split('\n').filter(line =>
+    !/^(diff --git |index |--- |\+\+\+ |new file mode|deleted file mode|similarity index|rename (from|to))/.test(line)
+  ).map(line => {
+    let kind = 'context';
+    if (/^@@/.test(line)) kind = 'hunk';
+    else if (/^(diff |index |new file mode|deleted file mode|similarity index|rename (from|to))/.test(line)) kind = 'meta';
+    else if (/^\+\+\+ /.test(line)) kind = 'file-new';
+    else if (/^--- /.test(line)) kind = 'file-old';
+    else if (line.startsWith('+')) kind = 'added';
+    else if (line.startsWith('-')) kind = 'removed';
+    return `<span class="markdown-diff-line ${kind}">${escapeHtml(line || ' ')}</span>`;
+  }).join('');
+  return `<div class="markdown-diff" role="region" aria-label="Markdown Git diff"><pre><code>${lines}</code></pre></div>`;
 }
 
 const CSS = `
@@ -360,11 +370,16 @@ const CSS = `
 @media(max-width:1050px){.footer-inner{grid-template-columns:1fr 1fr}.footer-feature{grid-column:1/-1;border-bottom:1px solid var(--rule);padding:0 0 35px;margin-bottom:35px}.footer-projects{border-left:0;padding-left:0;padding-right:35px}.footer-support{padding-left:35px}}
 @media(max-width:760px){.product-update-group{scroll-margin-top:200px}.footer{display:block}.footer-inner{display:block;padding:38px 19px 34px}.footer-feature{padding-bottom:30px;margin-bottom:30px}.footer-feature h2{font-size:34px}.footer-projects,.footer-support{border-left:0;padding:0}.footer-support{border-top:1px solid var(--rule);margin-top:30px;padding-top:30px}.footer div+div{margin-top:0}.footer-bottom{display:block;padding:20px 19px 26px}.footer-bottom nav{margin-top:14px}.refresh-status{display:block}.refresh-status span{display:block;margin-top:3px}}
 .rendered-change.changed{background:#efede6;border-color:#9a927f}.rendered-table{padding:0;margin:16px 0 22px;background:transparent!important;border-left:0}.rendered-table table{width:100%;border-collapse:collapse;background:#fff}.rendered-table th,.rendered-table td{border:1px solid #c9c9c9;padding:13px 15px;text-align:left;vertical-align:top}.rendered-table th{font-weight:700;background:#fafafa}.rendered-table tr.diff-row.added td{background:var(--green-soft)}.rendered-table tr.diff-row.removed td{background:var(--red-soft);color:#642620;text-decoration:line-through}.learn-alert{--alert-bg:#efd9fd;--alert-border:#3b2e58;display:block;margin:20px 0 24px;padding:20px 24px;border:1px solid var(--alert-border);border-radius:10px;background:var(--alert-bg);color:var(--ink)}.learn-alert-note{--alert-bg:#efd9fd;--alert-border:#3b2e58}.learn-alert-tip{--alert-bg:#f1faf1;--alert-border:#0e700e}.learn-alert-important{--alert-bg:#ebf3fc;--alert-border:#115ea3}.learn-alert-caution{--alert-bg:#fff9f5;--alert-border:#8a3707}.learn-alert-warning{--alert-bg:#fdf3f4;--alert-border:#b10e1c}.learn-alert-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:var(--alert-border);font-weight:700;font-size:18px}.learn-alert-icon{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border:2px solid currentColor;border-radius:50%;font:700 13px/1 var(--sans)}.learn-alert-body p,.learn-alert-body ul,.learn-alert-body ol,.learn-alert-body pre{margin:0 0 10px}.learn-alert-body>*:last-child,.learn-alert-change>*:last-child{margin-bottom:0}.learn-alert-change{padding:7px 10px;margin:0 -10px 3px;border-left:3px solid transparent}.learn-alert-change.added{background:rgba(227,238,232,.78);border-color:#79aa89}.learn-alert-change.removed{background:rgba(243,223,220,.82);border-color:#c88680;color:#642620;text-decoration:line-through}.learn-alert.diff-added{box-shadow:inset 4px 0 #79aa89}.learn-alert.diff-removed{box-shadow:inset 4px 0 #c88680}.learn-alert.diff-changed{box-shadow:inset 4px 0 #9a927f}@media(max-width:760px){.rendered-table{overflow-x:auto}.rendered-table table{min-width:560px}.rendered-table th,.rendered-table td{padding:10px 12px}.learn-alert{padding:17px 18px}}
+.story-description{max-width:780px;margin:5px 0 0;color:#56615f;font-size:13px;line-height:1.45}.rich-diff{max-width:960px;padding:8px 0 18px;font-size:16px;line-height:1.62}.rich-diff h1,.rich-diff h2,.rich-diff h3,.rich-diff h4{font-family:var(--serif);line-height:1.2;margin:26px 0 11px}.rich-diff h1{font-size:30px}.rich-diff h2{font-size:25px}.rich-diff h3{font-size:20px}.rich-diff p,.rich-diff ul,.rich-diff ol{margin:0 0 16px}.rich-diff pre{overflow:auto;border:1px solid var(--rule);background:#f0eee7;padding:14px}.rich-diff code{font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.rich-diff table{width:100%;border-collapse:collapse;margin:20px 0 26px;background:#fff}.rich-diff th,.rich-diff td{border:1px solid #c9c9c9;padding:13px 15px;text-align:left;vertical-align:top}.rich-diff th{font-weight:700;background:#fafafa}.rich-diff ins{border-radius:3px;background:#c8f1da;color:#164f35;padding:1px 2px;text-decoration:none}.rich-diff del{border-radius:3px;background:#ffd7df;color:#7c2032;padding:1px 2px;text-decoration:line-through}.rich-diff ins a,.rich-diff del a{color:inherit}.rich-diff>ins,.rich-diff>del{display:block;background:transparent;color:inherit;padding:0;text-decoration:none}.rich-diff>ins:has(.learn-alert) .learn-alert{box-shadow:inset 4px 0 #79aa89}.rich-diff>del:has(.learn-alert) .learn-alert{box-shadow:inset 4px 0 #c88680}.markdown-diff{max-width:100%;overflow:hidden;border:1px solid #c9c9c9;border-radius:6px;background:#fff}.markdown-diff pre{margin:0;padding:10px 0;overflow:auto;background:#fff;color:#24292f;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}.markdown-diff code{display:block;min-width:max-content}.markdown-diff-line{display:block;min-height:1.55em;padding:0 16px;white-space:pre}.markdown-diff-line.added,.markdown-diff-line.file-new{background:#dafbe1;color:#116329}.markdown-diff-line.removed,.markdown-diff-line.file-old{background:#ffebe9;color:#82071e}.markdown-diff-line.hunk{background:#ddf4ff;color:#0969da}.markdown-diff-line.meta{color:#57606a;font-weight:600}.markdown-diff-line.context{color:#57606a}@media(max-width:1320px) and (min-width:1051px){.site-header{gap:18px;padding-left:2vw;padding-right:2vw}.brand{font-size:27px}.brand small{display:none}.main-nav{gap:18px}.utility{gap:12px;padding-left:16px}.site-link{font-size:12px}}@media(max-width:760px){.story-description{font-size:12.5px}.rich-diff{font-size:15px}.rich-diff table{display:block;overflow-x:auto}.rich-diff th,.rich-diff td{min-width:180px;padding:10px 12px}.markdown-diff pre{font-size:12px}}
+.brand{display:inline-flex;align-items:center;gap:10px;line-height:1}.brand-logo{width:38px;height:38px;object-fit:contain;flex:0 0 auto}.brand small{margin-left:4px;line-height:1.2}@media(min-width:1051px){.site-header{padding-left:max(24px,calc((100vw - 1420px)/2 + 24px));padding-right:max(24px,calc((100vw - 1420px)/2 + 24px))}.main-nav{align-self:stretch}.main-nav a{display:flex;align-items:center;padding:4px 0 0}}@media(max-width:1050px){.main-nav{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.brand{gap:8px}.brand-logo{width:32px;height:32px}.main-nav{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.detail-main{min-width:0}.editorial-summary{min-width:0;max-width:100%;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;margin:22px 0 0;padding:0;border:1px solid #c8d2cc;border-radius:6px;overflow:hidden;background:#f5f7f4}.editorial-summary>.editorial-panel{min-width:0;max-width:100%;padding:23px 26px 24px}.editorial-panel.admin{border-left:1px solid #c8d2cc;background:#e9f0ec}.editorial-panel .section-title{max-width:100%;font-size:22px;margin-bottom:10px;overflow-wrap:anywhere}.editorial-panel p{max-width:100%;margin:0;color:#26302d;overflow-wrap:anywhere}.ai-disclosure{min-width:0;max-width:100%;grid-column:1/-1;margin:0;padding:9px 26px;border-top:1px solid #c8d2cc;background:#f0f2ee;color:var(--muted);font-size:12px;overflow-wrap:anywhere}.doc-source-intro{display:block;margin:0 0 18px;padding:0 0 17px;border-bottom:1px solid var(--rule)}.doc-source-intro p{width:100%;max-width:none;margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.45}.learn-link{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;font-family:var(--serif);font-weight:650;text-decoration:none}.learn-link img{width:21px;height:21px}.grouped-story[id]{scroll-margin-top:96px}@media(max-width:760px){.editorial-summary{display:block;width:100%}.editorial-summary>.editorial-panel{width:100%;padding:20px 19px}.editorial-panel.admin{border-left:0;border-top:1px solid #c8d2cc}.ai-disclosure{display:block;width:100%;padding:9px 19px}.doc-source-intro p{margin-top:10px}.grouped-story[id]{scroll-margin-top:200px}}
+.mini-calendar-header{display:grid;grid-template-columns:25px minmax(0,1fr) 25px;align-items:center;gap:5px;margin-bottom:10px}.mini-calendar-title{margin:0;text-align:center}.mini-month-nav{display:grid;place-items:center;width:25px;height:25px;padding:0;border:1px solid var(--rule);border-radius:50%;color:var(--green);font:20px/1 Arial,sans-serif;text-decoration:none}.mini-month-nav>span{display:block;line-height:1;transform:translateY(-1px)}.mini-month-nav:hover{border-color:var(--green);background:#eef3ed}.mini-month-nav.disabled{color:#aaa79f;background:#eceae4;cursor:default}.mini-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.mini-weekday{padding:0 0 5px;text-align:center;color:var(--muted);font:700 9px/1 var(--sans);text-transform:uppercase}.mini-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;height:30px;border:1px solid transparent;color:var(--ink);font-family:var(--serif);font-size:12px;line-height:1;text-decoration:none}.mini-day:hover{border-color:#aebbb4;background:#eef3ef;color:var(--green)}.mini-day.selected{border-color:var(--green);background:#eef3ed;color:var(--green);font-weight:700}.mini-day.outside{background:transparent;color:#aaa79f}.mini-day.outside:hover{background:transparent;color:#716f69}.mini-update-dot{display:block;width:4px;height:4px;border-radius:50%;background:var(--green)}.mini-day.outside .mini-update-dot{background:#85827c}.mini-month-link{display:inline-block;margin-top:10px;font-size:12px}.day-rail .rss-box{margin-top:2px}@media(max-width:760px){.mini-calendar-grid{gap:5px}.mini-day{height:36px;font-size:13px}.mini-calendar-header{grid-template-columns:30px minmax(0,1fr) 30px}.mini-month-nav{width:30px;height:30px}}
+.period-brief{padding-bottom:28px}.period-brief .period-overview{max-width:900px;font-size:17px;line-height:1.6}.period-key-changes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 34px;max-width:940px;margin:24px 0 22px;padding:0;list-style:none;border-top:1px solid var(--rule)}.period-key-changes li{min-width:0;padding:14px 0 13px;border-bottom:1px solid var(--rule)}.period-change-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.period-change-heading strong{font-family:var(--serif);font-size:17px;line-height:1.25}.period-change-heading span{flex:0 0 auto;color:var(--green);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.period-key-changes p{max-width:none;margin:5px 0 0;color:#46514e;font-size:13px;line-height:1.5}.period-admin-focus{max-width:900px;padding:14px 18px;border-left:3px solid var(--green);background:var(--green-soft)}.period-admin-focus>strong{font-family:var(--serif);font-size:16px}.period-admin-focus p{max-width:none;margin:3px 0 0}.period-ai-note{margin:12px 0 0!important;color:var(--muted);font-size:11px}.period-brief+.story-list{margin-top:25px}@media(max-width:760px){.period-key-changes{grid-template-columns:1fr}.period-change-heading{display:block}.period-change-heading span{display:block;margin-top:3px}.period-brief .period-overview{font-size:16px}}
 `;
 
 const JS = `
 document.querySelectorAll('[data-diff-tab]').forEach(button=>button.addEventListener('click',()=>{const root=button.closest('[data-diff]');root.querySelectorAll('[data-diff-tab]').forEach(item=>item.classList.toggle('active',item===button));root.querySelectorAll('[data-diff-panel]').forEach(panel=>panel.hidden=panel.dataset.diffPanel!==button.dataset.diffTab)}));
-const localDateTimeFormatter=new Intl.DateTimeFormat(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+const localDateTimeFormatter=new Intl.DateTimeFormat(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 const localDayFormatter=new Intl.DateTimeFormat(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 function localizeDates(){document.querySelectorAll('[data-local-datetime]').forEach(item=>{const value=new Date(item.dateTime);if(!Number.isNaN(value.getTime()))item.textContent=localDateTimeFormatter.format(value)});document.querySelectorAll('[data-local-day]').forEach(item=>{const value=new Date(item.dateTime);if(!Number.isNaN(value.getTime()))item.textContent=localDayFormatter.format(value)})}
 function updateRelativeTimes(){const now=Date.now();document.querySelectorAll('[data-relative-time]').forEach(item=>{const value=new Date(item.dataset.relativeTime).getTime();if(Number.isNaN(value))return;const difference=value-now;const hours=Math.abs(difference)/3600000;const amount=hours<10?Math.max(.1,Math.round(hours*10)/10):Math.round(hours);const label=amount===1?'hour':'hours';item.textContent=difference<0?amount+' '+label+' ago':'in '+amount+' '+label})}
@@ -381,6 +396,7 @@ class StaticSiteGenerator {
     this.generatedAt = (generatedAt.isValid() ? generatedAt : moment.utc()).toISOString();
     this.nextRefreshAt = nextRefreshAfter(this.generatedAt);
     this.generatedUrls = new Set(['/']);
+    this.periodSummaries = { weeks: {}, months: {} };
   }
 
   async write(relativePath, content) {
@@ -404,6 +420,16 @@ class StaticSiteGenerator {
     return reports;
   }
 
+  async loadPeriodSummaries() {
+    try {
+      const data = JSON.parse(await fs.readFile(path.join(this.websiteDir, 'period-summaries.json'), 'utf8'));
+      return { weeks: data.weeks || {}, months: data.months || {} };
+    } catch (error) {
+      if (error.code !== 'ENOENT') console.warn(`Skipping period summaries: ${error.message}`);
+      return { weeks: {}, months: {} };
+    }
+  }
+
   normalizeDocItems(reports) {
     const items = [];
     for (const report of reports) {
@@ -423,12 +449,12 @@ class StaticSiteGenerator {
           sourceLabel: 'Microsoft Learn',
           date: report.date,
           title: meta.title,
-          summary: meta.description,
+          summary: change.englishSummary?.summary || meta.description,
+          adminImpact: change.englishSummary?.adminImpact || 'Review the documentation change to determine whether it affects tenant configuration, security posture, or rollout plans.',
           product,
           topic,
           changeType: change.changeType,
           url: `/changes/${report.date}/${slug}/`,
-          legacyUrl: `/${report.date}.html`,
           publicUrl: change.publicDocsUrl || null,
           filename: change.filename,
           patch: change.patch || '',
@@ -467,7 +493,10 @@ class StaticSiteGenerator {
     return [...byId.values()].map(message => {
       const body = message.Body?.Content || '';
       const summaryDetail = (message.Details || []).find(detail => /^summary$/i.test(detail.Name || ''))?.Value;
-      const summary = truncate(stripHtml(summaryDetail || body) || 'A Microsoft 365 Message Center announcement relevant to Microsoft Entra administrators.', 280);
+      const bodyRoot = parse(String(body));
+      const bodySummary = stripHtml(bodyRoot.querySelector('p')?.toString() || body);
+      const summary = stripHtml(summaryDetail) || firstTwoSentences(bodySummary)
+        || 'A Microsoft 365 Message Center announcement relevant to Microsoft Entra administrators.';
       const dateValue = message.LastModifiedDateTime || message.StartDateTime;
       const product = classifyProduct((message.Services || []).join(' '), message.Title, body);
       const topic = classifyTopic('', message.Title, body);
@@ -495,19 +524,18 @@ class StaticSiteGenerator {
 
   head(title, description, canonical, active = '') {
     const safeTitle = title === SITE.name ? title : `${title} — ${SITE.name}`;
-    const safeDescription = escapeHtml(description || SITE.description);
+    const safeDescription = escapeHtml(truncate(description || SITE.description, 300));
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(safeTitle)}</title><meta name="description" content="${safeDescription}"><link rel="canonical" href="${SITE.url}${canonical}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="${SITE.name}" href="/rss.xml"><meta property="og:site_name" content="${SITE.name}"><meta property="og:title" content="${escapeHtml(safeTitle)}"><meta property="og:description" content="${safeDescription}"><meta property="og:url" content="${SITE.url}${canonical}"><meta property="og:type" content="article"><meta property="og:image" content="${SITE.url}/og-image.png"><meta property="og:image:secure_url" content="${SITE.url}/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(safeTitle)}"><meta name="twitter:description" content="${safeDescription}"><meta name="twitter:image" content="${SITE.url}/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body>${this.header(active)}`;
   }
 
   header(active = '') {
-    const nav = [['day','Day','/day/'],['week','Week','/'],['month','Month','/month/'],['products','Products','/products/'],['topics','Topics','/topics/'],['message-center','Message Center','/message-center/']];
-    return `<header class="site-header"><a class="brand" href="/">Entra.News Daily<small>${SITE.host}</small></a><nav class="main-nav" aria-label="Primary">${nav.map(([key,label,url])=>`<a href="${url}"${active===key?' aria-current="page"':''}>${label}</a>`).join('')}</nav><div class="utility"><a class="site-link" href="/about/"${active==='about'?' aria-current="page"':''}>About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header>`;
+    const nav = [['day','Day','/'],['week','Week','/week/'],['month','Month','/month/'],['message-center','Message Center','/message-center/']];
+    return `<header class="site-header"><a class="brand" href="/"><img class="brand-logo" src="/assets/ui/entra-news-logo.png" alt=""><span>Daily.Entra.News</span></a><nav class="main-nav" aria-label="Primary">${nav.map(([key,label,url])=>`<a href="${url}"${active===key?' aria-current="page"':''}>${label}</a>`).join('')}</nav><div class="utility"><a class="site-link" href="/about/"${active==='about'?' aria-current="page"':''}>About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header>`;
   }
 
   footer() {
-    const generatedLabel = moment.utc(this.generatedAt).format('D MMM YYYY, HH:mm [UTC]');
-    const nextLabel = moment.utc(this.nextRefreshAt).format('D MMM YYYY, HH:mm [UTC]');
-    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="${this.generatedAt}" data-local-datetime>${generatedLabel}</time> <span class="refresh-relative" data-relative-time="${this.generatedAt}">recently</span></span><span>Next refresh <time datetime="${this.nextRefreshAt}" data-local-datetime>${nextLabel}</time> <span class="refresh-relative" data-relative-time="${this.nextRefreshAt}">within 24 hours</span></span></div></div><nav aria-label="Footer"><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>`;
+    const generatedLabel = moment.utc(this.generatedAt).format('D MMM YYYY, HH:mm');
+    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="${this.generatedAt}" data-local-datetime>${generatedLabel}</time> <span class="refresh-relative" data-relative-time="${this.generatedAt}">recently</span></span><span>Next refresh <span class="refresh-relative" data-relative-time="${this.nextRefreshAt}">in 24 hours</span></span></div></div><nav aria-label="Footer"><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>`;
     return footer.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
   }
 
@@ -540,8 +568,49 @@ class StaticSiteGenerator {
     const productGroups = PRODUCTS.map(product => ({ product, items: items.filter(item => item.product.slug === product.slug) })).filter(group => group.items.length);
     return `<section class="product-groups">${productGroups.map(({product,items:productItems})=>{
       const topicGroups = TOPICS.map(topic => ({ topic, items: productItems.filter(item => item.topic.slug === topic.slug) })).filter(group => group.items.length).sort((a,b)=>b.items.length-a.items.length||a.topic.name.localeCompare(b.topic.name));
-      return `<section class="product-update-group" id="product-${product.slug}"><header class="product-group-header"><img src="/assets/products/${product.icon}" alt=""><div><h2><a href="/products/${product.slug}/">${escapeHtml(product.name)}</a></h2><span class="product-group-count">${productItems.length} update${productItems.length===1?'':'s'}</span></div></header>${topicGroups.map(({topic,items:topicItems})=>`<section class="topic-update-group"><header class="topic-group-header"><h3><a href="/topics/${topic.slug}/">${escapeHtml(topic.name)}</a></h3><span class="topic-group-count">${topicItems.length}</span></header>${[...topicItems].sort((a,b)=>b.date.localeCompare(a.date)||impactScore(b)-impactScore(a)||a.title.localeCompare(b.title)).map(item=>{const support=[showDate?`<span>${moment(item.date).format('D MMMM YYYY')}</span>`:'',this.messageCenterMeta(item)].filter(Boolean).join('');return `<article class="grouped-story"><div class="grouped-story-head"><h4><a href="${item.url}">${escapeHtml(item.title)}</a></h4>${this.changePill(item)}</div>${support?`<div class="story-support">${support}</div>`:''}</article>`}).join('')}</section>`).join('')}</section>`;
+      return `<section class="product-update-group" id="product-${product.slug}"><header class="product-group-header"><img src="/assets/products/${product.icon}" alt=""><div><h2><a href="/products/${product.slug}/">${escapeHtml(product.name)}</a></h2><span class="product-group-count">${productItems.length} update${productItems.length===1?'':'s'}</span></div></header>${topicGroups.map(({topic,items:topicItems})=>`<section class="topic-update-group"><header class="topic-group-header"><h3><a href="/topics/${topic.slug}/">${escapeHtml(topic.name)}</a></h3><span class="topic-group-count">${topicItems.length}</span></header>${[...topicItems].sort((a,b)=>b.date.localeCompare(a.date)||impactScore(b)-impactScore(a)||a.title.localeCompare(b.title)).map(item=>{const support=[showDate?`<span>${moment(item.date).format('D MMMM YYYY')}</span>`:'',this.messageCenterMeta(item)].filter(Boolean).join('');return `<article class="grouped-story" id="${escapeHtml(item.id)}"><div class="grouped-story-head"><h4><a href="${item.url}">${escapeHtml(item.title)}</a></h4>${this.changePill(item)}</div><p class="story-description">${escapeHtml(item.summary)}</p>${support?`<div class="story-support">${support}</div>`:''}</article>`}).join('')}</section>`).join('')}</section>`;
     }).join('')}</section>`;
+  }
+
+  resolveDayDate(items, requestedDate) {
+    const dates = [...new Set(items.map(item => item.date).filter(Boolean))].sort();
+    if (!dates.length) return requestedDate;
+    if (dates.includes(requestedDate)) return requestedDate;
+    return dates.filter(date => date <= requestedDate).at(-1) || dates[0];
+  }
+
+  miniMonthCalendar(items, selectedDate) {
+    const first = moment(`${selectedDate.slice(0,7)}-01`);
+    const start = first.clone().startOf('isoWeek');
+    const end = first.clone().endOf('month').endOf('isoWeek');
+    const counts = new Map();
+    items.forEach(item => counts.set(item.date, (counts.get(item.date) || 0) + 1));
+    const dates = [...new Set(items.map(item => item.date).filter(Boolean))].sort();
+    const previousMonth = first.clone().subtract(1, 'month');
+    const nextMonth = first.clone().add(1, 'month');
+    const previousDate = dates.filter(date => date.startsWith(previousMonth.format('YYYY-MM'))).at(-1);
+    const nextDate = dates.find(date => date.startsWith(nextMonth.format('YYYY-MM')));
+    const monthIcon = direction => `<span aria-hidden="true">${direction === 'Previous' ? '&lsaquo;' : '&rsaquo;'}</span>`;
+    const monthControl = (direction, month, destination) => destination
+      ? `<a class="mini-month-nav" href="/day/${destination}/" aria-label="${direction} month, ${month.format('MMMM YYYY')}" title="${month.format('MMMM YYYY')}">${monthIcon(direction)}</a>`
+      : `<span class="mini-month-nav disabled" aria-hidden="true">${monthIcon(direction)}</span>`;
+    const cells = Array.from({ length: end.diff(start, 'days') + 1 }, (_, index) => start.clone().add(index, 'days')).map(day => {
+      const date = day.format('YYYY-MM-DD');
+      const count = counts.get(date) || 0;
+      const outside = date.slice(0,7) !== selectedDate.slice(0,7);
+      const dot = count ? '<span class="mini-update-dot" aria-hidden="true"></span>' : '';
+      if (outside && !count) return `<span class="mini-day outside" aria-label="${day.format('D MMMM YYYY')}, outside current month"><span class="mini-day-number">${day.date()}</span></span>`;
+      if (outside) return `<a class="mini-day outside has-updates" href="/day/${date}/" aria-label="${day.format('D MMMM YYYY')}, ${count} change${count === 1 ? '' : 's'}, outside current month" title="${count} change${count === 1 ? '' : 's'}"><span class="mini-day-number">${day.date()}</span>${dot}</a>`;
+      const destination = this.resolveDayDate(items, date);
+      const countLabel = count ? `${count} change${count === 1 ? '' : 's'}` : `no changes; showing ${moment(destination).format('D MMMM')}`;
+      return `<a class="mini-day${date === selectedDate ? ' selected' : ''}${count ? ' has-updates' : ''}" href="/day/${destination}/" aria-label="${day.format('D MMMM YYYY')}, ${countLabel}" title="${countLabel}"><span class="mini-day-number">${day.date()}</span>${dot}</a>`;
+    }).join('');
+    return `<section class="mini-calendar" aria-label="${first.format('MMMM YYYY')} change calendar"><div class="mini-calendar-header">${monthControl('Previous', previousMonth, previousDate)}<h2 class="rail-heading mini-calendar-title">${first.format('MMMM YYYY')}</h2>${monthControl('Next', nextMonth, nextDate)}</div><div class="mini-calendar-grid"><span class="mini-weekday">M</span><span class="mini-weekday">T</span><span class="mini-weekday">W</span><span class="mini-weekday">T</span><span class="mini-weekday">F</span><span class="mini-weekday">S</span><span class="mini-weekday">S</span>${cells}</div><a class="mini-month-link" href="/month/${selectedDate.slice(0,7)}/">Open month view</a></section>`;
+  }
+
+  dayRail(items, dayItems, date) {
+    const productCounts = PRODUCTS.map(product=>({product,count:dayItems.filter(item=>item.product.slug===product.slug).length})).filter(entry=>entry.count).sort((a,b)=>b.count-a.count||a.product.short.localeCompare(b.product.short));
+    return `<aside class="right-rail month-stats-rail period-product-rail day-rail">${this.miniMonthCalendar(items,date)}<hr class="rail-rule"><h2 class="rail-heading">Day by product</h2>${productCounts.length?`<ul class="rail-count-list">${productCounts.map(({product,count})=>`<li><a href="#product-${product.slug}"><img src="/assets/products/${product.icon}" alt="">${escapeHtml(product.short)}</a><span class="rail-count">${count}</span></li>`).join('')}</ul>`:'<p class="quiet">No product updates.</p>'}<hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside>`;
   }
 
   periodProductRail(items, periodItems, label) {
@@ -561,6 +630,12 @@ class StaticSiteGenerator {
     return [...byDate.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([date, dayItems])=>`<section class="date-group"><h3 class="date-label">${moment(date).format('D MMMM YYYY')}</h3>${dayItems.sort((a,b)=>impactScore(b)-impactScore(a)||a.title.localeCompare(b.title)).map(item=>`<article class="story-row"><h3><a href="${item.url}">${escapeHtml(item.title)}</a></h3>${this.messageCenterMeta(item)}<div class="taxonomy">${escapeHtml(item.product.name)} &nbsp;›&nbsp; ${escapeHtml(item.topic.name)}</div></article>`).join('')}</section>`).join('');
   }
 
+  renderPeriodBrief(summary, label) {
+    if (!summary) return '';
+    const changes = (summary.keyChanges || []).map(change => `<li><div class="period-change-heading"><strong>${escapeHtml(change.title)}</strong>${change.product?`<span>${escapeHtml(change.product)}</span>`:''}</div><p>${escapeHtml(change.detail)}</p></li>`).join('');
+    return `<section class="feature period-brief"><div class="eyebrow">${escapeHtml(label)}</div><h2>${escapeHtml(summary.headline)}</h2><p class="period-overview">${escapeHtml(summary.overview)}</p>${changes?`<ul class="period-key-changes">${changes}</ul>`:''}<div class="period-admin-focus"><strong>For Entra administrators</strong><p>${escapeHtml(summary.adminImpact)}</p></div><p class="period-ai-note">This period briefing was generated by AI from the tracked Microsoft Learn and Message Center changes.</p></section>`;
+  }
+
   renderWeek(items, weekStart) {
     const weekEnd = moment(weekStart).add(6,'days').format('YYYY-MM-DD');
     const weekItems = items.filter(item => item.date >= weekStart && item.date <= weekEnd).sort((a,b)=>b.date.localeCompare(a.date));
@@ -569,24 +644,27 @@ class StaticSiteGenerator {
     const nextWeek = moment(weekStart).add(7,'days').format('YYYY-MM-DD');
     const previousLink = items.some(item => mondayOf(item.date) === previousWeek) ? `<a href="/week/${previousWeek}/">← Previous week</a>` : '<span></span>';
     const nextLink = items.some(item => mondayOf(item.date) === nextWeek) ? `<a href="/week/${nextWeek}/">Next week →</a>` : '<span></span>';
-    return `${this.head(`Week of ${moment(weekStart).format('D MMMM YYYY')}`, `Microsoft Entra changes for the week of ${moment(weekStart).format('D MMMM YYYY')}.`, `/week/${weekStart}/`, 'week')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1>Week of ${moment(weekStart).format('D MMMM YYYY')}</h1>${nextLink}</div>${feature?`<article class="feature"><div class="eyebrow">${moment(feature.date).format('D MMMM YYYY')}</div><div class="grouped-story-head"><h2>${escapeHtml(feature.title)}</h2>${this.changePill(feature)}</div>${this.messageCenterMeta(feature)}<div class="taxonomy">${escapeHtml(feature.product.name)} &nbsp;›&nbsp; ${escapeHtml(feature.topic.name)}</div><p>${escapeHtml(feature.summary)}</p><a href="${feature.url}">Read full update →</a></article>`:''}<section class="story-list"><h2 class="section-title">Updates this week</h2>${weekItems.length?this.groupedItems(weekItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this week.</p></div>'}</section></main>${this.periodProductRail(items,weekItems,'Week')}</div>${this.footer()}`;
+    const periodBrief = this.renderPeriodBrief(this.periodSummaries.weeks?.[weekStart], 'Week in brief');
+    const fallbackFeature = feature?`<article class="feature"><div class="eyebrow">${moment(feature.date).format('D MMMM YYYY')}</div><div class="grouped-story-head"><h2>${escapeHtml(feature.title)}</h2>${this.changePill(feature)}</div>${this.messageCenterMeta(feature)}<div class="taxonomy">${escapeHtml(feature.product.name)} &nbsp;›&nbsp; ${escapeHtml(feature.topic.name)}</div><p>${escapeHtml(feature.summary)}</p><a href="${feature.url}">Read full update →</a></article>`:'';
+    return `${this.head(`Week of ${moment(weekStart).format('D MMMM YYYY')}`, `Microsoft Entra changes for the week of ${moment(weekStart).format('D MMMM YYYY')}.`, `/week/${weekStart}/`, 'week')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1>Week of ${moment(weekStart).format('D MMMM YYYY')}</h1>${nextLink}</div>${periodBrief || fallbackFeature}<section class="story-list"><h2 class="section-title">Updates this week</h2>${weekItems.length?this.groupedItems(weekItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this week.</p></div>'}</section></main>${this.periodProductRail(items,weekItems,'Week')}</div>${this.footer()}`;
   }
 
   renderDay(items, date) {
-    const dayItems = items.filter(item => item.date === date);
+    const resolvedDate = this.resolveDayDate(items, date);
+    const dayItems = items.filter(item => item.date === resolvedDate);
     const storedOverview = dayItems.find(item => item.dailyOverview)?.dailyOverview || '';
     const messageCenterItems = dayItems.filter(item => item.source === 'mc').sort((a,b)=>impactScore(b)-impactScore(a));
     const fallbackOverview = dayItems.length ? `${dayItems.length} changes were tracked across ${new Set(dayItems.map(item => item.product.slug)).size} Microsoft Entra products. The leading updates include ${[...dayItems].sort((a,b)=>impactScore(b)-impactScore(a)).slice(0,3).map(item => item.title).join('; ')}.` : '';
     const messageCenterOverview = storedOverview && messageCenterItems.length ? `${messageCenterItems.length} Message Center announcement${messageCenterItems.length===1?' was':'s were'} also published, including ${messageCenterItems.slice(0,2).map(item=>item.title).join('; ')}.` : '';
     const dailyOverview = [storedOverview || fallbackOverview, messageCenterOverview].filter(Boolean).join(' ');
-    const earliest = items[items.length - 1]?.date || date;
-    const latest = items[0]?.date || date;
-    const previousDate = moment(date).subtract(1,'day').format('YYYY-MM-DD');
-    const nextDate = moment(date).add(1,'day').format('YYYY-MM-DD');
-    const previousLink = previousDate >= earliest ? `<a href="/day/${previousDate}/">← Previous day</a>` : '<span></span>';
-    const nextLink = nextDate <= latest ? `<a href="/day/${nextDate}/">Next day →</a>` : '<span></span>';
-    const localDateTime = dateAtRefresh(date);
-    return `${this.head(moment(date).format('D MMMM YYYY'), `Microsoft Entra changes published on ${moment(date).format('D MMMM YYYY')}.`, `/day/${date}/`, 'day')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1><time datetime="${localDateTime}" data-local-day>${moment(date).format('dddd, D MMMM YYYY')}</time></h1>${nextLink}</div>${dailyOverview?`<article class="feature"><div class="eyebrow">Plain-English daily brief</div><h2>What changed today</h2><p>${escapeHtml(dailyOverview)}</p></article>`:''}<section class="story-list"><h2 class="section-title">${dayItems.length} update${dayItems.length===1?'':'s'}</h2>${dayItems.length?this.groupedItems(dayItems):'<div class="empty"><h2>No tracked updates</h2><p>Try the previous day or browse the weekly archive.</p></div>'}</section></main>${this.periodProductRail(items,dayItems,'Day')}</div>${this.footer()}`;
+    const availableDates = [...new Set(items.map(item=>item.date))].sort();
+    const currentIndex = availableDates.indexOf(resolvedDate);
+    const previousDate = currentIndex > 0 ? availableDates[currentIndex - 1] : '';
+    const nextDate = currentIndex >= 0 && currentIndex < availableDates.length - 1 ? availableDates[currentIndex + 1] : '';
+    const previousLink = previousDate ? `<a href="/day/${previousDate}/">← Previous day</a>` : '<span></span>';
+    const nextLink = nextDate ? `<a href="/day/${nextDate}/">Next day →</a>` : '<span></span>';
+    const localDateTime = dateAtRefresh(resolvedDate);
+    return `${this.head(moment(resolvedDate).format('D MMMM YYYY'), `Microsoft Entra changes published on ${moment(resolvedDate).format('D MMMM YYYY')}.`, `/day/${resolvedDate}/`, 'day')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1><time datetime="${localDateTime}" data-local-day>${moment(resolvedDate).format('dddd, D MMMM YYYY')}</time></h1>${nextLink}</div>${dailyOverview?`<article class="feature"><div class="eyebrow">Plain-English daily brief</div><h2>What changed on this day</h2><p>${escapeHtml(dailyOverview)}</p></article>`:''}<section class="story-list"><h2 class="section-title">${dayItems.length} update${dayItems.length===1?'':'s'}</h2>${dayItems.length?this.groupedItems(dayItems):'<div class="empty"><h2>No tracked updates</h2><p>Try the previous day or browse the weekly archive.</p></div>'}</section></main>${this.dayRail(items,dayItems,resolvedDate)}</div>${this.footer()}`;
   }
 
   renderMonth(items, month) {
@@ -603,7 +681,7 @@ class StaticSiteGenerator {
     const sourceSummary=[documentationCount?`${documentationCount} documentation update${documentationCount===1?'':'s'}`:'',messageCenterCount?`${messageCenterCount} Message Center announcement${messageCenterCount===1?'':'s'}`:''].filter(Boolean);
     const themeNames=topicCounts.slice(0,3).map(({topic})=>topic.name), productNames=productCounts.slice(0,2).map(({product})=>product.short);
     const monthNarrative=monthItems.length?`${joinNames(sourceSummary)} were tracked during ${first.format('MMMM')}. Activity centred on ${joinNames(themeNames)}, with the most changes affecting ${joinNames(productNames)}.`:`No tracked Microsoft Entra changes were recorded during ${first.format('MMMM')}.`;
-    const monthOverview=`<section class="month-overview compact"><div><div class="eyebrow">Month in brief</div><h2>What changed in ${first.format('MMMM')}</h2><p>${escapeHtml(monthNarrative)}</p></div></section>`;
+    const monthOverview=this.renderPeriodBrief(this.periodSummaries.months?.[month], 'Month in brief') || `<section class="month-overview compact"><div><div class="eyebrow">Month in brief</div><h2>What changed in ${first.format('MMMM')}</h2><p>${escapeHtml(monthNarrative)}</p></div></section>`;
     const previousMonth=first.clone().subtract(1,'month').format('YYYY-MM'), nextMonth=first.clone().add(1,'month').format('YYYY-MM');
     const previousLink=previousMonth>=earliestDate.slice(0,7)?`<a href="/month/${previousMonth}/">← Previous month</a>`:'<span></span>';
     const nextLink=nextMonth<=latestDate.slice(0,7)?`<a href="/month/${nextMonth}/">Next month →</a>`:'<span></span>';
@@ -625,11 +703,11 @@ class StaticSiteGenerator {
     return `${this.head('About','Why Entra.News Daily was built for the Microsoft Entra community.','/about/','about')}
       <div class="about-layout"><main class="about-main">
         <section class="about-hero"><div class="about-kicker"><img src="/assets/products/entra-family.svg" alt=""><div class="eyebrow">About Entra.News Daily</div></div><h1>Built for the die-hard Microsoft Entra community.</h1><p class="lede">This site is dedicated to the people who want to know what changed in Microsoft Entra—not just what the documentation says today. It is built by <a href="https://merill.net">Merill Fernando</a> for Entra admins, architects, developers, and fellow identity enthusiasts.</p></section>
-        <div class="about-pair"><section class="about-section"><h2>Why it exists</h2><p>Microsoft Entra moves quickly. Documentation pages, guidance, previews, and service announcements change every day, but those changes can be difficult to spot once a page has been updated.</p><p>Entra.News Daily keeps a readable record of those changes so you can catch up by day, week, month, product, or topic—and then open the source material when something matters to you.</p></section><section class="about-section"><h2>How it works</h2><p>A scheduled workflow watches the public Microsoft Entra documentation, records additions and updates, and brings in relevant Microsoft 365 Message Center announcements.</p><p>Plain-English summaries make the daily changes easier to scan. Every documentation item keeps the formatted change and raw Markdown diff available, so the source evidence is always close at hand.</p></section></div>
+        <div class="about-pair"><section class="about-section"><h2>Why it exists</h2><p>Microsoft Entra moves quickly. Documentation pages, guidance, previews, and service announcements change every day, but those changes can be difficult to spot once a page has been updated.</p><p>Entra.News Daily keeps a readable record of those changes so you can catch up by day, week, month, product, or topic—and then open the source material when something matters to you.</p></section><section class="about-section"><h2>How it works</h2><p>A scheduled workflow watches the public Microsoft Entra documentation, records additions and updates, and brings in relevant Microsoft 365 Message Center announcements.</p><p>Plain-English summaries make the daily changes easier to scan. Every documentation item keeps the readable change and Markdown diff available, so the source evidence is always close at hand.</p></section></div>
         <section class="about-section" id="stay-current"><h2>Stay current with Microsoft Entra</h2><div class="update-paths"><div class="update-path"><div class="eyebrow">The weekly update</div><h3>Subscribe to Entra.News</h3><p><a href="https://entra.news">Entra.News</a> is the weekly briefing for Microsoft Entra. Subscribe to get the important changes, new guidance, and admin takeaways delivered in one readable update each week.</p><a class="update-link" href="https://entra.news">Subscribe to Entra.News</a></div><div class="update-path"><div class="eyebrow">Daily news and conversation</div><h3>Bookmark Daily and join Discord</h3><p>Bookmark <a href="https://daily.entra.news">daily.entra.news</a> for the day-by-day record. Then join the <a href="https://discord.entra.news">Entra Discord community</a>, where these updates are posted daily and the community hangs out to discuss the latest Entra updates and news.</p><a class="update-link" href="https://discord.entra.news">Join the Entra Discord community</a></div></div></section>
         <section class="about-section"><h2>Made for the community</h2><p>This is an independent community project, not a Microsoft product or service. It is built in the open for people who care deeply about identity and want a calmer way to keep up with constant change.</p><p>If something is missing, incorrectly classified, or could be explained more clearly, please <a href="https://github.com/merill/entra-doc-diff/issues">open an issue on GitHub</a>. Contributions and thoughtful feedback are always welcome.</p></section>
         <blockquote class="community-note"><p>For the Entra fans who read release notes for fun, notice the small changes, and help everyone else understand why they matter.</p></blockquote>
-      </main><aside class="about-aside"><h2 class="rail-heading">Built by Merill</h2><p><a href="https://merill.net">Merill Fernando</a> builds tools and writes about Microsoft Entra and Microsoft 365 for the admin and identity community.</p><hr class="rail-rule"><h2 class="rail-heading">Stay current</h2><ul class="plain-list stay-current"><li><a href="https://entra.news">Subscribe to the weekly update</a></li><li><a href="https://daily.entra.news">Bookmark daily.entra.news</a></li><li><a href="https://discord.entra.news">Join the Entra Discord</a></li></ul><hr class="rail-rule"><h2 class="rail-heading">Explore</h2><ul class="plain-list"><li><a href="/day/">Latest day</a></li><li><a href="/">Current week</a></li><li><a href="/month/">Month archive</a></li><li><a href="/products/">Browse products</a></li><li><a href="/topics/">Browse topics</a></li><li><a href="/message-center/">Message Center</a></li></ul><hr class="rail-rule"><h2 class="rail-heading">Follow the project</h2><ul class="plain-list"><li><a href="https://github.com/merill/entra-doc-diff">Source on GitHub</a></li><li><a href="https://entra.chat">Entra.Chat podcast</a></li></ul></aside></div>${this.footer()}`;
+      </main><aside class="about-aside"><h2 class="rail-heading">Built by Merill</h2><p><a href="https://merill.net">Merill Fernando</a> builds tools and writes about Microsoft Entra and Microsoft 365 for the admin and identity community.</p><hr class="rail-rule"><h2 class="rail-heading">Stay current</h2><ul class="plain-list stay-current"><li><a href="https://entra.news">Subscribe to the weekly update</a></li><li><a href="https://daily.entra.news">Bookmark daily.entra.news</a></li><li><a href="https://discord.entra.news">Join the Entra Discord</a></li></ul><hr class="rail-rule"><h2 class="rail-heading">Explore</h2><ul class="plain-list"><li><a href="/">Latest day</a></li><li><a href="/week/">Current week</a></li><li><a href="/month/">Month archive</a></li><li><a href="/products/">Browse products</a></li><li><a href="/topics/">Browse topics</a></li><li><a href="/message-center/">Message Center</a></li></ul><hr class="rail-rule"><h2 class="rail-heading">Follow the project</h2><ul class="plain-list"><li><a href="https://github.com/merill/entra-doc-diff">Source on GitHub</a></li><li><a href="https://entra.chat">Entra.Chat podcast</a></li></ul></aside></div>${this.footer()}`;
   }
 
   relatedHtml(item, allItems) {
@@ -641,7 +719,8 @@ class StaticSiteGenerator {
   }
 
   renderDocDetail(item, allItems) {
-    return `${this.head(item.title,item.summary,item.url,'')}<div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/${mondayOf(item.date)}/">Week of ${moment(mondayOf(item.date)).format('D MMMM YYYY')}</a> &nbsp;/&nbsp; <a href="/products/${item.product.slug}/">${escapeHtml(item.product.short)}</a> &nbsp;/&nbsp; <a href="/topics/${item.topic.slug}/">${escapeHtml(item.topic.name)}</a></nav><div class="product-kicker"><img src="/assets/products/${item.product.icon}" alt="">${escapeHtml(item.product.name)}</div><h1>${escapeHtml(item.title)}</h1><div class="article-meta"><span>${moment(item.date).format('D MMMM YYYY')}</span><span>${escapeHtml(item.changeType)}</span><span>+${item.additions} / −${item.deletions} lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>${escapeHtml(item.summary)}</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted">${formattedDiff(item.patch)}</div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">${escapeHtml(item.patch)}</pre></div></section></main><aside class="detail-aside">${item.publicUrl?`<a class="aside-link" href="${item.publicUrl}"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a>`:''}<a class="aside-link" href="${item.legacyUrl}"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2>${this.relatedHtml(item,allItems)}<hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div>${this.footer()}`;
+    const learnLink = item.publicUrl ? `<a class="learn-link" href="${item.publicUrl}" target="_blank" rel="noopener noreferrer"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a>` : '';
+    return `${this.head(item.title,item.summary,item.url,'')}<div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/${mondayOf(item.date)}/">Week of ${moment(mondayOf(item.date)).format('D MMMM YYYY')}</a> &nbsp;/&nbsp; <a href="/products/${item.product.slug}/">${escapeHtml(item.product.short)}</a> &nbsp;/&nbsp; <a href="/topics/${item.topic.slug}/">${escapeHtml(item.topic.name)}</a></nav><div class="product-kicker"><img src="/assets/products/${item.product.icon}" alt="">${escapeHtml(item.product.name)}</div><h1>${escapeHtml(item.title)}</h1><div class="article-meta"><span>${moment(item.date).format('D MMMM YYYY')}</span><span>${escapeHtml(item.changeType)}</span><span>+${item.additions} / −${item.deletions} lines</span></div><section class="summary-grid editorial-summary" aria-label="AI-generated editorial summary"><div class="editorial-panel brief"><h2 class="section-title">In brief</h2><p>${escapeHtml(item.summary)}</p></div><div class="editorial-panel admin"><h2 class="section-title">What Entra admins need to know</h2><p>${escapeHtml(item.adminImpact)}</p></div><p class="ai-disclosure">This editorial summary was generated by AI from the documentation changes. Verify important details in the full Microsoft Learn article.</p></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2>${item.publicUrl?`<div class="doc-source-intro">${learnLink}<p>The comparison below is an extract of the Microsoft Learn article showing only the changed content. <a href="${item.publicUrl}" target="_blank" rel="noopener noreferrer">Open the full article</a> for complete context.</p></div>`:''}<div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="markdown">Markdown</button></div><div class="diff-panel" data-diff-panel="formatted">${formattedDiff(item.patch)}</div><div class="diff-panel" data-diff-panel="markdown" hidden>${renderMarkdownDiff(item.patch)}</div></section></main><aside class="detail-aside">${item.publicUrl?`<a class="aside-link" href="${item.publicUrl}" target="_blank" rel="noopener noreferrer"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><hr class="rail-rule">`:''}<h2 class="section-title">Related changes</h2>${this.relatedHtml(item,allItems)}<hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div>${this.footer()}`;
   }
 
   renderMcDetail(item, allItems) {
@@ -652,6 +731,9 @@ class StaticSiteGenerator {
     for (const directory of ['changes','day','week','month','products','topics','message-center','about']) {
       await fs.rm(path.join(this.websiteDir, directory), { recursive: true, force: true });
     }
+    for (const file of await fs.readdir(this.websiteDir)) {
+      if (/^\d{4}-\d{2}-\d{2}\.html$/.test(file)) await fs.rm(path.join(this.websiteDir, file));
+    }
     this.generatedUrls = new Set(['/']);
     this.periodRailCache = {};
     await fs.mkdir(path.join(this.websiteDir,'assets'),{recursive:true});
@@ -659,11 +741,12 @@ class StaticSiteGenerator {
       await fs.copyFile(path.join(this.siteAssetDir,asset),path.join(this.websiteDir,asset));
     }
     await fs.mkdir(path.join(this.websiteDir,'assets','ui'),{recursive:true});
-    for (const asset of ['newspaper.svg','microphone.svg']) {
+    for (const asset of ['newspaper.svg','microphone.svg','entra-news-logo.png','book-bookmark.svg']) {
       await fs.copyFile(path.join(this.siteAssetDir,'ui',asset),path.join(this.websiteDir,'assets','ui',asset));
     }
     await this.write('assets/site.css',CSS);
     await this.write('assets/site.js',JS);
+    this.periodSummaries = await this.loadPeriodSummaries();
     const reports=await this.loadReports();
     const docs=this.normalizeDocItems(reports);
     const mc=await this.loadMessageCenterItems();
@@ -671,11 +754,12 @@ class StaticSiteGenerator {
     const latestDate=items[0]?.date||moment().format('YYYY-MM-DD');
     const latestWeek=mondayOf(latestDate), latestMonth=latestDate.slice(0,7);
     const recentCutoff=moment(latestDate).subtract(this.detailDays,'days');
-    docs.filter(item=>moment(item.date).isBefore(recentCutoff)).forEach(item => { item.url = item.legacyUrl; });
+    docs.filter(item=>moment(item.date).isBefore(recentCutoff)).forEach(item => { item.url = `/day/${item.date}/#${item.id}`; });
     this.relatedByProduct = new Map(PRODUCTS.map(product => [product.slug, items.filter(item => item.product.slug === product.slug)]));
     this.relatedByTopic = new Map(TOPICS.map(topic => [topic.slug, items.filter(item => item.topic.slug === topic.slug)]));
-    await this.write('index.html',this.renderWeek(items,latestWeek));
+    await this.write('index.html',this.renderDay(items,latestDate));
     await this.write('day/index.html',this.renderDay(items,latestDate));
+    await this.write('week/index.html',this.renderWeek(items,latestWeek));
     await this.write('month/index.html',this.renderMonth(items,latestMonth));
     await this.write('products/index.html',this.renderDirectory(items,'product'));
     await this.write('topics/index.html',this.renderDirectory(items,'topic'));
@@ -698,7 +782,7 @@ class StaticSiteGenerator {
     const rssItems=items.slice(0,50).map(item=>`<item><title>${escapeHtml(item.title)}</title><link>${SITE.url}${item.url}</link><guid>${SITE.url}${item.url}</guid><pubDate>${moment(item.date).toDate().toUTCString()}</pubDate><description>${escapeHtml(item.summary)}</description></item>`).join('');
     await this.write('rss.xml',`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${SITE.name}</title><link>${SITE.url}</link><description>${SITE.description}</description>${rssItems}</channel></rss>`);
     await this.write('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${SITE.url}/sitemap.xml\n`);
-    await this.write('llms.txt',`# ${SITE.name}\n\n${SITE.description}\n\n- [Current week](${SITE.url}/)\n- [Products](${SITE.url}/products/)\n- [Topics](${SITE.url}/topics/)\n- [Message Center](${SITE.url}/message-center/)\n- [About](${SITE.url}/about/)\n- [RSS](${SITE.url}/rss.xml)\n`);
+    await this.write('llms.txt',`# ${SITE.name}\n\n${SITE.description}\n\n- [Latest day](${SITE.url}/)\n- [Current week](${SITE.url}/week/)\n- [Products](${SITE.url}/products/)\n- [Topics](${SITE.url}/topics/)\n- [Message Center](${SITE.url}/message-center/)\n- [About](${SITE.url}/about/)\n- [RSS](${SITE.url}/rss.xml)\n`);
     await this.write('CNAME',`${SITE.host}\n`);
     const sitemap=[...this.generatedUrls].filter(url=>!url.startsWith('/assets/')).map(url=>`<url><loc>${SITE.url}${url}</loc></url>`).join('');
     await this.write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${sitemap}</urlset>`);
@@ -707,4 +791,4 @@ class StaticSiteGenerator {
   }
 }
 
-module.exports = { StaticSiteGenerator, isEntraMessage, classifyProduct, classifyTopic, extractMarkdownMetadata, findRelatedItems, selectRelatedItems, sanitizeMcHtml, slugify, formattedDiff };
+module.exports = { StaticSiteGenerator, isEntraMessage, classifyProduct, classifyTopic, extractMarkdownMetadata, findRelatedItems, selectRelatedItems, sanitizeMcHtml, slugify, formattedDiff, renderMarkdownDiff };

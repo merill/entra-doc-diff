@@ -10,7 +10,8 @@ const {
   extractMarkdownMetadata,
   selectRelatedItems,
   sanitizeMcHtml,
-  formattedDiff
+  formattedDiff,
+  renderMarkdownDiff
 } = require('./static-site');
 
 test('Message Center filter matches standalone Entra in service or title', () => {
@@ -25,9 +26,11 @@ test('product classification recognizes governance and workload identity', () =>
 });
 
 test('Markdown metadata prefers frontmatter and produces readable description', () => {
-  const metadata = extractMarkdownMetadata('diff --git a/a b/a\n+title: Create a configuration monitor\n+description: Evaluate a tenant against a known-good configuration baseline\n+# Create a configuration monitor', 'docs/test.md');
+  const longDescription = `Evaluate a tenant against a known-good configuration baseline ${'without losing meaningful detail '.repeat(12)}`.trim();
+  const metadata = extractMarkdownMetadata(`diff --git a/a b/a\n+title: Create a configuration monitor\n+description: ${longDescription}\n+# Create a configuration monitor`, 'docs/test.md');
   assert.equal(metadata.title, 'Create a configuration monitor');
-  assert.match(metadata.description, /known-good configuration baseline/);
+  assert.equal(metadata.description, longDescription);
+  assert.doesNotMatch(metadata.description, /…$/);
 });
 
 test('Message Center HTML sanitizer removes active content and event handlers', () => {
@@ -38,9 +41,8 @@ test('Message Center HTML sanitizer removes active content and event handlers', 
 
 test('formatted diff renders added and removed document content', () => {
   const result = formattedDiff('@@ -1 +1 @@\n-# Old heading\n+# New heading\n+[Learn more](/entra/identity/example)');
-  assert.match(result, /class="rendered-change removed"/);
-  assert.match(result, /<h1>Old heading<\/h1>/);
-  assert.match(result, /class="rendered-change added"/);
+  assert.match(result, /class="rich-diff"/);
+  assert.match(result, /<h1><del[^>]*>Old<\/del><ins[^>]*>New<\/ins> heading<\/h1>/);
   assert.match(result, /https:\/\/learn\.microsoft\.com\/entra\/identity\/example/);
 });
 
@@ -61,17 +63,56 @@ test('formatted diff hides front matter and preserves complete Markdown tables',
   assert.doesNotMatch(result, /Old title|New title|ms\.topic/);
   assert.match(result, /<table>/);
   assert.match(result, /<th>Capability<\/th>/);
-  assert.match(result, /class="diff-row removed"/);
-  assert.match(result, /class="diff-row added"/);
+  assert.match(result, /<del[^>]*>Old capability<\/del><ins[^>]*>Web content filtering<\/ins>/);
+  assert.match(result, /<del[^>]*>Old reference<\/del><ins[^>]*><a [^>]*>Configure<\/a><\/ins>/);
+});
+
+test('formatted diff hides a front matter fragment when the hunk starts after its opening delimiter', () => {
+  const result = formattedDiff([
+    '@@ -2,7 +2,7 @@',
+    ' title: How to manage the Internet Access profile',
+    ' description: Learn how to manage the profile.',
+    '-ms.date: 03/25/2026',
+    '+ms.date: 08/02/2026',
+    ' ms.subservice: entra-internet-access',
+    ' ',
+    ' ## Overview',
+    '-The old explanation.',
+    '+The new explanation.'
+  ].join('\n'));
+  assert.doesNotMatch(result, /title:|description:|ms\.date|ms\.subservice/);
+  assert.match(result, /<h2>Overview<\/h2>/);
+  assert.match(result, /<del[^>]*>old<\/del><ins[^>]*>new<\/ins>/);
+  assert.doesNotMatch(result, /<p><\/p>/);
+});
+
+test('formatted diff repairs paragraph-to-heading changes into valid block markup', () => {
+  const result = formattedDiff([
+    '@@ -1 +1 @@',
+    '-Example of adding a custom bypass policy:',
+    '+## How to add a custom bypass policy'
+  ].join('\n'));
+  assert.doesNotMatch(result, /<p[^>]*>[\s\S]*<h2[^>]*>[\s\S]*<\/p>/);
+  assert.match(result, /<p><del[^>]*>Example of adding<\/del><\/p><h2>/);
+  assert.match(result, /<ins[^>]*>policy<\/ins><\/h2>/);
 });
 
 test('formatted diff renders every Microsoft Learn alert type', () => {
   for (const type of ['NOTE', 'TIP', 'IMPORTANT', 'CAUTION', 'WARNING']) {
     const result = formattedDiff(`@@ -1 +1 @@\n+> [!${type}]\n+> Alert content`);
-    assert.match(result, new RegExp(`class="learn-alert learn-alert-${type.toLowerCase()} diff-added"`));
+    assert.match(result, new RegExp(`class="learn-alert learn-alert-${type.toLowerCase()}"`));
     assert.match(result, new RegExp(`<span>${type.charAt(0)}${type.slice(1).toLowerCase()}<\\/span>`));
     assert.doesNotMatch(result, new RegExp(`\\[!${type}\\]`));
   }
+});
+
+test('Markdown diff uses Git-style line semantics', () => {
+  const result = renderMarkdownDiff('diff --git a/file.md b/file.md\nindex 1234567..89abcde 100644\n--- a/file.md\n+++ b/file.md\n@@ -1 +1 @@\n-old value\n+new value\n context');
+  assert.match(result, /aria-label="Markdown Git diff"/);
+  assert.doesNotMatch(result, /diff --git|index 1234567|--- a\/file\.md|\+\+\+ b\/file\.md/);
+  assert.match(result, /markdown-diff-line hunk[^>]*>@@ -1 \+1 @@/);
+  assert.match(result, /markdown-diff-line removed[^>]*>-old value/);
+  assert.match(result, /markdown-diff-line added[^>]*>\+new value/);
 });
 
 test('related items preserve a relevant cross-source result', () => {
@@ -99,10 +140,33 @@ test('static generator writes indexable archive and detail pages', async () => {
       patch: '+title: Create a configuration monitor\n+description: Evaluate configuration drift against a baseline',
       additions: 2,
       deletions: 0,
-      publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/id-governance/'
+      publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/id-governance/',
+      englishSummary: {
+        summary: 'This readable summary explains the configuration baseline change in full so administrators can understand the update before opening the source diff.',
+        adminImpact: 'Entra administrators should compare the documented baseline with their tenant configuration and investigate unexpected drift.'
+      }
     }]
   }));
+  await fs.writeFile(path.join(websiteDir, '2026-07-31.html'), 'legacy daily report');
   await fs.writeFile(path.join(mcDataPath, 'messages.json'), JSON.stringify([]));
+  await fs.writeFile(path.join(websiteDir, 'period-summaries.json'), JSON.stringify({
+    weeks: {
+      '2026-07-27': {
+        headline: 'Passkey migration guidance leads the week',
+        overview: 'The week introduced concrete migration controls and configuration guidance for Entra administrators.',
+        adminImpact: 'Review the new opt-out behavior before planning migration.',
+        keyChanges: [{ title: 'Migration control documented', detail: 'Administrators can assess the new behavior before rollout.', product: 'Entra ID' }]
+      }
+    },
+    months: {
+      '2026-08': {
+        headline: 'Identity governance and passkeys shape August',
+        overview: 'August documentation focused on configuration baselines and migration controls.',
+        adminImpact: 'Compare the new guidance with current tenant configuration.',
+        keyChanges: [{ title: 'Configuration baselines expanded', detail: 'New guidance explains how to evaluate configuration drift.', product: 'ID Governance' }]
+      }
+    }
+  }));
   await fs.writeFile(path.join(mcDataPath, 'archive', 'MC100.json'), JSON.stringify({
     Id: 'MC100',
     Title: 'Microsoft Entra ID: New administrator experience',
@@ -116,10 +180,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal(result.messageCenter, 1);
   const indexHtml = await fs.readFile(path.join(websiteDir, 'index.html'), 'utf8');
   const dayHtml = await fs.readFile(path.join(websiteDir, 'day', '2026-08-01', 'index.html'), 'utf8');
+  const weekIndexHtml = await fs.readFile(path.join(websiteDir, 'week', 'index.html'), 'utf8');
   const monthHtml = await fs.readFile(path.join(websiteDir, 'month', '2026-08', 'index.html'), 'utf8');
   const docDetailHtml = await fs.readFile(path.join(websiteDir, 'changes', '2026-08-01', 'create-a-configuration-monitor-01', 'index.html'), 'utf8');
   const messageDetailHtml = await fs.readFile(path.join(websiteDir, 'message-center', 'MC100', 'index.html'), 'utf8');
   const aboutHtml = await fs.readFile(path.join(websiteDir, 'about', 'index.html'), 'utf8');
+  const siteCss = await fs.readFile(path.join(websiteDir, 'assets', 'site.css'), 'utf8');
   const siteJs = await fs.readFile(path.join(websiteDir, 'assets', 'site.js'), 'utf8');
   assert.match(indexHtml, /Entra\.News Daily/);
   assert.match(indexHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
@@ -131,8 +197,18 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /href="https:\/\/merill\.net"/);
   assert.doesNotMatch(indexHtml, /class="story-time"|class="source-label"/);
   assert.match(indexHtml, /class="product-update-group"/);
-  assert.match(indexHtml, /class="right-rail month-stats-rail period-product-rail"/);
-  assert.match(indexHtml, /Week by product/);
+  assert.match(indexHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
+  assert.match(indexHtml, /class="right-rail month-stats-rail period-product-rail day-rail"/);
+  assert.match(indexHtml, /Day by product/);
+  assert.match(indexHtml, /class="mini-calendar"/);
+  assert.match(indexHtml, /aria-label="August 2026 change calendar"/);
+  assert.match(indexHtml, /aria-label="1 August 2026, 2 changes"/);
+  assert.match(indexHtml, /aria-label="2 August 2026, no changes; showing 1 August"/);
+  assert.match(indexHtml, /class="mini-update-dot"/);
+  assert.doesNotMatch(indexHtml, /class="mini-count"/);
+  assert.match(indexHtml, /class="mini-day outside"[^>]*><span class="mini-day-number">27<\/span>/);
+  assert.match(indexHtml, /href="\/day\/2026-08-01\/"/);
+  assert.match(indexHtml, /<link rel="canonical" href="https:\/\/daily\.entra\.news\/day\/2026-08-01\/">/);
   assert.match(indexHtml, /href="#product-id-governance"/);
   assert.match(indexHtml, /id="product-id-governance"/);
   assert.match(indexHtml, /class="topic-update-group"/);
@@ -142,22 +218,58 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(dayHtml, /Plan for change/);
   assert.doesNotMatch(dayHtml, /planForChange/);
   assert.match(dayHtml, /class="product-group-header"/);
+  assert.match(dayHtml, /What changed on this day/);
+  assert.doesNotMatch(dayHtml, /What changed today/);
+  assert.match(dayHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.match(dayHtml, /Day by product/);
+  assert.match(dayHtml, /class="mini-calendar-grid"/);
   assert.match(dayHtml, /href="#product-id-governance"/);
   assert.match(dayHtml, /class="change-pill updated">Updated/);
   assert.match(dayHtml, /class="change-pill new">New/);
   assert.match(dayHtml, /<time datetime="2026-08-01T08:15:00Z" data-local-day>/);
+  assert.match(weekIndexHtml, /Week by product/);
+  assert.match(weekIndexHtml, /Week of 27 July 2026/);
+  assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
+  assert.match(weekIndexHtml, /class="period-key-changes"/);
+  assert.match(monthHtml, /Identity governance and passkeys shape August/);
+  assert.match(monthHtml, /For Entra administrators/);
+  assert.equal(generator.resolveDayDate([{ date: '2026-08-01' }], '2026-08-04'), '2026-08-01');
+  const calendarHtml = generator.miniMonthCalendar([
+    { date: '2026-07-31' },
+    { date: '2026-08-01' },
+    { date: '2026-09-02' }
+  ], '2026-08-01');
+  assert.match(calendarHtml, /href="\/day\/2026-07-31\/" aria-label="Previous month, July 2026"/);
+  assert.match(calendarHtml, /href="\/day\/2026-09-02\/" aria-label="Next month, September 2026"/);
+  assert.match(calendarHtml, /class="mini-update-dot"/);
+  assert.doesNotMatch(calendarHtml, /class="mini-count"/);
   assert.match(messageDetailHtml, /Related changes/);
-  assert.doesNotMatch(docDetailHtml, /For administrators|Source: Microsoft Learn/);
+  assert.doesNotMatch(docDetailHtml, /For administrators|Source: Microsoft Learn|View daily source report/);
   assert.doesNotMatch(docDetailHtml, /The comparison below keeps the source evidence visible/);
+  assert.match(docDetailHtml, /class="summary-grid editorial-summary"/);
+  assert.match(docDetailHtml, /<h2 class="section-title">In brief<\/h2><p>This readable summary explains the configuration baseline change in full/);
+  assert.match(docDetailHtml, /<h2 class="section-title">What Entra admins need to know<\/h2><p>Entra administrators should compare/);
+  assert.match(docDetailHtml, /editorial summary was generated by AI/);
+  assert.match(siteCss, /\.editorial-panel p\{[^}]*overflow-wrap:anywhere/);
+  assert.match(siteCss, /\.editorial-summary\{[^}]*border-radius:6px;overflow:hidden/);
+  assert.match(siteCss, /\.doc-source-intro p\{width:100%;max-width:none/);
+  assert.match(siteCss, /@media\(max-width:760px\)\{\.editorial-summary\{display:block;width:100%\}/);
+  assert.match(docDetailHtml, /class="doc-source-intro"/);
+  assert.match(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content/);
+  assert.match(docDetailHtml, /<a href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer">Open the full article<\/a> for complete context/);
+  assert.match(docDetailHtml, /href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer"/);
+  assert.match(docDetailHtml, /data-diff-tab="markdown">Markdown<\/button>/);
+  assert.doesNotMatch(docDetailHtml, /Raw Markdown/);
+  assert.match(docDetailHtml, /aria-label="Markdown Git diff"/);
   assert.doesNotMatch(messageDetailHtml, /For administrators/);
   assert.match(monthHtml, /August 2026/);
-  assert.match(monthHtml, /class="month-overview compact"/);
+  assert.match(monthHtml, /class="feature period-brief"/);
   assert.match(monthHtml, /class="calendar-count"/);
   assert.match(monthHtml, /class="right-rail month-stats-rail"/);
   assert.match(monthHtml, /href="#product-id-governance"/);
   assert.match(monthHtml, /updates by product/);
   assert.match(monthHtml, /class="product-update-group"/);
+  assert.match(monthHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.doesNotMatch(monthHtml, /Notable changes|class="two-column"/);
   assert.match(aboutHtml, /Built for the die-hard Microsoft Entra community/);
   assert.match(aboutHtml, /Why it exists/);
@@ -178,19 +290,29 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /href="https:\/\/merill\.net" target="_blank" rel="noopener noreferrer">merill\.net/);
   assert.match(indexHtml, /href="https:\/\/entra\.news" target="_blank" rel="noopener noreferrer"[^>]*><img src="\/assets\/ui\/newspaper\.svg"/);
   assert.match(indexHtml, /href="https:\/\/entra\.chat" target="_blank" rel="noopener noreferrer"[^>]*><img src="\/assets\/ui\/microphone\.svg"/);
+  assert.match(indexHtml, /<a class="brand" href="\/">\s*<img class="brand-logo" src="\/assets\/ui\/entra-news-logo\.png" alt="">\s*<span>Daily\.Entra\.News<\/span><\/a>/);
+  assert.doesNotMatch(indexHtml, /<small>daily\.entra\.news<\/small>/);
+  const headerHtml = indexHtml.match(/<header class="site-header">[\s\S]*?<\/header>/)?.[0] || '';
+  assert.doesNotMatch(headerHtml, />Products<\/a>|>Topics<\/a>/);
+  assert.match(headerHtml, /href="\/" aria-current="page">Day<\/a>[\s\S]*href="\/week\/">Week<\/a>[\s\S]*>Month<\/a>[\s\S]*>Message Center<\/a>/);
   const footerHtml = indexHtml.match(/<footer class="footer"[\s\S]*?<\/footer>/)?.[0] || '';
   const footerLinks = footerHtml.match(/<a\b[^>]*>/g) || [];
   assert.equal(footerLinks.length > 0, true);
   assert.equal(footerLinks.every(link => /target="_blank"/.test(link) && /rel="noopener noreferrer"/.test(link)), true);
   assert.match(indexHtml, /Last refreshed <time datetime="2026-08-04T09:00:00\.000Z" data-local-datetime>/);
-  assert.match(indexHtml, /Next refresh <time datetime="2026-08-05T08:15:00\.000Z" data-local-datetime>/);
+  assert.match(indexHtml, /Next refresh <span class="refresh-relative" data-relative-time="2026-08-05T08:15:00\.000Z">in 24 hours<\/span>/);
+  assert.doesNotMatch(indexHtml, /Next refresh <time|UTC|GMT/);
   assert.match(indexHtml, /data-relative-time="2026-08-04T09:00:00\.000Z"/);
   assert.match(siteJs, /Intl\.DateTimeFormat/);
+  assert.doesNotMatch(siteJs, /timeZoneName/);
   assert.match(siteJs, /data-local-day/);
   assert.match(siteJs, /hours ago|'in '/);
   assert.equal((await fs.stat(path.join(websiteDir, 'favicon.ico'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'og-image.png'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'newspaper.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'microphone.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'entra-news-logo.png'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'book-bookmark.svg'))).size > 0, true);
+  await assert.rejects(fs.stat(path.join(websiteDir, '2026-07-31.html')), { code: 'ENOENT' });
   assert.equal((await fs.readFile(path.join(websiteDir, 'CNAME'), 'utf8')).trim(), 'daily.entra.news');
 });

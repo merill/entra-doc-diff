@@ -1,708 +1,0 @@
-
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
-        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
-        .header h1 { margin: 0; font-size: 28px; }
-        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
-        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
-        .header p { margin: 10px 0 0 0; opacity: 0.9; }
-        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .summary-item { text-align: center; }
-        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
-        .summary-item .label { font-size: 14px; color: #b0b0b0; }
-        .section { margin-bottom: 30px; }
-        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
-        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
-        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
-        .file-name a { color: #4da6ff; text-decoration: none; }
-        .file-name a:hover { text-decoration: underline; }
-        .file-meta { font-size: 12px; color: #b0b0b0; }
-        .file-changes { padding: 15px; }
-        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
-        .additions { color: #40c463; }
-        .deletions { color: #f85149; }
-        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
-        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
-        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
-        
-        /* Diff view styles */
-        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
-        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
-        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
-        .before-label { color: #f85149; border-right: 1px solid #404040; }
-        .after-label { color: #40c463; }
-        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
-        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
-        .before-pane { border-right: 1px solid #404040; }
-        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
-        .diff-context { background: #2a2a2a; color: #e0e0e0; }
-        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
-        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
-        .diff-empty { background: #353535; }
-        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
-        
-        @media (max-width: 768px) {
-          .diff-content { grid-template-columns: 1fr; }
-          .diff-header { grid-template-columns: 1fr; }
-          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
-          .before-label { border-right: none; border-bottom: 1px solid #404040; }
-        }
-        @media (max-width: 600px) {
-          body { padding: 10px; }
-          .header { padding: 20px; }
-          .summary-grid { grid-template-columns: 1fr; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
-        <p>Daily summary for changes since March 18th 2026, 9:21 PM PDT</p>
-        <p>Report generated on March 19th 2026, 9:21 PM PDT</p>
-      </div>
-
-      <div class="summary">
-        <h3>📊 Summary</h3>
-        <div class="summary-grid">
-          <div class="summary-item">
-            <div class="number">68</div>
-            <div class="label">Total Commits</div>
-          </div>
-          <div class="summary-item">
-            <div class="number">1</div>
-            <div class="label">New Files</div>
-          </div>
-          <div class="summary-item">
-            <div class="number">31</div>
-            <div class="label">Modified Files</div>
-          </div>
-          <div class="summary-item">
-            <div class="number">1</div>
-            <div class="label">Deleted Files</div>
-          </div>
-          <div class="summary-item">
-            <div class="number">18</div>
-            <div class="label">Contributors</div>
-          </div>
-        </div>
-      </div>
-    
-      <div class="section">
-        <h2>🆕 New Documentation Files</h2>
-      
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="new-badge">NEW</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility.md" target="_blank">docs/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility.md</a>
-            </div>
-            <div class="file-meta">
-              Added by Ed McKillop on Mar 19, 2026 5:49 PM
-              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+168 lines added</span>
-            </div>
-            <div><strong>Commit:</strong> Add files via upload</div>
-          </div>
-        </div>
-        </div>
-      <div class="section">
-        <h2>📝 Modified Documentation Files</h2>
-      
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/knowledgeowl-tutorial.md" target="_blank">docs/identity/saas-apps/knowledgeowl-tutorial.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by omondiatieno on Mar 19, 2026 10:41 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/knowledgeowl-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+25</span> / 
-              <span class="deletions">-22</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> update knowledgeowl and veza articles</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">description: Learn how to configure single sign-on between Microsoft Entra ID and KnowledgeOwl.</div><div class="diff-line diff-context">ms.reviewer: celested</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 03/25/2025</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and KnowledgeOwl so that I can control who has access to KnowledgeOwl, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In a different web browser window, sign in to your KnowledgeOwl company site as an administrator.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Select **Settings** and then select **SSO**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot shows SSO selected from the Settings menu.](./media/knowledgeowl-tutorial/settings-sso-dropdown.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. In the Scroll to **SAML Settings** tab, perform the following steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	![Screenshot shows SAML S S O Integration where you can make the changes described here.](./media/knowledgeowl-tutorial/sso-settings-required-fields.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">	a. Select **Enable SAML SSO**.</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">description: Learn how to configure single sign-on between Microsoft Entra ID and KnowledgeOwl.</div><div class="diff-line diff-context">ms.reviewer: celested</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/19/2026</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and KnowledgeOwl so that I can control who has access to KnowledgeOwl, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. In a different web browser window, sign in to your KnowledgeOwl company site as an administrator.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. Select **Security and access** and then select **Single sign-on**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">1. In the **SAML Settings** tab, perform the following steps:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot shows the SAML settings where you can enable SAML SSO reader logins mentioned here.](./media/knowledgeowl-tutorial/sso-saml-settings.png)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	1. Select **Enable SAML SSO reader logins**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">	![Screenshot shows the Service provider metadata section where you can copy the values mentioned here.](./media/knowledgeowl-tutorial/service-provider-metadata.png)</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/architecture/security-copilot-entra-proof-of-concept.md" target="_blank">docs/architecture/security-copilot-entra-proof-of-concept.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by Dennis Rea on Mar 19, 2026 4:27 PM
-              <br><a href="https://learn.microsoft.com/en-us/entra/architecture/security-copilot-entra-proof-of-concept" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+23</span> / 
-              <span class="deletions">-23</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Alt-text and indentation fixes</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">A Security Copilot in Entra PoC begins with your organization’s unique security challenges and objectives. In the [Microsoft Entra admin center](https://entra.microsoft.com/), select **Copilot**. Prompts appear to get you started. You can explore these prompts or enter your prompt in the chat box. You can view the graph query used to derive results. </div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">   ![Screenshot of the Microsoft Entra admin center](./media/security-copilot-entra-poc/admin-center.png)</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">   ![Screenshot of Copilot topic history](./media/security-copilot-entra-poc/method-open-list.png)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Persona functions</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">|Helpdesk Administrator|Investigate users blocked from sign-in, due to a risk event. To resolve the issue, Help Desk is on the call, with the user. |I&#39;m investigating a user email **julie-b@contoso** blocked due to high risk. Help me understand why this user is blocked. Also, let me know if other users are blocked, due to the same situation, within the last 24 hours. |</div><div class="diff-line diff-context">|Security operations center (SOC) team member|Investigate a spike of password resets from a country/region, or department: determine trends or patterns. |I&#39;m seeing a trend from an IP address that&#39;s high risk for multiple users. Review all user applications in the United States to determine if there’s a pattern of applications, services, or groups. |</div><div class="diff-line diff-deleted">|Identity administrator|Investigate the potential effects of a new Conditional Access policy|Show me the signins and the Conditional Access policies that apply. List users without registered multifactor authentication (MFA). Show me sign-in logs from unmanaged devices for the past 14 days|</div><div class="diff-line diff-context">|Tenant administrator|Guest management|Show me the guest users in the tenant|</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## PoC scenarios: Microsoft Entra ID</div><div class="diff-line diff-context">2. Create end-user communication for changes that affects the user experience. </div><div class="diff-line diff-context">3. Set up and/or confirm data retention for agent log and metrics.  </div><div class="diff-line diff-context">4. Apply Conditional Access optimization agent recommendations: </div><div class="diff-line diff-deleted">  * Obtain and document a prioritized list of suggestions by chatting with the agent.  </div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">A Security Copilot in Entra PoC begins with your organization’s unique security challenges and objectives. In the [Microsoft Entra admin center](https://entra.microsoft.com/), select **Copilot**. Prompts appear to get you started. You can explore these prompts or enter your prompt in the chat box. You can view the graph query used to derive results. </div><div class="diff-line diff-context"></div><div class="diff-line diff-added">   ![Screenshot of the Microsoft Entra admin center.](./media/security-copilot-entra-poc/admin-center.png)</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">   ![Screenshot of Copilot topic history.](./media/security-copilot-entra-poc/method-open-list.png)</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Persona functions</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">|---|---|---|</div><div class="diff-line diff-context">|Helpdesk Administrator|Investigate users blocked from sign-in, due to a risk event. To resolve the issue, Help Desk is on the call, with the user. |I&#39;m investigating a user email **julie-b@contoso** blocked due to high risk. Help me understand why this user is blocked. Also, let me know if other users are blocked, due to the same situation, within the last 24 hours. |</div><div class="diff-line diff-context">|Security operations center (SOC) team member|Investigate a spike of password resets from a country/region, or department: determine trends or patterns. |I&#39;m seeing a trend from an IP address that&#39;s high risk for multiple users. Review all user applications in the United States to determine if there’s a pattern of applications, services, or groups. |</div><div class="diff-line diff-added">|Identity administrator|Investigate the potential effects of a new Conditional Access policy|Show me the sign-ins and the Conditional Access policies that apply. List users without registered multifactor authentication (MFA). Show me sign-in logs from unmanaged devices for the past 14 days|</div><div class="diff-line diff-context">|Tenant administrator|Guest management|Show me the guest users in the tenant|</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">## PoC scenarios: Microsoft Entra ID</div><div class="diff-line diff-context">2. Create end-user communication for changes that affects the user experience. </div><div class="diff-line diff-context">3. Set up and/or confirm data retention for agent log and metrics.  </div><div class="diff-line diff-context">4. Apply Conditional Access optimization agent recommendations: </div><div class="diff-line diff-added">   * Obtain and document a prioritized list of suggestions by chatting with the agent.  </div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-terminate-governance-relationship.md" target="_blank">docs/id-governance/tenant-governance/how-to-terminate-governance-relationship.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-terminate-governance-relationship" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+6</span> / 
-              <span class="deletions">-6</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Terminate governance**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   The relationship status changes to **Termination requested**. Tenant Governance sends an email notification to the governed tenant about the termination request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Wait for the governed tenant to confirm the termination.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   When the governed tenant confirms, Tenant Governance deletes all relationship-related resources from the governed tenant, and the relationship status changes to **Terminated**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Confirm termination as the governed tenant</div><div class="diff-line diff-context">When the governing tenant initiates termination, the governed tenant must confirm the request to complete the process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Confirm termination**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">   Tenant Governance deletes all relationship-related resources from the governed tenant, and the relationship status changes to **Terminated**. Tenant Governance sends an email notification to the governing tenant that termination is complete.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Directly terminate a relationship: Governed tenant</div><div class="diff-line diff-context">As the governed tenant, directly terminate a governance relationship without requiring approval from the governing tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the details of the relationship, then confirm termination.</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Terminate governance**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    The relationship status changes to **Termination requested**. Tenant Governance sends an email notification to the governed tenant about the termination request.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Wait for the governed tenant to confirm the termination.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    When the governed tenant confirms, Tenant Governance deletes all relationship-related resources from the governed tenant, and the relationship status changes to **Terminated**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Confirm termination as the governed tenant</div><div class="diff-line diff-context">When the governing tenant initiates termination, the governed tenant must confirm the request to complete the process.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Select **Confirm termination**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    Tenant Governance deletes all relationship-related resources from the governed tenant, and the relationship status changes to **Terminated**. Tenant Governance sends an email notification to the governing tenant that termination is complete.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Directly terminate a relationship: Governed tenant</div><div class="diff-line diff-context">As the governed tenant, directly terminate a governance relationship without requiring approval from the governing tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Review the details of the relationship, then confirm termination.</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/signals-metrics.md" target="_blank">docs/id-governance/tenant-governance/signals-metrics.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/signals-metrics" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+6</span> / 
-              <span class="deletions">-6</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article focuses exclusively on:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. Discovery signals and what they represent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. How each signal is composed</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. How metric concepts apply to each signal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">1. How to interpret signals and metrics together</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Discovery signals at a glance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a conceptual level, this signal answers:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; *Are identities from one tenant authenticating into or collaborating with another tenant?*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This signal intentionally combines multiple identity inputs to reflect both breadth and depth of cross-tenant interaction.</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This article focuses exclusively on:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Discovery signals and what they represent</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- How each signal is composed</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- How metric concepts apply to each signal</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- How to interpret signals and metrics together</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Discovery signals at a glance</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">At a conceptual level, this signal answers:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">*Are identities from one tenant authenticating into or collaborating with another tenant?*</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This signal intentionally combines multiple identity inputs to reflect both breadth and depth of cross-tenant interaction.</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/governance-policy-templates.md" target="_blank">docs/id-governance/tenant-governance/governance-policy-templates.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/governance-policy-templates" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+5</span> / 
-              <span class="deletions">-5</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Cross-tenant delegated administration roles - Specify which Microsoft Entra built-in roles users from the governing tenant have in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- Multi-tenant applications - Select custom applications to create and manage across tenants.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you create a template, you can use it to establish multiple governance relationships with different governed tenants, ensuring consistent access policies across your organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Each group can have multiple role assignments, and each policy template can have multiple groups defined. When you create the governance relationship, Tenant Governance creates [granular delegated admin privileges (GDAP)](/partner-center/customers/gdap-introduction) role assignments in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Multi-tenant application configuration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">By selecting custom, multi-tenant applications in the policy template, you enable centralized application management. When you create the governance relationship, Tenant Governance creates a service principal with the same permissions in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This capability allows you to manage your custom, multi-tenant applications at scale from the central governing tenant. You don&#39;t need to go into every tenant individually to monitor and maintain least privileged app access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, assume you&#39;ve built a custom line of business app called Contoso Resource Manager, responsible for monitoring, reporting, and automating resource configuration across your tenants. Use the governance relationship to set up a service principal instance of Contoso Resource Manager across your governed tenants, with the right provisioned permissions consented. When you need to add or remove permissions, do so through the governance relationship instead of making changes and consenting to permissions on a per-tenant basis.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Cross-tenant delegated administration roles - Specify which Microsoft Entra built-in roles users from the governing tenant have in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- Multitenant applications - Select custom applications to create and manage across tenants.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">After you create a template, you can use it to establish multiple governance relationships with different governed tenants, ensuring consistent access policies across your organization.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Each group can have multiple role assignments, and each policy template can have multiple groups defined. When you create the governance relationship, Tenant Governance creates [granular delegated admin privileges (GDAP)](/partner-center/customers/gdap-introduction) role assignments in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Multitenant application configuration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">By selecting custom, multitenant applications in the policy template, you enable centralized application management. When you create the governance relationship, Tenant Governance creates a service principal with the same permissions in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This capability allows you to manage your custom, multitenant applications at scale from the central governing tenant. You don&#39;t need to go into every tenant individually to monitor and maintain least privileged app access.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">For example, assume you&#39;ve built a custom line of business app called Contoso Resource Manager, responsible for monitoring, reporting, and automating resource configuration across your tenants. Use the governance relationship to set up a service principal instance of Contoso Resource Manager across your governed tenants, with the right provisioned permissions consented. When you need to add or remove permissions, do so through the governance relationship instead of making changes and consenting to permissions on a per-tenant basis.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-update-governance-relationship.md" target="_blank">docs/id-governance/tenant-governance/how-to-update-governance-relationship.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-update-governance-relationship" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+5</span> / 
-              <span class="deletions">-5</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [entra-tenant-governance-preview-note](~/includes/entra-tenant-governance-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">This article describes how to update an existing governance relationship between a governing tenant and a governed tenant. You might need to update a governance relationship to add or modify delegated administration roles or multi-tenant application configurations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">- You must have an active governance relationship between a governing tenant and a governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Modify the template as needed. Update one or more of these configurations:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    - **Delegated administration roles**: Add or change the Microsoft Entra built-in roles assigned to security groups in the governing tenant. These roles determine the access level that users in those groups have when they sign in to the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">    - **Multi-tenant application management**: Add or update custom, multi-tenant applications. When you update the relationship, Tenant Governance creates or updates a service principal with the corresponding permissions in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Save the updated governance policy template. The version number of the template increments by one.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If you updated delegated administration roles, Tenant Governance updates the GDAP role assignments in the governed tenant accordingly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- If you updated multi-tenant application management, Tenant Governance updates the corresponding service principal and its permissions in the governed tenant.</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [entra-tenant-governance-preview-note](~/includes/entra-tenant-governance-preview-note.md)]</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">This article describes how to update an existing governance relationship between a governing tenant and a governed tenant. You might need to update a governance relationship to add or modify delegated administration roles or multitenant application configurations.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Prerequisites</div><div class="diff-line diff-context">- You must have an active governance relationship between a governing tenant and a governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Modify the template as needed. Update one or more of these configurations:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    - **Delegated administration roles**: Add or change the Microsoft Entra built-in roles assigned to security groups in the governing tenant. These roles determine the access level that users in those groups have when they sign in to the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">    - **Multitenant application management**: Add or update custom, multitenant applications. When you update the relationship, Tenant Governance creates or updates a service principal with the corresponding permissions in the governed tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Save the updated governance policy template. The version number of the template increments by one.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- If you updated delegated administration roles, Tenant Governance updates the GDAP role assignments in the governed tenant accordingly.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- If you updated multitenant application management, Tenant Governance updates the corresponding service principal and its permissions in the governed tenant.</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/deployment-guide.md" target="_blank">docs/id-governance/tenant-governance/deployment-guide.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/deployment-guide" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+4</span> / 
-              <span class="deletions">-4</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">1. Configure the template:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - **Cross-tenant delegated administration**: Select the Microsoft Entra built-in roles to assign, and specify the security groups in the governing tenant that receive those roles.</div><div class="diff-line diff-deleted">   - **Multi-tenant applications** (optional): Select custom applications to provision in governed tenants.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Save the template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A governance relationship object in both tenants</div><div class="diff-line diff-context">- Cross-tenant access settings updates</div><div class="diff-line diff-context">- GDAP role assignments (if delegated administration is configured)</div><div class="diff-line diff-deleted">- Service principals for multi-tenant applications (if application management is configured)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For complete setup instructions, see [Set up a governance relationship](how-to-setup-governance-relationship.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Phase 4: Implement cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Entra roles** tab, assign any required roles (for example, Teams Reader for Teams resources).</div><div class="diff-line diff-context">1. For Exchange, Security, and Compliance resources, assign permissions in the respective service admin centers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">For detailed instructions, see [Set up permissions for tenant monitoring](how-to-setup-permissions-tenant-monitoring.md).</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">1. Configure the template:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">   - **Cross-tenant delegated administration**: Select the Microsoft Entra built-in roles to assign, and specify the security groups in the governing tenant that receive those roles.</div><div class="diff-line diff-added">   - **Multitenant applications** (optional): Select custom applications to provision in governed tenants.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Save the template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- A governance relationship object in both tenants</div><div class="diff-line diff-context">- Cross-tenant access settings updates</div><div class="diff-line diff-context">- GDAP role assignments (if delegated administration is configured)</div><div class="diff-line diff-added">- Service principals for multitenant applications (if application management is configured)</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For complete setup instructions, see [Set up a governance relationship](how-to-set-up-governance-relationship.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Phase 4: Implement cross-tenant delegated administration</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Entra roles** tab, assign any required roles (for example, Teams Reader for Teams resources).</div><div class="diff-line diff-context">1. For Exchange, Security, and Compliance resources, assign permissions in the respective service admin centers.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">For detailed instructions, see [Set up permissions for tenant monitoring](how-to-set-up-permissions-tenant-monitoring.md).</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/overview.md" target="_blank">docs/id-governance/tenant-governance/overview.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/overview" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+4</span> / 
-              <span class="deletions">-4</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Automatically detect tenants that are related to your tenant based on one or more discovery signals.</div><div class="diff-line diff-context">- The B2B discovery signal identifies and measures inbound and outbound B2B access, B2B registration, and B2B administrative access between your tenant and other tenants.</div><div class="diff-line diff-deleted">- The multi-tenant application discovery signal identifies tenants with registered multi-tenant applications that have permissions in your tenant, or tenants to which your registered multi-tenant applications have access.</div><div class="diff-line diff-context">- The billing discovery signal identifies tenants that share billing accounts with you, where either your tenant or the related tenant is an associated billing tenant for the billing account.</div><div class="diff-line diff-context">- View initial and recent metrics about the volume of relationships between your tenant and related tenants.</div><div class="diff-line diff-context">- Filter and sort the list of related tenants based on discovery signal findings to focus on tenants with particular types of risk that your organization prioritizes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Define a governance policy template to automatically create a governance relationship between your tenant and new tenants created by your users.</div><div class="diff-line diff-context">- Control which users can create new add-on tenants by assigning or limiting access to commerce billing accounts in your tenant.</div><div class="diff-line diff-deleted">- Use the Entra asset in your commerce billing account to streamline recovery of administrative access to an add-on tenant, such as when the last administrator of that tenant leaves your organization, or when a threat actor compromises the add-on tenant.</div><div class="diff-line diff-context">- Use the commerce API or the Microsoft Entra admin center to create a new add-on tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Learn more about [creating a governed tenant](how-to-create-tenant.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Tenant Governance is available at two service levels: Tenant Governance Basic and Tenant Governance Premium. To see which Tenant Governance features are available at each service level, see [Microsoft Entra licensing](~/fundamentals/licensing.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">Tenant configuration management APIs are generally available. Other Tenant Governance experiences are in public preview. All Tenant Governance capabilities are supported by Microsoft Customer Support for use in production environments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Automatically detect tenants that are related to your tenant based on one or more discovery signals.</div><div class="diff-line diff-context">- The B2B discovery signal identifies and measures inbound and outbound B2B access, B2B registration, and B2B administrative access between your tenant and other tenants.</div><div class="diff-line diff-added">- The multitenant application discovery signal identifies tenants with registered multitenant applications that have permissions in your tenant, or tenants to which your registered multitenant applications have access.</div><div class="diff-line diff-context">- The billing discovery signal identifies tenants that share billing accounts with you, where either your tenant or the related tenant is an associated billing tenant for the billing account.</div><div class="diff-line diff-context">- View initial and recent metrics about the volume of relationships between your tenant and related tenants.</div><div class="diff-line diff-context">- Filter and sort the list of related tenants based on discovery signal findings to focus on tenants with particular types of risk that your organization prioritizes.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Define a governance policy template to automatically create a governance relationship between your tenant and new tenants created by your users.</div><div class="diff-line diff-context">- Control which users can create new add-on tenants by assigning or limiting access to commerce billing accounts in your tenant.</div><div class="diff-line diff-added">- Use the Microsoft Entra asset in your commerce billing account to streamline recovery of administrative access to an add-on tenant, such as when the last administrator of that tenant leaves your organization, or when a threat actor compromises the add-on tenant.</div><div class="diff-line diff-context">- Use the commerce API or the Microsoft Entra admin center to create a new add-on tenant.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Learn more about [creating a governed tenant](how-to-create-tenant.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Tenant Governance is available at two service levels: Tenant Governance Basic and Tenant Governance Premium. To see which Tenant Governance features are available at each service level, see [Microsoft Entra licensing](~/fundamentals/licensing.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">Tenant configuration management APIs are generally available. Other Tenant Governance experiences are in preview. All Tenant Governance capabilities are supported by Microsoft Customer Support for use in production environments.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Next steps</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md" target="_blank">docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by Marilee Turscak - MSFT on Mar 19, 2026 2:39 PM
-              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+3</span> / 
-              <span class="deletions">-3</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Fixed small typos</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">In the [Microsoft Intune admin center](https://intune.microsoft.com/), confirm the following criteria:</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted">* Device enrollment</div><div class="diff-line diff-context">  * If not, [enroll the device in Intune](/intune/intune-service/fundamentals/deployment-guide-enrollment)</div><div class="diff-line diff-deleted">* Device compliance</div><div class="diff-line diff-context">  * If not, open the **Company Portal** app on the client device and follow the steps to [remediate the issue](/intune/intune-service/user-help/check-device-access-windows-cpapp).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">1. Navigate to **Global Secure Access**.</div><div class="diff-line diff-context">2. Under **Applications**, select **Quick Access**.</div><div class="diff-line diff-deleted">3. In the **Private DNS** tabm ensure **Private DNS** is not selected.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Manual proxy setting disabled</div><div class="diff-line diff-context"></div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">In the [Microsoft Intune admin center](https://intune.microsoft.com/), confirm the following criteria:</div><div class="diff-line diff-context"></div><div class="diff-line diff-added">1. Device enrollment</div><div class="diff-line diff-context">  * If not, [enroll the device in Intune](/intune/intune-service/fundamentals/deployment-guide-enrollment)</div><div class="diff-line diff-added">2. Device compliance</div><div class="diff-line diff-context">  * If not, open the **Company Portal** app on the client device and follow the steps to [remediate the issue](/intune/intune-service/user-help/check-device-access-windows-cpapp).</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">   &gt; [!NOTE]</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">1. Navigate to **Global Secure Access**.</div><div class="diff-line diff-context">2. Under **Applications**, select **Quick Access**.</div><div class="diff-line diff-added">3. In the **Private DNS** tab, ensure **Private DNS** is not selected.</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">### Manual proxy setting disabled</div><div class="diff-line diff-context"></div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/veza-tutorial.md" target="_blank">docs/identity/saas-apps/veza-tutorial.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by omondiatieno on Mar 19, 2026 10:41 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/veza-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+2</span> / 
-              <span class="deletions">-2</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> update knowledgeowl and veza articles</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">description: Learn how to configure single sign-on between Microsoft Entra ID and Veza.</div><div class="diff-line diff-context">ms.reviewer: jomondi</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-deleted">ms.date: 05/07/2024</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Veza so that I can control who has access to Veza, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">1. If you wish to configure the application in **SP** initiated mode, then perform the following step:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    In the **Sign-on URL** text box, type a URL using the following pattern:</div><div class="diff-line diff-deleted">    `https://&lt;instancename&gt;.veza.com/login`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, in the **SAML Signing Certificate** section, find **Certificate (Base64)** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">description: Learn how to configure single sign-on between Microsoft Entra ID and Veza.</div><div class="diff-line diff-context">ms.reviewer: jomondi</div><div class="diff-line diff-context">ms.topic: how-to</div><div class="diff-line diff-added">ms.date: 03/19/2026</div><div class="diff-line diff-context">ms.custom: sfi-image-nochange</div><div class="diff-line diff-context"># Customer intent: As an IT administrator, I want to learn how to configure single sign-on between Microsoft Entra ID and Veza so that I can control who has access to Veza, enable automatic sign-in with Microsoft Entra accounts, and manage my accounts in one central location.</div><div class="diff-line diff-context">---</div><div class="diff-line diff-context">1. If you wish to configure the application in **SP** initiated mode, then perform the following step:</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">    In the **Sign-on URL** text box, type a URL using the following pattern:</div><div class="diff-line diff-added">    `https://&lt;instancename&gt;.vezacloud.com/login`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. On the **Set up single sign-on with SAML** page, in the **SAML Signing Certificate** section, find **Certificate (Base64)** and select **Download** to download the certificate and save it on your computer.</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/governance-relationships.md" target="_blank">docs/id-governance/tenant-governance/governance-relationships.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/governance-relationships" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+2</span> / 
-              <span class="deletions">-2</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">| Scenario | Description |</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">| Cross-tenant delegated administration | Use governance relationships to centralize **least-privileged administrative access** across multiple Microsoft Entra tenants. Administrators sign in using accounts from the governing tenant. This approach eliminates the need to create and manage local or B2B administrator accounts in every governed tenant. |</div><div class="diff-line diff-deleted">| Multi-tenant application management | Manage custom, multi-tenant applications from the governing tenant. Administrators can monitor and maintain least-privileged application access across governed tenants without signing into each tenant individually. This approach reduces operational overhead and configuration drift. |</div><div class="diff-line diff-context">| Tenant configuration management | If you configured cross-tenant delegated administration in your governance relationship, use this administrative access to ensure that the tenant meets your organization&#39;s security and compliance objectives on an ongoing basis. |</div><div class="diff-line diff-context">| Secure tenant creation | When you create a new add-on tenant from an existing tenant, Tenant Governance automatically establishes a governance relationship between the parent tenant and the new tenant by using a default governance policy template. This step immediately brings newly created tenants under centralized administration and governance controls, reducing the risk of unmanaged or misconfigured tenants. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- [Set up a governance relationship](how-to-setup-governance-relationship.md)</div><div class="diff-line diff-context">- [Governance policy templates](governance-policy-templates.md)</div><div class="diff-line diff-context">- [Cross-tenant delegated administration](cross-tenant-delegated-administration.md)</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">| Scenario | Description |</div><div class="diff-line diff-context">|---|---|</div><div class="diff-line diff-context">| Cross-tenant delegated administration | Use governance relationships to centralize **least-privileged administrative access** across multiple Microsoft Entra tenants. Administrators sign in using accounts from the governing tenant. This approach eliminates the need to create and manage local or B2B administrator accounts in every governed tenant. |</div><div class="diff-line diff-added">| Multitenant application management | Manage custom, multitenant applications from the governing tenant. Administrators can monitor and maintain least-privileged application access across governed tenants without signing into each tenant individually. This approach reduces operational overhead and configuration drift. |</div><div class="diff-line diff-context">| Tenant configuration management | If you configured cross-tenant delegated administration in your governance relationship, use this administrative access to ensure that the tenant meets your organization&#39;s security and compliance objectives on an ongoing basis. |</div><div class="diff-line diff-context">| Secure tenant creation | When you create a new add-on tenant from an existing tenant, Tenant Governance automatically establishes a governance relationship between the parent tenant and the new tenant by using a default governance policy template. This step immediately brings newly created tenants under centralized administration and governance controls, reducing the risk of unmanaged or misconfigured tenants. |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Related content</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- [Set up a governance relationship](how-to-set-up-governance-relationship.md)</div><div class="diff-line diff-context">- [Governance policy templates](governance-policy-templates.md)</div><div class="diff-line diff-context">- [Cross-tenant delegated administration](cross-tenant-delegated-administration.md)</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/how-to-interpret-discovery-data.md" target="_blank">docs/id-governance/tenant-governance/how-to-interpret-discovery-data.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/how-to-interpret-discovery-data" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+2</span> / 
-              <span class="deletions">-2</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Investigate ownership (business unit, team, or developer).</div><div class="diff-line diff-context">- Evaluate whether IT should manage the tenant.</div><div class="diff-line diff-deleted">- Consider establishing a [governance relationship](how-to-setup-governance-relationship.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This approach aligns with the goal of bringing unsanctioned but legitimate tenants under governance, rather than blocking them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Related tenants in Tenant Governance](related-tenants.md)</div><div class="diff-line diff-context">- [Signals and metrics for tenant discovery](signals-metrics.md)</div><div class="diff-line diff-context">- [Enable tenant discovery](how-to-enable-tenant-discovery.md)</div><div class="diff-line diff-deleted">- [Set up a governance relationship](how-to-setup-governance-relationship.md)</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- Investigate ownership (business unit, team, or developer).</div><div class="diff-line diff-context">- Evaluate whether IT should manage the tenant.</div><div class="diff-line diff-added">- Consider establishing a [governance relationship](how-to-set-up-governance-relationship.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">This approach aligns with the goal of bringing unsanctioned but legitimate tenants under governance, rather than blocking them.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- [Related tenants in Tenant Governance](related-tenants.md)</div><div class="diff-line diff-context">- [Signals and metrics for tenant discovery](signals-metrics.md)</div><div class="diff-line diff-context">- [Enable tenant discovery](how-to-enable-tenant-discovery.md)</div><div class="diff-line diff-added">- [Set up a governance relationship](how-to-set-up-governance-relationship.md)</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-tenant-governance.md" target="_blank">docs/includes/licensing-tenant-governance.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by barclayn on Mar 19, 2026 7:18 AM
-              <br><a href="https://learn.microsoft.com/en-us/entra/includes/licensing-tenant-governance" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+2</span> / 
-              <span class="deletions">-2</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Apply reviewer feedback: Acrolinx fixes and formatting corrections</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Feature | Free | Microsoft Entra P1 | Microsoft Entra P2 | Microsoft Entra ID Governance |</div><div class="diff-line diff-context">|---|---|---|---|---|</div><div class="diff-line diff-deleted">| Discover related tenants through B2B collaboration, multi-tenant apps, and shared billing accounts | | | | ✅ |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Governance relationships</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Feature | Free | Microsoft Entra P1 | Microsoft Entra P2 | Microsoft Entra ID Governance |</div><div class="diff-line diff-context">|---|---|---|---|---|</div><div class="diff-line diff-context">| Governance relationship with cross-tenant granular delegated admin privileges (GDAP) | | ✅ | ✅ | ✅ |</div><div class="diff-line diff-deleted">| Governance relationship with custom multi-tenant app injection | | | | ✅ |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Secure tenant creation</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Feature | Free | Microsoft Entra P1 | Microsoft Entra P2 | Microsoft Entra ID Governance |</div><div class="diff-line diff-context">|---|---|---|---|---|</div><div class="diff-line diff-added">| Discover related tenants through B2B collaboration, multitenant apps, and shared billing accounts | | | | ✅ |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Governance relationships</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Feature | Free | Microsoft Entra P1 | Microsoft Entra P2 | Microsoft Entra ID Governance |</div><div class="diff-line diff-context">|---|---|---|---|---|</div><div class="diff-line diff-context">| Governance relationship with cross-tenant granular delegated admin privileges (GDAP) | | ✅ | ✅ | ✅ |</div><div class="diff-line diff-added">| Governance relationship with custom multitenant app injection | | | | ✅ |</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">### Secure tenant creation</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility.md" target="_blank">docs/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by Ed McKillop on Mar 19, 2026 6:11 PM
-              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-global-secure-access-mobile-client-health-check-utility" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+1</span> / 
-              <span class="deletions">-1</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> Update troubleshoot-global-secure-access-mobile-client-health-check-utility.md</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-deleted"># Troubleshoot the Global Secure Access mobile client with Health check utility</div><div class="diff-line diff-context"></div><div class="diff-line diff-context">This article&#39;s troubleshooting guidance is for the [Global Secure Access](/entra/global-secure-access/overview-what-is-global-secure-access) iOS client, using the health check utility in [Microsoft Defender](/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-defender-service-description). </div><div class="diff-line diff-context"></div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context"></div><div class="diff-line diff-context">---</div><div class="diff-line diff-context"></div><div class="diff-line diff-added"># Troubleshoot the Global Secure Access mobile client with Health check utility </div><div class="diff-line diff-context"></div><div class="diff-line diff-context">This article&#39;s troubleshooting guidance is for the [Global Secure Access](/entra/global-secure-access/overview-what-is-global-secure-access) iOS client, using the health check utility in [Microsoft Defender](/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-defender-service-description). </div><div class="diff-line diff-context"></div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="modified-badge">MODIFIED</span>
-              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory.md" target="_blank">docs/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory.md</a>
-            </div>
-            <div class="file-meta">
-              Modified by Diana Richards on Mar 19, 2026 3:30 PM
-              <br><a href="https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="additions">+1</span> / 
-              <span class="deletions">-1</span> lines changed
-            </div>
-            <div><strong>Commit:</strong> space fix</div>
-            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
-            
-      <div class="diff-container">
-        <div class="diff-header">
-          <div class="diff-label before-label">Before</div>
-          <div class="diff-label after-label">After</div>
-        </div>
-        <div class="diff-content">
-          <div class="diff-pane before-pane">
-    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Provision Microsoft Entra ID to Active Directory - Configuration</div><div class="diff-line diff-deleted">The following document will guide you through configuring Microsoft Entra Cloud Sync for provisioning groups from Microsoft Entra ID to Active Directory. If you are looking for information on provisioning from AD to Microsoft Entra ID, see [ Configure - Provisioning Active Directory to Microsoft Entra ID using Microsoft Entra Cloud Sync](how-to-configure.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [deprecation](~/includes/gwb-v2-deprecation.md)]</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-          <div class="diff-pane after-pane">
-    <div class="diff-line diff-context">---</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Provision Microsoft Entra ID to Active Directory - Configuration</div><div class="diff-line diff-added">The following document will guide you through configuring Microsoft Entra Cloud Sync for provisioning groups from Microsoft Entra ID to Active Directory. If you are looking for information on provisioning from AD to Microsoft Entra ID, see [Configure - Provisioning Active Directory to Microsoft Entra ID using Microsoft Entra Cloud Sync](how-to-configure.md).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">[!INCLUDE [deprecation](~/includes/gwb-v2-deprecation.md)]</div><div class="diff-line diff-context">&nbsp;</div>
-          </div>
-        </div>
-      </div>
-    
-          </div>
-        </div>
-        </div>
-      <div class="section">
-        <h2>🗑️ Deleted Documentation Files</h2>
-      
-        <div class="file-item">
-          <div class="file-header">
-            <div class="file-name">
-              <span class="deleted-badge">DELETED</span>
-              docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md
-            </div>
-            <div class="file-meta">
-              Deleted by Ed McKillop on Mar 19, 2026 5:49 PM
-              <br><span style="color: #888;">📖 Was available at: https://learn.microsoft.com/en-us/entra/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility</span>
-            </div>
-          </div>
-          <div class="file-changes">
-            <div class="change-stats">
-              <span class="deletions">-171 lines removed</span>
-            </div>
-            <div><strong>Commit:</strong> Delete docs/global-secure-access/troubleshoot-global-secure-access-client-ios-health-check-utility.md</div>
-          </div>
-        </div>
-        </div>
-      <div class="footer">
-        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
-        <p>📧 Delivered to merill@merill.net</p>
-        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
-      </div>
-    </body>
-    </html>
-    

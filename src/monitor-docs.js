@@ -1198,28 +1198,23 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     const htmlFilePath = path.join('reports', `entra-docs-report-${timestamp}.html`);
     const jsonFilePath = path.join('reports', `entra-docs-data-${timestamp}.json`);
     
-    // Save to website folder for publishing
-    const websiteHtmlPath = path.join('website', `${dateForUrl}.html`);
+    // The static site uses the daily JSON as its source. The legacy dated HTML
+    // report is retained only in the workflow artifact, not published.
     const websiteJsonPath = path.join('website', `${dateForUrl}.json`);
 
     await fs.writeFile(htmlFilePath, html);
     await fs.writeFile(jsonFilePath, JSON.stringify(analysis, null, 2));
-    await fs.writeFile(websiteHtmlPath, html);
     await fs.writeFile(websiteJsonPath, JSON.stringify(analysis, null, 2));
 
     console.log(`💾 Report saved: ${htmlFilePath}`);
-    console.log(`🌐 Website report saved: ${websiteHtmlPath}`);
+    console.log(`🌐 Website data saved: ${websiteJsonPath}`);
     
-    // Generate the legacy index first, then replace it with the complete
-    // editorial static site. Historical dated reports remain available as
-    // source evidence while the new routes provide readable archive pages.
-    await this.generateIndexPage();
     const staticSite = new StaticSiteGenerator();
     await staticSite.build();
     
     return {
       reportPath: htmlFilePath,
-      websitePath: websiteHtmlPath,
+      websitePath: path.join('website', 'day', dateForUrl, 'index.html'),
       dateForUrl: dateForUrl
     };
   }
@@ -1696,9 +1691,9 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     const subject = `📋 Microsoft Entra Docs Daily Update - ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified files`;
 
     // Add website link to the email content
-    const websiteLink = saveResult && saveResult.dateForUrl ? 
-      `https://entradiff.merill.net/${saveResult.dateForUrl}.html` : 
-      'https://entradiff.merill.net';
+    const websiteLink = saveResult && saveResult.dateForUrl ?
+      `https://daily.entra.news/day/${saveResult.dateForUrl}/` :
+      'https://daily.entra.news/';
     
     // Generate email-specific HTML with full report content optimized for email clients
     const emailHtml = this.generateEmailHtml(analysis, websiteLink);
