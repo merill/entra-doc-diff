@@ -1,0 +1,387 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #e0e0e0; max-width: 1200px; margin: 0 auto; padding: 20px; background: #1a1a1a; }
+        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header h1 a { color: white; text-decoration: none; transition: opacity 0.2s; }
+        .header h1 a:hover { opacity: 0.8; text-decoration: underline; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
+        .summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0078d4; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; }
+        .summary-item .number { font-size: 24px; font-weight: bold; color: #4da6ff; }
+        .summary-item .label { font-size: 14px; color: #b0b0b0; }
+        .english-summary { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #9b72cf; }
+        .english-summary h3 { color: #c6a7eb; margin-top: 0; }
+        .english-summary ul { padding-left: 22px; margin-bottom: 0; }
+        .english-summary li { margin-bottom: 12px; }
+        .digest-category { display: inline-block; background: #49365f; color: #e2cdf9; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-right: 6px; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #4da6ff; border-bottom: 2px solid #404040; padding-bottom: 10px; }
+        .file-item { background: #2a2a2a; border: 1px solid #404040; border-radius: 6px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .file-header { background: #353535; padding: 15px; border-bottom: 1px solid #404040; }
+        .file-name { font-weight: bold; color: #4da6ff; margin-bottom: 5px; }
+        .file-name a { color: #4da6ff; text-decoration: none; }
+        .file-name a:hover { text-decoration: underline; }
+        .file-meta { font-size: 12px; color: #b0b0b0; }
+        .file-changes { padding: 15px; }
+        .change-stats { background: #353535; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; }
+        .additions { color: #40c463; }
+        .deletions { color: #f85149; }
+        .changes-detail { background: #353535; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
+        .new-badge { background: #40c463; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .modified-badge { background: #ffdf5d; color: #1a1a1a; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .deleted-badge { background: #f85149; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .no-changes { text-align: center; color: #b0b0b0; font-style: italic; padding: 40px; }
+        .footer { margin-top: 40px; padding: 20px; background: #2a2a2a; border-radius: 8px; text-align: center; font-size: 14px; color: #b0b0b0; }
+        
+        /* Diff view styles */
+        .diff-container { margin-top: 15px; border: 1px solid #404040; border-radius: 6px; overflow: hidden; background: #2a2a2a; }
+        .diff-header { display: grid; grid-template-columns: 1fr 1fr; background: #353535; border-bottom: 1px solid #404040; }
+        .diff-label { padding: 10px 15px; font-weight: bold; text-align: center; font-size: 14px; }
+        .before-label { color: #f85149; border-right: 1px solid #404040; }
+        .after-label { color: #40c463; }
+        .diff-content { display: grid; grid-template-columns: 1fr 1fr; max-height: 400px; overflow-y: auto; }
+        .diff-pane { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4; }
+        .before-pane { border-right: 1px solid #404040; }
+        .diff-line { padding: 2px 10px; white-space: pre-wrap; word-break: break-word; min-height: 18px; }
+        .diff-context { background: #2a2a2a; color: #e0e0e0; }
+        .diff-deleted { background: #3d1a1a; color: #f85149; border-left: 3px solid #f85149; }
+        .diff-added { background: #1a3d1a; color: #40c463; border-left: 3px solid #40c463; }
+        .diff-empty { background: #353535; }
+        .no-diff { padding: 15px; text-align: center; color: #b0b0b0; font-style: italic; }
+        
+        @media (max-width: 768px) {
+          .diff-content { grid-template-columns: 1fr; }
+          .diff-header { grid-template-columns: 1fr; }
+          .before-pane { border-right: none; border-bottom: 1px solid #404040; }
+          .before-label { border-right: none; border-bottom: 1px solid #404040; }
+        }
+        @media (max-width: 600px) {
+          body { padding: 10px; }
+          .header { padding: 20px; }
+          .summary-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1><a href="index.html" style="color: white; text-decoration: none;">📋 Microsoft Entra Documentation Changes</a></h1>
+        <p>Daily summary for changes since August 2nd 2026, 8:12 PM PDT</p>
+        <p>Report generated on August 3rd 2026, 8:12 PM PDT</p>
+      </div>
+
+      <div class="summary">
+        <h3>📊 Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="number">17</div>
+            <div class="label">Total Commits</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">2</div>
+            <div class="label">New Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">4</div>
+            <div class="label">Modified Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">0</div>
+            <div class="label">Deleted Files</div>
+          </div>
+          <div class="summary-item">
+            <div class="number">10</div>
+            <div class="label">Contributors</div>
+          </div>
+        </div>
+      </div>
+    
+      <div class="english-summary">
+        <h3>✨ What changed today</h3>
+        <p>Today’s Entra documentation updates cover MFA retirement planning, Global Secure Access NAT deployments, provisioning integrations and extensibility, Zscaler automation, and licensing references.</p>
+        <ul>
+      <li>
+        <span class="digest-category">Retirement or breaking change</span>
+        <strong>SMS and voice MFA retirement guidance</strong><br>
+        <span>New FAQs document the retirement timeline, passkey auto-enablement, loss of SMS and voice MFA without a customer-managed telecom provider, costs, SSPR scope, and a temporary opt-out. Administrators should identify affected users and plan passkey or telecom-provider migration.</span>
+      </li>
+    
+      <li>
+        <span class="digest-category">New documentation</span>
+        <strong>Global Secure Access CPEs behind NAT</strong><br>
+        <span>New guidance explains how to deploy a remote network when the CPE is behind upstream NAT using IKEv2 NAT-T. Administrators should verify CPE NAT-T support, allow UDP 500 and 4500, and use a static public IP where possible.</span>
+      </li>
+    
+      <li>
+        <span class="digest-category">New documentation</span>
+        <strong>Zscaler provisioning integration</strong><br>
+        <span>A new tutorial covers automated user and group provisioning and deprovisioning between Microsoft Entra ID and Zscaler, including SCIM, OAuth credentials, scoping, and attribute mapping. Administrators can use it to guide the integration and prerequisite setup.</span>
+      </li>
+    
+      <li>
+        <span class="digest-category">Documentation change</span>
+        <strong>Application provisioning extensibility workflows</strong><br>
+        <span>Updated provisioning documentation adds Microsoft Graph Explorer procedures for creating custom task extensions and extensibility workflows, with permissions and request examples, and links attribute customization to workflow-based mappings. The workflow example is labeled Preview; administrators should review and consent to the required Lifecycle Workflows permissions.</span>
+      </li>
+    
+      <li>
+        <span class="digest-category">Documentation change</span>
+        <strong>Licensing service-plan reference refresh</strong><br>
+        <span>The licensing reference now includes Azure portal licensing management, refreshed product and service-plan identifiers, Agent 365, and an updated CSV reference. Administrators using PowerShell or licensing tools should review the identifiers when mapping products and plans.</span>
+      </li>
+    </ul>
+      </div>
+    
+      <div class="section">
+        <h2>🆕 New Documentation Files</h2>
+      
+        <div class="file-item" id="change-ade3e4cb257c">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-create-remote-network-cpe-behind-nat.md" target="_blank">docs/global-secure-access/how-to-create-remote-network-cpe-behind-nat.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Abhijeet Kumar Sinha on Aug 3, 2026 7:39 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-create-remote-network-cpe-behind-nat" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+210 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> Add guidance for remote network CPE behind NAT (#13993)</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">New documentation</div>
+        <strong>New guidance for Global Secure Access CPEs behind NAT</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">A new how-to explains configuring a Global Secure Access remote network when the CPE has a private WAN address behind an upstream NAT router, using IKEv2 NAT Traversal (NAT-T) over UDP 4500. It covers topology, prerequisites, and setup considerations.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators can use this guidance for supported NAT-based deployments. The CPE must support NAT-T, the upstream router must allow UDP 500 and 4500 traffic, and its public IP should be static.</p>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item" id="change-867620d1dc36">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="new-badge">NEW</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md" target="_blank">docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md</a>
+            </div>
+            <div class="file-meta">
+              Added by Hamsika45 on Aug 3, 2026 7:51 AM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/zscaler-zidentity-provisioning-tutorial" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+152 lines added</span>
+            </div>
+            <div><strong>Commit:</strong> creating a new tutorial for Zscaler zidentity (#13083)</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">New documentation</div>
+        <strong>New tutorial for Zscaler provisioning with Microsoft Entra ID</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">Microsoft added a tutorial describing how to configure automatic user provisioning and deprovisioning between Microsoft Entra ID and Zscaler Provisioning, including user and group synchronization, prerequisites, SCIM setup, application-gallery configuration, scoping, and attribute mapping.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators integrating Zscaler can follow the documented steps and prerequisites, including required roles, a Zscaler admin account, app-role assignments, and OAuth client credentials. The documentation does not indicate a new product launch or preview.</p>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="section">
+        <h2>📝 Modified Documentation Files</h2>
+      
+        <div class="file-item" id="change-4279b24ba7f8">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/extend-application-attributes.md" target="_blank">docs/identity/app-provisioning/extend-application-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Adelle Ingrid Dimitui on Aug 3, 2026 8:09 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/extend-application-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+245</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> added api instructions for custom call-outs docs (#14004)</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">Documentation change</div>
+        <strong>Added Microsoft Graph instructions for extensibility workflows</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">The documentation now explains how to use Microsoft Graph Explorer to create custom task extensions and extensibility workflows, including required permissions, sample requests, and responses. The workflow example is labeled Preview.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators can follow the new API-based procedure to configure these extensions, but must consent to the documented Lifecycle Workflows permissions. This documents an existing capability; it does not indicate a new product launch.</p>
+      </div>
+    
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before creating an extensibility workflow, you need a custom extension that you can link to your extensibility workflow. As mentioned previously, you can think of the custom extension as a wrapper for the  Azure Logic App where your custom logic resides. When the extensibility workflow triggers the custom extension, the Azure Logic App will run.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Using your browser, sign in to your Entra ID tenant via the [Microsoft Entra admin center](https://entra.microsoft.com).</div><div class="diff-line diff-context">1. Navigate to **Lifecycle workflows &gt; Custom extensions &gt; Add a custom extension**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You now have a custom extension that is ready to link to an extensibility workflow as a task. Now let’s work on creating an extensibility workflow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">## Step 2: Create an extensibility workflow</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Once you’ve created a custom extension, you can now create an extensibility workflow whose task is to trigger the custom extension.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">1. Using your browser, sign in to your Entra ID tenant via the [Microsoft Entra admin center](https://entra.microsoft.com).</div><div class="diff-line diff-context">1. Navigate to **Identity Governance &gt; Lifecycle Workflows &gt; Create workflow**.</div><div class="diff-line diff-context">1. In the Choose a template tab, select the **Real-time Provisioning extensibility** template.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You now have an extensibility workflow that can trigger an Azure Logic App that contains your custom logic. Now let’s work on mapping the extensibility workflow to a target attribute.</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Before creating an extensibility workflow, you need a custom extension that you can link to your extensibility workflow. As mentioned previously, you can think of the custom extension as a wrapper for the  Azure Logic App where your custom logic resides. When the extensibility workflow triggers the custom extension, the Azure Logic App will run.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">### In the Microsoft Entra admin center</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-context">1. Using your browser, sign in to your Entra ID tenant via the [Microsoft Entra admin center](https://entra.microsoft.com).</div><div class="diff-line diff-context">1. Navigate to **Lifecycle workflows &gt; Custom extensions &gt; Add a custom extension**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">You now have a custom extension that is ready to link to an extensibility workflow as a task. Now let’s work on creating an extensibility workflow.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Using Microsoft Graph</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">1. Start the [Microsoft Graph Explorer tool](https://aka.ms/ge).</div><div class="diff-line diff-added">1. Sign in to your tenant.</div><div class="diff-line diff-added">1. Select **Modify permissions**.</div><div class="diff-line diff-added">1. Consent to the following required permissions: `LifecycleWorkflows-CustomExt.ReadWrite.All`</div><div class="diff-line diff-added">1. Use the [Create customTaskExtensions API](https://learn.microsoft.com/graph/api/identitygovernance-lifecycleworkflowscontainer-post-customtaskextensions) to create a custom extension.</div><div class="diff-line diff-added">&nbsp;</div><div class="diff-line diff-added">**Example request**</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item" id="change-0c572e4e53c2">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-sms-voice-retirement.md" target="_blank">docs/identity/authentication/concept-sms-voice-retirement.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by marinasanchezz1 on Aug 3, 2026 9:37 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-sms-voice-retirement" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+7</span> / 
+              <span class="deletions">-63</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Split SMS/voice retirement FAQ into a dedicated FAQ page (#13978)</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">Documentation change</div>
+        <strong>Documentation adds SMS and voice retirement FAQs</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">The page now documents the retirement timeline, passkey auto-enablement beginning September 1, 2026, and loss of SMS/voice MFA without a customer-managed telecom provider from February 1, 2027. It also covers costs, SSPR, scope, and a temporary opt-out.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators should identify affected users, plan passkey or telecom-provider migration, and review the temporary opt-out before September 1, 2026. The documented timeline applies to public cloud tenants; Azure AD B2C and Entra External ID are excluded from this announcement.</p>
+      </div>
+    
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To avoid sign-in disruption, make sure users register a passkey or move to another phishing-resistant authentication method before February 1, 2027. If your organization has a valid business, regulatory, or operational need to keep using SMS or voice, configure a customer-managed telecom provider before this date.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">## Frequently asked questions</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Why is Microsoft provided telecom delivery for SMS and Voice ending?</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">The primary driver is security. As the industry moves toward phishing-resistant authentication, Microsoft Entra ID is making passkeys the default authentication experience. SMS and voice are among the most vulnerable authentication methods available today and provide significantly weaker protection against phishing and account compromise than passkeys.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Organizations that still require SMS or voice will continue to have that option through customer-managed telecom providers when there is a legitimate business, regulatory, or technical need. This change is intended to modernize authentication while preserving flexibility for those scenarios.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Beginning September 1, 2026, passkeys will be automatically enabled for users currently enabled for SMS or voice. Beginning February 1, 2027, tenants that have not configured a customer-managed telecom provider through the Microsoft Security Store will no longer be able to use SMS or voice for MFA. Users whose only MFA method is SMS or voice will be required to register a passkey during sign-in before they can continue accessing their account. Tenants that have configured a customer-managed telecom provider can continue using SMS or voice according to their organization&#39;s policies.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Will there be costs associated with using a telecom provider through the Security Store?</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">Yes. Pricing varies by telecom provider and region. Costs are typically per-message and depend on your volume, geographic distribution, and selected provider. You&#39;ll need to evaluate providers in the Microsoft Security Store for specific pricing.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">However, migrating Microsoft provided SMS and voice users to Passkeys incur no additional cost.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">### Will my users be auto-migrated, or do I have to do it?</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To avoid sign-in disruption, make sure users register a passkey or move to another phishing-resistant authentication method before February 1, 2027. If your organization has a valid business, regulatory, or operational need to keep using SMS or voice, configure a customer-managed telecom provider before this date.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Temporarily opt out of the automatic passkey enablement</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">A temporary opt-out is available for the September 1, 2026 through February 1, 2027 changes. This lets you delay passkey and Registration Campaign enablement while you complete transition activities, such as configuring customer-managed telecom providers or migrating to other authentication methods.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">To opt out, update your authentication methods policy using Microsoft Graph and set the `passkeyDynamicMigration` property to `true`.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">}</div><div class="diff-line diff-context">```</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">After this setting is applied, your tenant is excluded from the automatic passkey enablement and Registration Campaign rollout during the opt-out period. Beginning February 1, 2027, standard passkey migration and enforcement timelines apply regardless of this setting.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">If your tenant still has users enabled for Microsoft-managed SMS or voice on February 1, 2027, and you haven&#39;t configured a customer-managed telecom provider through the Security Store, those users can no longer use SMS or voice to satisfy MFA requirements and continue signing in.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">**There is no opt out for the February 1, 2027 enforcement. This requirement applies to all tenants.**</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">## Frequently asked questions</div><div class="diff-line diff-context">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item" id="change-c6dcd96d0c83">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/users/licensing-service-plan-reference.md" target="_blank">docs/identity/users/licensing-service-plan-reference.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by shelleyatmicrosoft on Aug 3, 2026 5:28 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+26</span> / 
+              <span class="deletions">-32</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Learn Editor: Update licensing-service-plan-reference.md</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">Documentation change</div>
+        <strong>Licensing service-plan reference updated</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">The documentation now includes Azure portal licensing management, refreshes product and service-plan identifier entries, adds Agent 365, and states the table was last updated August 3, 2026.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators using PowerShell or license-management tools should review the updated identifiers and CSV reference when mapping products and service plans.</p>
+      </div>
+    
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Product names and service plan identifiers for licensing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">## Overview</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">When managing licenses in the [Microsoft 365 admin center](https://admin.microsoft.com), you see product names that look something like *Office 365 E3*. When you use PowerShell v1.0 cmdlets, the same product is identified using a specific but less friendly name: *ENTERPRISEPACK*. When using PowerShell v2.0 cmdlets or [Microsoft Graph](/graph/api/resources/subscribedsku), the same product is identified using a GUID value: *6fd2c87f-b296-42f0-b197-1e91e994b900*.</div><div class="diff-line diff-deleted">&nbsp;</div><div class="diff-line diff-deleted">The following table lists the most commonly used Microsoft online service products and provides their various ID values. These tables are for reference purposes in Microsoft Entra ID, part of Microsoft Entra, and are accurate only as of the date when this article was last updated. Microsoft will continue to make periodic updates to this document. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Product name**: Used in management portals</div><div class="diff-line diff-context">- **String ID**: Used by PowerShell v1.0 cmdlets when performing operations on licenses or by the **skuPartNumber** property of the **subscribedSku** Microsoft Graph API</div><div class="diff-line diff-context">- **Service plans included**: A list of service plans in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">- **Service plans included (friendly names)**: A list of service plans (friendly names) in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">&gt; [!NOTE]</div><div class="diff-line diff-deleted">&gt; This information was last updated on July 27, 2026.</div><div class="diff-line diff-deleted">&gt; You can also download a CSV version of this table [here](https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv).</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Product name | String ID | GUID | Service plans included | Service plans included (friendly names) |</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context"># Product names and service plan identifiers for licensing</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">When [managing licenses in the Azure portal](https://portal.azure.com/#blade/Microsoft_AAD_IAM/LicensesMenuBlade/Products) or the [Microsoft 365 admin center](https://admin.microsoft.com), you see product names that look something like *Office 365 E3*. When you use PowerShell v1.0 cmdlets, the same product is identified using a specific but less friendly name: *ENTERPRISEPACK*. When using PowerShell v2.0 cmdlets or [Microsoft Graph](/graph/api/resources/subscribedsku), the same product is identified using a GUID value: *6fd2c87f-b296-42f0-b197-1e91e994b900*. The following table lists the most commonly used Microsoft online service products and provides their various ID values. These tables are for reference purposes in Microsoft Entra ID, part of Microsoft Entra, and are accurate only as of the date when this article was last updated. Microsoft will continue to make periodic updates to this document. </div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">- **Product name**: Used in management portals</div><div class="diff-line diff-context">- **String ID**: Used by PowerShell v1.0 cmdlets when performing operations on licenses or by the **skuPartNumber** property of the **subscribedSku** Microsoft Graph API</div><div class="diff-line diff-context">- **Service plans included**: A list of service plans in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">- **Service plans included (friendly names)**: A list of service plans (friendly names) in the product that correspond to the string ID and GUID</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">&gt;[!NOTE]</div><div class="diff-line diff-added">&gt;This information was last updated on August 3, 2026.&lt;br/&gt;You can also download a CSV version of this table [here](https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv).</div><div class="diff-line diff-added">&gt;&lt;br/&gt;</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">| Product name | String ID | GUID | Service plans included | Service plans included (friendly names) |</div><div class="diff-line diff-context">| --- | --- | --- |--- | --- |</div><div class="diff-line diff-context">| 10-Year Audit Log Retention Add On |	10_ALR_ADDON | c2e41e49-e2a2-4c55-832a-cf13ffba1d6a | Auditing_10Year_ Retention_ Add_On (7d16094b-4db8-41ff-a182-372a90a85407) |	Auditing 10Year Retention Add On (7d16094b-4db8-41ff-a182-372a90a85407) |</div><div class="diff-line diff-context">| Advanced Communications | ADV_COMMS | e4654015-5daf-4a48-9b37-4f309dddd88b | TEAMS_ADVCOMMS (604ec28a-ae18-4bc6-91b0-11da94504ba9) | Microsoft 365 Advanced Communications (604ec28a-ae18-4bc6-91b0-11da94504ba9) |</div><div class="diff-line diff-added">| Agent 365 | AGENT_365 | 796a6fb4-740b-4d36-bf56-9c12ca7fa069 | AGENT_365 (d0ce5ebb-9db0-491f-b780-8973a1d815fe)&lt;br/&gt;AUDIT_FOR_AGENTS (6d9b0ae5-e6a0-4f04-991a-e5700fd84930)&lt;br/&gt;COMMUNICATION_COMPLIANCE_FOR_AGENTS (135fe762-031a-4e79-bd3c-ac376addddec)&lt;br/&gt;COMPLIANCE_MANAGER_FOR_AGENTS (d1f65d05-a302-4861-bd35-da8933ba7655)&lt;br/&gt;DATA_LIFECYCLE_MANAGEMENT_FOR_AGENTS (30d56d35-9be2-41c1-b4b8-7a8d6f073152)&lt;br/&gt;DATA_LOSS_PREVENTION_FOR_AGENTS (46d3c309-0ba7-461f-9d0e-eaca165794c2)&lt;br/&gt;DEFENDER_FOR_AI (a1c15058-5559-4c1a-ba05-8040847f91bb)&lt;br/&gt;EDISCOVERY_FOR_AGENTS (92cedcb2-3fb2-40b4-9df4-f9a5603d9631)&lt;br/&gt;ENTRA_ID_GOV_FOR_ASSISTIVE_AGENTS (a9e85e05-1687-4958-8a4c-bdacda2943db)&lt;br/&gt;ENTRA_NETWORK_CONTROLS_FOR_ASSISTIVE_AGENTS (27e196a4-8b80-4930-bd65-53fd28581878)&lt;br/&gt;INFORMATION_PROTECTION_FOR_AGENTS (48478b49-91a1-4ded-94f0-066db80035ca)&lt;br/&gt;INSIDER_RISK_MANAGEMENT_FOR_AGENTS (004ddfc0-c92f-4b0a-90c5-c60646299d71) | Agent 365 (d0ce5ebb-9db0-491f-b780-8973a1d815fe)&lt;br/&gt;Microsoft Purview Audit for Agents (6d9b0ae5-e6a0-4f04-991a-e5700fd84930)&lt;br/&gt;Microsoft Purview Communication Compliance for Agents (135fe762-031a-4e79-bd3c-ac376addddec)&lt;br/&gt;Microsoft Purview Compliance Manager for Agents (d1f65d05-a302-4861-bd35-da8933ba7655)&lt;br/&gt;Microsoft Purview Data Lifecycle Management for Agents (30d56d35-9be2-41c1-b4b8-7a8d6f073152)&lt;br/&gt;Microsoft Purview Data Loss Prevention for Agents (46d3c309-0ba7-461f-9d0e-eaca165794c2)&lt;br/&gt;Microsoft Defender for AI (a1c15058-5559-4c1a-ba05-8040847f91bb)&lt;br/&gt;Microsoft Purview eDiscovery for Agents (92cedcb2-3fb2-40b4-9df4-f9a5603d9631)&lt;br/&gt;Microsoft Entra ID Governance for Assistive Agents (a9e85e05-1687-4958-8a4c-bdacda2943db)&lt;br/&gt;Microsoft Entra Network Controls for Assistive Agents (27e196a4-8b80-4930-bd65-53fd28581878)&lt;br/&gt;Microsoft Purview Information Protection for Agents (48478b49-91a1-4ded-94f0-066db80035ca)&lt;br/&gt;Microsoft Purview Insider Risk Management for Agents (004ddfc0-c92f-4b0a-90c5-c60646299d71) |</div><div class="diff-line diff-context">| AI Builder Capacity add-on | CDSAICAPACITY | d2dea78b-507c-4e56-b400-39447f4738f8 | CDSAICAPACITY (a7c70a41-5e02-4271-93e6-d9b4184d83f5)&lt;br/&gt;EXCHANGE_S_FOUNDATION (113feb6c-3fe4-4440-bddc-54d774bf0318) |	AI Builder capacity add-on (a7c70a41-5e02-4271-93e6-d9b4184d83f5)&lt;br/&gt;Exchange Foundation (113feb6c-3fe4-4440-bddc-54d774bf0318) |</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        
+        <div class="file-item" id="change-085673a64392">
+          <div class="file-header">
+            <div class="file-name">
+              <span class="modified-badge">MODIFIED</span>
+              <a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/customize-application-attributes.md" target="_blank">docs/identity/app-provisioning/customize-application-attributes.md</a>
+            </div>
+            <div class="file-meta">
+              Modified by Adelle Ingrid Dimitui on Aug 3, 2026 4:29 PM
+              <br><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/customize-application-attributes" target="_blank" style="color: #0078d4;">📖 View on learn.microsoft.com</a>
+            </div>
+          </div>
+          <div class="file-changes">
+            <div class="change-stats">
+              <span class="additions">+1</span> / 
+              <span class="deletions">-1</span> lines changed
+            </div>
+            <div><strong>Commit:</strong> Added a link to lcw extensibility workflow article</div>
+            
+      <div style="margin-top: 14px; padding: 14px; background: #30263b; border-left: 3px solid #b98de0; border-radius: 5px; color: #e6e6e6;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #b98de0; margin-bottom: 5px;">Documentation change</div>
+        <strong>Added guidance for LCW extensibility workflow mappings</strong>
+        <p style="margin: 6px 0; line-height: 1.45;">The application attribute customization documentation now links the LCW extensibility workflow mapping type to a separate article explaining how to extend attribute mappings with these workflows.</p>
+        <p style="margin: 0; line-height: 1.45;"><strong>Why admins should care:</strong> Administrators can use the new link for additional guidance; no product behavior or configuration change is documented.</p>
+      </div>
+    
+            <div style="margin-top: 15px;"><strong>Changes:</strong></div>
+            
+      <div class="diff-container">
+        <div class="diff-header">
+          <div class="diff-label before-label">Before</div>
+          <div class="diff-label after-label">After</div>
+        </div>
+        <div class="diff-content">
+          <div class="diff-pane before-pane">
+    <div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-context">  &gt; The maximum supported length for a single attribute mapping expression is **10,000 characters**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-deleted">- **LCW extensibility workflow** - The target attribute is populated with the value generated by an Azure Logic app, which is triggered by an LCW extensibility workflow.</div><div class="diff-line diff-context">- **None** - the target attribute is left unmodified. However, if the target attribute is ever empty, it populates with the default value that you specify.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with these four basic types, custom attribute-mappings support the concept of an optional **default** value assignment. The default value assignment ensures that a target attribute is populated with a value if there&#39;s not a value in Microsoft Entra ID or on the target object. The most common configuration is to leave this blank. For more information about mapping attributes, see [How Application Provisioning works in Microsoft Entra ID](~/identity/app-provisioning/how-provisioning-works.md#mapping-attributes).</div>
+          </div>
+          <div class="diff-pane after-pane">
+    <div class="diff-line diff-context">  &gt; [!NOTE]</div><div class="diff-line diff-context">  &gt; The maximum supported length for a single attribute mapping expression is **10,000 characters**.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-added">- **LCW extensibility workflow** - The target attribute is populated with the value generated by an Azure Logic app, which is triggered by an LCW extensibility workflow. For more information about this mapping type, see [Extend attribute mappings with LCW extensibility workflows](~/identity/app-provisioning/extend-application-attributes.md).</div><div class="diff-line diff-context">- **None** - the target attribute is left unmodified. However, if the target attribute is ever empty, it populates with the default value that you specify.</div><div class="diff-line diff-context">&nbsp;</div><div class="diff-line diff-context">Along with these four basic types, custom attribute-mappings support the concept of an optional **default** value assignment. The default value assignment ensures that a target attribute is populated with a value if there&#39;s not a value in Microsoft Entra ID or on the target object. The most common configuration is to leave this blank. For more information about mapping attributes, see [How Application Provisioning works in Microsoft Entra ID](~/identity/app-provisioning/how-provisioning-works.md#mapping-attributes).</div>
+          </div>
+        </div>
+      </div>
+    
+          </div>
+        </div>
+        </div>
+      <div class="footer">
+        <p>🤖 This report was automatically generated by the Entra Docs Monitor</p>
+        <p>📧 Delivered to merill@merill.net</p>
+        <p>🔗 <a href="https://github.com/MicrosoftDocs/entra-docs" target="_blank">Visit Repository</a></p>
+      </div>
+    </body>
+    </html>
+    
