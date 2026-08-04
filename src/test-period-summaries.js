@@ -100,6 +100,33 @@ test('max reasoning retries an incomplete response with a larger token allowance
   assert.equal(generator.runUsage.outputTokens, 12600);
 });
 
+test('an incomplete 25000-token response retries with a doubled allowance', async () => {
+  const requests = [];
+  const client = { responses: { create: async request => {
+    requests.push(request);
+    return requests.length === 1
+      ? { status: 'incomplete', usage: { input_tokens: 500, output_tokens: 25000 } }
+      : {
+          status: 'completed', model: 'gpt-5.6-luna',
+          output_text: JSON.stringify({
+            headline: 'Large summary completed', overview: 'The summary completed with a larger token allowance.',
+            adminImpact: 'Review the completed period briefing.',
+            keyChanges: [{ title: 'Larger allowance used', detail: 'The retry doubled the configured output allowance.', product: 'Entra ID' }]
+          }),
+          usage: { input_tokens: 500, output_tokens: 600 }
+        };
+  } } };
+  const generator = new PeriodSummaryGenerator({ client, maxOutputTokens: 25000, budgetUsd: 5, logger: { log() {}, warn() {} } });
+  const item = {
+    id: 'doc-large', date: '2026-08-01', source: 'docs', changeType: 'Updated', additions: 4,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+    title: 'Large period', summary: 'A large period needs more reasoning tokens.', adminImpact: 'Review the briefing.'
+  };
+  const summary = await generator.generateOne('week', '2026-07-27', [item], { weeks: {}, months: {} });
+  assert.equal(summary.headline, 'Large summary completed');
+  assert.deepEqual(requests.map(request => request.max_output_tokens), [25000, 50000]);
+});
+
 test('transient API overloads are retried without discarding the period', async () => {
   let attempts = 0;
   const warnings = [];

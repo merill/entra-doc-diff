@@ -230,7 +230,7 @@ class PeriodSummaryGenerator {
     if (Number(this.baseUsage.costUsd || 0) + this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached`);
     const evidence = this.buildEvidence(kind, key, items, store);
     this.logger.log(`🧠 Writing ${kind} brief for ${key} with ${this.model} (${this.reasoningEffort} reasoning, ${items.length} updates)...`);
-    const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens, 25000)])];
+    const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens * 2, 25000)])];
     for (let attempt = 0; attempt < tokenLimits.length; attempt += 1) {
       const maxOutputTokens = tokenLimits[attempt];
       const response = await this.createResponse({
