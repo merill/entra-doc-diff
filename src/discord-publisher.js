@@ -55,85 +55,47 @@ class DiscordPublisher {
     return `${this.siteBaseUrl}/${dateForUrl}`;
   }
 
-  getChangeLabel(file) {
-    if (file.status === 'added') return 'New documentation';
-    if (file.status === 'removed') return 'Removed documentation';
-    return 'Updated documentation';
-  }
-
-  getCategoryColor(category) {
-    const colors = {
-      'Preview': 0x8e44ad,
-      'General availability': 0x27ae60,
-      'Retirement or breaking change': 0xc0392b,
-      'Admin action': 0xe67e22,
-      'New documentation': 0x2980b9,
-      'Documentation change': 0x7f8c8d,
-      'Feature update': 0x0078d4
-    };
-    return colors[category] || 0x0078d4;
-  }
-
-  getTimestamp(value) {
-    if (!value) return undefined;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-  }
-
-  createDiffEvent(file, dateForUrl) {
-    const summary = file.englishSummary || {};
-    const reportUrl = `${this.getReportUrl(dateForUrl)}#${this.getDiffAnchor(file)}`;
-    const links = [
-      `[View diff](${reportUrl})`,
-      file.publicDocsUrl ? `[Microsoft Learn](${file.publicDocsUrl})` : null,
-      file.githubUrl ? `[GitHub](${file.githubUrl})` : null
-    ].filter(Boolean).join(' · ');
-
-    return {
-      eventId: this.getDiffEventId(file),
-      type: 'diff',
-      category: summary.category || this.getChangeLabel(file),
-      title: summary.headline || file.commitMessage || this.getChangeLabel(file),
-      description: summary.summary || `${this.getChangeLabel(file)} for ${file.filename}.`,
-      adminImpact: summary.adminImpact || 'Review the documentation change and determine whether it affects your tenant configuration or rollout plans.',
-      changeLabel: this.getChangeLabel(file),
-      filename: file.filename,
-      additions: file.additions || 0,
-      deletions: file.deletions || 0,
-      url: file.publicDocsUrl || reportUrl,
-      reportUrl,
-      links,
-      publishedAt: file.commitDate
-    };
-  }
-
-  createBulkEvent(analysis, dateForUrl, diffEvents) {
-    if (diffEvents.length < 2 || !analysis.englishSummary) return null;
-
-    const hash = crypto.createHash('sha256')
-      .update(diffEvents.map(event => event.eventId).sort().join('\n'))
-      .digest('hex')
-      .substring(0, 16);
-
-    return {
-      eventId: `entra-docs:bulk:${dateForUrl}:${hash}`,
-      type: 'bulk',
-      title: `Microsoft Entra documentation digest — ${dateForUrl}`,
-      description: analysis.englishSummary.overview,
-      groups: analysis.englishSummary.groups || [],
-      url: this.getReportUrl(dateForUrl)
-    };
-  }
-
-  createEvents(analysis, dateForUrl) {
+  createDailySummaryEvent(analysis, dateForUrl) {
     const files = [
       ...(analysis.newFiles || []),
       ...(analysis.modifiedFiles || []),
       ...(analysis.deletedFiles || [])
     ];
-    const diffEvents = files.map(file => this.createDiffEvent(file, dateForUrl));
-    const bulkEvent = this.createBulkEvent(analysis, dateForUrl, diffEvents);
-    return bulkEvent ? [bulkEvent, ...diffEvents] : diffEvents;
+    if (files.length === 0) return null;
+
+    const englishSummary = analysis.englishSummary || {};
+    const fallbackSummary = files
+      .map(file => file.englishSummary?.summary)
+      .filter(Boolean)
+      .join(' ');
+    const groups = Array.isArray(englishSummary.groups) && englishSummary.groups.length > 0
+      ? englishSummary.groups
+      : [{
+          category: files[0].englishSummary?.category || 'Documentation update',
+          title: files.length === 1
+            ? files[0].englishSummary?.headline || 'Microsoft Entra documentation update'
+            : `${files.length} Microsoft Entra documentation updates`,
+          summary: fallbackSummary || `${files.length} Microsoft Entra documentation file${files.length === 1 ? '' : 's'} changed.`,
+          sourceFiles: files.map(file => file.filename)
+        }];
+    const hash = crypto.createHash('sha256')
+      .update(files.map(file => this.getDiffEventId(file)).sort().join('\n'))
+      .digest('hex')
+      .substring(0, 16);
+
+    return {
+      eventId: `entra-docs:daily:${dateForUrl}:${hash}`,
+      type: 'daily',
+      title: `Microsoft Entra daily update — ${dateForUrl}`,
+      description: englishSummary.overview || `Today's report includes ${files.length} Microsoft Entra documentation update${files.length === 1 ? '' : 's'}.`,
+      groups,
+      url: this.getReportUrl(dateForUrl)
+    };
+  }
+
+  createEvents(analysis, dateForUrl) {
+    const dailyEvent = this.createDailySummaryEvent(analysis, dateForUrl);
+    return dailyEvent ? [dailyEvent] : [];
   }
 
   buildPayload(event) {
@@ -145,24 +107,20 @@ class DiscordPublisher {
       identity.avatar_url = this.avatarUrl;
     }
 
-    if (event.type === 'bulk') {
-      return {
-        ...identity,
-        allowed_mentions: { parse: [] },
-        embeds: [{
-          title: this.truncate(event.title, 256),
-          url: event.url,
-          description: this.truncate(event.description, 4096),
-          color: 0x6f42c1,
-          fields: (event.groups || []).slice(0, 25).map(group => ({
-            name: this.truncate(`${group.category ? `[${group.category}] ` : ''}${group.title}`, 256),
-            value: this.truncate(`${group.summary}\n[View the daily report](${event.url})`, 1024),
-            inline: false
-          })),
-          footer: { text: 'Entra Docs digest · AI-generated with GPT-5.6 Luna' }
-        }]
-      };
-    }
+    const visibleGroups = (event.groups || []).slice(0, 6);
+    const fields = visibleGroups.map(group => ({
+      name: this.truncate(`${group.category ? `[${group.category}] ` : ''}${group.title}`, 220),
+      value: this.truncate(group.summary, 600),
+      inline: false
+    }));
+    const hiddenGroupCount = Math.max(0, (event.groups || []).length - visibleGroups.length);
+    fields.push({
+      name: 'Read the full daily update',
+      value: hiddenGroupCount > 0
+        ? `[View all changes on daily.entra.news](${event.url}) · ${hiddenGroupCount} additional documentation area${hiddenGroupCount === 1 ? '' : 's'}`
+        : `[View all changes on daily.entra.news](${event.url})`,
+      inline: false
+    });
 
     return {
       ...identity,
@@ -170,27 +128,9 @@ class DiscordPublisher {
       embeds: [{
         title: this.truncate(event.title, 256),
         url: event.url,
-        description: this.truncate(event.description, 4096),
-        color: this.getCategoryColor(event.category),
-        fields: [
-          {
-            name: 'Why Entra administrators should care',
-            value: this.truncate(event.adminImpact, 1024),
-            inline: false
-          },
-          {
-            name: 'Documentation change',
-            value: this.truncate(`${event.changeLabel} · +${event.additions} / -${event.deletions}\n\`${event.filename}\``, 1024),
-            inline: false
-          },
-          {
-            name: 'Links',
-            value: this.truncate(event.links, 1024),
-            inline: false
-          }
-        ],
-        footer: { text: `Entra Docs · ${event.category} · AI-generated with GPT-5.6 Luna` },
-        timestamp: this.getTimestamp(event.publishedAt)
+        description: this.truncate(event.description, 700),
+        color: 0x6f42c1,
+        fields
       }]
     };
   }
@@ -286,6 +226,7 @@ class DiscordPublisher {
     this.validateWebhookUrl();
     const state = await this.loadState();
     state.published = this.prunePublishedEvents(state.published);
+    state.pending = Object.fromEntries(Object.entries(state.pending).filter(([, event]) => event?.type === 'daily'));
 
     for (const event of events) {
       if (!state.published[event.eventId]) state.pending[event.eventId] = event;

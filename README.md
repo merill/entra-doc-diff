@@ -81,13 +81,13 @@ The workflow defaults to `gpt-5.6-luna` with medium reasoning and three concurre
 2. Open **Edit Channel → Integrations → Webhooks** and create one webhook named `Entra Scout`.
 3. Store its URL in this repository as the Actions secret `DISCORD_ENTRA_SCOUT_WEBHOOK_URL`.
 4. Store the same URL under the same secret name in the Message Center repository. GitHub secrets are repository-scoped, but both values point to the single Discord webhook.
-5. Run the workflow manually. Documentation messages use Entra Docs titles and footers; Message Center messages use their own archive and classification fields.
+5. Run the workflow manually. Documentation changes are combined into one daily summary; Message Center posts retain their own archive and classification format.
 
 Both publishers override the webhook name to `Entra Scout` but omit `avatar_url`, so Discord uses the image configured directly on the shared webhook. Set `DISCORD_ENTRA_SCOUT_NAME` to change the name, or set `DISCORD_ENTRA_SCOUT_AVATAR_URL` to a publicly accessible image URL only when you intentionally want a per-message avatar override.
 
-Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same change. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
+Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same daily summary. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 
-Documentation notifications link directly to the matching change on the canonical `https://daily.entra.news/YYYY-MM-DD` daily page.
+The documentation notification contains the grouped English digest and one link to the canonical `https://daily.entra.news/YYYY-MM-DD` daily page. It does not post separate cards for each documentation diff.
 
 ### 3. **Microsoft Graph Setup**
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)

@@ -45,27 +45,42 @@ function createAnalysis() {
   };
 }
 
-test('Discord events include one bulk digest followed by every diff', () => {
+test('Discord publishes one daily summary without per-diff sections or a footer', () => {
   const publisher = new DiscordPublisher({
     webhookUrl: 'https://discord.com/api/webhooks/123/token',
     enabled: true
   });
   const events = publisher.createEvents(createAnalysis(), '2026-08-03');
 
-  assert.equal(events.length, 3);
-  assert.equal(events[0].type, 'bulk');
-  assert.equal(events[1].type, 'diff');
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'daily');
   assert.equal(events[0].url, 'https://daily.entra.news/2026-08-03');
-  assert.match(events[1].reportUrl, /^https:\/\/daily\.entra\.news\/2026-08-03#change-[a-f0-9]{12}$/);
-  assert.match(events[1].links, /^\[View diff\]\(https:\/\/daily\.entra\.news\/2026-08-03#change-/);
-  assert.doesNotMatch(events[1].links, /EntraDiff/);
 
-  const payload = publisher.buildPayload(events[1]);
+  const payload = publisher.buildPayload(events[0]);
+  const embed = payload.embeds[0];
   assert.equal(payload.username, 'Entra Scout');
   assert.equal(Object.hasOwn(payload, 'avatar_url'), false);
   assert.deepEqual(payload.allowed_mentions, { parse: [] });
-  assert.match(payload.embeds[0].fields[2].value, /View diff/);
-  assert.match(payload.embeds[0].fields[2].value, /Microsoft Learn/);
+  assert.equal(Object.hasOwn(embed, 'footer'), false);
+  assert.equal(Object.hasOwn(embed, 'timestamp'), false);
+  assert.equal(embed.fields.some(field => field.name === 'Why Entra administrators should care'), false);
+  assert.equal(embed.fields.some(field => field.name === 'Documentation change'), false);
+  assert.match(embed.fields.at(-1).value, /daily\.entra\.news/);
+  assert.doesNotMatch(JSON.stringify(embed), /docs\/identity\/authentication\/first\.md/);
+});
+
+test('a single documentation diff still produces one daily summary', () => {
+  const publisher = new DiscordPublisher({ enabled: true });
+  const analysis = createAnalysis();
+  analysis.modifiedFiles = analysis.modifiedFiles.slice(0, 1);
+  delete analysis.englishSummary;
+
+  const events = publisher.createEvents(analysis, '2026-08-03');
+  const payload = publisher.buildPayload(events[0]);
+
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'daily');
+  assert.match(payload.embeds[0].fields[0].value, /updated product behavior/i);
 });
 
 test('Discord payload accepts an explicit public avatar URL override', () => {
@@ -73,9 +88,7 @@ test('Discord payload accepts an explicit public avatar URL override', () => {
     enabled: true,
     avatarUrl: 'https://cdn.example.com/entra-scout.png'
   });
-  const events = publisher.createEvents(createAnalysis(), {
-    websiteUrl: 'https://entradiff.merill.net/2026-08-03.html'
-  });
+  const events = publisher.createEvents(createAnalysis(), '2026-08-03');
 
   assert.equal(
     publisher.buildPayload(events[0]).avatar_url,
@@ -112,17 +125,25 @@ test('Discord publisher retries rate limits and does not republish delivered eve
       sleep: async milliseconds => sleeps.push(milliseconds)
     });
     const analysis = createAnalysis();
+    await fs.writeFile(statePath, JSON.stringify({
+      version: 1,
+      published: {},
+      pending: {
+        'entra-docs:legacy': { type: 'diff', title: 'Legacy per-diff notification' }
+      }
+    }));
 
     const first = await publisher.publish(analysis, '2026-08-03');
     const second = await publisher.publish(analysis, '2026-08-03');
     const state = JSON.parse(await fs.readFile(statePath, 'utf8'));
 
-    assert.equal(first.published, 3);
+    assert.equal(first.published, 1);
     assert.equal(second.published, 0);
-    assert.equal(requests.length, 4);
+    assert.equal(requests.length, 2);
     assert.equal(sleeps[0], 1);
-    assert.equal(Object.keys(state.published).length, 3);
+    assert.equal(Object.keys(state.published).length, 1);
     assert.equal(Object.keys(state.pending).length, 0);
+    assert.equal(Object.hasOwn(state.published, 'entra-docs:legacy'), false);
     assert.match(requests[0].url, /wait=true/);
   } finally {
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
@@ -143,5 +164,5 @@ test('Discord dry run does not send or mark messages as delivered', async () => 
 
   const result = await publisher.publish(createAnalysis(), '2026-08-03');
   assert.equal(called, false);
-  assert.equal(result.pending, 3);
+  assert.equal(result.pending, 1);
 });
