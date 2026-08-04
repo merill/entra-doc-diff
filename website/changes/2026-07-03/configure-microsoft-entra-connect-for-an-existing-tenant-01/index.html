@@ -1,0 +1,447 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configure Microsoft Entra Connect for an existing tenant — Entra.News Daily</title><meta name="description" content="Learn how Microsoft Entra Connect matches and synchronizes on-premises objects with an existing Microsoft Entra tenant, and how to resolve hard match conflicts."><link rel="canonical" href="https://daily.entra.news/changes/2026-07-03/configure-microsoft-entra-connect-for-an-existing-tenant-01/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="Configure Microsoft Entra Connect for an existing tenant — Entra.News Daily"><meta property="og:description" content="Learn how Microsoft Entra Connect matches and synchronizes on-premises objects with an existing Microsoft Entra tenant, and how to resolve hard match conflicts."><meta property="og:url" content="https://daily.entra.news/changes/2026-07-03/configure-microsoft-entra-connect-for-an-existing-tenant-01/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Configure Microsoft Entra Connect for an existing tenant — Entra.News Daily"><meta name="twitter:description" content="Learn how Microsoft Entra Connect matches and synchronizes on-premises objects with an existing Microsoft Entra tenant, and how to resolve hard match conflicts."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-06-29/">Week of 29 June 2026</a> &nbsp;/&nbsp; <a href="/products/entra-id/">Entra ID</a> &nbsp;/&nbsp; <a href="/topics/provisioning/">Provisioning</a></nav><div class="product-kicker"><img src="/assets/products/entra-id.svg" alt="">Microsoft Entra ID</div><h1>Configure Microsoft Entra Connect for an existing tenant</h1><div class="article-meta"><span>3 July 2026</span><span>Updated</span><span>+142 / −30 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Learn how Microsoft Entra Connect matches and synchronizes on-premises objects with an existing Microsoft Entra tenant, and how to resolve hard match conflicts.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change removed"><h1>Microsoft Entra Connect: When you have an existing tenant</h1>
+<p>Most of the topics for how to use Microsoft Entra Connect assumes you start with a new Microsoft Entra tenant and that there are no users or other objects there. But if you started with a Microsoft Entra tenant, populated it with users and other objects, and now want to use Connect, then this topic is for you.</p>
+</div><div class="rendered-change added"><h1>Configure Microsoft Entra Connect for an existing tenant</h1>
+<p>Most of the articles about how to use Microsoft Entra Connect assume you start with a new Microsoft Entra tenant that has no users or other objects. But if you started with a Microsoft Entra tenant, populated it with users and other objects, and now want to use Connect, this article is for you.</p>
+</div><div class="rendered-change context"><h2>The basics</h2>
+<p>An object in Microsoft Entra ID is either managed in the cloud or on-premises. For one single object, you can&#39;t manage some attributes on-premises and some other attributes in Microsoft Entra ID. Each object has a flag indicating where the object is managed.</p>
+</div><div class="rendered-change removed"><p>You can manage some users on-premises and others in the cloud. A common scenario for this configuration is an organization with a mix of accounting workers and sales workers. The accounting workers have an on-premises AD account, but the sales workers don&#39;t, but both have an account in Microsoft Entra ID. You would manage some users on-premises and some in Microsoft Entra ID.</p>
+</div><div class="rendered-change added"><p>You can manage some users on-premises and others in the cloud. A common scenario for this configuration is an organization with a mix of accounting workers and sales workers. The accounting workers have an on-premises Active Directory (AD) account and the sales workers don&#39;t, but both have an account in Microsoft Entra ID. You would manage some users on-premises and some in Microsoft Entra ID.</p>
+</div><div class="rendered-change context"><p>There are some extra concerns you need to consider when you started to manage users in Microsoft Entra ID that are also present on-premises, and later want to use Microsoft Entra Connect.</p>
+<p><a name='sync-with-existing-users-in-azure-ad'></a></p>
+<h2>Sync with existing users in Microsoft Entra ID</h2>
+</div><div class="rendered-change removed"><p>When you start synchronizing with Microsoft Entra Connect, the Microsoft Entra service API checks every new incoming object and tries to find an existing object to match. There are three attributes used for this process: <strong>userPrincipalName</strong>, <strong>proxyAddresses</strong>, and <strong>sourceAnchor</strong>/<strong>immutableID</strong>. A match on <strong>userPrincipalName</strong> or <strong>proxyAddresses</strong> is known as a &quot;<strong>soft-match</strong>.&quot; A match on <strong>sourceAnchor</strong> is known as &quot;<strong>hard-match</strong>.&quot; For the <strong>proxyAddresses</strong> attribute, only the value with <strong>SMTP:</strong>, that is the primary email address, is used for the evaluation.</p>
+</div><div class="rendered-change added"><p>When you start synchronizing with Microsoft Entra Connect, the Microsoft Entra service API checks every new incoming object and tries to find an existing object to match. There are three attributes used for this process: <strong>userPrincipalName</strong>, <strong>proxyAddresses</strong>, and <strong>sourceAnchor</strong>/<strong>immutableID</strong>. A match on <strong>userPrincipalName</strong> or <strong>proxyAddresses</strong> is known as a &quot;<strong>soft match</strong>.&quot; A match on <strong>sourceAnchor</strong> is known as &quot;<strong>hard match</strong>.&quot; For the <strong>proxyAddresses</strong> attribute, only the value with <strong>SMTP:</strong>, that is the primary email address, is used for the evaluation.</p>
+</div><div class="rendered-change context"><p>The match is only evaluated for new objects coming from on-premises AD. If you change an existing object so it matches any of these attributes, then you see an error instead.</p>
+<p>If Microsoft Entra ID finds an object where the attribute values are the same as the new incoming object from Microsoft Entra Connect, then it takes over the object in Microsoft Entra ID and the previously cloud-managed object is converted to on-premises managed. All attributes in Microsoft Entra ID with a value in on-premises AD are overwritten with the respective on-premises value.</p>
+</div><aside class="learn-alert learn-alert-warning diff-changed"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Warning</span></div><div class="learn-alert-body"><div class="learn-alert-change removed"><p>Since all attributes in Microsoft Entra ID are going to be overwritten by the on-premises value, make sure you have good data on-premises. For example, if you only have managed email address in Microsoft 365 and not kept it updated in on-premises AD DS, then you lose any values in Microsoft Entra ID / Microsoft 365 that aren&#39;t present in AD DS.</p>
+</div><div class="learn-alert-change added"><p>Since all attributes in Microsoft Entra ID are going to be overwritten by the on-premises value, make sure you have good data on-premises. For example, if you only manage the email address in Microsoft 365 and haven&#39;t kept it updated in on-premises Active Directory Domain Services (AD DS), then you lose any values in Microsoft Entra ID / Microsoft 365 that aren&#39;t present in AD DS.</p>
+</div></div></aside><aside class="learn-alert learn-alert-important diff-context"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Important</span></div><div class="learn-alert-body"><div class="learn-alert-change context"><p>If you use password hash sync, which is always enabled with Express installation, then the password hash in Microsoft Entra ID is overwritten with the password hash from on-premises AD. If your users are used to managing different passwords, then you need to inform them that they should use the on-premises AD password.</p>
+</div></div></aside><div class="rendered-change removed"><p>The previous section and warning must be considered in your planning. If you made many changes in Microsoft Entra ID which weren&#39;t reflected in on-premises AD DS, then to prevent data loss, you need to plan on how to populate AD DS with the updated values from Microsoft Entra ID, before you sync your objects with Microsoft Entra Connect.</p>
+</div><div class="rendered-change added"><p>Consider the preceding data-loss warning when you plan your deployment. If you made many changes in Microsoft Entra ID that weren&#39;t reflected in on-premises AD DS, then to prevent data loss, plan how to populate AD DS with the updated values from Microsoft Entra ID before you sync your objects with Microsoft Entra Connect.</p>
+</div><div class="rendered-change removed"><p>If you matched your objects with a soft-match, then the <strong>sourceAnchor</strong> is added to the object in Microsoft Entra ID so a hard match can be used later.</p>
+</div><div class="rendered-change added"><p>If you matched your objects with a soft match, then the <strong>sourceAnchor</strong> is added to the object in Microsoft Entra ID so a hard match can be used later.</p>
+</div><aside class="learn-alert learn-alert-important diff-changed"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Important</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>[!IMPORTANT]</p>
+</div><div class="learn-alert-change context"><p>Microsoft strongly recommends against synchronizing on-premises accounts with preexisting administrative accounts in Microsoft Entra ID.</p>
+</div></div></aside><div class="rendered-change removed"><h3>Hard-match vs soft-match</h3>
+</div><div class="rendered-change added"><h3>Hard match vs soft match</h3>
+</div><div class="rendered-change context"><p>By default, the SourceAnchor value of an object, for example &quot;abcdefghijklmnopqrstuv==&quot;, is the Base64 string representation of the mS-Ds-ConsistencyGUID attribute (or ObjectGUID depending on the configuration) from the on-premises Active Directory object. This value is set as the corresponding ImmutableId in Microsoft Entra ID.</p>
+</div><div class="rendered-change removed"><p>When Microsoft Entra Connect or Cloud Sync adds new objects, the Microsoft Entra ID service tries to match the incoming object by using the sourceAnchor value corresponding to the ImmutableId attribute of existent objects in Microsoft Entra ID. If there&#39;s a match, Microsoft Entra Connect takes over the source or authority (SoA) of that object and updates it with the properties of the incoming on-premises Active Directory object in what is known as <em>&quot;hard-match.&quot;</em>
+When Microsoft Entra ID can&#39;t find any object with an ImmutableId that matches the SourceAnchor value, it tries to use the incoming object&#39;s userPrincipalName or primary SMTP address to find a match in what it&#39;s known as a &quot;<em>soft-match</em>.&quot; </p>
+</div><div class="rendered-change added"><p>When Microsoft Entra Connect or Cloud Sync adds new objects, the Microsoft Entra ID service tries to match the incoming object by using the sourceAnchor value corresponding to the ImmutableId attribute of existent objects in Microsoft Entra ID. If there&#39;s a match, Microsoft Entra Connect takes over the source of authority (SoA) of that object and updates it with the properties of the incoming on-premises Active Directory object in what&#39;s known as a <em>hard match</em>.
+When Microsoft Entra ID can&#39;t find any object with an ImmutableId that matches the SourceAnchor value, it tries to use the incoming object&#39;s userPrincipalName or primary SMTP address to find a match in what&#39;s known as a <em>soft match</em>.</p>
+</div><div class="rendered-change removed"><p>Both, the hard-match and soft-match, tries to match objects already present and managed in Microsoft Entra ID with the new incoming objects being added that represent the same on-premises entity. If Microsoft Entra ID isn&#39;t able to find a <em>hard-match</em> or <em>soft-match</em> for the incoming object, it provisions a new object in Microsoft Entra ID directory.</p>
+</div><div class="rendered-change added"><p>Both hard match and soft match try to match objects already present and managed in Microsoft Entra ID with the new incoming objects being added that represent the same on-premises entity. If Microsoft Entra ID isn&#39;t able to find a <em>hard match</em> or <em>soft match</em> for the incoming object, it provisions a new object in the Microsoft Entra ID directory.</p>
+</div><div class="rendered-change removed"><p>If Microsoft Entra ID is able to &quot;<em>soft-match</em>&quot; the new incoming object based on primary SMTP address with an existent object managed in Microsoft Entra ID, but this new object has a different sourceAnchor value, then there&#39;s an attempt to provision a new object which normally results in a conflict where Microsoft Entra ID is unable to create the new object. This conflict occurs in situations such as:</p>
+</div><div class="rendered-change added"><p>If Microsoft Entra ID is able to <em>soft match</em> the new incoming object based on primary SMTP address with an existent object managed in Microsoft Entra ID, but this new object has a different sourceAnchor value, then Microsoft Entra ID attempts to provision a new object. The provisioning attempt normally results in a conflict where Microsoft Entra ID is unable to create the new object. This conflict occurs in situations such as:</p>
+</div><div class="rendered-change context"><ul>
+<li><p>A different sourceAnchor value was set in <code>mS-Ds-ConsistencyGuid</code> attribute, on the original on-premises AD user that has already been synced to Entra ID.</p>
+</li>
+<li><p><em>AttributeConflictName = ProxyAddresses</em>: the new incoming object has a different sourceAnchor and SID but has the same Primary SMTP address as the existent user in Entra ID directory.</p>
+</li>
+</ul>
+</div><aside class="learn-alert learn-alert-note diff-changed"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change removed"><p>In some rare situations, an <code>OnPremiseSecurityIdentifier</code> conflict occurs due to an issue with on-premises AD RID Pool (for example, a Domain Controller recovered from backup), which can generate a new user with the same SID. In such cases, an <code>AttributeValueMustBeUnique</code> error is thrown when trying to provision the user not due to &quot;<em>soft-match</em>&quot; attempts but because the <code>OnPremiseSecurityIdentifier</code> must be unique in Entra ID directory.</p>
+</div><div class="learn-alert-change added"><p>In some rare situations, an <code>OnPremiseSecurityIdentifier</code> conflict occurs due to an issue with on-premises AD RID Pool (for example, a Domain Controller recovered from backup), which can generate a new user with the same SID. In such cases, an <code>AttributeValueMustBeUnique</code> error is thrown when trying to provision the user not due to <em>soft match</em> attempts but because the <code>OnPremiseSecurityIdentifier</code> must be unique in Entra ID directory.</p>
+</div></div></aside><div class="rendered-change removed"><p>These scenarios typically mean that you&#39;re trying to reprovision the same user. To resolve the conflict, you should update the on-premises user&#39;s <code>mS-Ds-ConsistencyGuid</code> attribute to match the same value as the existent cloud user&#39;s ImmutableID. This change allows Microsoft Entra ID to make the correct &quot;hard-match&quot;.</p>
+</div><div class="rendered-change added"><p>These scenarios typically mean that you&#39;re trying to reprovision the same user. To resolve the conflict, you should update the on-premises user&#39;s <code>mS-Ds-ConsistencyGuid</code> attribute to match the same value as the existent cloud user&#39;s ImmutableID. This change allows Microsoft Entra ID to make the correct hard match.</p>
+</div><div class="rendered-change removed"><h4>Block hard-match in Microsoft Entra ID</h4>
+</div><div class="rendered-change added"><h4>Block hard match in Microsoft Entra ID</h4>
+</div><div class="rendered-change context"><p>We added a configuration option to disable the hard matching feature in Microsoft Entra ID. We advise customers to disable hard matching unless they need it to take over cloud-only accounts.</p>
+<pre><code>-Features $OnPremSync.Features
+</code></pre>
+<pre><code>
+</code></pre>
+</div><div class="rendered-change removed"><h4>Block soft-match in Microsoft Entra ID</h4>
+</div><div class="rendered-change added"><h4>Block soft match in Microsoft Entra ID</h4>
+</div><div class="rendered-change context"><p>Similarly, we added a configuration option to disable the soft matching option in Microsoft Entra ID. We advise customers to disable soft matching unless they need it to take over cloud-only accounts.</p>
+</div><aside class="learn-alert learn-alert-note diff-context"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change context"><p>BlockCloudObjectTakeoverThroughHardMatchEnabled and BlockSoftMatchEnabled are used to block matching for all objects if enabled for the tenant. Customers are encouraged to disable these features only during the period when a matching procedure is required for their tenancy. This flag should be set to <em>True</em> again after any matching has been completed and is no longer needed.</p>
+</div></div></aside><div class="rendered-change added"><h4>Hard match security protections</h4>
+<p>Beginning July 1, 2026, Microsoft Entra ID adds extra protections for hard match operations. These protections help prevent an on-premises Active Directory object from taking over the wrong cloud account when the target account is risky to reassociate.</p>
+<p>A hard match can be blocked when the target cloud account meets one or more of these conditions:</p>
+<ul>
+<li>The cloud account already has <code>onPremisesObjectIdentifier</code> set.</li>
+<li>The cloud account is assigned a privileged Microsoft Entra role.</li>
+<li>The cloud account is eligible for a privileged Microsoft Entra role.</li>
+</ul>
+<p>These security protections don&#39;t disable hard match. Initial hard match for safe targets still works, and ongoing synchronization for users that are already correctly matched isn&#39;t affected. Cloud-managed accounts with writeback enabled are excluded from this enforcement. The check is enforced in the cloud, so it applies to both Microsoft Entra Connect Sync and Microsoft Entra Cloud Sync regardless of the client version. <a href="#hard-match-vs-soft-match">Soft match</a> behavior is unchanged and continues to be governed separately by the <code>BlockSoftMatchEnabled</code> feature.</p>
+<p>For the exact error messages and error-specific fixes, see <a href="tshoot-connect-sync-errors.md#invalidhardmatch">Troubleshoot InvalidHardMatch errors</a>.</p>
+</div><aside class="learn-alert learn-alert-caution diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Caution</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Don&#39;t use hard match as a general repair mechanism for privileged accounts or for accounts that are already mapped to an on-premises object. If the wrong on-premises object is linked to a cloud account, the account can inherit the wrong source of authority. Confirm the intended mapping before you retry synchronization.</p>
+</div></div></aside><div class="rendered-change added"><p>Before you intentionally hard match an on-premises user to an existing cloud user, verify the following:</p>
+<ul>
+<li>The cloud user is the correct account for the on-premises object to take over.</li>
+<li>The cloud user isn&#39;t assigned or eligible for a privileged Microsoft Entra role, unless you plan to temporarily remove the role or eligibility first.</li>
+<li>The cloud user doesn&#39;t already have <code>onPremisesObjectIdentifier</code> set, unless you plan to clear it before you retry.</li>
+<li>The source anchor value from the on-premises object matches the cloud user&#39;s <code>onPremisesImmutableId</code>.</li>
+</ul>
+<p><a name='recover-from-a-blocked-hard-match'></a></p>
+<h4>Hard match scenarios and recovery paths</h4>
+<p>The following table summarizes common hard match scenarios, whether Microsoft Entra ID allows or blocks each one, and how to recover.</p>
+</div><div class="rendered-change rendered-table added"><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Result</th>
+<th>Recovery</th>
+</tr>
+</thead>
+<tbody><tr class="diff-row added">
+<td>A new on-premises user hard matches to a non-privileged cloud user that isn&#39;t already mapped</td>
+<td>Hard match continues</td>
+<td>No action needed if the match is intentional.</td>
+</tr>
+<tr class="diff-row added">
+<td>The target cloud user has a privileged role assigned</td>
+<td>Hard match blocked</td>
+<td>Temporarily remove the role, complete the hard match, then reassign it.</td>
+</tr>
+<tr class="diff-row added">
+<td>The target cloud user is eligible for a privileged role</td>
+<td>Hard match blocked</td>
+<td>Temporarily remove the eligibility, complete the hard match, then restore it.</td>
+</tr>
+<tr class="diff-row added">
+<td>The target cloud user is soft-deleted and privileged</td>
+<td>Hard match blocked</td>
+<td>Restore the user if needed, then apply the privileged-role recovery.</td>
+</tr>
+<tr class="diff-row added">
+<td>The target cloud user already has <code>onPremisesObjectIdentifier</code> set (for example, after an AD user is recreated, a forest or domain move, or a merger)</td>
+<td>Remap blocked (<code>AttributeUpdateNotAllowed</code>)</td>
+<td>Validate the intended source object, clear <code>onPremisesObjectIdentifier</code> to <code>null</code>, then rerun synchronization.</td>
+</tr>
+<tr class="diff-row added">
+<td>You can&#39;t remediate before enforcement</td>
+<td>Temporary bypass</td>
+<td>Enable <code>allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled</code>, then remediate and disable it.</td>
+</tr>
+</tbody></table>
+</div><div class="rendered-change added"><h5>Fix a hard match blocked by a privileged role</h5>
+<p>If the cloud user has a privileged role assignment or eligibility:</p>
+<ol>
+<li>Confirm that the on-premises object should be linked to the existing cloud user.</li>
+<li>If the user is soft-deleted, restore it from the Microsoft Entra ID Recycle Bin.</li>
+<li>Temporarily remove the privileged role assignment or eligibility from the cloud user.</li>
+<li>Rerun synchronization to complete the hard match.</li>
+<li>Reassign the privileged role or restore the eligibility.</li>
+</ol>
+</div><aside class="learn-alert learn-alert-important diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Important</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Don&#39;t leave privileged access removed longer than necessary. Restore the role assignment or eligibility after the hard match succeeds.</p>
+</div></div></aside><div class="rendered-change added"><h5>Clear onPremisesObjectIdentifier</h5>
+<p>If the hard match is blocked because <code>onPremisesObjectIdentifier</code> is already set, clear the value to <code>null</code> and then rerun synchronization. Use Microsoft Graph or ADSyncTools.</p>
+<p>To clear <code>onPremisesObjectIdentifier</code> with Microsoft Graph so synchronization can proceed, send the following request:</p>
+<pre><code class="language-http">PATCH https://graph.microsoft.com/beta/users/{userId}
+Content-Type: application/json
+
+{
+  &quot;onPremisesObjectIdentifier&quot;: null
+}
+</code></pre>
+<p>This PATCH request requires the <code>User-OnPremisesSyncBehavior.ReadWrite.All</code> Microsoft Graph permission and the Global Administrator or Hybrid Identity Administrator role.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>You can only clear <code>onPremisesObjectIdentifier</code> by setting it to <code>null</code>. Attempts to set it to another value are blocked. After you clear the value and rerun synchronization, the next successful sync stamps a fresh value.</p>
+</div></div></aside><div class="rendered-change added"><p>Alternatively, to clear <code>onPremisesObjectIdentifier</code> with ADSyncTools version 2.5.0 or later, run the following commands:</p>
+<pre><code class="language-powershell"># Provide the user&#39;s identity.
+$userId = &quot;&lt;userId&gt;&quot;
+
+# Review the current on-premises attributes.
+Get-ADSyncToolsOnPremisesAttribute -Id $userId
+
+# Optional: back up the current values before making changes.
+Get-ADSyncToolsOnPremisesAttribute -Id $userId | Export-Clixml backupOnpremisesAttributes.Clixml
+
+# Clear onPremisesObjectIdentifier.
+Clear-ADSyncToolsOnPremisesAttribute -Id $userId -onPremisesObjectIdentifier
+</code></pre>
+<p>After you clear the value, rerun synchronization.</p>
+<h5>Temporarily allow onPremisesObjectIdentifier updates</h5>
+<p>If you can&#39;t remediate affected objects before enforcement, enable the tenant-level feature flag <code>allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled</code>. This flag is disabled by default. Leave the flag disabled unless you need a temporary bypass while you complete remediation.</p>
+<pre><code class="language-powershell">$baseUri = &quot;https://graph.microsoft.com/beta&quot;
+$onPremSync = Get-MgDirectoryOnPremiseSynchronization
+$uri = &quot;$baseUri/directory/onPremisesSynchronization/$($onPremSync.Id)&quot;
+$params = @{
+    features = @{
+        allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled = $true
+    }
+}
+Invoke-MgGraphRequest -Method PATCH -Uri $uri -Body $params
+(Get-MgDirectoryOnPremiseSynchronization).Features | fl
+</code></pre>
+</div><aside class="learn-alert learn-alert-warning diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Warning</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Enabling this feature flag reduces the protection provided by hard match security enforcement. Use it only as a temporary bypass for a validated migration, recovery, or consolidation scenario. Disable the bypass after remediation is complete.</p>
+</div></div></aside><div class="rendered-change context"><h3>Other objects than users</h3>
+</div><div class="rendered-change removed"><p>For mail-enabled groups and contacts, you can soft-match based on proxyAddresses. Hard match isn&#39;t applicable since you can only update the sourceAnchor/immutableID (using PowerShell) on Users only. For groups that aren&#39;t mail-enabled, there&#39;s currently no support for soft-match or hard-match.</p>
+</div><div class="rendered-change added"><p>For mail-enabled groups and contacts, you can soft match based on proxyAddresses. Hard match isn&#39;t applicable since you can only update the sourceAnchor/immutableID (using PowerShell) on users. For groups that aren&#39;t mail-enabled, there&#39;s no support for soft match or hard match.</p>
+</div><div class="rendered-change context"><h3>Admin role considerations</h3>
+</div><div class="rendered-change removed"><p>To protect from untrusted on-premises users, Microsoft Entra ID won&#39;t match on-premises users with cloud users that have an admin role. This behavior is by default. To work around this, you can do the following steps:</p>
+</div><div class="rendered-change added"><p>To protect from untrusted on-premises users, Microsoft Entra ID won&#39;t match on-premises users with cloud users that have an admin role. This is the default behavior. To work around it, do the following steps:</p>
+</div><div class="rendered-change removed"><ol>
+<li>Remove the directory roles from the cloud-only user object.</li>
+</ol>
+</div><div class="rendered-change added"><ol>
+<li>Remove the directory roles from the cloud-only user object.</li>
+</ol>
+</div><div class="rendered-change context"><ol>
+<li>Hard-delete the new quarantined object created in the cloud.</li>
+</ol>
+</div><div class="rendered-change context"><ol>
+<li>Trigger a new sync cycle.</li>
+</ol>
+</div><div class="rendered-change removed"><ol>
+<li>Optionally, add the directory roles back to the user object in cloud once the matching is done.</li>
+</ol>
+</div><div class="rendered-change added"><ol>
+<li>Optionally, add the directory roles back to the user object in the cloud after the matching is done.</li>
+</ol>
+</div><div class="rendered-change context"><p><a name='create-a-new-on-premises-active-directory-from-data-in-azure-ad'></a></p>
+<h2>Create a new on-premises Active Directory from data in Microsoft Entra ID</h2>
+</div><div class="rendered-change removed"><p>Some customers start with a cloud-only solution with Microsoft Entra ID and they don&#39;t have an on-premises AD. Later they want to consume on-premises resources and want to build an on-premises AD based on Microsoft Entra data. Microsoft Entra Connect can&#39;t help you for this scenario. It doesn&#39;t create users on-premises and it doesn&#39;t have any ability to set the password on-premises to the same as in Microsoft Entra ID.</p>
+</div><div class="rendered-change added"><p>Some customers start with a cloud-only solution with Microsoft Entra ID and they don&#39;t have an on-premises AD. Later they want to consume on-premises resources and want to build an on-premises AD based on Microsoft Entra data. Microsoft Entra Connect can&#39;t help with this scenario. It doesn&#39;t create users on-premises and it doesn&#39;t have any ability to set the password on-premises to the same as in Microsoft Entra ID.</p>
+<p>If the only reason you plan to add on-premises AD is to support line-of-business (LOB) apps, then consider using <a href="https://learn.microsoft.com/en-us/entra/identity/domain-services/index.yml">Microsoft Entra Domain Services</a> instead.</p>
+</div><div class="rendered-change removed"><p>If the only reason why you plan to add on-premises AD is to support LOBs (Line-of-Business apps), then maybe you should consider to use <a href="https://learn.microsoft.com/en-us/entra/identity/domain-services/index.yml">Microsoft Entra Domain Services</a> instead.</p>
+</div><div class="rendered-change added"><p><a name='next-steps'></a></p>
+</div><div class="rendered-change removed"><h2>Next steps</h2>
+</div><div class="rendered-change added"><h2>Related content</h2>
+</div><div class="rendered-change context"><p>Learn more about <a href="../whatis-hybrid-identity.md">Integrating your on-premises identities with Microsoft Entra ID</a>.</p>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md
+index b5a4867ac72..bb2a9c7d5c4 100644
+--- a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md
++++ b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md
+@@ -1,53 +1,55 @@
+ ---
+-title: &#039;Microsoft Entra Connect: When you already have Microsoft Entra ID&#039;
+-description: This topic describes how to use Connect when you have an existing Microsoft Entra tenant.
+-ms.custom: has-azure-ad-ps-ref
++title: Configure Microsoft Entra Connect for an existing tenant
++description: Learn how Microsoft Entra Connect matches and synchronizes on-premises objects with an existing Microsoft Entra tenant, and how to resolve hard match conflicts.
++ms.custom: has-azure-ad-ps-ref, msecd-doc-authoring-1015
+ ms.topic: how-to
+-ms.date: 04/09/2025
++ms.date: 07/01/2026
+ ms.subservice: hybrid-connect
++ai-usage: ai-assisted
++#customer intent: As an IT administrator, I want to understand how Microsoft Entra Connect matches and synchronizes with existing Microsoft Entra ID objects so that I can onboard an existing tenant without data loss or blocked hard matches.
+ ---
+ 
+-# Microsoft Entra Connect: When you have an existing tenant
+-Most of the topics for how to use Microsoft Entra Connect assumes you start with a new Microsoft Entra tenant and that there are no users or other objects there. But if you started with a Microsoft Entra tenant, populated it with users and other objects, and now want to use Connect, then this topic is for you.
++# Configure Microsoft Entra Connect for an existing tenant
++Most of the articles about how to use Microsoft Entra Connect assume you start with a new Microsoft Entra tenant that has no users or other objects. But if you started with a Microsoft Entra tenant, populated it with users and other objects, and now want to use Connect, this article is for you.
+ 
+ ## The basics
+ An object in Microsoft Entra ID is either managed in the cloud or on-premises. For one single object, you can&#039;t manage some attributes on-premises and some other attributes in Microsoft Entra ID. Each object has a flag indicating where the object is managed.
+ 
+-You can manage some users on-premises and others in the cloud. A common scenario for this configuration is an organization with a mix of accounting workers and sales workers. The accounting workers have an on-premises AD account, but the sales workers don&#039;t, but both have an account in Microsoft Entra ID. You would manage some users on-premises and some in Microsoft Entra ID.
++You can manage some users on-premises and others in the cloud. A common scenario for this configuration is an organization with a mix of accounting workers and sales workers. The accounting workers have an on-premises Active Directory (AD) account and the sales workers don&#039;t, but both have an account in Microsoft Entra ID. You would manage some users on-premises and some in Microsoft Entra ID.
+ 
+ There are some extra concerns you need to consider when you started to manage users in Microsoft Entra ID that are also present on-premises, and later want to use Microsoft Entra Connect.
+ 
+ &lt;a name=&#039;sync-with-existing-users-in-azure-ad&#039;&gt;&lt;/a&gt;
+ 
+ ## Sync with existing users in Microsoft Entra ID
+-When you start synchronizing with Microsoft Entra Connect, the Microsoft Entra service API checks every new incoming object and tries to find an existing object to match. There are three attributes used for this process: **userPrincipalName**, **proxyAddresses**, and **sourceAnchor**/**immutableID**. A match on **userPrincipalName** or **proxyAddresses** is known as a &quot;**soft-match**.&quot; A match on **sourceAnchor** is known as &quot;**hard-match**.&quot; For the **proxyAddresses** attribute, only the value with **SMTP:**, that is the primary email address, is used for the evaluation.
++When you start synchronizing with Microsoft Entra Connect, the Microsoft Entra service API checks every new incoming object and tries to find an existing object to match. There are three attributes used for this process: **userPrincipalName**, **proxyAddresses**, and **sourceAnchor**/**immutableID**. A match on **userPrincipalName** or **proxyAddresses** is known as a &quot;**soft match**.&quot; A match on **sourceAnchor** is known as &quot;**hard match**.&quot; For the **proxyAddresses** attribute, only the value with **SMTP:**, that is the primary email address, is used for the evaluation.
+ 
+ The match is only evaluated for new objects coming from on-premises AD. If you change an existing object so it matches any of these attributes, then you see an error instead.
+ 
+ If Microsoft Entra ID finds an object where the attribute values are the same as the new incoming object from Microsoft Entra Connect, then it takes over the object in Microsoft Entra ID and the previously cloud-managed object is converted to on-premises managed. All attributes in Microsoft Entra ID with a value in on-premises AD are overwritten with the respective on-premises value.
+ 
+ &gt; [!WARNING]
+-&gt; Since all attributes in Microsoft Entra ID are going to be overwritten by the on-premises value, make sure you have good data on-premises. For example, if you only have managed email address in Microsoft 365 and not kept it updated in on-premises AD DS, then you lose any values in Microsoft Entra ID / Microsoft 365 that aren&#039;t present in AD DS.
++&gt; Since all attributes in Microsoft Entra ID are going to be overwritten by the on-premises value, make sure you have good data on-premises. For example, if you only manage the email address in Microsoft 365 and haven&#039;t kept it updated in on-premises Active Directory Domain Services (AD DS), then you lose any values in Microsoft Entra ID / Microsoft 365 that aren&#039;t present in AD DS.
+ 
+ &gt; [!IMPORTANT]
+ &gt; If you use password hash sync, which is always enabled with Express installation, then the password hash in Microsoft Entra ID is overwritten with the password hash from on-premises AD. If your users are used to managing different passwords, then you need to inform them that they should use the on-premises AD password.
+ 
+-The previous section and warning must be considered in your planning. If you made many changes in Microsoft Entra ID which weren&#039;t reflected in on-premises AD DS, then to prevent data loss, you need to plan on how to populate AD DS with the updated values from Microsoft Entra ID, before you sync your objects with Microsoft Entra Connect.
++Consider the preceding data-loss warning when you plan your deployment. If you made many changes in Microsoft Entra ID that weren&#039;t reflected in on-premises AD DS, then to prevent data loss, plan how to populate AD DS with the updated values from Microsoft Entra ID before you sync your objects with Microsoft Entra Connect.
+ 
+-If you matched your objects with a soft-match, then the **sourceAnchor** is added to the object in Microsoft Entra ID so a hard match can be used later.
++If you matched your objects with a soft match, then the **sourceAnchor** is added to the object in Microsoft Entra ID so a hard match can be used later.
+ 
+-&gt;[!IMPORTANT]
++&gt; [!IMPORTANT]
+ &gt; Microsoft strongly recommends against synchronizing on-premises accounts with preexisting administrative accounts in Microsoft Entra ID.
+ 
+-### Hard-match vs soft-match
++### Hard match vs soft match
+ By default, the SourceAnchor value of an object, for example &quot;abcdefghijklmnopqrstuv==&quot;, is the Base64 string representation of the mS-Ds-ConsistencyGUID attribute (or ObjectGUID depending on the configuration) from the on-premises Active Directory object. This value is set as the corresponding ImmutableId in Microsoft Entra ID.
+ 
+-When Microsoft Entra Connect or Cloud Sync adds new objects, the Microsoft Entra ID service tries to match the incoming object by using the sourceAnchor value corresponding to the ImmutableId attribute of existent objects in Microsoft Entra ID. If there&#039;s a match, Microsoft Entra Connect takes over the source or authority (SoA) of that object and updates it with the properties of the incoming on-premises Active Directory object in what is known as *&quot;hard-match.&quot;*
+-When Microsoft Entra ID can&#039;t find any object with an ImmutableId that matches the SourceAnchor value, it tries to use the incoming object&#039;s userPrincipalName or primary SMTP address to find a match in what it&#039;s known as a &quot;*soft-match*.&quot; 
++When Microsoft Entra Connect or Cloud Sync adds new objects, the Microsoft Entra ID service tries to match the incoming object by using the sourceAnchor value corresponding to the ImmutableId attribute of existent objects in Microsoft Entra ID. If there&#039;s a match, Microsoft Entra Connect takes over the source of authority (SoA) of that object and updates it with the properties of the incoming on-premises Active Directory object in what&#039;s known as a *hard match*.
++When Microsoft Entra ID can&#039;t find any object with an ImmutableId that matches the SourceAnchor value, it tries to use the incoming object&#039;s userPrincipalName or primary SMTP address to find a match in what&#039;s known as a *soft match*.
+ 
+-Both, the hard-match and soft-match, tries to match objects already present and managed in Microsoft Entra ID with the new incoming objects being added that represent the same on-premises entity. If Microsoft Entra ID isn&#039;t able to find a *hard-match* or *soft-match* for the incoming object, it provisions a new object in Microsoft Entra ID directory.
++Both hard match and soft match try to match objects already present and managed in Microsoft Entra ID with the new incoming objects being added that represent the same on-premises entity. If Microsoft Entra ID isn&#039;t able to find a *hard match* or *soft match* for the incoming object, it provisions a new object in the Microsoft Entra ID directory.
+ 
+-If Microsoft Entra ID is able to &quot;*soft-match*&quot; the new incoming object based on primary SMTP address with an existent object managed in Microsoft Entra ID, but this new object has a different sourceAnchor value, then there&#039;s an attempt to provision a new object which normally results in a conflict where Microsoft Entra ID is unable to create the new object. This conflict occurs in situations such as:
++If Microsoft Entra ID is able to *soft match* the new incoming object based on primary SMTP address with an existent object managed in Microsoft Entra ID, but this new object has a different sourceAnchor value, then Microsoft Entra ID attempts to provision a new object. The provisioning attempt normally results in a conflict where Microsoft Entra ID is unable to create the new object. This conflict occurs in situations such as:
+ 
+ - A different sourceAnchor value was set in `mS-Ds-ConsistencyGuid` attribute, on the original on-premises AD user that has already been synced to Entra ID.
+ 
+@@ -60,11 +62,11 @@ In such cases, an `AttributeValueMustBeUnique` export error is thrown in Microso
+ - *AttributeConflictName = ProxyAddresses*: the new incoming object has a different sourceAnchor and SID but has the same Primary SMTP address as the existent user in Entra ID directory. 
+ 
+ &gt; [!NOTE]
+-&gt; In some rare situations, an `OnPremiseSecurityIdentifier` conflict occurs due to an issue with on-premises AD RID Pool (for example, a Domain Controller recovered from backup), which can generate a new user with the same SID. In such cases, an `AttributeValueMustBeUnique` error is thrown when trying to provision the user not due to &quot;*soft-match*&quot; attempts but because the `OnPremiseSecurityIdentifier` must be unique in Entra ID directory.
++&gt; In some rare situations, an `OnPremiseSecurityIdentifier` conflict occurs due to an issue with on-premises AD RID Pool (for example, a Domain Controller recovered from backup), which can generate a new user with the same SID. In such cases, an `AttributeValueMustBeUnique` error is thrown when trying to provision the user not due to *soft match* attempts but because the `OnPremiseSecurityIdentifier` must be unique in Entra ID directory.
+ 
+-These scenarios typically mean that you&#039;re trying to reprovision the same user. To resolve the conflict, you should update the on-premises user&#039;s `mS-Ds-ConsistencyGuid` attribute to match the same value as the existent cloud user&#039;s ImmutableID. This change allows Microsoft Entra ID to make the correct &quot;hard-match&quot;.
++These scenarios typically mean that you&#039;re trying to reprovision the same user. To resolve the conflict, you should update the on-premises user&#039;s `mS-Ds-ConsistencyGuid` attribute to match the same value as the existent cloud user&#039;s ImmutableID. This change allows Microsoft Entra ID to make the correct hard match.
+ 
+-#### Block hard-match in Microsoft Entra ID
++#### Block hard match in Microsoft Entra ID
+ 
+ We added a configuration option to disable the hard matching feature in Microsoft Entra ID. We advise customers to disable hard matching unless they need it to take over cloud-only accounts.
+ 
+@@ -80,7 +82,7 @@ Update-MgDirectoryOnPremiseSynchronization `
+     -Features $OnPremSync.Features
+ ```
+ 
+-#### Block soft-match in Microsoft Entra ID
++#### Block soft match in Microsoft Entra ID
+ 
+ Similarly, we added a configuration option to disable the soft matching option in Microsoft Entra ID. We advise customers to disable soft matching unless they need it to take over cloud-only accounts.
+ 
+@@ -99,25 +101,135 @@ Update-MgDirectoryOnPremiseSynchronization `
+ &gt; [!NOTE]
+ &gt; BlockCloudObjectTakeoverThroughHardMatchEnabled and BlockSoftMatchEnabled are used to block matching for all objects if enabled for the tenant. Customers are encouraged to disable these features only during the period when a matching procedure is required for their tenancy. This flag should be set to *True* again after any matching has been completed and is no longer needed.
+ 
++#### Hard match security protections
++
++Beginning July 1, 2026, Microsoft Entra ID adds extra protections for hard match operations. These protections help prevent an on-premises Active Directory object from taking over the wrong cloud account when the target account is risky to reassociate.
++
++A hard match can be blocked when the target cloud account meets one or more of these conditions:
++
++- The cloud account already has `onPremisesObjectIdentifier` set.
++- The cloud account is assigned a privileged Microsoft Entra role.
++- The cloud account is eligible for a privileged Microsoft Entra role.
++
++These security protections don&#039;t disable hard match. Initial hard match for safe targets still works, and ongoing synchronization for users that are already correctly matched isn&#039;t affected. Cloud-managed accounts with writeback enabled are excluded from this enforcement. The check is enforced in the cloud, so it applies to both Microsoft Entra Connect Sync and Microsoft Entra Cloud Sync regardless of the client version. [Soft match](#hard-match-vs-soft-match) behavior is unchanged and continues to be governed separately by the `BlockSoftMatchEnabled` feature.
++
++For the exact error messages and error-specific fixes, see [Troubleshoot InvalidHardMatch errors](tshoot-connect-sync-errors.md#invalidhardmatch).
++
++&gt; [!CAUTION]
++&gt; Don&#039;t use hard match as a general repair mechanism for privileged accounts or for accounts that are already mapped to an on-premises object. If the wrong on-premises object is linked to a cloud account, the account can inherit the wrong source of authority. Confirm the intended mapping before you retry synchronization.
++
++Before you intentionally hard match an on-premises user to an existing cloud user, verify the following:
++
++- The cloud user is the correct account for the on-premises object to take over.
++- The cloud user isn&#039;t assigned or eligible for a privileged Microsoft Entra role, unless you plan to temporarily remove the role or eligibility first.
++- The cloud user doesn&#039;t already have `onPremisesObjectIdentifier` set, unless you plan to clear it before you retry.
++- The source anchor value from the on-premises object matches the cloud user&#039;s `onPremisesImmutableId`.
++
++&lt;a name=&#039;recover-from-a-blocked-hard-match&#039;&gt;&lt;/a&gt;
++
++#### Hard match scenarios and recovery paths
++
++The following table summarizes common hard match scenarios, whether Microsoft Entra ID allows or blocks each one, and how to recover.
++
++| Scenario | Result | Recovery |
++|---|---|---|
++| A new on-premises user hard matches to a non-privileged cloud user that isn&#039;t already mapped | Hard match continues | No action needed if the match is intentional. |
++| The target cloud user has a privileged role assigned | Hard match blocked | Temporarily remove the role, complete the hard match, then reassign it. |
++| The target cloud user is eligible for a privileged role | Hard match blocked | Temporarily remove the eligibility, complete the hard match, then restore it. |
++| The target cloud user is soft-deleted and privileged | Hard match blocked | Restore the user if needed, then apply the privileged-role recovery. |
++| The target cloud user already has `onPremisesObjectIdentifier` set (for example, after an AD user is recreated, a forest or domain move, or a merger) | Remap blocked (`AttributeUpdateNotAllowed`) | Validate the intended source object, clear `onPremisesObjectIdentifier` to `null`, then rerun synchronization. |
++| You can&#039;t remediate before enforcement | Temporary bypass | Enable `allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled`, then remediate and disable it. |
++
++##### Fix a hard match blocked by a privileged role
++
++If the cloud user has a privileged role assignment or eligibility:
++
++1. Confirm that the on-premises object should be linked to the existing cloud user.
++1. If the user is soft-deleted, restore it from the Microsoft Entra ID Recycle Bin.
++1. Temporarily remove the privileged role assignment or eligibility from the cloud user.
++1. Rerun synchronization to complete the hard match.
++1. Reassign the privileged role or restore the eligibility.
++
++&gt; [!IMPORTANT]
++&gt; Don&#039;t leave privileged access removed longer than necessary. Restore the role assignment or eligibility after the hard match succeeds.
++
++##### Clear onPremisesObjectIdentifier
++
++If the hard match is blocked because `onPremisesObjectIdentifier` is already set, clear the value to `null` and then rerun synchronization. Use Microsoft Graph or ADSyncTools.
++
++To clear `onPremisesObjectIdentifier` with Microsoft Graph so synchronization can proceed, send the following request:
++
++```http
++PATCH https://graph.microsoft.com/beta/users/{userId}
++Content-Type: application/json
++
++{
++  &quot;onPremisesObjectIdentifier&quot;: null
++}
++```
++
++This PATCH request requires the `User-OnPremisesSyncBehavior.ReadWrite.All` Microsoft Graph permission and the Global Administrator or Hybrid Identity Administrator role.
++
++&gt; [!NOTE]
++&gt; You can only clear `onPremisesObjectIdentifier` by setting it to `null`. Attempts to set it to another value are blocked. After you clear the value and rerun synchronization, the next successful sync stamps a fresh value.
++
++Alternatively, to clear `onPremisesObjectIdentifier` with ADSyncTools version 2.5.0 or later, run the following commands:
++
++```powershell
++# Provide the user&#039;s identity.
++$userId = &quot;&lt;userId&gt;&quot;
++
++# Review the current on-premises attributes.
++Get-ADSyncToolsOnPremisesAttribute -Id $userId
++
++# Optional: back up the current values before making changes.
++Get-ADSyncToolsOnPremisesAttribute -Id $userId | Export-Clixml backupOnpremisesAttributes.Clixml
++
++# Clear onPremisesObjectIdentifier.
++Clear-ADSyncToolsOnPremisesAttribute -Id $userId -onPremisesObjectIdentifier
++```
++
++After you clear the value, rerun synchronization.
++
++##### Temporarily allow onPremisesObjectIdentifier updates
++
++If you can&#039;t remediate affected objects before enforcement, enable the tenant-level feature flag `allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled`. This flag is disabled by default. Leave the flag disabled unless you need a temporary bypass while you complete remediation.
++
++```powershell
++$baseUri = &quot;https://graph.microsoft.com/beta&quot;
++$onPremSync = Get-MgDirectoryOnPremiseSynchronization
++$uri = &quot;$baseUri/directory/onPremisesSynchronization/$($onPremSync.Id)&quot;
++$params = @{
++    features = @{
++        allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled = $true
++    }
++}
++Invoke-MgGraphRequest -Method PATCH -Uri $uri -Body $params
++(Get-MgDirectoryOnPremiseSynchronization).Features | fl
++```
++
++&gt; [!WARNING]
++&gt; Enabling this feature flag reduces the protection provided by hard match security enforcement. Use it only as a temporary bypass for a validated migration, recovery, or consolidation scenario. Disable the bypass after remediation is complete.
++
+ ### Other objects than users
+-For mail-enabled groups and contacts, you can soft-match based on proxyAddresses. Hard match isn&#039;t applicable since you can only update the sourceAnchor/immutableID (using PowerShell) on Users only. For groups that aren&#039;t mail-enabled, there&#039;s currently no support for soft-match or hard-match.
++For mail-enabled groups and contacts, you can soft match based on proxyAddresses. Hard match isn&#039;t applicable since you can only update the sourceAnchor/immutableID (using PowerShell) on users. For groups that aren&#039;t mail-enabled, there&#039;s no support for soft match or hard match.
+ 
+ ### Admin role considerations
+-To protect from untrusted on-premises users, Microsoft Entra ID won&#039;t match on-premises users with cloud users that have an admin role. This behavior is by default. To work around this, you can do the following steps:
++To protect from untrusted on-premises users, Microsoft Entra ID won&#039;t match on-premises users with cloud users that have an admin role. This is the default behavior. To work around it, do the following steps:
+ 
+-1.    Remove the directory roles from the cloud-only user object.
++1. Remove the directory roles from the cloud-only user object.
+ 1. Hard-delete the new quarantined object created in the cloud.
+-
+ 1. Trigger a new sync cycle.
+-
+-1. Optionally, add the directory roles back to the user object in cloud once the matching is done.
++1. Optionally, add the directory roles back to the user object in the cloud after the matching is done.
+ 
+ &lt;a name=&#039;create-a-new-on-premises-active-directory-from-data-in-azure-ad&#039;&gt;&lt;/a&gt;
+ 
+ ## Create a new on-premises Active Directory from data in Microsoft Entra ID
+-Some customers start with a cloud-only solution with Microsoft Entra ID and they don&#039;t have an on-premises AD. Later they want to consume on-premises resources and want to build an on-premises AD based on Microsoft Entra data. Microsoft Entra Connect can&#039;t help you for this scenario. It doesn&#039;t create users on-premises and it doesn&#039;t have any ability to set the password on-premises to the same as in Microsoft Entra ID.
++Some customers start with a cloud-only solution with Microsoft Entra ID and they don&#039;t have an on-premises AD. Later they want to consume on-premises resources and want to build an on-premises AD based on Microsoft Entra data. Microsoft Entra Connect can&#039;t help with this scenario. It doesn&#039;t create users on-premises and it doesn&#039;t have any ability to set the password on-premises to the same as in Microsoft Entra ID.
++
++If the only reason you plan to add on-premises AD is to support line-of-business (LOB) apps, then consider using [Microsoft Entra Domain Services](~/identity/domain-services/index.yml) instead.
+ 
+-If the only reason why you plan to add on-premises AD is to support LOBs (Line-of-Business apps), then maybe you should consider to use [Microsoft Entra Domain Services](~/identity/domain-services/index.yml) instead.
++&lt;a name=&#039;next-steps&#039;&gt;&lt;/a&gt;
+ 
+-## Next steps
++## Related content
+ Learn more about [Integrating your on-premises identities with Microsoft Entra ID](../whatis-hybrid-identity.md).
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-07-03.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-taskize-connect-for-automatic-user-provisioning-with-microsoft-entra-id-227/">Configure Taskize Connect for automatic user provisioning with Microsoft Entra ID</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/tshoot-connect-sso-25/">Tshoot Connect Sso</a></div><div class="related-item"><div class="related-meta">7 July 2026</div><a href="/changes/2026-07-07/snowflake-provisioning-tutorial-15/">Snowflake Provisioning Tutorial</a></div><div class="related-item"><div class="related-meta">2 July 2026</div><a href="/changes/2026-07-02/harness-provisioning-tutorial-04/">Harness Provisioning Tutorial</a></div><div class="related-item"><div class="related-meta">1 July 2026</div><a href="/changes/2026-07-01/configure-harness-for-automatic-user-provisioning-with-microsoft-entra-id-08/">Configure Harness for automatic user provisioning with Microsoft Entra ID</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>

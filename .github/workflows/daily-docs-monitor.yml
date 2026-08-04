@@ -5,8 +5,8 @@ permissions:
   
 on:
   schedule:
-    # Run daily at 6:00 PM PST (2:00 AM UTC) - optimal time based on Microsoft's merge patterns
-    - cron: '0 2 * * *'
+    # Run after the 07:30 UTC MicrosoftDocs publish/sync cycle, with time for late changes to settle.
+    - cron: '15 8 * * *'
   workflow_dispatch: # Allow manual triggering for testing
 
 concurrency:
@@ -23,6 +23,9 @@ jobs:
       
     - name: Clone Entra Docs repository
       run: git clone https://github.com/MicrosoftDocs/entra-docs.git entra-docs
+
+    - name: Clone Message Center repository
+      run: git clone --depth 1 https://github.com/merill/mc.git mc
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -43,6 +46,7 @@ jobs:
         OPENAI_SUMMARY_REASONING_EFFORT: "medium"
         OPENAI_SUMMARY_CONCURRENCY: "3"
         DISCORD_ENTRA_SCOUT_WEBHOOK_URL: ${{ secrets.DISCORD_ENTRA_SCOUT_WEBHOOK_URL }}
+        MC_DATA_PATH: "./mc/@data"
         RECIPIENT_EMAIL: "merill@merill.net"
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         GITHUB_ACTIONS: "true"

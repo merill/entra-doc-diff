@@ -205,3 +205,4 @@ test('rendered summaries escape model-provided HTML', () => {
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /Safe &amp; useful/);
 });
+

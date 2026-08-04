@@ -4,7 +4,7 @@ An automated GitHub Actions workflow that monitors the [Microsoft Entra document
 
 ## 🚀 Features
 
-- **📅 Daily Monitoring**: Automatically runs every day at 6:00 PM PST (optimal timing based on Microsoft's merge patterns)
+- **📅 Daily Monitoring**: Automatically runs every day at 8:15 AM UTC, after Microsoft's late publish/sync cycle
 - **📧 Email Alerts**: Beautifully formatted HTML email reports sent to your inbox
 - **🔍 Smart Analysis**: Categorizes changes into new files, modifications, and deletions
 - **💡 Change Summaries**: Provides detailed summaries of what changed in each modified file
@@ -98,17 +98,17 @@ Discord messages disable all automatic mentions, retry rate limits and transient
 
 ### 4. **Customize (Optional)**
 Edit `.github/workflows/daily-docs-monitor.yml` to:
-- Change the schedule (currently 6:00 PM PST daily)
+- Change the schedule (currently 8:15 AM UTC daily)
 - Modify the recipient email
 - Adjust the timezone
 
 ## 🕒 Optimal Timing
 
-Based on analysis of Microsoft's documentation repository patterns:
-- **Peak Activity**: 9 AM - 5 PM PST (Microsoft business hours)
-- **Bulk Updates**: Often occur in late afternoon
-- **Chosen Schedule**: 6:00 PM PST (2:00 AM UTC)
-- **Why**: Provides 10-20 minute buffer after typical documentation workflows complete
+Analysis of 838 merge commits in `MicrosoftDocs/entra-docs` from May through early August 2026 found recurring publish/sync cycles around 07:30, 12:30, 17:30, and 22:30 UTC. The 07:30 cycle consistently includes the late Pacific-day changes and its repository sync normally completes by approximately 07:38 UTC.
+
+- **Chosen schedule**: 8:15 AM UTC daily
+- **Why**: Provides a 35–45 minute buffer after the late publish/sync cycle while publishing the daily update soon afterwards
+- **Visitor display**: The generated site converts refresh timestamps and daily-page dates to the reader's local timezone in the browser
 
 ## 🧪 Testing
 
@@ -120,6 +120,17 @@ npm test
 # End-to-end local run without sending email or Discord messages
 DRY_RUN=true DISCORD_DRY_RUN=true LOCAL_REPO_PATH=/path/to/entra-docs npm start
 ```
+
+Build and preview the static Entra.News Daily site locally:
+
+```bash
+MC_DATA_PATH=../mc/@data npm run build:site
+npm run preview:site
+```
+
+Open `http://127.0.0.1:4173/`. The generated site uses `daily.entra.news` as its canonical host and includes indexable day, week, month, product, topic, documentation-change, and Message Center pages. Recent documentation details lead with readable context and a formatted comparison, with the raw Markdown patch available as a secondary view.
+
+Message Center ingestion includes a post when either its service list or title contains the standalone word `Entra` (case-insensitive). Set `MC_DATA_PATH` to the Message Center repository's `@data` directory when building locally; the GitHub workflow clones that repository automatically.
 
 Or trigger the GitHub Action manually:
 1. Go to Actions tab in your repository
@@ -146,15 +157,15 @@ entra-doc-diff/
 3. **Filter Files**: Focuses on `.md` files in the `docs/` directory
 4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
 5. **Group Changes**: For multiple diffs, asks Luna for one additional product/documentation-area digest
-6. **Publish**: Writes the summaries into the HTML and JSON reports and posts deduplicated Discord embeds
-7. **Send Email**: Delivers the complete report through Microsoft Graph
-8. **Archive**: Saves the report as a GitHub Actions artifact
+6. **Publish**: Writes summaries into JSON and the static Entra.News Daily site, then posts deduplicated Discord embeds
+7. **Send Email**: Delivers the complete report through Microsoft Graph without requesting Outlook sensitivity
+8. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
 
 ## 🔧 Configuration Options
 
 ### Workflow Variables (in `daily-docs-monitor.yml`):
 - `RECIPIENT_EMAIL`: Where to send the reports
-- `cron`: Schedule (currently `'0 2 * * *'` for 2 AM UTC)
+- `cron`: Schedule (currently `'15 8 * * *'` for 8:15 AM UTC)
 
 ### Script Configuration (in `monitor-docs.js`):
 - `targetRepo`: Repository to monitor (currently `MicrosoftDocs/entra-docs`)

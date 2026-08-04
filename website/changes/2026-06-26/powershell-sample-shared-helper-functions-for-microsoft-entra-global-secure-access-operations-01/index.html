@@ -1,0 +1,601 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations — Entra.News Daily</title><meta name="description" content="Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts."><link rel="canonical" href="https://daily.entra.news/changes/2026-06-26/powershell-sample-shared-helper-functions-for-microsoft-entra-global-secure-access-operations-01/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations — Entra.News Daily"><meta property="og:description" content="Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts."><meta property="og:url" content="https://daily.entra.news/changes/2026-06-26/powershell-sample-shared-helper-functions-for-microsoft-entra-global-secure-access-operations-01/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations — Entra.News Daily"><meta name="twitter:description" content="Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-06-22/">Week of 22 June 2026</a> &nbsp;/&nbsp; <a href="/products/global-secure-access/">Global Secure Access</a> &nbsp;/&nbsp; <a href="/topics/authentication/">Authentication</a></nav><div class="product-kicker"><img src="/assets/products/global-secure-access.svg" alt="">Microsoft Entra Global Secure Access</div><h1>PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations</h1><div class="article-meta"><span>26 June 2026</span><span>New</span><span>+300 / −0 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change context"><p>new file mode 100644</p>
+</div><div class="rendered-change added"><hr>
+<h2>title: PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations
+description: &quot;Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts.&quot;
+ms.topic: sample
+ms.date: 06/17/2026
+ms.reviewer: tdetzner
+ai-usage: ai-assisted</h2>
+<h1>Shared helper functions for Microsoft Entra Global Secure Access operations</h1>
+<p>This helper file provides shared authentication and alert email functions used by the Global Secure Access operations automation scripts. Download or copy this helper into the same folder as the scripts that dot-source <code>_GsaOpsHelpers.ps1</code>.</p>
+<p>The helper supports Azure authentication, Microsoft Graph authentication, Log Analytics token checks, and alert email delivery through Microsoft Graph.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>PowerShell 7.0 or later.</li>
+<li>Install the modules listed in the script&#39;s <code>.NOTES</code> block.</li>
+<li>Use only permissions and roles that your organization has approved for the task.</li>
+</ul>
+<h2>Script</h2>
+<pre><code class="language-powershell">&lt;#
+.SYNOPSIS
+    Shared helpers for GSA operations automation scripts.
+.DESCRIPTION
+    Dot-source this file from any script in scripts/automation/ that needs to
+    authenticate to Azure and/or Microsoft Graph, or send an HTML alert email
+    via Microsoft Graph.
+
+    Exposed functions:
+        Connect-GsaRuntime  - Ensure Az and/or Microsoft Graph contexts exist.
+                              Tries managed identity first; if unavailable,
+                              falls back to interactive browser login, then
+                              device-code. Accepts -TenantId and -SubscriptionId.
+                              Reuses existing contexts when tenant/subscription
+                              match. Throws on failure.
+        Confirm-GsaLogAnalyticsAccess
+                            - Ensures the Az session holds a Log Analytics
+                              token. Tenants with CA policies may issue
+                              ARM-only tokens; this helper detects and fixes
+                              that. Call before Invoke-AzOperationalInsightsQuery.
+        Send-GsaAlertEmail  - Send an HTML alert email through Microsoft Graph
+                              using Send-MgUserMail. Throws on failure.
+
+    Both helpers throw terminating errors so the calling script can surface
+    auth and delivery failures via standard try/catch, rather than masking
+    them with Write-Warning and continuing.
+
+    Example:
+        . &quot;$PSScriptRoot\_GsaOpsHelpers.ps1&quot;
+        Connect-GsaRuntime -Service Both
+        Send-GsaAlertEmail -SenderId &#39;gsa-automation@contoso.com&#39; `
+                           -Recipient &#39;gsa-ops@contoso.com&#39; `
+                           -Subject  &#39;GSA alert&#39;                `
+                           -HtmlBody &#39;&lt;p&gt;Body&lt;/p&gt;&#39;
+.NOTES
+    Minimum module versions:
+        Az.Accounts 2.x
+        Microsoft.Graph.Authentication 2.x
+        Microsoft.Graph.Users.Actions 2.x
+    PowerShell 5.1+. Callers that use `ConvertFrom-Json -AsHashtable` require
+    PowerShell 7.0 or later.
+    Author: GSA Operations
+#&gt;
+
+function Connect-GsaRuntime {
+    &lt;#
+    .SYNOPSIS
+        Ensures an Az and/or Microsoft Graph context is available.
+    .DESCRIPTION
+        If no context is already established for the requested service, attempts
+        to authenticate in this order:
+          1. Reuse an existing context (no-op if tenant and subscription match).
+          2. Managed identity (Azure Automation, App Service, etc.).
+          3. Interactive browser login (local development / test).
+          4. Device-code fallback (headless terminals).
+        Throws on failure. Safe to call multiple times.
+    .PARAMETER Service
+        Which service contexts to ensure. One of: Az, Graph, Both. Default: Both.
+    .PARAMETER TenantId
+        Microsoft Entra tenant ID to target. When supplied and a context for a
+        different tenant is active, the existing context is replaced.
+    .PARAMETER SubscriptionId
+        Optional Azure subscription ID to set as the active context.
+    #&gt;
+    [CmdletBinding()]
+    param(
+        [ValidateSet(&#39;Az&#39;, &#39;Graph&#39;, &#39;Both&#39;)]
+        [string]$Service = &#39;Both&#39;,
+
+        [string]$TenantId,
+
+        [string]$SubscriptionId
+    )
+
+    if ($Service -in &#39;Az&#39;, &#39;Both&#39;) {
+        $azContext = Get-AzContext -ErrorAction SilentlyContinue
+        if ($azContext) {
+            $tenantOk = (-not $TenantId) -or ($azContext.Tenant.Id -eq $TenantId)
+            $subOk    = (-not $SubscriptionId) -or ($azContext.Subscription.Id -eq $SubscriptionId)
+            if ($tenantOk -and $subOk) {
+                Write-Verbose (&quot;Reusing existing Az context (tenant {0}, subscription {1}).&quot; -f $azContext.Tenant.Id, $azContext.Subscription.Id)
+            } elseif ($tenantOk -and $SubscriptionId) {
+                Set-AzContext -SubscriptionId $SubscriptionId -ErrorAction Stop | Out-Null
+                Write-Verbose (&quot;Switched subscription to {0}.&quot; -f $SubscriptionId)
+            } else {
+                # Tenant mismatch — disconnect and re-authenticate below
+                Disconnect-AzAccount -ErrorAction SilentlyContinue | Out-Null
+                $azContext = $null
+            }
+        }
+
+        if (-not $azContext) {
+            $connectParams = @{ ErrorAction = &#39;Stop&#39; }
+            if ($TenantId)       { $connectParams[&#39;TenantId&#39;]     = $TenantId }
+            if ($SubscriptionId) { $connectParams[&#39;Subscription&#39;] = $SubscriptionId }
+
+            # 1. Managed identity
+            try {
+                Connect-AzAccount -Identity @connectParams | Out-Null
+                Write-Verbose &quot;Connected to Azure via managed identity.&quot;
+            } catch {
+                Write-Verbose &quot;Managed identity unavailable for Azure — falling back to interactive login.&quot;
+                # 2. Interactive browser
+                try {
+                    Connect-AzAccount @connectParams | Out-Null
+                    Write-Verbose &quot;Connected to Azure via interactive login.&quot;
+                } catch {
+                    Write-Verbose (&quot;Interactive browser failed: {0}. Trying device-code.&quot; -f $_.Exception.Message)
+                    # 3. Device-code fallback
+                    try {
+                        Connect-AzAccount -UseDeviceAuthentication @connectParams | Out-Null
+                        Write-Verbose &quot;Connected to Azure via device-code.&quot;
+                    } catch {
+                        throw &quot;Failed to obtain an Azure context via managed identity, browser, or device-code. Error: $_&quot;
+                    }
+                }
+            }
+            if (-not (Get-AzContext -ErrorAction SilentlyContinue)) {
+                throw &quot;Connect-AzAccount returned without an error but no Az context is available.&quot;
+            }
+        }
+    }
+
+    if ($Service -in &#39;Graph&#39;, &#39;Both&#39;) {
+        $mgContext = Get-MgContext -ErrorAction SilentlyContinue
+        if ($mgContext) {
+            $tenantOk = (-not $TenantId) -or ($mgContext.TenantId -eq $TenantId)
+            if ($tenantOk) {
+                Write-Verbose (&quot;Reusing existing Graph context (tenant {0}).&quot; -f $mgContext.TenantId)
+            } else {
+                Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+                $mgContext = $null
+            }
+        }
+
+        if (-not $mgContext) {
+            $mgParams = @{ NoWelcome = $true; ErrorAction = &#39;Stop&#39; }
+            if ($TenantId) { $mgParams[&#39;TenantId&#39;] = $TenantId }
+
+            # 1. Managed identity
+            try {
+                Connect-MgGraph -Identity @mgParams | Out-Null
+                Write-Verbose &quot;Connected to Microsoft Graph via managed identity.&quot;
+            } catch {
+                Write-Verbose &quot;Managed identity unavailable for Graph — falling back to interactive login.&quot;
+                # 2. Interactive browser
+                try {
+                    Connect-MgGraph @mgParams | Out-Null
+                    Write-Verbose &quot;Connected to Microsoft Graph via interactive login.&quot;
+                } catch {
+                    throw &quot;Failed to obtain a Microsoft Graph context via managed identity or interactive login. Error: $_&quot;
+                }
+            }
+            if (-not (Get-MgContext -ErrorAction SilentlyContinue)) {
+                throw &quot;Connect-MgGraph returned without an error but no Graph context is available.&quot;
+            }
+        }
+    }
+}
+
+function Confirm-GsaLogAnalyticsAccess {
+    &lt;#
+    .SYNOPSIS
+        Ensures the current Az context holds a Log Analytics token.
+    .DESCRIPTION
+        Tenants with conditional access policies (e.g. MFA) may issue an
+        ARM-only token on initial Connect-AzAccount. Calls to
+        Invoke-AzOperationalInsightsQuery then fail with:
+
+            &quot;Authentication failed against resource
+             OperationalInsightsEndpointResourceId.&quot;
+
+        This function detects that condition by attempting to acquire a token
+        for the Log Analytics resource (https://api.loganalytics.io). If the
+        token request fails, it re-authenticates with the
+        OperationalInsightsEndpointResourceId scope.
+
+        Call this after Connect-GsaRuntime and before any
+        Invoke-AzOperationalInsightsQuery call.
+    #&gt;
+    [CmdletBinding()]
+    param()
+
+    $context = Get-AzContext -ErrorAction SilentlyContinue
+    if (-not $context) {
+        throw &#39;No Az context available. Call Connect-GsaRuntime first.&#39;
+    }
+
+    try {
+        $null = Get-AzAccessToken -ResourceUrl &#39;https://api.loganalytics.io&#39; -ErrorAction Stop
+        Write-Verbose &#39;Log Analytics token is available.&#39;
+        return
+    } catch {
+        Write-Verbose (&quot;Log Analytics token not available: {0}&quot; -f $_.Exception.Message)
+    }
+
+    Write-Verbose &#39;Acquiring Log Analytics token (conditional access may prompt for MFA)...&#39;
+    $connectParams = @{
+        AuthScope   = &#39;OperationalInsightsEndpointResourceId&#39;
+        TenantId    = $context.Tenant.Id
+        ErrorAction = &#39;Stop&#39;
+    }
+
+    try {
+        Connect-AzAccount @connectParams | Out-Null
+        Write-Verbose &#39;Re-authenticated with browser for Log Analytics scope.&#39;
+    } catch {
+        Write-Verbose (&quot;Browser re-auth failed: {0}. Trying device-code.&quot; -f $_.Exception.Message)
+        try {
+            Connect-AzAccount -UseDeviceAuthentication @connectParams | Out-Null
+            Write-Verbose &#39;Re-authenticated with device-code for Log Analytics scope.&#39;
+        } catch {
+            throw &quot;Failed to acquire a Log Analytics token. Error: $_&quot;
+        }
+    }
+}
+
+function Send-GsaAlertEmail {
+    &lt;#
+    .SYNOPSIS
+        Sends an HTML alert email via Microsoft Graph.
+    .DESCRIPTION
+        Wraps Send-MgUserMail with a consistent HTML message envelope. The
+        sender mailbox must exist in the tenant and the calling identity must
+        hold Mail.Send for that mailbox. Throws on failure so the caller can
+        decide whether to log, retry, or rethrow.
+    .PARAMETER SenderId
+        UserId or UPN of the sending mailbox.
+    .PARAMETER Recipient
+        Email address of the recipient.
+    .PARAMETER Subject
+        Subject line of the alert.
+    .PARAMETER HtmlBody
+        HTML body of the alert. Caller is responsible for HTML-escaping any
+        dynamic content that could otherwise break the message.
+    #&gt;
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$SenderId,
+
+        [Parameter(Mandatory)]
+        [string]$Recipient,
+
+        [Parameter(Mandatory)]
+        [string]$Subject,
+
+        [Parameter(Mandatory)]
+        [string]$HtmlBody
+    )
+
+    $message = @{
+        Message = @{
+            Subject      = $Subject
+            Body         = @{
+                ContentType = &#39;HTML&#39;
+                Content     = $HtmlBody
+            }
+            ToRecipients = @(@{ EmailAddress = @{ Address = $Recipient } })
+        }
+        SaveToSentItems = $false
+    }
+
+    try {
+        Send-MgUserMail -UserId $SenderId -BodyParameter $message -ErrorAction Stop
+        Write-Verbose &quot;Alert email sent from &#39;$SenderId&#39; to &#39;$Recipient&#39;.&quot;
+    } catch {
+        throw &quot;Failed to send alert email via Microsoft Graph (Sender=&#39;$SenderId&#39;, Recipient=&#39;$Recipient&#39;). Verify the Mail.Send permission and that the sending mailbox exists. Error: $_&quot;
+    }
+}
+</code></pre>
+<h2>Related content</h2>
+<ul>
+<li><a href="../powershell-samples.md">Global Secure Access PowerShell samples</a></li>
+<li><a href="../overview-operations.md">Microsoft Entra Global Secure Access operations guide</a></li>
+</ul>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/global-secure-access/scripts/powershell-global-secure-access-operations-helpers.md b/docs/global-secure-access/scripts/powershell-global-secure-access-operations-helpers.md
+new file mode 100644
+index 00000000000..a620dc65576
+--- /dev/null
++++ b/docs/global-secure-access/scripts/powershell-global-secure-access-operations-helpers.md
+@@ -0,0 +1,300 @@
++---
++title: PowerShell sample - Shared helper functions for Microsoft Entra Global Secure Access operations
++description: &quot;Use shared helper functions for authentication and alert email in Global Secure Access operations automation scripts.&quot;
++ms.topic: sample
++ms.date: 06/17/2026
++ms.reviewer: tdetzner
++ai-usage: ai-assisted
++---
++
++# Shared helper functions for Microsoft Entra Global Secure Access operations
++
++This helper file provides shared authentication and alert email functions used by the Global Secure Access operations automation scripts. Download or copy this helper into the same folder as the scripts that dot-source `_GsaOpsHelpers.ps1`.
++
++The helper supports Azure authentication, Microsoft Graph authentication, Log Analytics token checks, and alert email delivery through Microsoft Graph.
++
++## Prerequisites
++
++- PowerShell 7.0 or later.
++- Install the modules listed in the script&#039;s `.NOTES` block.
++- Use only permissions and roles that your organization has approved for the task.
++
++## Script
++
++```powershell
++&lt;#
++.SYNOPSIS
++    Shared helpers for GSA operations automation scripts.
++.DESCRIPTION
++    Dot-source this file from any script in scripts/automation/ that needs to
++    authenticate to Azure and/or Microsoft Graph, or send an HTML alert email
++    via Microsoft Graph.
++
++    Exposed functions:
++        Connect-GsaRuntime  - Ensure Az and/or Microsoft Graph contexts exist.
++                              Tries managed identity first; if unavailable,
++                              falls back to interactive browser login, then
++                              device-code. Accepts -TenantId and -SubscriptionId.
++                              Reuses existing contexts when tenant/subscription
++                              match. Throws on failure.
++        Confirm-GsaLogAnalyticsAccess
++                            - Ensures the Az session holds a Log Analytics
++                              token. Tenants with CA policies may issue
++                              ARM-only tokens; this helper detects and fixes
++                              that. Call before Invoke-AzOperationalInsightsQuery.
++        Send-GsaAlertEmail  - Send an HTML alert email through Microsoft Graph
++                              using Send-MgUserMail. Throws on failure.
++
++    Both helpers throw terminating errors so the calling script can surface
++    auth and delivery failures via standard try/catch, rather than masking
++    them with Write-Warning and continuing.
++
++    Example:
++        . &quot;$PSScriptRoot\_GsaOpsHelpers.ps1&quot;
++        Connect-GsaRuntime -Service Both
++        Send-GsaAlertEmail -SenderId &#039;gsa-automation@contoso.com&#039; `
++                           -Recipient &#039;gsa-ops@contoso.com&#039; `
++                           -Subject  &#039;GSA alert&#039;                `
++                           -HtmlBody &#039;&lt;p&gt;Body&lt;/p&gt;&#039;
++.NOTES
++    Minimum module versions:
++        Az.Accounts 2.x
++        Microsoft.Graph.Authentication 2.x
++        Microsoft.Graph.Users.Actions 2.x
++    PowerShell 5.1+. Callers that use `ConvertFrom-Json -AsHashtable` require
++    PowerShell 7.0 or later.
++    Author: GSA Operations
++#&gt;
++
++function Connect-GsaRuntime {
++    &lt;#
++    .SYNOPSIS
++        Ensures an Az and/or Microsoft Graph context is available.
++    .DESCRIPTION
++        If no context is already established for the requested service, attempts
++        to authenticate in this order:
++          1. Reuse an existing context (no-op if tenant and subscription match).
++          2. Managed identity (Azure Automation, App Service, etc.).
++          3. Interactive browser login (local development / test).
++          4. Device-code fallback (headless terminals).
++        Throws on failure. Safe to call multiple times.
++    .PARAMETER Service
++        Which service contexts to ensure. One of: Az, Graph, Both. Default: Both.
++    .PARAMETER TenantId
++        Microsoft Entra tenant ID to target. When supplied and a context for a
++        different tenant is active, the existing context is replaced.
++    .PARAMETER SubscriptionId
++        Optional Azure subscription ID to set as the active context.
++    #&gt;
++    [CmdletBinding()]
++    param(
++        [ValidateSet(&#039;Az&#039;, &#039;Graph&#039;, &#039;Both&#039;)]
++        [string]$Service = &#039;Both&#039;,
++
++        [string]$TenantId,
++
++        [string]$SubscriptionId
++    )
++
++    if ($Service -in &#039;Az&#039;, &#039;Both&#039;) {
++        $azContext = Get-AzContext -ErrorAction SilentlyContinue
++        if ($azContext) {
++            $tenantOk = (-not $TenantId) -or ($azContext.Tenant.Id -eq $TenantId)
++            $subOk    = (-not $SubscriptionId) -or ($azContext.Subscription.Id -eq $SubscriptionId)
++            if ($tenantOk -and $subOk) {
++                Write-Verbose (&quot;Reusing existing Az context (tenant {0}, subscription {1}).&quot; -f $azContext.Tenant.Id, $azContext.Subscription.Id)
++            } elseif ($tenantOk -and $SubscriptionId) {
++                Set-AzContext -SubscriptionId $SubscriptionId -ErrorAction Stop | Out-Null
++                Write-Verbose (&quot;Switched subscription to {0}.&quot; -f $SubscriptionId)
++            } else {
++                # Tenant mismatch — disconnect and re-authenticate below
++                Disconnect-AzAccount -ErrorAction SilentlyContinue | Out-Null
++                $azContext = $null
++            }
++        }
++
++        if (-not $azContext) {
++            $connectParams = @{ ErrorAction = &#039;Stop&#039; }
++            if ($TenantId)       { $connectParams[&#039;TenantId&#039;]     = $TenantId }
++            if ($SubscriptionId) { $connectParams[&#039;Subscription&#039;] = $SubscriptionId }
++
++            # 1. Managed identity
++            try {
++                Connect-AzAccount -Identity @connectParams | Out-Null
++                Write-Verbose &quot;Connected to Azure via managed identity.&quot;
++            } catch {
++                Write-Verbose &quot;Managed identity unavailable for Azure — falling back to interactive login.&quot;
++                # 2. Interactive browser
++                try {
++                    Connect-AzAccount @connectParams | Out-Null
++                    Write-Verbose &quot;Connected to Azure via interactive login.&quot;
++                } catch {
++                    Write-Verbose (&quot;Interactive browser failed: {0}. Trying device-code.&quot; -f $_.Exception.Message)
++                    # 3. Device-code fallback
++                    try {
++                        Connect-AzAccount -UseDeviceAuthentication @connectParams | Out-Null
++                        Write-Verbose &quot;Connected to Azure via device-code.&quot;
++                    } catch {
++                        throw &quot;Failed to obtain an Azure context via managed identity, browser, or device-code. Error: $_&quot;
++                    }
++                }
++            }
++            if (-not (Get-AzContext -ErrorAction SilentlyContinue)) {
++                throw &quot;Connect-AzAccount returned without an error but no Az context is available.&quot;
++            }
++        }
++    }
++
++    if ($Service -in &#039;Graph&#039;, &#039;Both&#039;) {
++        $mgContext = Get-MgContext -ErrorAction SilentlyContinue
++        if ($mgContext) {
++            $tenantOk = (-not $TenantId) -or ($mgContext.TenantId -eq $TenantId)
++            if ($tenantOk) {
++                Write-Verbose (&quot;Reusing existing Graph context (tenant {0}).&quot; -f $mgContext.TenantId)
++            } else {
++                Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
++                $mgContext = $null
++            }
++        }
++
++        if (-not $mgContext) {
++            $mgParams = @{ NoWelcome = $true; ErrorAction = &#039;Stop&#039; }
++            if ($TenantId) { $mgParams[&#039;TenantId&#039;] = $TenantId }
++
++            # 1. Managed identity
++            try {
++                Connect-MgGraph -Identity @mgParams | Out-Null
++                Write-Verbose &quot;Connected to Microsoft Graph via managed identity.&quot;
++            } catch {
++                Write-Verbose &quot;Managed identity unavailable for Graph — falling back to interactive login.&quot;
++                # 2. Interactive browser
++                try {
++                    Connect-MgGraph @mgParams | Out-Null
++                    Write-Verbose &quot;Connected to Microsoft Graph via interactive login.&quot;
++                } catch {
++                    throw &quot;Failed to obtain a Microsoft Graph context via managed identity or interactive login. Error: $_&quot;
++                }
++            }
++            if (-not (Get-MgContext -ErrorAction SilentlyContinue)) {
++                throw &quot;Connect-MgGraph returned without an error but no Graph context is available.&quot;
++            }
++        }
++    }
++}
++
++function Confirm-GsaLogAnalyticsAccess {
++    &lt;#
++    .SYNOPSIS
++        Ensures the current Az context holds a Log Analytics token.
++    .DESCRIPTION
++        Tenants with conditional access policies (e.g. MFA) may issue an
++        ARM-only token on initial Connect-AzAccount. Calls to
++        Invoke-AzOperationalInsightsQuery then fail with:
++
++            &quot;Authentication failed against resource
++             OperationalInsightsEndpointResourceId.&quot;
++
++        This function detects that condition by attempting to acquire a token
++        for the Log Analytics resource (https://api.loganalytics.io). If the
++        token request fails, it re-authenticates with the
++        OperationalInsightsEndpointResourceId scope.
++
++        Call this after Connect-GsaRuntime and before any
++        Invoke-AzOperationalInsightsQuery call.
++    #&gt;
++    [CmdletBinding()]
++    param()
++
++    $context = Get-AzContext -ErrorAction SilentlyContinue
++    if (-not $context) {
++        throw &#039;No Az context available. Call Connect-GsaRuntime first.&#039;
++    }
++
++    try {
++        $null = Get-AzAccessToken -ResourceUrl &#039;https://api.loganalytics.io&#039; -ErrorAction Stop
++        Write-Verbose &#039;Log Analytics token is available.&#039;
++        return
++    } catch {
++        Write-Verbose (&quot;Log Analytics token not available: {0}&quot; -f $_.Exception.Message)
++    }
++
++    Write-Verbose &#039;Acquiring Log Analytics token (conditional access may prompt for MFA)...&#039;
++    $connectParams = @{
++        AuthScope   = &#039;OperationalInsightsEndpointResourceId&#039;
++        TenantId    = $context.Tenant.Id
++        ErrorAction = &#039;Stop&#039;
++    }
++
++    try {
++        Connect-AzAccount @connectParams | Out-Null
++        Write-Verbose &#039;Re-authenticated with browser for Log Analytics scope.&#039;
++    } catch {
++        Write-Verbose (&quot;Browser re-auth failed: {0}. Trying device-code.&quot; -f $_.Exception.Message)
++        try {
++            Connect-AzAccount -UseDeviceAuthentication @connectParams | Out-Null
++            Write-Verbose &#039;Re-authenticated with device-code for Log Analytics scope.&#039;
++        } catch {
++            throw &quot;Failed to acquire a Log Analytics token. Error: $_&quot;
++        }
++    }
++}
++
++function Send-GsaAlertEmail {
++    &lt;#
++    .SYNOPSIS
++        Sends an HTML alert email via Microsoft Graph.
++    .DESCRIPTION
++        Wraps Send-MgUserMail with a consistent HTML message envelope. The
++        sender mailbox must exist in the tenant and the calling identity must
++        hold Mail.Send for that mailbox. Throws on failure so the caller can
++        decide whether to log, retry, or rethrow.
++    .PARAMETER SenderId
++        UserId or UPN of the sending mailbox.
++    .PARAMETER Recipient
++        Email address of the recipient.
++    .PARAMETER Subject
++        Subject line of the alert.
++    .PARAMETER HtmlBody
++        HTML body of the alert. Caller is responsible for HTML-escaping any
++        dynamic content that could otherwise break the message.
++    #&gt;
++    [CmdletBinding()]
++    param(
++        [Parameter(Mandatory)]
++        [string]$SenderId,
++
++        [Parameter(Mandatory)]
++        [string]$Recipient,
++
++        [Parameter(Mandatory)]
++        [string]$Subject,
++
++        [Parameter(Mandatory)]
++        [string]$HtmlBody
++    )
++
++    $message = @{
++        Message = @{
++            Subject      = $Subject
++            Body         = @{
++                ContentType = &#039;HTML&#039;
++                Content     = $HtmlBody
++            }
++            ToRecipients = @(@{ EmailAddress = @{ Address = $Recipient } })
++        }
++        SaveToSentItems = $false
++    }
++
++    try {
++        Send-MgUserMail -UserId $SenderId -BodyParameter $message -ErrorAction Stop
++        Write-Verbose &quot;Alert email sent from &#039;$SenderId&#039; to &#039;$Recipient&#039;.&quot;
++    } catch {
++        throw &quot;Failed to send alert email via Microsoft Graph (Sender=&#039;$SenderId&#039;, Recipient=&#039;$Recipient&#039;). Verify the Mail.Send permission and that the sending mailbox exists. Error: $_&quot;
++    }
++}
++```
++
++## Related content
++
++- [Global Secure Access PowerShell samples](../powershell-samples.md)
++- [Microsoft Entra Global Secure Access operations guide](../overview-operations.md)
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/global-secure-access/scripts/powershell-global-secure-access-operations-helpers"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-06-26.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-calculate-the-alert-noise-ratio-for-microsoft-entra-global-secure-access-detec-02/">PowerShell sample - Calculate the alert noise ratio for Microsoft Entra Global Secure Access detections</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-check-microsoft-entra-global-secure-access-role-assignment-reviews-03/">PowerShell sample - Check Microsoft Entra Global Secure Access role assignment reviews</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-list-microsoft-entra-backup-and-recovery-snapshots-for-global-secure-access-re-07/">PowerShell sample - List Microsoft Entra Backup and Recovery snapshots for Global Secure Access recovery</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-preview-a-microsoft-entra-recovery-for-global-secure-access-objects-06/">PowerShell sample - Preview a Microsoft Entra recovery for Global Secure Access objects</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-run-a-microsoft-entra-recovery-for-global-secure-access-objects-05/">PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>

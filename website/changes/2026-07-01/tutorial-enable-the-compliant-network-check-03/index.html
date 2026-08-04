@@ -1,0 +1,160 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tutorial: Enable the compliant network check — Entra.News Daily</title><meta name="description" content="Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access."><link rel="canonical" href="https://daily.entra.news/changes/2026-07-01/tutorial-enable-the-compliant-network-check-03/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="Tutorial: Enable the compliant network check — Entra.News Daily"><meta property="og:description" content="Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access."><meta property="og:url" content="https://daily.entra.news/changes/2026-07-01/tutorial-enable-the-compliant-network-check-03/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Tutorial: Enable the compliant network check — Entra.News Daily"><meta name="twitter:description" content="Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-06-29/">Week of 29 June 2026</a> &nbsp;/&nbsp; <a href="/products/global-secure-access/">Global Secure Access</a> &nbsp;/&nbsp; <a href="/topics/conditional-access/">Conditional Access</a></nav><div class="product-kicker"><img src="/assets/products/global-secure-access.svg" alt="">Microsoft Entra Global Secure Access</div><h1>Tutorial: Enable the compliant network check</h1><div class="article-meta"><span>1 July 2026</span><span>New</span><span>+78 / −0 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change context"><p>new file mode 100644</p>
+</div><div class="rendered-change added"><hr>
+<h2>title: &#39;Tutorial: Enable the compliant network check&#39;
+description: Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access.
+ms.topic: tutorial
+ms.date: 06/22/2026
+ms.subservice: entra-internet-access
+ms.reviewer: jebley
+ai-usage: ai-assisted
+ms.custom: sfi-image-nochange</h2>
+<h1>Tutorial: Enable the compliant network check</h1>
+<p>The compliant network check ensures users connect through the Global Secure Access service for your tenant before they access protected resources. This tenant-bound network signal lets you use location-based Conditional Access policies without maintaining egress IP address lists or routing traffic through a VPN for source IP anchoring.</p>
+<p>In this tutorial, you learn how to:</p>
+<blockquote>
+<p>[!div class=&quot;checklist&quot;]</p>
+<ul>
+<li>Recognize what the compliant network check does and why it matters.</li>
+<li>Create a Conditional Access policy that blocks access from anywhere except the compliant network.</li>
+<li>Validate that protected apps are blocked when the Global Secure Access client is disabled.</li>
+</ul>
+</blockquote>
+<h2>Key concepts</h2>
+<p>Compliant network enforcement reduces the risk of token theft and replay attacks. Microsoft Entra ID performs authentication-plane enforcement when a user authenticates. If an adversary steals a session token and tries to replay it from a device that isn&#39;t connected to your organization&#39;s compliant network, Microsoft Entra ID denies the request and blocks further access.</p>
+<p>The compliant network check is tenant-specific. If you define a policy that requires compliant network in one tenant, only users who connect through the Global Secure Access service for that tenant can satisfy the control.</p>
+<p>The compliant network is different from IPv4, IPv6, or geographic named locations that you configure in Conditional Access. You don&#39;t need to review or maintain compliant network IP addresses or ranges.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>You must <a href="tutorial-microsoft-traffic-source-ip-restoration.md">enable source IP restoration</a> in order to target the compliant network in Conditional Access.</p>
+</div></div></aside><div class="rendered-change added"><h2>Step 1: Create the compliant network Conditional Access policy</h2>
+<p>A typical policy blocks all network locations except compliant networks. Start with a pilot group and a specific test application before you apply the policy broadly.</p>
+<ol>
+<li>Sign in to the <a href="https://entra.microsoft.com">Microsoft Entra admin center</a> as at least a Conditional Access Administrator.</li>
+<li>Browse to <strong>Entra ID</strong> &gt; <strong>Conditional Access</strong>.</li>
+<li>Select <strong>Create new policy</strong>.</li>
+<li>Enter a meaningful policy name, such as <strong>Require compliant network - Pilot</strong>.</li>
+<li>Under <strong>Assignments</strong>, select <strong>Users or workload identities</strong>.<ol>
+<li>Under <strong>Include</strong>, select a test user or pilot group.</li>
+</ol>
+</li>
+<li>Under <strong>Target resources</strong> &gt; <strong>Include</strong>, select a specific test application.</li>
+<li>Under <strong>Network</strong>:<ol>
+<li>Set <strong>Configure</strong> to <strong>Yes</strong>.</li>
+<li>Under <strong>Include</strong>, select <strong>Any location</strong>.</li>
+<li>Under <strong>Exclude</strong>, select <strong>All Compliant Network locations</strong>.</li>
+</ol>
+</li>
+<li>Under <strong>Access controls</strong> &gt; <strong>Grant</strong>, select <strong>Block access</strong>, and then select <strong>Select</strong>.</li>
+<li>Confirm your settings and set <strong>Enable policy</strong> to <strong>On</strong>.</li>
+<li>Select <strong>Create</strong>.</li>
+</ol>
+<h2>Step 2: Validate the compliant network policy</h2>
+<ol>
+<li><p>On a pilot device with the Global Secure Access client installed and running, attempt to sign in to an app included in the Conditional Access policy configured in step 1. You should be able to sign in normally.</p>
+</li>
+<li><p>Pause the Global Secure Access client by right-clicking the application in the Windows system tray and selecting <strong>Disable</strong>.</p>
+</li>
+<li><p>Open a new browser session and try to sign in again.</p>
+</li>
+<li><p>Confirm that Microsoft Entra ID blocks access.</p>
+<p> :::image type=&quot;content&quot; source=&quot;media/tutorial-microsoft-traffic/compliant-network-block.png&quot; alt-text=&quot;Screenshot that shows a Microsoft sign-in error stating that the user can&#39;t access the resource right now.&quot; lightbox=&quot;media/tutorial-microsoft-traffic/compliant-network-block.png&quot;:::</p>
+</li>
+<li><p>Re-enable the Global Secure Access client and confirm that access is restored.</p>
+</li>
+</ol>
+<p>If you&#39;re already signed in to an application, access isn&#39;t interrupted immediately. Microsoft Entra ID reevaluates the compliant network check the next time sign-in is required, such as when the application session expires. Use a fresh browser session or sign out first when you validate.</p>
+<h2>What you learned</h2>
+<p>In this exercise, you accomplished the following tasks:</p>
+<ul>
+<li><strong>Confirmed Conditional Access signaling:</strong> You verified that Microsoft Entra ID can evaluate the compliant network signal.</li>
+<li><strong>Created a compliant network Conditional Access policy:</strong> Your pilot users must connect through Global Secure Access before they can reach apps integrated with Microsoft Entra ID.</li>
+<li><strong>Validated enforcement:</strong> You confirmed that access succeeds with the Global Secure Access client running and is blocked when the client is disabled.</li>
+</ul>
+<h2>Next step</h2>
+<blockquote>
+<p>[!div class=&quot;nextstepaction&quot;]
+<a href="tutorial-microsoft-traffic-tenant-restrictions.md">Configure universal tenant restrictions</a></p>
+</blockquote>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/global-secure-access/tutorial-microsoft-traffic-compliant-network.md b/docs/global-secure-access/tutorial-microsoft-traffic-compliant-network.md
+new file mode 100644
+index 00000000000..e02f3cb3078
+--- /dev/null
++++ b/docs/global-secure-access/tutorial-microsoft-traffic-compliant-network.md
+@@ -0,0 +1,78 @@
++---
++title: &#039;Tutorial: Enable the compliant network check&#039;
++description: Learn how to configure a Conditional Access policy that requires a compliant network with Global Secure Access.
++ms.topic: tutorial
++ms.date: 06/22/2026
++ms.subservice: entra-internet-access
++ms.reviewer: jebley
++ai-usage: ai-assisted
++ms.custom: sfi-image-nochange
++---
++
++# Tutorial: Enable the compliant network check
++
++The compliant network check ensures users connect through the Global Secure Access service for your tenant before they access protected resources. This tenant-bound network signal lets you use location-based Conditional Access policies without maintaining egress IP address lists or routing traffic through a VPN for source IP anchoring.
++
++In this tutorial, you learn how to:
++
++&gt; [!div class=&quot;checklist&quot;]
++&gt; - Recognize what the compliant network check does and why it matters.
++&gt; - Create a Conditional Access policy that blocks access from anywhere except the compliant network.
++&gt; - Validate that protected apps are blocked when the Global Secure Access client is disabled.
++
++## Key concepts
++
++Compliant network enforcement reduces the risk of token theft and replay attacks. Microsoft Entra ID performs authentication-plane enforcement when a user authenticates. If an adversary steals a session token and tries to replay it from a device that isn&#039;t connected to your organization&#039;s compliant network, Microsoft Entra ID denies the request and blocks further access.
++
++The compliant network check is tenant-specific. If you define a policy that requires compliant network in one tenant, only users who connect through the Global Secure Access service for that tenant can satisfy the control.
++
++The compliant network is different from IPv4, IPv6, or geographic named locations that you configure in Conditional Access. You don&#039;t need to review or maintain compliant network IP addresses or ranges.
++
++&gt; [!NOTE]
++&gt;
++&gt; You must [enable source IP restoration](tutorial-microsoft-traffic-source-ip-restoration.md) in order to target the compliant network in Conditional Access.
++
++## Step 1: Create the compliant network Conditional Access policy
++
++A typical policy blocks all network locations except compliant networks. Start with a pilot group and a specific test application before you apply the policy broadly.
++
++1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a Conditional Access Administrator.
++1. Browse to **Entra ID** &gt; **Conditional Access**.
++1. Select **Create new policy**.
++1. Enter a meaningful policy name, such as **Require compliant network - Pilot**.
++1. Under **Assignments**, select **Users or workload identities**.
++    1. Under **Include**, select a test user or pilot group.
++1. Under **Target resources** &gt; **Include**, select a specific test application.
++1. Under **Network**:
++    1. Set **Configure** to **Yes**.
++    1. Under **Include**, select **Any location**.
++    1. Under **Exclude**, select **All Compliant Network locations**.
++1. Under **Access controls** &gt; **Grant**, select **Block access**, and then select **Select**.
++1. Confirm your settings and set **Enable policy** to **On**.
++1. Select **Create**.
++
++## Step 2: Validate the compliant network policy
++
++1. On a pilot device with the Global Secure Access client installed and running, attempt to sign in to an app included in the Conditional Access policy configured in step 1. You should be able to sign in normally.
++1. Pause the Global Secure Access client by right-clicking the application in the Windows system tray and selecting **Disable**.
++1. Open a new browser session and try to sign in again.
++1. Confirm that Microsoft Entra ID blocks access.
++
++    :::image type=&quot;content&quot; source=&quot;media/tutorial-microsoft-traffic/compliant-network-block.png&quot; alt-text=&quot;Screenshot that shows a Microsoft sign-in error stating that the user can&#039;t access the resource right now.&quot; lightbox=&quot;media/tutorial-microsoft-traffic/compliant-network-block.png&quot;:::
++
++1. Re-enable the Global Secure Access client and confirm that access is restored.
++
++If you&#039;re already signed in to an application, access isn&#039;t interrupted immediately. Microsoft Entra ID reevaluates the compliant network check the next time sign-in is required, such as when the application session expires. Use a fresh browser session or sign out first when you validate.
++
++## What you learned
++
++In this exercise, you accomplished the following tasks:
++
++- **Confirmed Conditional Access signaling:** You verified that Microsoft Entra ID can evaluate the compliant network signal.
++- **Created a compliant network Conditional Access policy:** Your pilot users must connect through Global Secure Access before they can reach apps integrated with Microsoft Entra ID.
++- **Validated enforcement:** You confirmed that access succeeds with the Global Secure Access client running and is blocked when the client is disabled.
++
++## Next step
++
++&gt; [!div class=&quot;nextstepaction&quot;]
++&gt; [Configure universal tenant restrictions](tutorial-microsoft-traffic-tenant-restrictions.md)
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/global-secure-access/tutorial-microsoft-traffic-compliant-network"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-07-01.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">26 March 2026</div><a href="/2026-03-26.html">Enable Compliant Network Check with Conditional Access</a></div><div class="related-item"><div class="related-meta">25 March 2026</div><a href="/2026-03-25.html">Enable Compliant Network Check with Conditional Access</a></div><div class="related-item"><div class="related-meta">10 February 2026</div><a href="/2026-02-10.html">Enable Compliant Network Check with Conditional Access</a></div><div class="related-item"><div class="related-meta">28 May 2025</div><a href="/2025-05-28.html">Enable compliant network check with Conditional Access</a></div><div class="related-item"><div class="related-meta">17 April 2025</div><a href="/2025-04-17.html">Enable compliant network check with Conditional Access</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>

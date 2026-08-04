@@ -81,3 +81,4 @@ If your organization automatically encrypts these reports, configure Exchange On
 5. Send a test report and confirm in message trace that no encryption or rights-protection rule was applied.
 
 Always scope the exception to the authenticated monitor sender. Don't exempt messages based only on a custom header, because an external sender could spoof it.
+

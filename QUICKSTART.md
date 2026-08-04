@@ -48,7 +48,7 @@ npm test
 ```
 
 ## Step 5: Enable the Workflow
-The GitHub Action will automatically run daily at 6 PM PST. You can also:
+The GitHub Action runs daily at 8:15 AM UTC, after the late Microsoft Docs publish/sync cycle. You can also:
 - Go to Actions tab → "Daily Entra Docs Monitor" → "Run workflow" to test manually
 - Check the logs to ensure everything is working
 - Look for email delivery in your inbox

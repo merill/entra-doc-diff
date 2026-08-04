@@ -11,6 +11,7 @@ const { parse } = require('node-html-parser');
 const diff = require('diff');
 const OpenAI = require('openai');
 const DiscordPublisher = require('./discord-publisher');
+const { StaticSiteGenerator } = require('./static-site');
 
 class EntraDocsMonitor {
   constructor() {
@@ -1209,8 +1210,12 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     console.log(`💾 Report saved: ${htmlFilePath}`);
     console.log(`🌐 Website report saved: ${websiteHtmlPath}`);
     
-    // Generate/update index page
+    // Generate the legacy index first, then replace it with the complete
+    // editorial static site. Historical dated reports remain available as
+    // source evidence while the new routes provide readable archive pages.
     await this.generateIndexPage();
+    const staticSite = new StaticSiteGenerator();
+    await staticSite.build();
     
     return {
       reportPath: htmlFilePath,

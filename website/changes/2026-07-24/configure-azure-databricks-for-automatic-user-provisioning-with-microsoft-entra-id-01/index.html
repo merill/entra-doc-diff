@@ -1,0 +1,285 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID — Entra.News Daily</title><meta name="description" content="Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM."><link rel="canonical" href="https://daily.entra.news/changes/2026-07-24/configure-azure-databricks-for-automatic-user-provisioning-with-microsoft-entra-id-01/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID — Entra.News Daily"><meta property="og:description" content="Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM."><meta property="og:url" content="https://daily.entra.news/changes/2026-07-24/configure-azure-databricks-for-automatic-user-provisioning-with-microsoft-entra-id-01/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID — Entra.News Daily"><meta name="twitter:description" content="Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-07-20/">Week of 20 July 2026</a> &nbsp;/&nbsp; <a href="/products/entra-id/">Entra ID</a> &nbsp;/&nbsp; <a href="/topics/standards/">Standards</a></nav><div class="product-kicker"><img src="/assets/products/entra-id.svg" alt="">Microsoft Entra ID</div><h1>Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID</h1><div class="article-meta"><span>24 July 2026</span><span>New</span><span>+150 / −0 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change context"><p>new file mode 100644</p>
+</div><div class="rendered-change added"><hr>
+<h2>title: Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID
+description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM.
+ms.topic: how-to
+ms.date: 07/22/2026
+# Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Azure Databricks so that I can streamline the user management process and ensure that users have the appropriate access to Azure Databricks.</h2>
+<h1>Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID</h1>
+<p>This article describes how to set up SCIM provisioning to the Azure Databricks account using Microsoft Entra ID.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>You can also sync users and groups from Microsoft Entra ID using <a href="https://learn.microsoft.com/azure/databricks/admin/users-groups/automatic-identity-management/">automatic identity management</a>. Automatic identity management does not require you to configure an application in Microsoft Entra ID. It also supports syncing Microsoft Entra ID service principals and nested groups to Azure Databricks, which is not supported using SCIM provisioning. Automatic identity management is enabled by default for accounts created after August 1, 2025.</p>
+</div></div></aside><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><ul>
+<li>The Microsoft Entra ID SCIM provisioning connector is not available in Azure China regions.</li>
+<li>SCIM provisioning is separate from configuring authentication for Azure Databricks. Authentication is handled automatically by Microsoft Entra ID, using the OpenID Connect protocol flow.</li>
+</ul>
+</div></div></aside><div class="rendered-change added"><h2>Prerequisites</h2>
+<p>[!INCLUDE <a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/common-prerequisites.md">common-prerequisites.md</a>]</p>
+<ul>
+<li>An Azure Databricks account with the <a href="https://databricks.com/product/pricing/platform-addons">Premium plan</a>.</li>
+<li>The <strong>Cloud Application Administrator</strong> role in Microsoft Entra ID.</li>
+<li>A <strong>Premium edition</strong> Microsoft Entra ID account to provision groups. Provisioning users is available for any Microsoft Entra ID edition.</li>
+<li>You must be an <strong>Azure Databricks account admin</strong>.</li>
+</ul>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>To enable the account console and establish your first account admin, see <a href="https://learn.microsoft.com/azure/databricks/admin/admin-concepts#establish-first-account-admin">Establish your first account admin</a>.</p>
+</div></div></aside><div class="rendered-change added"><h2>Step 1: Configure Azure Databricks</h2>
+<ol>
+<li>As an Azure Databricks account admin, sign in to the Azure Databricks <a href="https://accounts.azuredatabricks.net">account console</a>.</li>
+<li>Select <strong>Security</strong>.</li>
+<li>Select <strong>User provisioning</strong>.</li>
+<li>Select <strong>Set up user provisioning</strong>.</li>
+<li>Copy the <strong>SCIM token</strong> and the <strong>Account SCIM URL</strong>. You use these values to configure your Microsoft Entra ID enterprise application.</li>
+</ol>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>The SCIM token is restricted to the Account SCIM API <code>/api/2.1/accounts/{account_id}/scim/v2/</code> and cannot be used to authenticate to other Databricks REST APIs.</p>
+</div></div></aside><div class="rendered-change added"><h2>Step 2: Add Azure Databricks from the gallery</h2>
+<p>Before configuring Azure Databricks for automatic user provisioning with Microsoft Entra ID, you need to add Azure Databricks from the Microsoft Entra application gallery to your list of managed SaaS applications.</p>
+<ol>
+<li>Sign in to the <a href="https://entra.microsoft.com">Microsoft Entra admin center</a> as at least a <a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator">Cloud Application Administrator</a>.</li>
+<li>Browse to <strong>Entra ID</strong> &gt; <strong>Enterprise apps</strong> &gt; <strong>New application</strong>.</li>
+<li>In the <strong>Add from the gallery</strong> section, search for and select <strong>Azure Databricks SCIM Provisioning Connector</strong>.</li>
+<li>Enter a <strong>Name</strong> for the application and select <strong>Add</strong>.</li>
+</ol>
+<h2>Step 3: Configure automatic user provisioning to Azure Databricks</h2>
+<p>This section guides you through the steps to configure the Microsoft Entra provisioning service to create, update, and disable users and groups in Azure Databricks based on user and group assignments in Microsoft Entra ID.</p>
+</div><aside class="learn-alert learn-alert-important diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Important</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>If you already have SCIM connectors that sync identities directly to your workspaces, you must disable those SCIM connectors when the account-level SCIM connector is enabled. See <a href="https://learn.microsoft.com/azure/databricks/admin/users-groups/scim/aad#migrate">Migrate workspace-level SCIM provisioning to the account level</a>.</p>
+</div></div></aside><div class="rendered-change added"><h3>Configure provisioning credentials</h3>
+<ol>
+<li>Sign in to the <a href="https://entra.microsoft.com">Microsoft Entra admin center</a> as at least a <a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator">Cloud Application Administrator</a>.</li>
+<li>Browse to <strong>Entra ID</strong> &gt; <strong>Enterprise apps</strong>, and select your <strong>Azure Databricks SCIM Provisioning Connector</strong> application.</li>
+<li>Under the <strong>Manage</strong> menu, select <strong>Provisioning</strong>.</li>
+<li>Set <strong>Provisioning Mode</strong> to <strong>Automatic</strong>.</li>
+<li>Under <strong>Admin Credentials</strong>, set the <strong>Tenant URL</strong> to the <strong>Account SCIM URL</strong> you copied in Step 1.</li>
+<li>Set the <strong>Secret Token</strong> to the <strong>SCIM token</strong> you generated in Step 1.</li>
+<li>Select <strong>Test Connection</strong> and wait for the message confirming that the credentials are authorized to enable provisioning.</li>
+<li>Select <strong>Save</strong>.</li>
+</ol>
+<h3>Assign users and groups to the application</h3>
+<p>Users and groups assigned to the SCIM application will be provisioned to the Azure Databricks account. If you have existing Azure Databricks workspaces, Databricks recommends that you add all existing users and groups in those workspaces to the SCIM application.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Microsoft Entra ID does not support the automatic provisioning of service principals to Azure Databricks. You can add service principals to your Azure Databricks account by following <a href="https://learn.microsoft.com/azure/databricks/admin/users-groups/manage-service-principals#add-sp">Add service principals to your account</a>.</p>
+<p>Microsoft Entra ID does not support the automatic provisioning of nested groups to Azure Databricks. Microsoft Entra ID can only read and provision users that are immediate members of the explicitly assigned group. As a workaround, explicitly assign the groups that contain the users who need to be provisioned.</p>
+</div></div></aside><div class="rendered-change added"><ol>
+<li>Go to <strong>Manage</strong> &gt; <strong>Properties</strong>.</li>
+<li>Set <strong>Assignment required</strong> to <strong>No</strong>. Databricks recommends this option, which allows all users to sign in to the Azure Databricks account.</li>
+<li>Go to <strong>Manage</strong> &gt; <strong>Provisioning</strong>.</li>
+<li>To start synchronizing Microsoft Entra ID users and groups to Azure Databricks, set the <strong>Provisioning Status</strong> toggle to <strong>On</strong>.</li>
+<li>Select <strong>Save</strong>.</li>
+<li>Go to <strong>Manage</strong> &gt; <strong>Users and groups</strong>.</li>
+<li>Select <strong>Add user/group</strong>, select the users and groups, and select the <strong>Assign</strong> button.</li>
+<li>Wait a few minutes and check that the users and groups exist in your Azure Databricks account.</li>
+</ol>
+<p>Users and groups that you add and assign will automatically be provisioned to the Azure Databricks account when Microsoft Entra ID schedules the next sync.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>If you remove a user from the account-level SCIM application, that user is deactivated from the account and from their workspaces, regardless of whether or not identity federation has been enabled.</p>
+</div></div></aside><div class="rendered-change added"><h2>Step 4: Monitor your deployment</h2>
+<p>[!INCLUDE <a href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/includes/monitor-deployment.md">monitor-deployment.md</a>]</p>
+<h2>Provisioning tips</h2>
+<ul>
+<li>Users and groups that existed in the Azure Databricks account prior to enabling provisioning exhibit the following behavior upon provisioning sync:<ul>
+<li>Users and groups are <strong>merged</strong> if they also exist in Microsoft Entra ID.</li>
+<li>Users and groups are <strong>ignored</strong> if they don&#39;t exist in Microsoft Entra ID. Users that don&#39;t exist in Microsoft Entra ID cannot sign in to Azure Databricks.</li>
+</ul>
+</li>
+<li>Individually assigned user permissions that are duplicated by membership in a group remain even after the group membership is removed for the user.</li>
+<li>Directly removing users from an Azure Databricks account using the account console has the following effects:<ul>
+<li>The removed user loses access to that Azure Databricks account and all workspaces in the account.</li>
+<li>The removed user will not be synced again using Microsoft Entra ID provisioning, even if they remain in the enterprise application.</li>
+</ul>
+</li>
+<li>The initial Microsoft Entra ID sync is triggered immediately after you enable provisioning. Subsequent syncs are triggered every 20–40 minutes, depending on the number of users and groups in the application.</li>
+<li>You cannot update the email address of an Azure Databricks user. If you need to update an email address, contact your Azure Databricks account team.</li>
+<li>You cannot sync nested groups or Microsoft Entra ID service principals from the <strong>Azure Databricks SCIM Provisioning Connector</strong> application. You can use the <a href="https://registry.terraform.io/providers/databricks/databricks/latest/docs">Databricks Terraform provider</a> or custom scripts that target the Azure Databricks SCIM API to sync nested groups or Microsoft Entra ID service principals.</li>
+<li>Updates to group names in Microsoft Entra ID do not sync into Azure Databricks.</li>
+<li>The parameters <code>userName</code> and <code>emails.value</code> must match. A mismatch can lead to Azure Databricks rejecting user creation requests from the Microsoft Entra ID SCIM application. For cases such as external users or aliased emails, you might need to change the enterprise application&#39;s default SCIM mapping to use <code>userPrincipalName</code> rather than <code>mail</code>.</li>
+</ul>
+<h2>(Optional) Automate SCIM provisioning using Microsoft Graph</h2>
+<p><a href="https://learn.microsoft.com/graph/auth/auth-concepts">Microsoft Graph</a> includes authentication and authorization libraries that you can integrate into your application to automate provisioning of users and groups to your Azure Databricks account or workspaces, instead of configuring a SCIM provisioning connector application.</p>
+<ol>
+<li>Follow the <a href="https://learn.microsoft.com/graph/auth-register-app-v2">instructions for registering an application with Microsoft Graph</a>. Make a note of the <strong>Application ID</strong> and the <strong>Tenant ID</strong> for the application.</li>
+<li>Go to the application&#39;s <strong>Overview</strong> page:<ol>
+<li>Configure a client secret for the application, and make a note of the secret.</li>
+<li>Grant the application these permissions:<ul>
+<li><code>Application.ReadWrite.All</code></li>
+<li><code>Application.ReadWrite.OwnedBy</code></li>
+</ul>
+</li>
+</ol>
+</li>
+<li>Ask a Microsoft Entra ID administrator to <a href="https://learn.microsoft.com/azure/active-directory/manage-apps/grant-admin-consent">grant admin consent</a>.</li>
+<li>Update your application&#39;s code to <a href="https://learn.microsoft.com/graph/migrate-azure-ad-graph-planning-checklist">add support for Microsoft Graph</a>.</li>
+</ol>
+<h2>Troubleshooting</h2>
+<h3>Users and groups do not sync</h3>
+<ul>
+<li>Verify that the Azure Databricks SCIM token used to set up provisioning is still valid in the account console.</li>
+<li>Do not attempt to sync nested groups, which are not supported by Microsoft Entra ID automatic provisioning.</li>
+</ul>
+<h3>Microsoft Entra ID service principals do not sync</h3>
+<p>The <strong>Azure Databricks SCIM Provisioning Connector</strong> application does not support syncing service principals.</p>
+<h3>After initial sync, users and groups stop syncing</h3>
+<p>After the initial sync, Microsoft Entra ID does not sync immediately after you change user or group assignments. It schedules a sync after a delay, based on the number of users and groups. To request an immediate sync, go to <strong>Manage</strong> &gt; <strong>Provisioning</strong> for the enterprise application and select <strong>Clear current state and restart synchronization</strong>.</p>
+<h3>Microsoft Entra ID provisioning service IP range not accessible</h3>
+<p>The Microsoft Entra ID provisioning service operates under specific IP ranges. If you need to restrict network access, you must allow traffic from the IP addresses for <code>AzureActiveDirectory</code> in the <a href="https://www.microsoft.com/en-us/download/">Azure IP Ranges and Service Tags – Public Cloud</a> file. Use the <code>AzureActiveDirectory</code> service tag, not a subtag such as <code>AzureActiveDirectory.ServiceEndpoint</code>. Subtag IP ranges do not include all SCIM provisioning traffic IPs. For more information, see <a href="https://learn.microsoft.com/azure/active-directory/app-provisioning/use-scim-to-provision-users-and-groups">IP Ranges</a>.</p>
+<h2>Additional resources</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/configure-automatic-user-provisioning-portal.md">Managing user account provisioning for Enterprise Apps</a></li>
+<li><a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-single-sign-on.md">What is application access and single sign-on with Microsoft Entra ID?</a></li>
+</ul>
+<h2>Related content</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/entra/identity/app-provisioning/check-status-user-account-provisioning.md">Learn how to review logs and get reports on provisioning activity</a></li>
+</ul>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/identity/saas-apps/azure-databricks-provisioning-tutorial.md b/docs/identity/saas-apps/azure-databricks-provisioning-tutorial.md
+new file mode 100644
+index 00000000000..6b0086533ba
+--- /dev/null
++++ b/docs/identity/saas-apps/azure-databricks-provisioning-tutorial.md
+@@ -0,0 +1,150 @@
++---
++title: Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID
++description: Learn how to configure Microsoft Entra ID to automatically provision and de-provision user accounts to Azure Databricks using SCIM.
++ms.topic: how-to
++ms.date: 07/22/2026
++# Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Azure Databricks so that I can streamline the user management process and ensure that users have the appropriate access to Azure Databricks.
++---
++
++# Configure Azure Databricks for automatic user provisioning with Microsoft Entra ID
++
++This article describes how to set up SCIM provisioning to the Azure Databricks account using Microsoft Entra ID.
++
++&gt; [!NOTE]
++&gt; You can also sync users and groups from Microsoft Entra ID using [automatic identity management](https://learn.microsoft.com/azure/databricks/admin/users-groups/automatic-identity-management/). Automatic identity management does not require you to configure an application in Microsoft Entra ID. It also supports syncing Microsoft Entra ID service principals and nested groups to Azure Databricks, which is not supported using SCIM provisioning. Automatic identity management is enabled by default for accounts created after August 1, 2025.
++
++&gt; [!NOTE]
++&gt; - The Microsoft Entra ID SCIM provisioning connector is not available in Azure China regions.
++&gt; - SCIM provisioning is separate from configuring authentication for Azure Databricks. Authentication is handled automatically by Microsoft Entra ID, using the OpenID Connect protocol flow.
++
++## Prerequisites
++
++[!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]
++* An Azure Databricks account with the [Premium plan](https://databricks.com/product/pricing/platform-addons).
++* The **Cloud Application Administrator** role in Microsoft Entra ID.
++* A **Premium edition** Microsoft Entra ID account to provision groups. Provisioning users is available for any Microsoft Entra ID edition.
++* You must be an **Azure Databricks account admin**.
++
++&gt; [!NOTE]
++&gt; To enable the account console and establish your first account admin, see [Establish your first account admin](https://learn.microsoft.com/azure/databricks/admin/admin-concepts#establish-first-account-admin).
++
++## Step 1: Configure Azure Databricks
++
++1. As an Azure Databricks account admin, sign in to the Azure Databricks [account console](https://accounts.azuredatabricks.net).
++1. Select **Security**.
++1. Select **User provisioning**.
++1. Select **Set up user provisioning**.
++1. Copy the **SCIM token** and the **Account SCIM URL**. You use these values to configure your Microsoft Entra ID enterprise application.
++
++&gt; [!NOTE]
++&gt; The SCIM token is restricted to the Account SCIM API `/api/2.1/accounts/{account_id}/scim/v2/` and cannot be used to authenticate to other Databricks REST APIs.
++
++## Step 2: Add Azure Databricks from the gallery
++
++Before configuring Azure Databricks for automatic user provisioning with Microsoft Entra ID, you need to add Azure Databricks from the Microsoft Entra application gallery to your list of managed SaaS applications.
++
++1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).
++1. Browse to **Entra ID** &gt; **Enterprise apps** &gt; **New application**.
++1. In the **Add from the gallery** section, search for and select **Azure Databricks SCIM Provisioning Connector**.
++1. Enter a **Name** for the application and select **Add**.
++
++## Step 3: Configure automatic user provisioning to Azure Databricks
++
++This section guides you through the steps to configure the Microsoft Entra provisioning service to create, update, and disable users and groups in Azure Databricks based on user and group assignments in Microsoft Entra ID.
++
++&gt; [!IMPORTANT]
++&gt; If you already have SCIM connectors that sync identities directly to your workspaces, you must disable those SCIM connectors when the account-level SCIM connector is enabled. See [Migrate workspace-level SCIM provisioning to the account level](https://learn.microsoft.com/azure/databricks/admin/users-groups/scim/aad#migrate).
++
++### Configure provisioning credentials
++
++1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).
++1. Browse to **Entra ID** &gt; **Enterprise apps**, and select your **Azure Databricks SCIM Provisioning Connector** application.
++1. Under the **Manage** menu, select **Provisioning**.
++1. Set **Provisioning Mode** to **Automatic**.
++1. Under **Admin Credentials**, set the **Tenant URL** to the **Account SCIM URL** you copied in Step 1.
++1. Set the **Secret Token** to the **SCIM token** you generated in Step 1.
++1. Select **Test Connection** and wait for the message confirming that the credentials are authorized to enable provisioning.
++1. Select **Save**.
++
++### Assign users and groups to the application
++
++Users and groups assigned to the SCIM application will be provisioned to the Azure Databricks account. If you have existing Azure Databricks workspaces, Databricks recommends that you add all existing users and groups in those workspaces to the SCIM application.
++
++&gt; [!NOTE]
++&gt; Microsoft Entra ID does not support the automatic provisioning of service principals to Azure Databricks. You can add service principals to your Azure Databricks account by following [Add service principals to your account](https://learn.microsoft.com/azure/databricks/admin/users-groups/manage-service-principals#add-sp).
++&gt;
++&gt; Microsoft Entra ID does not support the automatic provisioning of nested groups to Azure Databricks. Microsoft Entra ID can only read and provision users that are immediate members of the explicitly assigned group. As a workaround, explicitly assign the groups that contain the users who need to be provisioned.
++
++1. Go to **Manage** &gt; **Properties**.
++1. Set **Assignment required** to **No**. Databricks recommends this option, which allows all users to sign in to the Azure Databricks account.
++1. Go to **Manage** &gt; **Provisioning**.
++1. To start synchronizing Microsoft Entra ID users and groups to Azure Databricks, set the **Provisioning Status** toggle to **On**.
++1. Select **Save**.
++1. Go to **Manage** &gt; **Users and groups**.
++1. Select **Add user/group**, select the users and groups, and select the **Assign** button.
++1. Wait a few minutes and check that the users and groups exist in your Azure Databricks account.
++
++Users and groups that you add and assign will automatically be provisioned to the Azure Databricks account when Microsoft Entra ID schedules the next sync.
++
++&gt; [!NOTE]
++&gt; If you remove a user from the account-level SCIM application, that user is deactivated from the account and from their workspaces, regardless of whether or not identity federation has been enabled.
++
++## Step 4: Monitor your deployment
++
++[!INCLUDE [monitor-deployment.md](~/identity/saas-apps/includes/monitor-deployment.md)]
++
++## Provisioning tips
++
++- Users and groups that existed in the Azure Databricks account prior to enabling provisioning exhibit the following behavior upon provisioning sync:
++  - Users and groups are **merged** if they also exist in Microsoft Entra ID.
++  - Users and groups are **ignored** if they don&#039;t exist in Microsoft Entra ID. Users that don&#039;t exist in Microsoft Entra ID cannot sign in to Azure Databricks.
++- Individually assigned user permissions that are duplicated by membership in a group remain even after the group membership is removed for the user.
++- Directly removing users from an Azure Databricks account using the account console has the following effects:
++  - The removed user loses access to that Azure Databricks account and all workspaces in the account.
++  - The removed user will not be synced again using Microsoft Entra ID provisioning, even if they remain in the enterprise application.
++- The initial Microsoft Entra ID sync is triggered immediately after you enable provisioning. Subsequent syncs are triggered every 20–40 minutes, depending on the number of users and groups in the application.
++- You cannot update the email address of an Azure Databricks user. If you need to update an email address, contact your Azure Databricks account team.
++- You cannot sync nested groups or Microsoft Entra ID service principals from the **Azure Databricks SCIM Provisioning Connector** application. You can use the [Databricks Terraform provider](https://registry.terraform.io/providers/databricks/databricks/latest/docs) or custom scripts that target the Azure Databricks SCIM API to sync nested groups or Microsoft Entra ID service principals.
++- Updates to group names in Microsoft Entra ID do not sync into Azure Databricks.
++- The parameters `userName` and `emails.value` must match. A mismatch can lead to Azure Databricks rejecting user creation requests from the Microsoft Entra ID SCIM application. For cases such as external users or aliased emails, you might need to change the enterprise application&#039;s default SCIM mapping to use `userPrincipalName` rather than `mail`.
++
++## (Optional) Automate SCIM provisioning using Microsoft Graph
++
++[Microsoft Graph](/graph/auth/auth-concepts) includes authentication and authorization libraries that you can integrate into your application to automate provisioning of users and groups to your Azure Databricks account or workspaces, instead of configuring a SCIM provisioning connector application.
++
++1. Follow the [instructions for registering an application with Microsoft Graph](/graph/auth-register-app-v2). Make a note of the **Application ID** and the **Tenant ID** for the application.
++1. Go to the application&#039;s **Overview** page:
++   1. Configure a client secret for the application, and make a note of the secret.
++   1. Grant the application these permissions:
++      - `Application.ReadWrite.All`
++      - `Application.ReadWrite.OwnedBy`
++1. Ask a Microsoft Entra ID administrator to [grant admin consent](/azure/active-directory/manage-apps/grant-admin-consent).
++1. Update your application&#039;s code to [add support for Microsoft Graph](/graph/migrate-azure-ad-graph-planning-checklist).
++
++## Troubleshooting
++
++### Users and groups do not sync
++
++- Verify that the Azure Databricks SCIM token used to set up provisioning is still valid in the account console.
++- Do not attempt to sync nested groups, which are not supported by Microsoft Entra ID automatic provisioning.
++
++### Microsoft Entra ID service principals do not sync
++
++The **Azure Databricks SCIM Provisioning Connector** application does not support syncing service principals.
++
++### After initial sync, users and groups stop syncing
++
++After the initial sync, Microsoft Entra ID does not sync immediately after you change user or group assignments. It schedules a sync after a delay, based on the number of users and groups. To request an immediate sync, go to **Manage** &gt; **Provisioning** for the enterprise application and select **Clear current state and restart synchronization**.
++
++### Microsoft Entra ID provisioning service IP range not accessible
++
++The Microsoft Entra ID provisioning service operates under specific IP ranges. If you need to restrict network access, you must allow traffic from the IP addresses for `AzureActiveDirectory` in the [Azure IP Ranges and Service Tags – Public Cloud](https://www.microsoft.com/en-us/download/) file. Use the `AzureActiveDirectory` service tag, not a subtag such as `AzureActiveDirectory.ServiceEndpoint`. Subtag IP ranges do not include all SCIM provisioning traffic IPs. For more information, see [IP Ranges](/azure/active-directory/app-provisioning/use-scim-to-provision-users-and-groups).
++
++## Additional resources
++
++* [Managing user account provisioning for Enterprise Apps](~/identity/app-provisioning/configure-automatic-user-provisioning-portal.md)
++* [What is application access and single sign-on with Microsoft Entra ID?](~/identity/enterprise-apps/what-is-single-sign-on.md)
++
++## Related content
++
++* [Learn how to review logs and get reports on provisioning activity](~/identity/app-provisioning/check-status-user-account-provisioning.md)
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/identity/saas-apps/azure-databricks-provisioning-tutorial"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-07-24.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-adobe-identity-management-saml-for-automatic-user-provisioning-with-microsoft-entra-id-39/">Configure Adobe Identity Management (SAML) for automatic user provisioning with Microsoft Entra ID</a></div><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-insightly-saml-for-automatic-user-provisioning-with-microsoft-entra-id-136/">Configure Insightly SAML for automatic user provisioning with Microsoft Entra ID</a></div><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-lexmark-cloud-services-saml-for-automatic-user-provisioning-with-microsoft-entra-id-158/">Configure Lexmark Cloud Services (SAML) for automatic user provisioning with Microsoft Entra ID</a></div><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-palo-alto-networks-scim-connector-for-automatic-user-provisioning-with-microsoft-entra-183/">Configure Palo Alto Networks SCIM Connector for automatic user provisioning with Microsoft Entra ID</a></div><div class="related-item"><div class="related-meta">27 June 2026</div><a href="/changes/2026-06-27/configure-timeclock-365-saml-for-automatic-user-provisioning-with-microsoft-entra-id-235/">Configure TimeClock 365 SAML for automatic user provisioning with Microsoft Entra ID</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>

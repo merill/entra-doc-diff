@@ -1,0 +1,183 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Migrate GitHub Actions federated credentials to immutable subjects — Entra.News Daily</title><meta name="description" content="Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#039;s immutable subject format."><link rel="canonical" href="https://daily.entra.news/changes/2026-07-30/migrate-github-actions-federated-credentials-to-immutable-subjects-02/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="Migrate GitHub Actions federated credentials to immutable subjects — Entra.News Daily"><meta property="og:description" content="Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#039;s immutable subject format."><meta property="og:url" content="https://daily.entra.news/changes/2026-07-30/migrate-github-actions-federated-credentials-to-immutable-subjects-02/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Migrate GitHub Actions federated credentials to immutable subjects — Entra.News Daily"><meta name="twitter:description" content="Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#039;s immutable subject format."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-07-27/">Week of 27 July 2026</a> &nbsp;/&nbsp; <a href="/products/workload-id/">Workload ID</a> &nbsp;/&nbsp; <a href="/topics/security/">Security</a></nav><div class="product-kicker"><img src="/assets/products/workload-id.svg" alt="">Microsoft Entra Workload ID</div><h1>Migrate GitHub Actions federated credentials to immutable subjects</h1><div class="article-meta"><span>30 July 2026</span><span>New</span><span>+106 / −0 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#039;s immutable subject format.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change context"><p>new file mode 100644</p>
+</div><div class="rendered-change added"><hr>
+<p>title: Migrate GitHub Actions federated credentials to immutable subjects
+description: Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#39;s immutable subject format.
+author: ahmed-mohamed-msft
+ms.author: ahmed.m
+ms.topic: how-to
+ms.custom: msecd-doc-authoring-1018
+ms.date: 07/28/2026
+ai-usage: ai-generated</p>
+<p>#customer intent: As an administrator, I want to migrate my GitHub Actions federated identity credential to an immutable subject so that my trust relationship resists subject recycling.</p>
+<hr>
+<h1>Migrate GitHub Actions federated credentials to immutable subjects</h1>
+<p>A Microsoft Entra federated identity credential trusts a GitHub Actions workflow by matching the subject (<code>sub</code>) claim in the OpenID Connect (OIDC) token that GitHub issues. GitHub&#39;s original subject was built from the repository and owner names, which can be renamed, transferred, or reused. A federated identity credential that trusts a name-based subject is exposed to <em>subject recycling</em>, where a different repository or owner later produces a token that matches your credential. To learn more about this risk, see <a href="workload-identities-federated-credential-mutable-subjects.md">Mutable subjects in federated identity credentials</a>.</p>
+<p>GitHub now offers an immutable subject format that embeds the immutable repository and owner IDs. This article shows how to migrate an existing federated identity credential to that format without downtime: you create a new credential for the immutable subject, enable immutable subjects in GitHub, validate the workflow, and then remove the old credential.</p>
+<h2>Understand the immutable subject format</h2>
+<p>GitHub&#39;s original subject is name-based. For example, a workflow running on the <code>main</code> branch of the <code>contoso/payments-api</code> repository produces this subject:</p>
+<pre><code class="language-text">repo:contoso/payments-api:ref:refs/heads/main
+</code></pre>
+<p>The immutable format keeps the names but appends the immutable owner ID and repository ID, separated by an <code>@</code> symbol:</p>
+<pre><code class="language-text">repo:&lt;owner&gt;@&lt;owner_id&gt;/&lt;repo&gt;@&lt;repo_id&gt;:ref:refs/heads/main
+</code></pre>
+<p>The owner ID and repository ID are assigned once and never reused, so renaming, transferring, or recreating the repository doesn&#39;t change them. A federated identity credential that trusts the immutable subject stays bound to the original repository.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Immutable subjects apply to GitHub.com. They aren&#39;t available on GitHub Enterprise Server.</p>
+</div></div></aside><div class="rendered-change added"><h2>Get the immutable repository and owner IDs</h2>
+<p>To build the immutable subject, get the numeric owner ID and repository ID from GitHub. These IDs are available through GitHub&#39;s OIDC settings and REST API.</p>
+<p>Combine the names and IDs to form the immutable subject. For example, if the owner <code>contoso</code> has the ID <code>5544123</code> and the repository <code>payments-api</code> has the ID <code>821093847</code>, the immutable subject for the <code>main</code> branch is:</p>
+<pre><code class="language-text">repo:contoso@5544123/payments-api@821093847:ref:refs/heads/main
+</code></pre>
+<h2>Create a federated identity credential for the immutable subject</h2>
+<p>Create a new federated identity credential for the immutable subject alongside the existing one. Keeping both credentials in place lets the workflow keep running while you validate the change.</p>
+<p>Save the credential body to a file, such as <code>credential.json</code>, using the immutable subject you built:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;payments-api-main-immutable&quot;,
+  &quot;issuer&quot;: &quot;https://token.actions.githubusercontent.com&quot;,
+  &quot;subject&quot;: &quot;repo:contoso@5544123/payments-api@821093847:ref:refs/heads/main&quot;,
+  &quot;audiences&quot;: [&quot;api://AzureADTokenExchange&quot;]
+}
+</code></pre>
+<p>Create the credential with the Azure CLI:</p>
+<pre><code class="language-azurecli">az ad app federated-credential create \
+  --id &lt;application-object-id&gt; \
+  --parameters ./credential.json
+</code></pre>
+<p>Replace <code>&lt;application-object-id&gt;</code> with the object ID of your app registration. Create one credential for each subject the workflow presents, such as a different branch or environment.</p>
+<h2>Enable immutable subjects in GitHub</h2>
+<p>Opt the repository into the immutable subject format from the repository or organization OIDC settings. GitHub provides both UI and API controls, and a preview endpoint that shows the subject a workflow emits, so that you can confirm the value before you rely on it. For the current steps, see the <a href="https://docs.github.com/en/actions/reference/security/oidc">GitHub OpenID Connect reference</a>.</p>
+<p>After you opt in, GitHub issues tokens that use the immutable subject you configured your credential to match.</p>
+</div><aside class="learn-alert learn-alert-note diff-added"><div class="learn-alert-title"><span class="learn-alert-icon" aria-hidden="true">!</span><span>Note</span></div><div class="learn-alert-body"><div class="learn-alert-change added"><p>Starting July 15, 2026, GitHub applies the immutable format automatically to repositories that are created, renamed, or transferred. Existing repositories keep the name-based format until you opt in. For details, see <a href="https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/">Immutable subject claims for GitHub Actions OIDC tokens</a> in the GitHub Changelog.</p>
+</div></div></aside><div class="rendered-change added"><h2>Validate and remove the old credential</h2>
+<p>After the new credential is in place and GitHub emits the immutable subject, confirm the workflow works and then retire the old credential:</p>
+<ol>
+<li><p>Run the GitHub Actions workflow and confirm that it authenticates to Microsoft Entra with the new credential.</p>
+</li>
+<li><p>After the workflow succeeds against the immutable subject, remove the old name-based credential so that no mutable credential remains:</p>
+<pre><code class="language-azurecli">az ad app federated-credential delete \
+  --id &lt;application-object-id&gt; \
+  --federated-credential-id &lt;old-credential-id&gt;
+</code></pre>
+<p> Replace <code>&lt;application-object-id&gt;</code> with the object ID of your app registration and <code>&lt;old-credential-id&gt;</code> with the ID of the old name-based credential.</p>
+</li>
+</ol>
+<p>Removing the old credential eliminates the dangling, mutable-subject trust and completes the migration.</p>
+<h2>Related content</h2>
+<ul>
+<li><a href="workload-identities-federated-credential-mutable-subjects.md">Mutable subjects in federated identity credentials</a></li>
+<li><a href="workload-identity-federation-create-trust.md">Configure an app to trust an external identity provider</a></li>
+<li><a href="workload-identity-federation-considerations.md">Federated identity credentials considerations and limitations</a></li>
+<li><a href="https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/">Immutable subject claims for GitHub Actions OIDC tokens (GitHub Changelog)</a></li>
+</ul>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/workload-id/workload-identities-github-immutable-subjects.md b/docs/workload-id/workload-identities-github-immutable-subjects.md
+new file mode 100644
+index 00000000000..cdbd0f4da83
+--- /dev/null
++++ b/docs/workload-id/workload-identities-github-immutable-subjects.md
+@@ -0,0 +1,106 @@
++---
++title: Migrate GitHub Actions federated credentials to immutable subjects
++description: Learn how to migrate a Microsoft Entra federated identity credential for GitHub Actions from a mutable subject to GitHub&#039;s immutable subject format.
++author: ahmed-mohamed-msft
++ms.author: ahmed.m
++ms.topic: how-to
++ms.custom: msecd-doc-authoring-1018
++ms.date: 07/28/2026
++ai-usage: ai-generated
++
++#customer intent: As an administrator, I want to migrate my GitHub Actions federated identity credential to an immutable subject so that my trust relationship resists subject recycling.
++
++---
++
++# Migrate GitHub Actions federated credentials to immutable subjects
++
++A Microsoft Entra federated identity credential trusts a GitHub Actions workflow by matching the subject (`sub`) claim in the OpenID Connect (OIDC) token that GitHub issues. GitHub&#039;s original subject was built from the repository and owner names, which can be renamed, transferred, or reused. A federated identity credential that trusts a name-based subject is exposed to *subject recycling*, where a different repository or owner later produces a token that matches your credential. To learn more about this risk, see [Mutable subjects in federated identity credentials](workload-identities-federated-credential-mutable-subjects.md).
++
++GitHub now offers an immutable subject format that embeds the immutable repository and owner IDs. This article shows how to migrate an existing federated identity credential to that format without downtime: you create a new credential for the immutable subject, enable immutable subjects in GitHub, validate the workflow, and then remove the old credential.
++
++## Understand the immutable subject format
++
++GitHub&#039;s original subject is name-based. For example, a workflow running on the `main` branch of the `contoso/payments-api` repository produces this subject:
++
++```text
++repo:contoso/payments-api:ref:refs/heads/main
++```
++
++The immutable format keeps the names but appends the immutable owner ID and repository ID, separated by an `@` symbol:
++
++```text
++repo:&lt;owner&gt;@&lt;owner_id&gt;/&lt;repo&gt;@&lt;repo_id&gt;:ref:refs/heads/main
++```
++
++The owner ID and repository ID are assigned once and never reused, so renaming, transferring, or recreating the repository doesn&#039;t change them. A federated identity credential that trusts the immutable subject stays bound to the original repository.
++
++&gt; [!NOTE]
++&gt; Immutable subjects apply to GitHub.com. They aren&#039;t available on GitHub Enterprise Server.
++
++## Get the immutable repository and owner IDs
++
++To build the immutable subject, get the numeric owner ID and repository ID from GitHub. These IDs are available through GitHub&#039;s OIDC settings and REST API.
++
++Combine the names and IDs to form the immutable subject. For example, if the owner `contoso` has the ID `5544123` and the repository `payments-api` has the ID `821093847`, the immutable subject for the `main` branch is:
++
++```text
++repo:contoso@5544123/payments-api@821093847:ref:refs/heads/main
++```
++
++## Create a federated identity credential for the immutable subject
++
++Create a new federated identity credential for the immutable subject alongside the existing one. Keeping both credentials in place lets the workflow keep running while you validate the change.
++
++Save the credential body to a file, such as `credential.json`, using the immutable subject you built:
++
++```json
++{
++  &quot;name&quot;: &quot;payments-api-main-immutable&quot;,
++  &quot;issuer&quot;: &quot;https://token.actions.githubusercontent.com&quot;,
++  &quot;subject&quot;: &quot;repo:contoso@5544123/payments-api@821093847:ref:refs/heads/main&quot;,
++  &quot;audiences&quot;: [&quot;api://AzureADTokenExchange&quot;]
++}
++```
++
++Create the credential with the Azure CLI:
++
++```azurecli
++az ad app federated-credential create \
++  --id &lt;application-object-id&gt; \
++  --parameters ./credential.json
++```
++
++Replace `&lt;application-object-id&gt;` with the object ID of your app registration. Create one credential for each subject the workflow presents, such as a different branch or environment.
++
++## Enable immutable subjects in GitHub
++
++Opt the repository into the immutable subject format from the repository or organization OIDC settings. GitHub provides both UI and API controls, and a preview endpoint that shows the subject a workflow emits, so that you can confirm the value before you rely on it. For the current steps, see the [GitHub OpenID Connect reference](https://docs.github.com/en/actions/reference/security/oidc).
++
++After you opt in, GitHub issues tokens that use the immutable subject you configured your credential to match.
++
++&gt; [!NOTE]
++&gt; Starting July 15, 2026, GitHub applies the immutable format automatically to repositories that are created, renamed, or transferred. Existing repositories keep the name-based format until you opt in. For details, see [Immutable subject claims for GitHub Actions OIDC tokens](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/) in the GitHub Changelog.
++
++## Validate and remove the old credential
++
++After the new credential is in place and GitHub emits the immutable subject, confirm the workflow works and then retire the old credential:
++
++1. Run the GitHub Actions workflow and confirm that it authenticates to Microsoft Entra with the new credential.
++1. After the workflow succeeds against the immutable subject, remove the old name-based credential so that no mutable credential remains:
++
++    ```azurecli
++    az ad app federated-credential delete \
++      --id &lt;application-object-id&gt; \
++      --federated-credential-id &lt;old-credential-id&gt;
++    ```
++
++    Replace `&lt;application-object-id&gt;` with the object ID of your app registration and `&lt;old-credential-id&gt;` with the ID of the old name-based credential.
++
++Removing the old credential eliminates the dangling, mutable-subject trust and completes the migration.
++
++## Related content
++
++- [Mutable subjects in federated identity credentials](workload-identities-federated-credential-mutable-subjects.md)
++- [Configure an app to trust an external identity provider](workload-identity-federation-create-trust.md)
++- [Federated identity credentials considerations and limitations](workload-identity-federation-considerations.md)
++- [Immutable subject claims for GitHub Actions OIDC tokens (GitHub Changelog)](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/)
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identities-github-immutable-subjects"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-07-30.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">30 July 2026</div><a href="/changes/2026-07-30/mutable-subjects-in-federated-identity-credentials-01/">Mutable subjects in federated identity credentials</a></div><div class="related-item"><div class="related-meta">31 July 2026</div><a href="/changes/2026-07-31/workload-identities-federated-credential-mutable-subjects-01/">Workload Identities Federated Credential Mutable Subjects</a></div><div class="related-item"><div class="related-meta">31 July 2026</div><a href="/changes/2026-07-31/workload-identities-github-immutable-subjects-02/">Workload Identities Github Immutable Subjects</a></div><div class="related-item"><div class="related-meta">16 June 2026</div><a href="/2026-06-16.html">Flexible federated identity credentials (preview)</a></div><div class="related-item"><div class="related-meta">16 June 2026</div><a href="/2026-06-16.html">Set up a Flexible Federated identity credential (preview)</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>

@@ -1,0 +1,303 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects — Entra.News Daily</title><meta name="description" content="Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview."><link rel="canonical" href="https://daily.entra.news/changes/2026-06-26/powershell-sample-run-a-microsoft-entra-recovery-for-global-secure-access-objects-05/"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="Entra.News Daily" href="/rss.xml"><meta property="og:site_name" content="Entra.News Daily"><meta property="og:title" content="PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects — Entra.News Daily"><meta property="og:description" content="Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview."><meta property="og:url" content="https://daily.entra.news/changes/2026-06-26/powershell-sample-run-a-microsoft-entra-recovery-for-global-secure-access-objects-05/"><meta property="og:type" content="article"><meta property="og:image" content="https://daily.entra.news/og-image.png"><meta property="og:image:secure_url" content="https://daily.entra.news/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects — Entra.News Daily"><meta name="twitter:description" content="Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview."><meta name="twitter:image" content="https://daily.entra.news/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body><header class="site-header"><a class="brand" href="/">Entra.News Daily<small>daily.entra.news</small></a><nav class="main-nav" aria-label="Primary"><a href="/day/">Day</a><a href="/">Week</a><a href="/month/">Month</a><a href="/products/">Products</a><a href="/topics/">Topics</a><a href="/message-center/">Message Center</a></nav><div class="utility"><a class="site-link" href="/about/">About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a></div></header><div class="detail-layout"><main class="detail-main"><nav class="breadcrumbs"><a href="/week/2026-06-22/">Week of 22 June 2026</a> &nbsp;/&nbsp; <a href="/products/global-secure-access/">Global Secure Access</a> &nbsp;/&nbsp; <a href="/topics/general/">General</a></nav><div class="product-kicker"><img src="/assets/products/global-secure-access.svg" alt="">Microsoft Entra Global Secure Access</div><h1>PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects</h1><div class="article-meta"><span>26 June 2026</span><span>New</span><span>+151 / −0 lines</span></div><section class="summary-grid single"><div><h2 class="section-title">In brief</h2><p>Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview.</p></div></section><section class="doc-change" data-diff><h2 class="section-title">Documentation change</h2><div class="diff-tabs"><button class="active" data-diff-tab="formatted">Formatted</button><button data-diff-tab="raw">Raw Markdown</button></div><div class="diff-panel" data-diff-panel="formatted"><div class="rendered-change context"><p>new file mode 100644</p>
+</div><div class="rendered-change added"><hr>
+<h2>title: PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects
+description: &quot;Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview.&quot;
+ms.topic: sample
+ms.date: 06/17/2026
+ms.reviewer: tdetzner
+ai-usage: ai-assisted</h2>
+<h1>Run a Microsoft Entra recovery for Global Secure Access objects</h1>
+<p>This script starts a Microsoft Entra recovery job for selected directory object types from a snapshot. Run the preview script first, review the changes, and execute this recovery script only after approval.</p>
+<p>This script can make destructive changes. Use the same scope you reviewed in the preview job and follow your change approval process before running it.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>PowerShell 7.0 or later.</li>
+<li>Install the modules listed in the script&#39;s <code>.NOTES</code> block.</li>
+<li>Use only permissions and roles that your organization has approved for the task.</li>
+</ul>
+<h2>Script</h2>
+<pre><code class="language-powershell">&lt;#
+.SYNOPSIS
+    Executes a Microsoft Entra recovery job for GSA-related objects from a snapshot.
+.DESCRIPTION
+    Creates a recoveryJob that restores the in-scope directory objects to their
+    state in the selected snapshot. This is a destructive operation and should
+    only be run after a preview job has been reviewed and approved.
+
+    Use Start-GsaEntraRecoveryPreview.ps1 first, review the output of its
+    getChanges function, then execute this script with the same SnapshotId and
+    EntityTypes.
+.PARAMETER SnapshotId
+    Snapshot ID returned by Get-GsaEntraSnapshot.ps1.
+.PARAMETER EntityTypes
+    Directory object types to include in the recovery scope. Must match the
+    scope of the previously approved preview job.
+.PARAMETER TenantId
+    Target Microsoft Entra tenant ID.
+.PARAMETER UseManagedIdentity
+    Authenticate using the current managed identity. Use in Azure Automation.
+.PARAMETER ClientId
+    App registration client ID. Required with CertificateThumbprint.
+.PARAMETER CertificateThumbprint
+    Certificate thumbprint for service principal authentication.
+.PARAMETER Force
+    Bypass the interactive confirmation prompt. Required for unattended runs.
+.EXAMPLE
+    .\Invoke-GsaEntraRecovery.ps1 -SnapshotId &quot;MjAyNi0w...&quot; -UseManagedIdentity -Force
+.NOTES
+    Required Graph permissions:
+        EntraBackup.ReadWrite.Recovery (delegated only)
+    Required Entra role:
+        Entra Backup Administrator
+    Minimum module versions:
+        Microsoft.Graph.Authentication 2.x
+    Beta API: subject to change per Microsoft Graph versioning policy.
+    Destructive: always run a preview job first and review the changes.
+    Only one preview or recovery job can run per tenant at a time.
+    Recovery operations are logged in Entra audit logs under category
+    &quot;Backup and Recovery&quot;. Recovery operations don&#39;t fire Graph subscriptions
+    or delta records.
+    Reference: https://learn.microsoft.com/en-us/graph/api/resources/entrarecoveryservices-recoveryjob?view=graph-rest-beta
+    Author: GSA Operations
+#&gt;
+
+[CmdletBinding(DefaultParameterSetName = &#39;Interactive&#39;, SupportsShouldProcess, ConfirmImpact = &#39;High&#39;)]
+[OutputType([pscustomobject])]
+param(
+    [Parameter(Mandatory)]
+    [string]$SnapshotId,
+
+    [ValidateSet(&#39;conditionalAccessPolicy&#39;, &#39;namedLocationPolicy&#39;, &#39;application&#39;, &#39;servicePrincipal&#39;, &#39;group&#39;, &#39;user&#39;, &#39;appRoleAssignment&#39;, &#39;oAuth2PermissionGrant&#39;, &#39;authenticationMethodPolicy&#39;, &#39;authorizationPolicy&#39;, &#39;authenticationStrengthPolicy&#39;)]
+    [string[]]$EntityTypes = @(&#39;conditionalAccessPolicy&#39;, &#39;namedLocationPolicy&#39;, &#39;application&#39;, &#39;servicePrincipal&#39;),
+
+    [Parameter(ParameterSetName = &#39;ServicePrincipal&#39;, Mandatory)]
+    [Parameter(ParameterSetName = &#39;Interactive&#39;)]
+    [string]$TenantId,
+
+    [Parameter(ParameterSetName = &#39;ServicePrincipal&#39;, Mandatory)]
+    [string]$ClientId,
+
+    [Parameter(ParameterSetName = &#39;ServicePrincipal&#39;, Mandatory)]
+    [string]$CertificateThumbprint,
+
+    [Parameter(ParameterSetName = &#39;ManagedIdentity&#39;, Mandatory)]
+    [switch]$UseManagedIdentity,
+
+    [switch]$Force
+)
+
+$ErrorActionPreference = &#39;Stop&#39;
+
+if (-not $Force -and -not $PSCmdlet.ShouldProcess(&quot;tenant $TenantId, snapshot $SnapshotId, entity types [$($EntityTypes -join &#39;, &#39;)]&quot;, &quot;Execute Microsoft Entra recovery job&quot;)) {
+    Write-Warning &quot;Recovery job not started.&quot;
+    return
+}
+
+# Authenticate
+try {
+    switch ($PSCmdlet.ParameterSetName) {
+        &#39;ManagedIdentity&#39;  { Connect-MgGraph -Identity -NoWelcome | Out-Null }
+        &#39;ServicePrincipal&#39; { Connect-MgGraph -TenantId $TenantId -ClientId $ClientId -CertificateThumbprint $CertificateThumbprint -NoWelcome | Out-Null }
+        default            { Connect-MgGraph -TenantId $TenantId -Scopes &#39;EntraBackup.ReadWrite.Recovery&#39; -NoWelcome | Out-Null }
+    }
+    Write-Verbose &quot;Connected to Microsoft Graph.&quot;
+} catch {
+    throw &quot;Failed to authenticate to Microsoft Graph: $_&quot;
+}
+
+# Build scoped recovery job payload
+$body = @{
+    filteringCriteria = @{
+        &#39;@odata.type&#39; = &#39;#microsoft.graph.entraRecoveryServices.recoveryJobEntityNamesFilter&#39;
+        entityTypes   = $EntityTypes
+    }
+} | ConvertTo-Json -Depth 5
+
+# Create recovery job
+try {
+    $uri      = &quot;https://graph.microsoft.com/beta/directory/recovery/snapshots/$SnapshotId/recoveryJobs&quot;
+    $response = Invoke-MgGraphRequest -Method POST -Uri $uri -Body $body -ContentType &#39;application/json&#39; -ResponseHeadersVariable headers -StatusCodeVariable status
+    if ($status -ne 202) {
+        throw &quot;Unexpected status code $status when creating recovery job.&quot;
+    }
+} catch {
+    throw &quot;Failed to create recovery job. Verify the Microsoft Entra Backup Administrator role, EntraBackup.ReadWrite.Recovery permission, and that no other recovery or preview job is currently running. Error: $_&quot;
+}
+
+$jobUrl = $headers.Location | Select-Object -First 1
+if (-not $jobUrl) {
+    Write-Warning &quot;No Location header returned. Inspect the response manually.&quot;
+    return
+}
+
+[PSCustomObject]@{
+    SnapshotId      = $SnapshotId
+    EntityTypes     = $EntityTypes
+    RecoveryJobUri  = $jobUrl
+    StartedAt       = (Get-Date)
+    NextSteps       = &quot;Poll RecoveryJobUri until status=succeeded, then call {RecoveryJobUri}/getFailedChanges to review any failures.&quot;
+}
+</code></pre>
+<h2>Related content</h2>
+<ul>
+<li><a href="../powershell-samples.md">Global Secure Access PowerShell samples</a></li>
+<li><a href="../overview-operations.md">Microsoft Entra Global Secure Access operations guide</a></li>
+</ul>
+</div></div><div class="diff-panel" data-diff-panel="raw" hidden><pre class="raw-diff">diff --git a/docs/global-secure-access/scripts/powershell-invoke-entra-recovery.md b/docs/global-secure-access/scripts/powershell-invoke-entra-recovery.md
+new file mode 100644
+index 00000000000..1a57308103a
+--- /dev/null
++++ b/docs/global-secure-access/scripts/powershell-invoke-entra-recovery.md
+@@ -0,0 +1,151 @@
++---
++title: PowerShell sample - Run a Microsoft Entra recovery for Global Secure Access objects
++description: &quot;Run a Microsoft Entra recovery job for directory objects that affect Global Secure Access after reviewing a recovery preview.&quot;
++ms.topic: sample
++ms.date: 06/17/2026
++ms.reviewer: tdetzner
++ai-usage: ai-assisted
++---
++
++# Run a Microsoft Entra recovery for Global Secure Access objects
++
++This script starts a Microsoft Entra recovery job for selected directory object types from a snapshot. Run the preview script first, review the changes, and execute this recovery script only after approval.
++
++This script can make destructive changes. Use the same scope you reviewed in the preview job and follow your change approval process before running it.
++
++## Prerequisites
++
++- PowerShell 7.0 or later.
++- Install the modules listed in the script&#039;s `.NOTES` block.
++- Use only permissions and roles that your organization has approved for the task.
++
++## Script
++
++```powershell
++&lt;#
++.SYNOPSIS
++    Executes a Microsoft Entra recovery job for GSA-related objects from a snapshot.
++.DESCRIPTION
++    Creates a recoveryJob that restores the in-scope directory objects to their
++    state in the selected snapshot. This is a destructive operation and should
++    only be run after a preview job has been reviewed and approved.
++
++    Use Start-GsaEntraRecoveryPreview.ps1 first, review the output of its
++    getChanges function, then execute this script with the same SnapshotId and
++    EntityTypes.
++.PARAMETER SnapshotId
++    Snapshot ID returned by Get-GsaEntraSnapshot.ps1.
++.PARAMETER EntityTypes
++    Directory object types to include in the recovery scope. Must match the
++    scope of the previously approved preview job.
++.PARAMETER TenantId
++    Target Microsoft Entra tenant ID.
++.PARAMETER UseManagedIdentity
++    Authenticate using the current managed identity. Use in Azure Automation.
++.PARAMETER ClientId
++    App registration client ID. Required with CertificateThumbprint.
++.PARAMETER CertificateThumbprint
++    Certificate thumbprint for service principal authentication.
++.PARAMETER Force
++    Bypass the interactive confirmation prompt. Required for unattended runs.
++.EXAMPLE
++    .\Invoke-GsaEntraRecovery.ps1 -SnapshotId &quot;MjAyNi0w...&quot; -UseManagedIdentity -Force
++.NOTES
++    Required Graph permissions:
++        EntraBackup.ReadWrite.Recovery (delegated only)
++    Required Entra role:
++        Entra Backup Administrator
++    Minimum module versions:
++        Microsoft.Graph.Authentication 2.x
++    Beta API: subject to change per Microsoft Graph versioning policy.
++    Destructive: always run a preview job first and review the changes.
++    Only one preview or recovery job can run per tenant at a time.
++    Recovery operations are logged in Entra audit logs under category
++    &quot;Backup and Recovery&quot;. Recovery operations don&#039;t fire Graph subscriptions
++    or delta records.
++    Reference: https://learn.microsoft.com/en-us/graph/api/resources/entrarecoveryservices-recoveryjob?view=graph-rest-beta
++    Author: GSA Operations
++#&gt;
++
++[CmdletBinding(DefaultParameterSetName = &#039;Interactive&#039;, SupportsShouldProcess, ConfirmImpact = &#039;High&#039;)]
++[OutputType([pscustomobject])]
++param(
++    [Parameter(Mandatory)]
++    [string]$SnapshotId,
++
++    [ValidateSet(&#039;conditionalAccessPolicy&#039;, &#039;namedLocationPolicy&#039;, &#039;application&#039;, &#039;servicePrincipal&#039;, &#039;group&#039;, &#039;user&#039;, &#039;appRoleAssignment&#039;, &#039;oAuth2PermissionGrant&#039;, &#039;authenticationMethodPolicy&#039;, &#039;authorizationPolicy&#039;, &#039;authenticationStrengthPolicy&#039;)]
++    [string[]]$EntityTypes = @(&#039;conditionalAccessPolicy&#039;, &#039;namedLocationPolicy&#039;, &#039;application&#039;, &#039;servicePrincipal&#039;),
++
++    [Parameter(ParameterSetName = &#039;ServicePrincipal&#039;, Mandatory)]
++    [Parameter(ParameterSetName = &#039;Interactive&#039;)]
++    [string]$TenantId,
++
++    [Parameter(ParameterSetName = &#039;ServicePrincipal&#039;, Mandatory)]
++    [string]$ClientId,
++
++    [Parameter(ParameterSetName = &#039;ServicePrincipal&#039;, Mandatory)]
++    [string]$CertificateThumbprint,
++
++    [Parameter(ParameterSetName = &#039;ManagedIdentity&#039;, Mandatory)]
++    [switch]$UseManagedIdentity,
++
++    [switch]$Force
++)
++
++$ErrorActionPreference = &#039;Stop&#039;
++
++if (-not $Force -and -not $PSCmdlet.ShouldProcess(&quot;tenant $TenantId, snapshot $SnapshotId, entity types [$($EntityTypes -join &#039;, &#039;)]&quot;, &quot;Execute Microsoft Entra recovery job&quot;)) {
++    Write-Warning &quot;Recovery job not started.&quot;
++    return
++}
++
++# Authenticate
++try {
++    switch ($PSCmdlet.ParameterSetName) {
++        &#039;ManagedIdentity&#039;  { Connect-MgGraph -Identity -NoWelcome | Out-Null }
++        &#039;ServicePrincipal&#039; { Connect-MgGraph -TenantId $TenantId -ClientId $ClientId -CertificateThumbprint $CertificateThumbprint -NoWelcome | Out-Null }
++        default            { Connect-MgGraph -TenantId $TenantId -Scopes &#039;EntraBackup.ReadWrite.Recovery&#039; -NoWelcome | Out-Null }
++    }
++    Write-Verbose &quot;Connected to Microsoft Graph.&quot;
++} catch {
++    throw &quot;Failed to authenticate to Microsoft Graph: $_&quot;
++}
++
++# Build scoped recovery job payload
++$body = @{
++    filteringCriteria = @{
++        &#039;@odata.type&#039; = &#039;#microsoft.graph.entraRecoveryServices.recoveryJobEntityNamesFilter&#039;
++        entityTypes   = $EntityTypes
++    }
++} | ConvertTo-Json -Depth 5
++
++# Create recovery job
++try {
++    $uri      = &quot;https://graph.microsoft.com/beta/directory/recovery/snapshots/$SnapshotId/recoveryJobs&quot;
++    $response = Invoke-MgGraphRequest -Method POST -Uri $uri -Body $body -ContentType &#039;application/json&#039; -ResponseHeadersVariable headers -StatusCodeVariable status
++    if ($status -ne 202) {
++        throw &quot;Unexpected status code $status when creating recovery job.&quot;
++    }
++} catch {
++    throw &quot;Failed to create recovery job. Verify the Microsoft Entra Backup Administrator role, EntraBackup.ReadWrite.Recovery permission, and that no other recovery or preview job is currently running. Error: $_&quot;
++}
++
++$jobUrl = $headers.Location | Select-Object -First 1
++if (-not $jobUrl) {
++    Write-Warning &quot;No Location header returned. Inspect the response manually.&quot;
++    return
++}
++
++[PSCustomObject]@{
++    SnapshotId      = $SnapshotId
++    EntityTypes     = $EntityTypes
++    RecoveryJobUri  = $jobUrl
++    StartedAt       = (Get-Date)
++    NextSteps       = &quot;Poll RecoveryJobUri until status=succeeded, then call {RecoveryJobUri}/getFailedChanges to review any failures.&quot;
++}
++```
++
++## Related content
++
++- [Global Secure Access PowerShell samples](../powershell-samples.md)
++- [Microsoft Entra Global Secure Access operations guide](../overview-operations.md)
+</pre></div></section></main><aside class="detail-aside"><a class="aside-link" href="https://learn.microsoft.com/en-us/entra/global-secure-access/scripts/powershell-invoke-entra-recovery"><img src="/assets/ui/book-bookmark.svg" alt="">Open on Microsoft Learn ↗</a><a class="aside-link" href="/2026-06-26.html"><img src="/assets/ui/chart-history.svg" alt="">View daily source report</a><hr class="rail-rule"><h2 class="section-title">Related changes</h2><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-preview-a-microsoft-entra-recovery-for-global-secure-access-objects-06/">PowerShell sample - Preview a Microsoft Entra recovery for Global Secure Access objects</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-calculate-the-alert-noise-ratio-for-microsoft-entra-global-secure-access-detec-02/">PowerShell sample - Calculate the alert noise ratio for Microsoft Entra Global Secure Access detections</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-check-microsoft-entra-global-secure-access-role-assignment-reviews-03/">PowerShell sample - Check Microsoft Entra Global Secure Access role assignment reviews</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-verify-microsoft-entra-global-secure-access-configuration-backup-compliance-04/">PowerShell sample - Verify Microsoft Entra Global Secure Access configuration backup compliance</a></div><div class="related-item"><div class="related-meta">26 June 2026</div><a href="/changes/2026-06-26/powershell-sample-list-microsoft-entra-backup-and-recovery-snapshots-for-global-secure-access-re-07/">PowerShell sample - List Microsoft Entra Backup and Recovery snapshots for Global Secure Access recovery</a></div><hr class="rail-rule"><div class="rss-box"><img src="/assets/ui/envelope-open.svg" alt=""><a href="https://entra.news">Subscribe to Entra.News</a></div></aside></div><footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><h2><a target="_blank" rel="noopener noreferrer" href="https://maester.cloud">Maester Cloud</a></h2><p>Turn Maester results into a continuous view of your Microsoft 365 security posture, with history, drift tracking, and evidence that is ready when your team needs it.</p><a target="_blank" rel="noopener noreferrer" class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a target="_blank" rel="noopener noreferrer" href="https://maester.dev">Maester</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://cmd.ms">cmd.ms</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a target="_blank" rel="noopener noreferrer" href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="2026-08-04T04:58:37.452Z" data-local-datetime>4 Aug 2026, 04:58 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T04:58:37.452Z">recently</span></span><span>Next refresh <time datetime="2026-08-04T08:15:00.000Z" data-local-datetime>4 Aug 2026, 08:15 UTC</time> <span class="refresh-relative" data-relative-time="2026-08-04T08:15:00.000Z">within 24 hours</span></span></div></div><nav aria-label="Footer"><a target="_blank" rel="noopener noreferrer" href="/about/">About</a><a target="_blank" rel="noopener noreferrer" href="https://merill.net">merill.net</a><a target="_blank" rel="noopener noreferrer" href="https://entra.news">Entra.News weekly</a><a target="_blank" rel="noopener noreferrer" href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>
