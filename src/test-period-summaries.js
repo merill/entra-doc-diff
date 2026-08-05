@@ -25,7 +25,7 @@ test('period evidence preserves product breadth and Message Center signals', () 
   assert.equal(selected.some(item => item.source === 'mc'), true);
 });
 
-test('historical generator writes weekly and monthly Luna max summaries with usage cost', async () => {
+test('historical generator writes daily, weekly, and monthly Luna max summaries with usage cost', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-periods-'));
   const websiteDir = path.join(root, 'website');
   const mcDataPath = path.join(root, 'mc');
@@ -61,17 +61,152 @@ test('historical generator writes weekly and monthly Luna max summaries with usa
   const generator = new PeriodSummaryGenerator({ websiteDir, mcDataPath, client, reasoningEffort: 'max', budgetUsd: 1.25, now: '2026-08-04T00:00:00Z' });
   const result = await generator.run({ all: true });
   const stored = JSON.parse(await fs.readFile(path.join(websiteDir, 'period-summaries.json'), 'utf8'));
-  assert.equal(result.generated, 2);
+  assert.equal(result.generated, 3);
   assert.equal(requests.every(request => request.model === 'gpt-5.6-luna' && request.reasoning.effort === 'max'), true);
+  assert.equal(stored.version, 2);
+  assert.equal(stored.days['2026-08-01'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].keyChanges[0].sourceId, 'doc-source');
   assert.equal(stored.months['2026-08'].reasoningEffort, 'max');
-  assert.equal(stored.lastRun.requests, 2);
-  assert.equal(stored.lastRun.costUsd, 0.0016);
+  assert.equal(stored.lastRun.requests, 3);
+  assert.equal(stored.lastRun.costUsd, 0.0024);
   assert.equal(JSON.parse(requests[0].input).representativeChanges[0].id.startsWith('doc-'), true);
+  assert.equal(JSON.parse(requests[0].input).period.label, '1 August 2026');
+  assert.equal('weeklyBriefs' in JSON.parse(requests[0].input), false);
   assert.equal(requests[0].text.format.schema.properties.keyChanges.items.required.includes('sourceId'), true);
   assert.match(requests[0].instructions, /Every key change must be supported by representativeChanges/);
   assert.match(requests[0].instructions, /weeklyBriefs as context only/);
+});
+
+test('current generation includes the latest day by default', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-current-day-'));
+  const requests = [];
+  const generator = new PeriodSummaryGenerator({
+    outputPath: path.join(root, 'period-summaries.json'),
+    client: { responses: { create: async request => {
+      requests.push(JSON.parse(request.input).period);
+      return {
+        status: 'completed', model: 'gpt-5.6-luna',
+        output_text: JSON.stringify({
+          headline: 'Current summary', overview: 'The latest changes are summarized.',
+          adminImpact: 'Review the current briefing.',
+          keyChanges: [{ title: 'Current change', detail: 'The latest change is included.', product: 'Entra ID', sourceId: 'doc-latest' }]
+        }),
+        usage: { input_tokens: 100, output_tokens: 100 }
+      };
+    } } },
+    logger: { log() {}, warn() {} }
+  });
+  generator.loadItems = async () => [
+    {
+      id: 'doc-latest', date: '2026-08-02', source: 'docs', changeType: 'Updated', additions: 2,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'Latest', summary: 'The latest change.', adminImpact: 'Review it.'
+    },
+    {
+      id: 'doc-older', date: '2026-07-20', source: 'docs', changeType: 'Updated', additions: 1,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'Older', summary: 'An older change.', adminImpact: 'None.'
+    }
+  ];
+  const result = await generator.run({ force: true });
+  const stored = JSON.parse(await fs.readFile(generator.outputPath, 'utf8'));
+  assert.deepEqual(requests.map(period => period.type), ['day', 'week', 'month']);
+  assert.deepEqual(Object.keys(stored.days), ['2026-08-02']);
+  assert.equal(result.days, 1);
+});
+
+test('daily backfill checkpoints completed dates and resumes after a failure', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-resume-'));
+  const outputPath = path.join(root, 'period-summaries.json');
+  const items = [
+    {
+      id: 'doc-two', date: '2026-08-02', source: 'docs', changeType: 'Updated', additions: 2,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'Second day', summary: 'The second daily change.', adminImpact: 'Review it.'
+    },
+    {
+      id: 'doc-one', date: '2026-08-01', source: 'docs', changeType: 'Updated', additions: 1,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'First day', summary: 'The first daily change.', adminImpact: 'Review it.'
+    }
+  ];
+  const responseFor = headline => ({
+    status: 'completed', model: 'gpt-5.6-luna',
+    output_text: JSON.stringify({
+      headline, overview: `${headline} overview`, adminImpact: `${headline} impact`,
+      keyChanges: [{ title: headline, detail: `${headline} detail`, product: 'Entra ID', sourceId: 'doc-one' }]
+    }),
+    usage: { input_tokens: 100, output_tokens: 100 }
+  });
+
+  let firstRunRequests = 0;
+  const interrupted = new PeriodSummaryGenerator({
+    outputPath,
+    client: { responses: { create: async () => {
+      firstRunRequests += 1;
+      if (firstRunRequests === 2) throw new Error('Permanent test failure');
+      return responseFor('First day complete');
+    } } },
+    logger: { log() {}, warn() {} }
+  });
+  interrupted.loadItems = async () => items;
+  await assert.rejects(interrupted.run({ all: true, kinds: ['day'] }), /Permanent test failure/);
+  const checkpoint = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+  assert.deepEqual(Object.keys(checkpoint.days), ['2026-08-02']);
+
+  let resumedRequests = 0;
+  const resumed = new PeriodSummaryGenerator({
+    outputPath,
+    client: { responses: { create: async () => {
+      resumedRequests += 1;
+      return responseFor('Second day complete');
+    } } },
+    logger: { log() {}, warn() {} }
+  });
+  resumed.loadItems = async () => items;
+  const result = await resumed.run({ all: true, kinds: ['day'] });
+  const completed = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+  assert.equal(resumedRequests, 1);
+  assert.equal(result.days, 2);
+  assert.deepEqual(Object.keys(completed.days), ['2026-08-02', '2026-08-01']);
+  assert.equal(completed.totalUsage.requests, 2);
+});
+
+test('backfill budget applies per run so an existing checkpoint can continue', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-budget-'));
+  const outputPath = path.join(root, 'period-summaries.json');
+  await fs.writeFile(outputPath, JSON.stringify({
+    version: 2,
+    days: {}, weeks: {}, months: {},
+    totalUsage: { inputTokens: 1000, outputTokens: 1000, requests: 1, costUsd: 99 }
+  }));
+  let requests = 0;
+  const generator = new PeriodSummaryGenerator({
+    outputPath,
+    budgetUsd: 0.01,
+    client: { responses: { create: async () => {
+      requests += 1;
+      return {
+        status: 'completed', model: 'gpt-5.6-luna',
+        output_text: JSON.stringify({
+          headline: 'Backfill resumed', overview: 'A prior run does not consume the current run budget.',
+          adminImpact: 'No action is needed.',
+          keyChanges: [{ title: 'Resume works', detail: 'The next missing date can be generated.', product: 'Entra ID', sourceId: 'doc-one' }]
+        }),
+        usage: { input_tokens: 100, output_tokens: 100 }
+      };
+    } } },
+    logger: { log() {}, warn() {} }
+  });
+  generator.loadItems = async () => [{
+    id: 'doc-one', date: '2026-08-01', source: 'docs', changeType: 'Updated', additions: 1,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+    title: 'Resume', summary: 'Resume the daily backfill.', adminImpact: 'None.'
+  }];
+  const result = await generator.run({ all: true, kinds: ['day'] });
+  assert.equal(requests, 1);
+  assert.equal(result.days, 1);
 });
 
 test('max reasoning retries an incomplete response with a larger token allowance and counts both attempts', async () => {

@@ -76,6 +76,27 @@ test('email online report link uses the static daily route', async () => {
   assert.doesNotMatch(sentPayload.message.body.content, /entradiff\.merill\.net|2026-08-04\.html/);
 });
 
+test('commit parsing and analysis retain the first parent for exact documentation diffs', async () => {
+  const monitor = new EntraDocsMonitor();
+  const base = 'a'.repeat(40);
+  const head = 'b'.repeat(40);
+  const parsed = monitor.parseCommitDetails(`${base} ${'c'.repeat(40)}\n\nM\tdocs/identity/example.md\n`, head);
+  assert.equal(parsed.baseCommitSha, base);
+  assert.equal(parsed.files[0].filename, 'docs/identity/example.md');
+
+  monitor.getCommitDetails = async () => parsed;
+  monitor.getFileDiff = async () => '@@ -1 +1 @@\n-old\n+new';
+  const analysis = await monitor.analyzeChanges([{
+    hash: head,
+    parents: `${base} ${'c'.repeat(40)}`,
+    message: 'Update example',
+    author_name: 'Test Author',
+    date: '2026-08-05T00:00:00Z'
+  }]);
+  assert.equal(analysis.modifiedFiles[0].baseCommitSha, base);
+  assert.equal(analysis.modifiedFiles[0].commitSha, head);
+});
+
 test('each diff receives its own Luna English summary', async () => {
   const monitor = new EntraDocsMonitor();
   const analysis = createAnalysis();

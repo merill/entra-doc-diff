@@ -172,6 +172,7 @@ class EntraDocsMonitor {
         '--since': since,
         format: {
           hash: '%H',
+          parents: '%P',
           date: '%ai',
           message: '%s',
           author_name: '%an',
@@ -191,7 +192,7 @@ class EntraDocsMonitor {
     try {
       const commitDetails = await this.git.show([
         '--name-status',
-        '--format=fuller',
+        '--format=%P',
         commitHash
       ]);
       
@@ -206,8 +207,13 @@ class EntraDocsMonitor {
     const lines = gitOutput.split('\n');
     const files = [];
     let inFileSection = false;
+    let baseCommitSha = '';
     
     for (const line of lines) {
+      if (!inFileSection && /^[0-9a-f]{40}(?:\s+[0-9a-f]{40})*$/i.test(line.trim())) {
+        baseCommitSha = line.trim().split(/\s+/)[0];
+        continue;
+      }
       if (line.trim() === '') {
         inFileSection = true;
         continue;
@@ -227,7 +233,7 @@ class EntraDocsMonitor {
       }
     }
     
-    return { files };
+    return { files, baseCommitSha };
   }
 
   mapGitStatus(gitStatus) {
@@ -274,6 +280,7 @@ class EntraDocsMonitor {
       
       const commitDetails = await this.getCommitDetails(commit.hash);
       if (!commitDetails || !commitDetails.files) continue;
+      const baseCommitSha = String(commit.parents || '').trim().split(/\s+/)[0] || commitDetails.baseCommitSha || '';
 
       for (const file of commitDetails.files) {
         // Get file diff for change analysis
@@ -294,6 +301,7 @@ class EntraDocsMonitor {
           deletions: deletions,
           changes: additions + deletions,
           patch: fileDiff,
+          baseCommitSha,
           commitSha: commit.hash,
           commitMessage: commit.message,
           commitAuthor: commit.author_name,

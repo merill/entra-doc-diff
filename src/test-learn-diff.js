@@ -8,18 +8,24 @@ const {
   githubFileUrl,
   extractTitle,
   stripFrontMatter,
-  countChangedLines
+  countChangedLines,
+  loadComparison,
+  groupContiguousChangedBlocks
 } = require('../assets/site/learn-diff');
 
-test('commit URL parameters require and return an exact base/head pair', () => {
+test('commit URL parameters accept an exact pair or a head whose parent can be resolved', () => {
   assert.deepEqual(
     commitRefsFromSearchParams(new URLSearchParams('base=9152e77&head=4994b15')),
     { base: '9152e77', head: '4994b15' }
   );
+  assert.deepEqual(
+    commitRefsFromSearchParams(new URLSearchParams('head=4994b15')),
+    { base: null, head: '4994b15' }
+  );
   assert.equal(commitRefsFromSearchParams(new URLSearchParams()), null);
   assert.throws(
-    () => commitRefsFromSearchParams(new URLSearchParams('head=4994b15')),
-    /both base and head/
+    () => commitRefsFromSearchParams(new URLSearchParams('base=9152e77')),
+    /requires a head commit/
   );
   assert.throws(
     () => commitRefsFromSearchParams(new URLSearchParams('base=not-a-sha&head=4994b15')),
@@ -29,6 +35,55 @@ test('commit URL parameters require and return an exact base/head pair', () => {
     () => commitRefsFromSearchParams(new URLSearchParams('base=4994b15&head=4994b15')),
     /must be different/
   );
+});
+
+test('exact comparison resolves a missing base parameter and treats a missing file revision as empty', async () => {
+  const originalFetch = global.fetch;
+  const head = 'b'.repeat(40);
+  const base = 'a'.repeat(40);
+  global.fetch = async endpoint => {
+    const url = String(endpoint);
+    if (url.endsWith(`/commits/${head}`)) return new Response(JSON.stringify({ sha: head, parents: [{ sha: base }] }), { status: 200 });
+    if (url.endsWith(`/commits/${base}`)) return new Response(JSON.stringify({ sha: base, parents: [] }), { status: 200 });
+    if (url.includes(`/contents/docs/example.md?ref=${base}`)) return new Response(JSON.stringify({ message: 'Not Found' }), { status: 404 });
+    if (url.includes(`/contents/docs/example.md?ref=${head}`)) return new Response('# New file\n', { status: 200 });
+    return new Response(JSON.stringify({ message: 'Unexpected request' }), { status: 500 });
+  };
+  try {
+    const result = await loadComparison({ apiRoot: 'https://api.github.com/repos/example/docs', path: 'docs/example.md' }, '', null, { base: null, head });
+    assert.equal(result.baseCommit.sha, base);
+    assert.equal(result.headCommit.sha, head);
+    assert.equal(result.before, '');
+    assert.equal(result.after, '# New file\n');
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('GitHub hourly limits explain the shared allowance and request a token', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response(JSON.stringify({ message: 'API rate limit exceeded' }), {
+    status: 403,
+    headers: {
+      'content-type': 'application/json',
+      'x-ratelimit-limit': '60',
+      'x-ratelimit-remaining': '0',
+      'x-ratelimit-reset': '1785909600'
+    }
+  });
+  try {
+    await assert.rejects(
+      loadComparison({ apiRoot: 'https://api.github.com/repos/example/docs', path: 'docs/example.md' }, '', null, { base: 'a'.repeat(40), head: 'b'.repeat(40) }),
+      error => {
+        assert.equal(error.rateLimited, true);
+        assert.match(error.message, /shared unauthenticated allowance of 60 API requests per hour/);
+        assert.match(error.message, /Add a GitHub token/);
+        return true;
+      }
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
 
 test('Entra Learn URLs map to their public entra-docs source path', () => {
@@ -116,4 +171,18 @@ test('client helpers keep front matter out of the visual page and count line cha
     { value: 'old\nline\n', count: 2, removed: true },
     { value: 'new\n', count: 1, added: true }
   ]), { additions: 1, deletions: 2 });
+});
+
+test('diff navigator groups adjacent blocks from one continuous edit', () => {
+  const first = { id: 'first' };
+  const second = { id: 'second' };
+  const separate = { id: 'separate' };
+  const continuation = { id: 'continuation' };
+  const groups = groupContiguousChangedBlocks([
+    { block: first, operations: new Set(['53']) },
+    { block: second, operations: new Set(['53']) },
+    { block: separate, operations: new Set(['55']) },
+    { block: continuation, operations: new Set(['55', '57']) }
+  ]);
+  assert.deepEqual(groups, [[first, second], [separate, continuation]]);
 });

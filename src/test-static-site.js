@@ -7,11 +7,13 @@ const {
   StaticSiteGenerator,
   isEntraMessage,
   classifyProduct,
+  classifyTopic,
   extractMarkdownMetadata,
   selectRelatedItems,
   sanitizeMcHtml,
   formattedDiff,
-  renderMarkdownDiff
+  renderMarkdownDiff,
+  renderDailyRss
 } = require('./static-site');
 
 test('Message Center filter matches standalone Entra in service or title', () => {
@@ -23,6 +25,12 @@ test('Message Center filter matches standalone Entra in service or title', () =>
 test('product classification recognizes governance and workload identity', () => {
   assert.equal(classifyProduct('docs/id-governance/tenant-governance/monitor.md').slug, 'id-governance');
   assert.equal(classifyProduct('', 'Harden federated credentials for workload identities').slug, 'workload-id');
+});
+
+test('topic icon logic prioritizes Conditional Access titles and authentication references', () => {
+  assert.equal(classifyTopic('docs/identity/security.md', 'Conditional Access authentication strength', 'Authentication controls and sign-in requirements.').slug, 'conditional-access');
+  assert.equal(classifyTopic('docs/architecture/overview.md', 'Identity architecture', 'This authentication reference explains passwordless sign-in.').slug, 'authentication');
+  assert.equal(classifyTopic('docs/identity/security.md', 'Policy controls', 'Conditional Access policy behavior.').slug, 'conditional-access');
 });
 
 test('Markdown metadata prefers frontmatter and produces readable description', () => {
@@ -126,6 +134,54 @@ test('related items preserve a relevant cross-source result', () => {
   assert.equal(related.some(candidate => candidate.id === 'MC100'), true);
 });
 
+test('RSS contains newest-first plain-English daily summaries linked to daily pages', () => {
+  const rss = renderDailyRss([
+    {
+      date: '2026-08-01',
+      data: { englishSummary: { overview: 'Older identity summary.' } }
+    },
+    {
+      date: '2026-08-03',
+      data: {
+        englishSummary: {
+          headline: 'Identity & access <review>',
+          overview: 'Review & apply today\'s guidance.',
+          keyChanges: [{ title: 'Conditional Access', detail: 'A policy <setting> changed.' }],
+          adminImpact: 'Check sign-in policies.'
+        }
+      }
+    },
+    {
+      date: '2026-08-02',
+      data: { modifiedFiles: [{ englishSummary: { summary: 'A per-change summary must not become an RSS item.' } }] }
+    }
+  ], {
+    '2026-08-04': {
+      headline: 'Message Center-only Entra update',
+      overview: 'A daily brief can exist even when no documentation report exists.'
+    },
+    '2026-08-03': {
+      headline: 'Identity & access <review>',
+      overview: 'Review & apply today\'s regenerated guidance.',
+      keyChanges: [{ title: 'Conditional Access', detail: 'A policy <setting> changed.' }],
+      adminImpact: 'Check sign-in policies.'
+    }
+  });
+  assert.match(rss, /<title>Entra\.News Daily summaries<\/title>/);
+  assert.match(rss, /<description>Plain-English daily summaries of Microsoft Entra documentation and Message Center changes\.<\/description>/);
+  assert.match(rss, /<language>en<\/language>/);
+  assert.equal((rss.match(/<item>/g) || []).length, 3);
+  assert.equal(rss.indexOf('/day/2026-08-04/') < rss.indexOf('/day/2026-08-03/'), true);
+  assert.match(rss, /<link>https:\/\/daily\.entra\.news\/day\/2026-08-04\/<\/link>/);
+  assert.equal(rss.indexOf('/day/2026-08-03/') < rss.indexOf('/day/2026-08-01/'), true);
+  assert.match(rss, /<link>https:\/\/daily\.entra\.news\/day\/2026-08-03\/<\/link>/);
+  assert.match(rss, /<guid isPermaLink="true">https:\/\/daily\.entra\.news\/day\/2026-08-03\/<\/guid>/);
+  assert.match(rss, /Identity &amp; access &lt;review&gt; — 3 August 2026/);
+  assert.match(rss, /Review &amp; apply today&apos;s regenerated guidance\.[\s\S]*Conditional Access: A policy changed\.[\s\S]*For Entra administrators: Check sign-in policies\./);
+  assert.doesNotMatch(rss, /today&apos;s guidance\./);
+  assert.doesNotMatch(rss, /per-change summary|\/changes\//);
+});
+
 test('static generator writes indexable archive and detail pages', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-'));
   const websiteDir = path.join(root, 'website');
@@ -140,12 +196,18 @@ test('static generator writes indexable archive and detail pages', async () => {
       patch: '+title: Create a configuration monitor\n+description: Evaluate configuration drift against a baseline',
       additions: 2,
       deletions: 0,
+      baseCommitSha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      commitSha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/id-governance/',
       englishSummary: {
         summary: 'This readable summary explains the configuration baseline change in full so administrators can understand the update before opening the source diff.',
         adminImpact: 'Entra administrators should compare the documented baseline with their tenant configuration and investigate unexpected drift.'
       }
-    }]
+    }],
+    englishSummary: {
+      overview: 'Daily identity governance summary.',
+      groups: [{ title: 'Configuration monitoring', summary: 'Review the documented baseline.' }]
+    }
   }));
   for (const date of ['2026-06-15','2026-06-29','2026-07-06','2026-07-13','2026-07-20']) {
     await fs.writeFile(path.join(websiteDir, `${date}.json`), JSON.stringify({
@@ -163,6 +225,14 @@ test('static generator writes indexable archive and detail pages', async () => {
   await fs.writeFile(path.join(websiteDir, '2026-07-31.html'), 'legacy daily report');
   await fs.writeFile(path.join(mcDataPath, 'messages.json'), JSON.stringify([]));
   await fs.writeFile(path.join(websiteDir, 'period-summaries.json'), JSON.stringify({
+    days: {
+      '2026-08-01': {
+        headline: 'Configuration monitoring defines a tenant baseline',
+        overview: 'Identity Governance guidance now explains how administrators can evaluate configuration drift against a known baseline.',
+        adminImpact: 'Review the baseline and investigate unexpected changes.',
+        keyChanges: [{ title: 'Configuration monitor guidance added', detail: 'The new guidance documents baseline evaluation for tenant configuration.', product: 'ID Governance', sourceId: 'doc-2026-08-01-create-a-configuration-monitor-01' }]
+      }
+    },
     weeks: {
       '2026-07-27': {
         headline: 'Passkey migration guidance leads the week',
@@ -204,7 +274,11 @@ test('static generator writes indexable archive and detail pages', async () => {
   const siteJs = await fs.readFile(path.join(websiteDir, 'assets', 'site.js'), 'utf8');
   const learnDiffJs = await fs.readFile(path.join(websiteDir, 'assets', 'learn-diff.js'), 'utf8');
   const diffConfigJs = await fs.readFile(path.join(websiteDir, 'assets', 'diff-config.js'), 'utf8');
+  const rssXml = await fs.readFile(path.join(websiteDir, 'rss.xml'), 'utf8');
   assert.match(indexHtml, /Entra\.News Daily/);
+  assert.match(rssXml, /<link>https:\/\/daily\.entra\.news\/day\/2026-08-01\/<\/link>/);
+  assert.match(rssXml, /Identity Governance guidance now explains how administrators can evaluate configuration drift/);
+  assert.doesNotMatch(rssXml, /\/changes\/|New administrator experience/);
   assert.match(indexHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(indexHtml, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
   assert.match(indexHtml, /property="og:image" content="https:\/\/daily\.entra\.news\/og-image\.png"/);
@@ -218,6 +292,11 @@ test('static generator writes indexable archive and detail pages', async () => {
   }
   assert.equal((indexHtml.match(/cdn\.userjot\.com\/sdk\/v2\/uj\.js/g) || []).length, 1);
   assert.match(indexHtml, /href="https:\/\/merill\.net"/);
+  assert.match(indexHtml, /<script defer data-site="nuj3pzyz" data-domain="daily\.entra\.news" src="https:\/\/piqo\.app\/piqo\.js"><\/script>/);
+  assert.equal((indexHtml.match(/https:\/\/piqo\.app\/piqo\.js/g) || []).length, 1);
+  assert.match(indexHtml, /class="icon-link" href="\/rss\.xml"[^>]*aria-label="Subscribe to the Daily Entra News RSS feed"><img src="\/assets\/ui\/rss\.svg"/);
+  assert.match(indexHtml, /class="footer-rss-link"[^>]*href="\/rss\.xml"><img src="\/assets\/ui\/rss\.svg" alt="">Daily RSS<\/a>/);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'rss.svg'))).size > 0, true);
   assert.doesNotMatch(indexHtml, /class="story-time"|class="source-label"/);
   assert.match(indexHtml, /class="product-update-group"/);
   assert.match(indexHtml, /class="landing-intro"/);
@@ -229,7 +308,8 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(dayIndexHtml, /href="\/about\/">About this project →<\/a>/);
   assert.doesNotMatch(dayHtml, /class="landing-intro"|Keep up with Microsoft Entra/);
   for (const html of [indexHtml, dayIndexHtml, dayHtml]) {
-    assert.match(html, /Microsoft Entra daily update/);
+    assert.match(html, /Day in brief/);
+    assert.match(html, /Configuration monitoring defines a tenant baseline/);
     assert.doesNotMatch(html, /Plain-English daily brief/);
   }
   assert.match(indexHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
@@ -253,7 +333,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(dayHtml, /Plan for change/);
   assert.doesNotMatch(dayHtml, /planForChange/);
   assert.match(dayHtml, /class="product-group-header"/);
-  assert.match(dayHtml, /What changed on this day/);
+  assert.match(dayHtml, /Configuration monitor guidance added/);
   assert.doesNotMatch(dayHtml, /What changed today/);
   assert.match(dayHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.match(dayHtml, /Day by product/);
@@ -281,11 +361,14 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(weekIndexHtml, /<span class="period-nav-next"><\/span>/);
   assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
   assert.match(weekIndexHtml, /class="period-key-changes"/);
-  assert.match(weekIndexHtml, /class="period-change-heading"><span title="Entra ID">Entra ID<\/span><strong><a href="#doc-2026-08-01-create-a-configuration-monitor-01">Migration control documented<\/a><\/strong>/);
+  assert.match(weekIndexHtml, /class="period-change-taxonomy"><img src="\/assets\/products\/id-governance\.svg" alt=""><img class="topic-icon" src="\/assets\/topics\/governance\.svg" alt=""><span title="ID Governance · Governance">ID Governance · Governance<\/span><\/div><strong><a href="#doc-2026-08-01-create-a-configuration-monitor-01">Migration control documented<\/a><\/strong>/);
   assert.match(weekIndexHtml, /id="doc-2026-08-01-create-a-configuration-monitor-01"/);
   assert.match(siteCss, /\.period-change-heading\{display:block;min-width:0\}/);
-  assert.match(siteCss, /\.period-change-heading span\{[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/);
+  assert.match(siteCss, /\.period-change-taxonomy span\{[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/);
   assert.match(siteCss, /\.period-change-heading strong a\{[^}]*text-decoration:none/);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'topics', 'conditional-access.svg'))).size > 0, true);
+  assert.match(dayHtml, /class="topic-group-title"><img src="\/assets\/topics\/governance\.svg"/);
+  assert.match(docDetailHtml, /class="topic-kicker" href="\/topics\/governance\/"><img src="\/assets\/topics\/governance\.svg"/);
   assert.equal((await fs.stat(path.join(websiteDir, 'week', '2026-06-22', 'index.html'))).size > 0, true);
   const emptyWeekHtml = await fs.readFile(path.join(websiteDir, 'week', '2026-06-22', 'index.html'), 'utf8');
   assert.match(emptyWeekHtml, /No tracked updates/);
@@ -349,10 +432,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(siteCss, /\.theme-option\[aria-pressed="true"\]/);
   assert.match(siteCss, /:root\[data-theme="dark"\]\{color-scheme:dark/);
   assert.match(docDetailHtml, /class="doc-source-intro"/);
-  assert.match(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content/);
-  assert.match(docDetailHtml, /<a href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer">Open the full article<\/a> for complete context/);
-  assert.match(docDetailHtml, /href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer"/);
-  assert.match(docDetailHtml, /href="\/compare\/\?url=https%3A%2F%2Flearn\.microsoft\.com%2Fen-us%2Fentra%2Fid-governance%2F&amp;view=diff">Open full page diff →<\/a>/);
+  assert.match(docDetailHtml, /The comparison below shows only the changed extract/);
+  assert.doesNotMatch(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content|Open the full article/);
+  assert.match(docDetailHtml, /head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">Open the full-page diff<\/a> for complete context/);
+  assert.match(docDetailHtml, /href="\/compare\/\?url=https%3A%2F%2Flearn\.microsoft\.com%2Fen-us%2Fentra%2Fid-governance%2F&amp;base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">/);
+  assert.equal((docDetailHtml.match(/Open full page diff →/g) || []).length, 2);
+  assert.doesNotMatch(docDetailHtml, /Open on Microsoft Learn/);
   assert.match(docDetailHtml, /data-diff-tab="markdown">Markdown<\/button>/);
   assert.doesNotMatch(docDetailHtml, /Raw Markdown/);
   assert.match(docDetailHtml, /aria-label="Markdown Git diff"/);
@@ -381,14 +466,25 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
   assert.match(indexHtml, /href="\/compare\/">Diff<\/a>/);
-  assert.match(compareHtml, /See what changed on any Entra Learn page/);
+  assert.match(compareHtml, /See what changed on a Microsoft Learn page/);
+  assert.match(learnDiffJs, /See what changed on a Microsoft Learn page/);
   assert.match(compareHtml, /data-learn-diff-form/);
   assert.match(compareHtml, /data-live-visual-diff/);
   assert.match(compareHtml, /data-live-markdown-diff/);
   assert.match(compareHtml, /data-diff-navigator/);
   assert.match(compareHtml, /data-diff-previous/);
   assert.match(compareHtml, /data-diff-next/);
-  assert.match(compareHtml, /Optional: use a GitHub token/);
+  assert.match(compareHtml, /src="\/assets\/ui\/microsoft\.svg" alt=""><span>Microsoft Learn<\/span>/);
+  assert.match(compareHtml, /src="\/assets\/ui\/github\.svg" alt=""><span>GitHub<\/span>/);
+  assert.match(compareHtml, /src="\/assets\/ui\/chart-history\.svg" alt=""><span>History<\/span>/);
+  assert.doesNotMatch(compareHtml, /Optional: use a GitHub token|<details class="compare-token"/);
+  assert.match(compareHtml, /placeholder="https:\/\/learn\.microsoft\.com\/en-us\/entra\/identity\/conditional-access\/overview"/);
+  assert.doesNotMatch(compareHtml, /docs\.example\.com|The URL must match a source declared in assets\/diff-config\.js/);
+  assert.match(compareHtml, /data-github-token-drawer role="dialog" aria-modal="true"/);
+  assert.match(compareHtml, /GitHub’s hourly limit was reached/);
+  assert.match(compareHtml, /personal-access-tokens\/new/);
+  assert.doesNotMatch(indexHtml, /data-github-token-open|data-github-token-drawer/);
+  assert.match(compareHtml, /data-github-token-open[^>]*aria-label="Configure GitHub API settings"/);
   assert.match(compareHtml, /src="\/assets\/vendor\/marked\.js"/);
   assert.match(compareHtml, /src="\/assets\/diff-config\.js"/);
   assert.match(diffConfigJs, /repositoryUrl: 'https:\/\/github\.com\/MicrosoftDocs\/entra-docs'/);
@@ -412,18 +508,24 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(learnDiffJs, /escapeHtml\(author\.name/);
   assert.match(learnDiffJs, /previous\.textContent = '← Previous diff'/);
   assert.match(learnDiffJs, /next\.textContent = 'Next diff →'/);
+  assert.match(learnDiffJs, /groupContiguousChangedBlocks/);
+  assert.match(learnDiffJs, /change\.dataset\.operationIndex/);
   assert.match(learnDiffJs, /getBoundingClientRect\(\)\.bottom/);
   assert.match(learnDiffJs, /TOKEN_STORAGE_KEY = 'entra-news-github-token'/);
   assert.match(learnDiffJs, /localStorage\.getItem\(TOKEN_STORAGE_KEY\)/);
-  assert.match(learnDiffJs, /localStorage\.setItem\(TOKEN_STORAGE_KEY, value\)/);
-  assert.match(learnDiffJs, /tokenInput\.addEventListener\('input'/);
-  assert.match(learnDiffJs, /tokenDetails\.appendChild\(rate\)/);
-  assert.match(learnDiffJs, /GitHub allows 60 unauthenticated API requests per hour/);
-  assert.match(learnDiffJs, /personal-access-tokens\/new/);
-  assert.match(learnDiffJs, /Forget saved token/);
+  assert.doesNotMatch(learnDiffJs, /localStorage\.setItem\(TOKEN_STORAGE_KEY|tokenInput|tokenDetails|compare-token-help/);
+  assert.match(learnDiffJs, /shared unauthenticated allowance of 60 API requests per hour/);
+  assert.match(learnDiffJs, /github-token-required/);
+  assert.match(learnDiffJs, /retryAfterTokenChange/);
+  assert.match(siteJs, /GITHUB_TOKEN_STORAGE_KEY='entra-news-github-token'/);
+  assert.match(siteJs, /localStorage\.setItem\(GITHUB_TOKEN_STORAGE_KEY,value\)/);
+  assert.match(siteJs, /github-token-changed/);
+  assert.match(siteJs, /github-token-required/);
   assert.match(learnDiffJs, /pageUrl\.searchParams\.get\('view'\) === 'diff'/);
   assert.match(learnDiffJs, /shareUrl\.searchParams\.set\('view', 'diff'\)/);
   assert.match(learnDiffJs, /shareUrl\.searchParams\.set\('base', comparison\.baseCommit\.sha\)/);
+  assert.match(learnDiffJs, /learnLink\.setAttribute\('aria-label', 'Open on Microsoft Learn'\)/);
+  assert.doesNotMatch(learnDiffJs, /learnLink\.textContent|githubLink\.textContent/);
   assert.match(learnDiffJs, /shareUrl\.searchParams\.set\('head', comparison\.headCommit\.sha\)/);
   assert.match(indexHtml, /href="https:\/\/maester\.cloud"/);
   assert.match(indexHtml, /class="footer-feature-logo" src="\/assets\/ui\/maester\.png"/);
@@ -472,6 +574,9 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'calendar-days.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chevron-down.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chevron-right.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'microsoft.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'github.svg'))).size > 0, true);
+  assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'ui', 'chart-history.svg'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'learn-diff.js'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'vendor', 'marked.js'))).size > 0, true);
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'vendor', 'diff.min.js'))).size > 0, true);

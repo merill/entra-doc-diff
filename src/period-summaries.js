@@ -8,7 +8,7 @@ const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra a
 
 Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Distinguish new features, previews, general availability, retirements, changed behavior, security guidance, and ordinary documentation clarification. Explain concrete administrator impact or action only when the evidence supports it.
 
-Select three to five changes that best explain the period. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
+Select one to five changes that best explain the period. Prefer three to five when the evidence supports that breadth, but use one or two for a quiet day rather than repeating or stretching the evidence. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
 For every key change, copy the id of the single representativeChanges item that most directly supports it into sourceId. Every key change must be supported by representativeChanges. Treat weeklyBriefs as context only: never select a sourceId from a weekly brief or use one as the sole evidence for a key change. Never invent or alter an id.
 
 Avoid generic statements based mainly on counts, such as "documentation was updated across several products." Do not call something a launch merely because a new page appeared. Do not invent availability, dates, requirements, or recommendations. If the period is dominated by mechanical or low-impact edits, say so plainly and identify the most meaningful exceptions.
@@ -121,7 +121,11 @@ class PeriodSummaryGenerator {
       if (data.totalUsage) {
         this.baseUsage = { ...this.baseUsage, ...data.totalUsage };
       } else {
-        const summaries = [...Object.values(data.weeks || {}), ...Object.values(data.months || {})];
+        const summaries = [
+          ...Object.values(data.days || {}),
+          ...Object.values(data.weeks || {}),
+          ...Object.values(data.months || {})
+        ];
         const stored = summaries.reduce((usage, summary) => {
           usage.inputTokens += Number(summary.usage?.inputTokens || 0);
           usage.outputTokens += Number(summary.usage?.outputTokens || 0);
@@ -132,10 +136,19 @@ class PeriodSummaryGenerator {
         const lastRun = { ...this.baseUsage, ...(data.lastRun || {}) };
         this.baseUsage = Number(lastRun.costUsd || 0) > stored.costUsd ? lastRun : stored;
       }
-      return { version: 1, weeks: {}, months: {}, ...data, weeks: data.weeks || {}, months: data.months || {} };
+      return {
+        days: {},
+        weeks: {},
+        months: {},
+        ...data,
+        version: 2,
+        days: data.days || {},
+        weeks: data.weeks || {},
+        months: data.months || {}
+      };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
-      return { version: 1, weeks: {}, months: {} };
+      return { version: 2, days: {}, weeks: {}, months: {} };
     }
   }
 
@@ -162,6 +175,7 @@ class PeriodSummaryGenerator {
   }
 
   buildEvidence(kind, key, items, store) {
+    const isDay = kind === 'day';
     const isWeek = kind === 'week';
     const selected = selectPeriodEvidence(items, isWeek ? 75 : 40);
     const products = new Map();
@@ -177,13 +191,17 @@ class PeriodSummaryGenerator {
       period: {
         type: kind,
         key,
-        label: isWeek ? `Week of ${moment(key).format('D MMMM YYYY')}` : moment(`${key}-01`).format('MMMM YYYY')
+        label: isDay
+          ? moment(key).format('D MMMM YYYY')
+          : isWeek
+            ? `Week of ${moment(key).format('D MMMM YYYY')}`
+            : moment(`${key}-01`).format('MMMM YYYY')
       },
       counts,
       productCounts: [...products.entries()].sort((a, b) => b[1] - a[1]).map(([product, count]) => ({ product, count })),
       representativeChanges: selected.map(evidenceItem)
     };
-    if (!isWeek) {
+    if (kind === 'month') {
       evidence.weeklyBriefs = Object.entries(store.weeks)
         .filter(([week]) => week.slice(0, 7) === key || moment(week).add(6, 'days').format('YYYY-MM').slice(0, 7) === key)
         .sort(([a], [b]) => a.localeCompare(b))
@@ -200,8 +218,6 @@ class PeriodSummaryGenerator {
     this.runUsage.outputTokens += outputTokens;
     this.runUsage.requests += 1;
     this.runCostUsd += costUsd;
-    const totalCostUsd = Number(this.baseUsage.costUsd || 0) + this.runCostUsd;
-    if (totalCostUsd > this.budgetUsd) throw new Error(`Period-summary budget exceeded: $${totalCostUsd.toFixed(4)} > $${this.budgetUsd.toFixed(2)}`);
     return { inputTokens, outputTokens, costUsd };
   }
 
@@ -230,7 +246,7 @@ class PeriodSummaryGenerator {
 
   async generateOne(kind, key, items, store) {
     if (!this.client) throw new Error('No OpenAI API key is available. Run the CLI in an interactive terminal and enter the key when prompted.');
-    if (Number(this.baseUsage.costUsd || 0) + this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached`);
+    if (this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached for this run; completed periods were saved and the backfill can be resumed`);
     const evidence = this.buildEvidence(kind, key, items, store);
     this.logger.log(`🧠 Writing ${kind} brief for ${key} with ${this.model} (${this.reasoningEffort} reasoning, ${items.length} updates)...`);
     const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens * 2, 25000)])];
@@ -291,19 +307,33 @@ class PeriodSummaryGenerator {
     throw new Error(`Unable to generate ${kind} ${key}`);
   }
 
-  async run({ all = false, force = false } = {}) {
+  async run({ all = false, force = false, kinds = ['day', 'week', 'month'] } = {}) {
     const items = await this.loadItems();
     if (items.length === 0) throw new Error('No Entra changes were available to summarize');
     const store = await this.loadStore();
+    const requestedKinds = new Set(kinds);
+    const unknownKinds = [...requestedKinds].filter(kind => !['day', 'week', 'month'].includes(kind));
+    if (unknownKinds.length > 0) throw new Error(`Unknown period summary kind(s): ${unknownKinds.join(', ')}`);
+    if (requestedKinds.size === 0) throw new Error('At least one period summary kind must be selected');
     const latestDate = items[0].date;
     const latestWeek = moment(latestDate).startOf('isoWeek').format('YYYY-MM-DD');
     const latestMonth = latestDate.slice(0, 7);
     const weeks = [...new Set(items.map(item => moment(item.date).startOf('isoWeek').format('YYYY-MM-DD')))].sort();
     const months = [...new Set(items.map(item => item.date.slice(0, 7)))].sort();
-    const weekKeys = all ? weeks : [latestWeek];
-    const monthKeys = all ? months : [latestMonth];
+    // Backfill newest days first so the landing page and RSS feed improve
+    // immediately even if a long historical run is interrupted.
+    const days = [...new Set(items.map(item => item.date))].sort().reverse();
+    const dayKeys = requestedKinds.has('day') ? (all ? days : [latestDate]) : [];
+    const weekKeys = requestedKinds.has('week') ? (all ? weeks : [latestWeek]) : [];
+    const monthKeys = requestedKinds.has('month') ? (all ? months : [latestMonth]) : [];
 
     try {
+      for (const day of dayKeys) {
+        if (!force && store.days[day]) continue;
+        const periodItems = items.filter(item => item.date === day);
+        store.days[day] = await this.generateOne('day', day, periodItems, store);
+        await this.saveStore(store);
+      }
       for (const week of weekKeys) {
         if (!force && store.weeks[week]) continue;
         const end = moment(week).add(6, 'days').format('YYYY-MM-DD');
@@ -320,8 +350,8 @@ class PeriodSummaryGenerator {
     } finally {
       await this.saveStore(store);
     }
-    await this.saveStore(store);
     return {
+      days: dayKeys.filter(key => store.days[key]).length,
       weeks: weekKeys.filter(key => store.weeks[key]).length,
       months: monthKeys.filter(key => store.months[key]).length,
       generated: this.runUsage.requests,

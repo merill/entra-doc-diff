@@ -34,6 +34,11 @@ function readHidden(prompt) {
 
 async function main() {
   const args = new Set(process.argv.slice(2));
+  const selectedKinds = [
+    ['--days', 'day'],
+    ['--weeks', 'week'],
+    ['--months', 'month']
+  ].filter(([flag]) => args.has(flag)).map(([, kind]) => kind);
   const apiKey = process.env.OPENAI_API_KEY || await readHidden('OpenAI API key (input hidden): ');
   if (!apiKey) throw new Error('An OpenAI API key is required');
   const generator = new PeriodSummaryGenerator({
@@ -41,8 +46,12 @@ async function main() {
     mcDataPath: process.env.MC_DATA_PATH,
     apiKey
   });
-  const result = await generator.run({ all: args.has('--all'), force: args.has('--force') });
-  console.log(`✅ Period summaries ready: ${result.generated} generated in this run, $${result.costUsd.toFixed(4)} estimated API cost.`);
+  const result = await generator.run({
+    all: args.has('--all'),
+    force: args.has('--force'),
+    kinds: selectedKinds.length > 0 ? selectedKinds : undefined
+  });
+  console.log(`✅ Period summaries ready: ${result.generated} API request(s) in this run (${result.days} days, ${result.weeks} weeks, ${result.months} months available), $${result.costUsd.toFixed(4)} estimated API cost.`);
 }
 
 main().catch(error => {

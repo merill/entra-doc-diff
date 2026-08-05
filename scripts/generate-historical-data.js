@@ -82,6 +82,7 @@ class HistoricalDataGenerator extends EntraDocsMonitor {
         '--until': until,
         format: {
           hash: '%H',
+          parents: '%P',
           date: '%ai',
           message: '%s',
           author_name: '%an',

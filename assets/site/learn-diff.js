@@ -116,12 +116,12 @@
     const base = (searchParams.get('base') || '').trim();
     const head = (searchParams.get('head') || '').trim();
     if (!base && !head) return null;
-    if (!base || !head) throw new Error('Provide both base and head commit SHAs, or omit both to compare the latest two revisions.');
-    if (!/^[0-9a-f]{7,40}$/i.test(base) || !/^[0-9a-f]{7,40}$/i.test(head)) {
+    if (base && !head) throw new Error('A base commit also requires a head commit.');
+    if ((base && !/^[0-9a-f]{7,40}$/i.test(base)) || !/^[0-9a-f]{7,40}$/i.test(head)) {
       throw new Error('The base and head parameters must be Git commit SHAs between 7 and 40 hexadecimal characters.');
     }
-    if (base.toLowerCase() === head.toLowerCase()) throw new Error('The base and head commits must be different.');
-    return { base, head };
+    if (base && base.toLowerCase() === head.toLowerCase()) throw new Error('The base and head commits must be different.');
+    return { base: base || null, head };
   }
 
   function extractTitle(markdown, fallback) {
@@ -268,12 +268,26 @@
     const response = await root.fetch(endpoint, { headers });
     const remaining = response.headers.get('x-ratelimit-remaining');
     const limit = response.headers.get('x-ratelimit-limit');
+    const reset = response.headers.get('x-ratelimit-reset');
     if (rateElement && remaining && limit) rateElement.textContent = `${remaining} of ${limit} GitHub API requests remaining this hour`;
     if (!response.ok) {
       let message = `GitHub returned ${response.status}.`;
       try { message = (await response.json()).message || message; } catch {}
-      if (response.status === 403 || response.status === 429) message = 'GitHub’s API rate limit was reached. Wait for it to reset or use a read-only token.';
-      throw new Error(message);
+      const rateLimited = response.status === 429 || (response.status === 403 && remaining === '0');
+      if (rateLimited) {
+        const resetDate = reset ? new Date(Number(reset) * 1000) : null;
+        const resetText = resetDate && !Number.isNaN(resetDate.getTime())
+          ? ` It should reset around ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(resetDate)}.`
+          : '';
+        message = token
+          ? `The hourly GitHub API allowance for this token has been used.${resetText} You can wait for it to reset or replace the token with one that has available requests.`
+          : `GitHub’s shared unauthenticated allowance of 60 API requests per hour has been used for this IP address.${resetText} Add a GitHub token to continue with your personal allowance.`;
+      }
+      const error = new Error(message);
+      error.status = response.status;
+      error.rateLimited = rateLimited;
+      error.resetAt = reset ? Number(reset) * 1000 : null;
+      throw error;
     }
     return accept === 'application/vnd.github.raw+json' ? response.text() : response.json();
   }
@@ -283,11 +297,15 @@
     const rawUrl = ref => `${info.apiRoot}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
     if (refs) {
       const commitUrl = ref => `${info.apiRoot}/commits/${encodeURIComponent(ref)}`;
-      const [baseCommit, headCommit, before, after] = await Promise.all([
-        request(commitUrl(refs.base), token, undefined, rateElement),
-        request(commitUrl(refs.head), token, undefined, rateElement),
-        request(rawUrl(refs.base), token, 'application/vnd.github.raw+json', rateElement),
-        request(rawUrl(refs.head), token, 'application/vnd.github.raw+json', rateElement)
+      const rawAt = ref => request(rawUrl(ref), token, 'application/vnd.github.raw+json', rateElement)
+        .catch(error => error.status === 404 ? '' : Promise.reject(error));
+      const headCommit = await request(commitUrl(refs.head), token, undefined, rateElement);
+      const baseRef = refs.base || headCommit.parents?.[0]?.sha || '';
+      if (!baseRef) throw new Error('The selected head commit does not have a parent revision to compare.');
+      const [baseCommit, before, after] = await Promise.all([
+        request(commitUrl(baseRef), token, undefined, rateElement),
+        rawAt(baseRef),
+        rawAt(refs.head)
       ]);
       return { info, headCommit, baseCommit, after, before };
     }
@@ -314,6 +332,22 @@
     element.hidden = !message;
     element.className = `compare-status ${state || ''}`.trim();
     element.textContent = message || '';
+  }
+
+  function groupContiguousChangedBlocks(entries) {
+    const groups = [];
+    for (const entry of entries) {
+      const operations = new Set(entry.operations || []);
+      const current = groups[groups.length - 1];
+      const continuesCurrent = current && operations.size && [...operations].some(operation => current.operations.has(operation));
+      if (continuesCurrent) {
+        current.blocks.push(entry.block);
+        operations.forEach(operation => current.operations.add(operation));
+      } else {
+        groups.push({ blocks: [entry.block], operations });
+      }
+    }
+    return groups.map(group => group.blocks);
   }
 
   function createDiffNavigator(document) {
@@ -344,14 +378,19 @@
     }
 
     function visualTargets(panel) {
-      const blocks = new Set();
+      const blockSelector = 'p,li,h1,h2,h3,h4,h5,h6,tr,pre,blockquote';
+      const blocks = new Map();
       panel.querySelectorAll('ins,del').forEach(change => {
-        const ancestor = change.closest('p,li,h1,h2,h3,h4,h5,h6,tr,pre,blockquote');
-        const descendant = change.querySelector('p,li,h1,h2,h3,h4,h5,h6,tr,pre,blockquote');
-        const block = ancestor && panel.contains(ancestor) ? ancestor : descendant || change;
-        blocks.add(block);
+        const ancestor = change.closest(blockSelector);
+        const descendants = [...change.querySelectorAll(blockSelector)];
+        const candidates = ancestor && panel.contains(ancestor) ? [ancestor] : descendants.length ? descendants : [change];
+        const operation = change.dataset.operationIndex || '';
+        candidates.forEach(block => {
+          if (!blocks.has(block)) blocks.set(block, new Set());
+          if (operation) blocks.get(block).add(operation);
+        });
       });
-      return [...blocks];
+      return groupContiguousChangedBlocks([...blocks].map(([block, operations]) => ({ block, operations })));
     }
 
     function refresh() {
@@ -363,12 +402,12 @@
         return;
       }
       targets = panel.dataset.diffPanel === 'markdown'
-        ? [...panel.querySelectorAll('.markdown-diff-line.hunk')]
+        ? [...panel.querySelectorAll('.markdown-diff-line.hunk')].map(target => [target])
         : visualTargets(panel);
       if (!targets.length && panel.dataset.diffPanel === 'markdown') {
-        targets = [...panel.querySelectorAll('.markdown-diff-line.added,.markdown-diff-line.removed')];
+        targets = [...panel.querySelectorAll('.markdown-diff-line.added,.markdown-diff-line.removed')].map(target => [target]);
       }
-      targets.forEach(target => target.classList.add('diff-jump-target'));
+      targets.forEach(group => group[0].classList.add('diff-jump-target'));
       positionUnderHeader();
       navigator.hidden = !targets.length;
       position.textContent = `${targets.length} change${targets.length === 1 ? '' : 's'}`;
@@ -380,9 +419,9 @@
       if (!targets.length) return;
       if (currentIndex < 0) currentIndex = amount > 0 ? 0 : targets.length - 1;
       else currentIndex = (currentIndex + amount + targets.length) % targets.length;
-      targets.forEach((target, index) => target.classList.toggle('diff-jump-active', index === currentIndex));
+      targets.forEach((group, index) => group[0].classList.toggle('diff-jump-active', index === currentIndex));
       position.textContent = `${currentIndex + 1} of ${targets.length}`;
-      targets[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targets[currentIndex][0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     previous.addEventListener('click', () => move(-1));
@@ -406,10 +445,9 @@
     const form = root.document?.querySelector('[data-learn-diff-form]');
     if (!form) return;
     const input = form.querySelector('[name="learn-url"]');
-    const tokenInput = form.querySelector('[name="github-token"]');
     const submit = form.querySelector('button[type="submit"]');
     const status = root.document.querySelector('[data-compare-status]');
-    const rate = root.document.querySelector('[data-rate-limit]');
+    const rate = root.document.querySelector('[data-github-rate-status]');
     const results = root.document.querySelector('[data-compare-results]');
     const empty = root.document.querySelector('[data-compare-empty]');
     const diffNavigator = createDiffNavigator(root.document);
@@ -418,16 +456,13 @@
     const directView = pageUrl.searchParams.get('view') === 'diff';
     const main = root.document.querySelector('.compare-main');
     root.document.querySelector('.compare-callout')?.remove();
-    const tokenDetails = tokenInput.closest('details');
     root.document.title = 'Compare documentation revisions — Entra.News Daily';
-    root.document.querySelector('.compare-hero h1').textContent = 'See what changed on any configured documentation page.';
+    root.document.querySelector('.compare-hero h1').textContent = 'See what changed on a Microsoft Learn page.';
     root.document.querySelector('.compare-hero .lede').textContent = 'Paste a documentation URL. This page maps it to its configured GitHub repository, loads two revisions, and builds a visual and Markdown diff entirely in your browser.';
     root.document.querySelector('label[for="learn-url"]').textContent = 'Documentation page URL';
-    input.placeholder = 'https://docs.example.com/product/article';
+    input.placeholder = 'https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview';
     const emptyStrong = empty.querySelector('strong');
-    const emptyDescription = empty.querySelector('span');
     if (emptyStrong) emptyStrong.textContent = 'Paste a configured documentation page to begin.';
-    if (emptyDescription) emptyDescription.textContent = 'The URL must match a source declared in assets/diff-config.js.';
     let supportedSources = root.document.querySelector('[data-supported-sources]');
     if (!supportedSources) {
       supportedSources = root.document.createElement('p');
@@ -446,39 +481,14 @@
     main.insertBefore(directStatus, results);
     root.document.documentElement.dataset.compareView = directView ? 'diff' : 'standard';
 
-    const tokenHelp = root.document.createElement('div');
-    tokenHelp.className = 'compare-token-help';
-    tokenHelp.innerHTML = '<p>GitHub allows 60 unauthenticated API requests per hour for each public IP address. A comparison normally uses three requests. Adding a token raises the normal personal REST API limit to 5,000 requests per hour.</p><ol><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">GitHub’s fine-grained token form ↗</a>.</li><li>Give the token a short expiration and choose your own account as the resource owner.</li><li>No extra repository permissions are needed for this public source; GitHub tokens include read-only access to public repositories.</li><li>Generate the token, copy it, and paste it below.</li></ol><p class="compare-token-warning">The token is saved in this browser’s local storage for this site. Treat it like a password, use the shortest practical expiration, and remove it when you no longer need it.</p>';
-    tokenDetails.insertBefore(tokenHelp, tokenDetails.children[1]);
-    const tokenStorageNote = [...tokenDetails.querySelectorAll(':scope > p')]
-      .find(paragraph => paragraph.textContent.startsWith('The token is sent only'));
-    if (tokenStorageNote) tokenStorageNote.textContent = 'The token is sent only to api.github.com. When entered, it is saved only in this browser for future comparisons.';
-    tokenDetails.appendChild(rate);
-    const forgetToken = root.document.createElement('button');
-    forgetToken.type = 'button';
-    forgetToken.className = 'compare-token-forget';
-    forgetToken.textContent = 'Forget saved token';
-    tokenDetails.appendChild(forgetToken);
-
     function savedToken() {
       try { return root.localStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch { return ''; }
     }
-
-    function cacheToken(value) {
-      try {
-        if (value) root.localStorage.setItem(TOKEN_STORAGE_KEY, value);
-        else root.localStorage.removeItem(TOKEN_STORAGE_KEY);
-      } catch {}
-      forgetToken.hidden = !value;
-    }
-
-    tokenInput.value = savedToken();
-    forgetToken.hidden = !tokenInput.value;
-    tokenInput.addEventListener('input', () => cacheToken(tokenInput.value.trim()));
-    forgetToken.addEventListener('click', () => {
-      tokenInput.value = '';
-      cacheToken('');
-      rate.textContent = 'Saved GitHub token removed from this browser.';
+    let retryAfterTokenChange = false;
+    root.document.addEventListener('github-token-changed', event => {
+      if (!retryAfterTokenChange || !event.detail?.hasToken) return;
+      retryAfterTokenChange = false;
+      form.requestSubmit();
     });
     if (queryUrl) input.value = queryUrl;
 
@@ -497,8 +507,7 @@
       setStatus(status, 'Finding the configured source file and revisions on GitHub…', 'loading');
       try {
         const info = siteUrlToRepoInfo(input.value);
-        const token = tokenInput.value.trim();
-        cacheToken(token);
+        const token = savedToken();
         const requestedRefs = commitRefsFromSearchParams(pageUrl.searchParams);
         const comparison = await loadComparison(info, token, rate, requestedRefs);
         const parts = root.Diff.diffLines(comparison.before, comparison.after);
@@ -511,19 +520,23 @@
         root.document.querySelector('[data-result-stats]').textContent = `+${counts.additions} / −${counts.deletions} lines in the latest change`;
         const learnLink = root.document.querySelector('[data-result-learn]');
         learnLink.href = info.publicUrl;
-        learnLink.textContent = `Open on ${info.sourceLabel} ↗`;
+        learnLink.title = 'Open on Microsoft Learn';
+        learnLink.setAttribute('aria-label', 'Open on Microsoft Learn');
         const githubLink = root.document.querySelector('[data-result-github]');
         githubLink.href = githubFileUrl(info, headRef);
-        githubLink.textContent = 'Open this revision on GitHub ↗';
+        githubLink.title = 'Open this revision on GitHub';
+        githubLink.setAttribute('aria-label', 'Open this revision on GitHub');
         const historyLink = root.document.querySelector('[data-result-history]');
         historyLink.href = info.historyUrl;
+        historyLink.title = 'View complete file history';
+        historyLink.setAttribute('aria-label', 'View complete file history');
         root.document.querySelector('[data-result-revisions]').innerHTML = commitCard(comparison.baseCommit, 'Before') + commitCard(comparison.headCommit, 'After');
         root.document.querySelector('[data-live-visual-diff]').innerHTML = renderVisualDiff(comparison.before, comparison.after, info, baseRef, headRef);
         root.document.querySelector('[data-live-markdown-diff]').innerHTML = renderMarkdownDiff(comparison.before, comparison.after, info, baseRef, headRef);
         const shareUrl = new URL(root.location.href);
         shareUrl.search = '';
         shareUrl.searchParams.set('url', info.publicUrl);
-        if (requestedRefs) {
+        if (requestedRefs && comparison.baseCommit) {
           shareUrl.searchParams.set('base', comparison.baseCommit.sha);
           shareUrl.searchParams.set('head', comparison.headCommit.sha);
         }
@@ -531,10 +544,15 @@
         root.history.replaceState(null, '', shareUrl);
         results.hidden = false;
         directStatus.hidden = true;
+        retryAfterTokenChange = false;
         diffNavigator.refresh();
         setStatus(status, '', '');
         if (!directView) results.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
+        if (error.rateLimited) {
+          retryAfterTokenChange = true;
+          root.document.dispatchEvent(new root.CustomEvent('github-token-required', { detail: { message: error.message, resetAt: error.resetAt } }));
+        }
         empty.hidden = directView;
         if (directView) {
           directStatus.hidden = false;
@@ -560,6 +578,8 @@
     extractTitle,
     stripFrontMatter,
     countChangedLines,
+    loadComparison,
+    groupContiguousChangedBlocks,
     init
   };
   if (root.document) {

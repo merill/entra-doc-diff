@@ -1,8 +1,26 @@
 
 const THEME_STORAGE_KEY='entra-news-theme';
+const GITHUB_TOKEN_STORAGE_KEY='entra-news-github-token';
 function applyTheme(theme,persist){const value=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=value;document.documentElement.style.colorScheme=value;document.querySelectorAll('[data-theme-option]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeOption===value)));if(persist){try{localStorage.setItem(THEME_STORAGE_KEY,value)}catch{}}}
 document.querySelectorAll('[data-theme-option]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeOption,true)));
 applyTheme(document.documentElement.dataset.theme||'light',false);
+const githubTokenDrawer=document.querySelector('[data-github-token-drawer]');
+const githubTokenBackdrop=document.querySelector('[data-github-token-backdrop]');
+const githubTokenInput=document.querySelector('[data-github-token-input]');
+const githubTokenStatus=document.querySelector('[data-github-token-status]');
+const githubTokenAlert=document.querySelector('[data-github-token-alert]');
+let githubTokenReturnFocus=null;
+function storedGithubToken(){try{return localStorage.getItem(GITHUB_TOKEN_STORAGE_KEY)||''}catch{return ''}}
+function syncGithubTokenDrawer(){if(!githubTokenInput)return;const value=storedGithubToken();githubTokenInput.value=value;const forget=document.querySelector('[data-github-token-forget]');if(forget)forget.hidden=!value}
+function openGithubTokenDrawer(options={}){if(!githubTokenDrawer)return;githubTokenReturnFocus=document.activeElement;syncGithubTokenDrawer();if(githubTokenStatus)githubTokenStatus.textContent='';if(githubTokenAlert){githubTokenAlert.hidden=!options.rateLimited;const detail=githubTokenAlert.querySelector('p');if(detail&&options.message)detail.textContent=options.message}githubTokenDrawer.hidden=false;githubTokenBackdrop.hidden=false;document.body.classList.add('token-drawer-open');document.querySelectorAll('[data-github-token-open]').forEach(button=>button.setAttribute('aria-expanded','true'));setTimeout(()=>githubTokenInput?.focus(),0)}
+function closeGithubTokenDrawer(){if(!githubTokenDrawer)return;githubTokenDrawer.hidden=true;githubTokenBackdrop.hidden=true;document.body.classList.remove('token-drawer-open');document.querySelectorAll('[data-github-token-open]').forEach(button=>button.setAttribute('aria-expanded','false'));githubTokenReturnFocus?.focus?.();githubTokenReturnFocus=null}
+document.querySelectorAll('[data-github-token-open]').forEach(button=>button.addEventListener('click',()=>openGithubTokenDrawer()));
+document.querySelectorAll('[data-github-token-close]').forEach(button=>button.addEventListener('click',closeGithubTokenDrawer));
+githubTokenBackdrop?.addEventListener('click',closeGithubTokenDrawer);
+document.querySelector('[data-github-token-save]')?.addEventListener('click',()=>{const value=githubTokenInput.value.trim();if(!value){githubTokenStatus.textContent='Paste a GitHub token before saving.';githubTokenInput.focus();return}try{localStorage.setItem(GITHUB_TOKEN_STORAGE_KEY,value)}catch{githubTokenStatus.textContent='This browser did not allow the token to be saved.';return}githubTokenStatus.textContent='Token saved in this browser.';syncGithubTokenDrawer();document.dispatchEvent(new CustomEvent('github-token-changed',{detail:{hasToken:true}}));setTimeout(closeGithubTokenDrawer,250)});
+document.querySelector('[data-github-token-forget]')?.addEventListener('click',()=>{try{localStorage.removeItem(GITHUB_TOKEN_STORAGE_KEY)}catch{}syncGithubTokenDrawer();githubTokenStatus.textContent='Saved GitHub token removed from this browser.';document.dispatchEvent(new CustomEvent('github-token-changed',{detail:{hasToken:false}}))});
+document.addEventListener('github-token-required',event=>openGithubTokenDrawer({rateLimited:true,message:event.detail?.message}));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!githubTokenDrawer?.hidden){event.preventDefault();closeGithubTokenDrawer();return}if(event.key!=='Tab'||githubTokenDrawer?.hidden)return;const focusable=[...githubTokenDrawer.querySelectorAll('a[href],button:not([disabled]):not([hidden]),input:not([disabled])')];if(!focusable.length)return;const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}});
 document.querySelectorAll('[data-userjot-feedback]').forEach(button=>button.addEventListener('click',()=>window.uj?.showWidget({section:'feedback'})));
 document.querySelectorAll('[data-diff-tab]').forEach(button=>button.addEventListener('click',()=>{const root=button.closest('[data-diff]');root.querySelectorAll('[data-diff-tab]').forEach(item=>item.classList.toggle('active',item===button));root.querySelectorAll('[data-diff-panel]').forEach(panel=>panel.hidden=panel.dataset.diffPanel!==button.dataset.diffTab)}));
 const localDateTimeFormatter=new Intl.DateTimeFormat(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
