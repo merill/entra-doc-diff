@@ -168,7 +168,7 @@ test('static generator writes indexable archive and detail pages', async () => {
         headline: 'Passkey migration guidance leads the week',
         overview: 'The week introduced concrete migration controls and configuration guidance for Entra administrators.',
         adminImpact: 'Review the new opt-out behavior before planning migration.',
-        keyChanges: [{ title: 'Migration control documented', detail: 'Administrators can assess the new behavior before rollout.', product: 'Entra ID' }]
+        keyChanges: [{ title: 'Migration control documented', detail: 'Administrators can assess the new behavior before rollout.', product: 'Entra ID', sourceId: 'doc-2026-08-01-create-a-configuration-monitor-01' }]
       }
     },
     months: {
@@ -176,7 +176,7 @@ test('static generator writes indexable archive and detail pages', async () => {
         headline: 'Identity governance and passkeys shape August',
         overview: 'August documentation focused on configuration baselines and migration controls.',
         adminImpact: 'Compare the new guidance with current tenant configuration.',
-        keyChanges: [{ title: 'Configuration baselines expanded', detail: 'New guidance explains how to evaluate configuration drift.', product: 'ID Governance' }]
+        keyChanges: [{ title: 'Configuration baselines expanded', detail: 'New guidance explains how to evaluate configuration drift.', product: 'ID Governance', sourceId: 'doc-2026-08-01-create-a-configuration-monitor-01' }]
       }
     }
   }));
@@ -278,19 +278,44 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(weekIndexHtml, /<span class="period-nav-next"><\/span>/);
   assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
   assert.match(weekIndexHtml, /class="period-key-changes"/);
-  assert.match(weekIndexHtml, /class="period-change-heading"><span title="Entra ID">Entra ID<\/span><strong>Migration control documented<\/strong>/);
+  assert.match(weekIndexHtml, /class="period-change-heading"><span title="Entra ID">Entra ID<\/span><strong><a href="#doc-2026-08-01-create-a-configuration-monitor-01">Migration control documented<\/a><\/strong>/);
+  assert.match(weekIndexHtml, /id="doc-2026-08-01-create-a-configuration-monitor-01"/);
   assert.match(siteCss, /\.period-change-heading\{display:block;min-width:0\}/);
   assert.match(siteCss, /\.period-change-heading span\{[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/);
+  assert.match(siteCss, /\.period-change-heading strong a\{[^}]*text-decoration:none/);
   assert.equal((await fs.stat(path.join(websiteDir, 'week', '2026-06-22', 'index.html'))).size > 0, true);
   const emptyWeekHtml = await fs.readFile(path.join(websiteDir, 'week', '2026-06-22', 'index.html'), 'utf8');
   assert.match(emptyWeekHtml, /No tracked updates/);
   assert.match(generator.periodPicker([{ date: '2026-01-02' }], 'week', '2025-12-29'), /29 December 2025–4 January 2026/);
+  const matchedPeriodItem = generator.periodChangeTarget(
+    { title: 'Passkey migration controls documented', detail: 'Administrators can review the migration opt-out.', product: 'Entra ID' },
+    [
+      { id: 'unrelated', date: '2026-08-01', title: 'Branding reference', summary: 'CSS examples.', adminImpact: '', product: { slug: 'entra-id', short: 'Entra ID', name: 'Microsoft Entra ID' }, topic: { name: 'Branding' } },
+      { id: 'passkey-target', date: '2026-08-01', title: 'Passkey migration opt-out', summary: 'New migration control for administrators.', adminImpact: 'Review the opt-out.', product: { slug: 'entra-id', short: 'Entra ID', name: 'Microsoft Entra ID' }, topic: { name: 'Authentication' } }
+    ]
+  );
+  assert.equal(matchedPeriodItem.id, 'passkey-target');
+  const crossPeriodItem = generator.periodChangeTarget(
+    { title: 'New Partner Tier1 and Tier2 Support assignments will be blocked', detail: 'New role assignments are being blocked.', product: 'Entra ID' },
+    [{ id: 'unrelated', date: '2026-07-01', title: 'Passkey migration', summary: 'Passkey rollout.', adminImpact: '', product: { slug: 'entra-id', short: 'Entra ID', name: 'Microsoft Entra ID' }, topic: { name: 'Authentication' } }],
+    [
+      { id: 'unrelated', date: '2026-07-01', title: 'Passkey migration', summary: 'Passkey rollout.', adminImpact: '', product: { slug: 'entra-id', short: 'Entra ID', name: 'Microsoft Entra ID' }, topic: { name: 'Authentication' } },
+      { id: 'MC-partner', date: '2026-06-30', title: 'Blocking new assignments to Partner Tier1 and Tier2 Support roles', summary: 'New Partner Tier support role assignments will be blocked.', adminImpact: 'Review partner access.', url: '/message-center/MC-partner/', product: { slug: 'entra-id', short: 'Entra ID', name: 'Microsoft Entra ID' }, topic: { name: 'Governance' } }
+    ]
+  );
+  assert.equal(crossPeriodItem.id, 'MC-partner');
+  const crossPeriodHtml = generator.renderPeriodBrief({
+    headline: 'Partner access changes', overview: 'A role assignment policy is changing.', adminImpact: 'Review partner access.',
+    keyChanges: [{ title: 'Partner Tier1 and Tier2 assignments blocked', detail: 'The policy affects new partner assignments.', product: 'Entra ID', sourceId: 'MC-partner' }]
+  }, 'Month in brief', [], [{ id: 'MC-partner', url: '/message-center/MC-partner/' }]);
+  assert.match(crossPeriodHtml, /<strong><a href="\/message-center\/MC-partner\/">Partner Tier1 and Tier2 assignments blocked<\/a><\/strong>/);
   const weekStepLinks = generator.periodStepLinks([{ date: '2026-01-12' }, { date: '2025-12-29' }], 'week', '2026-01-05');
   assert.match(weekStepLinks.previous, /href="\/week\/2025-12-29\/"/);
   assert.match(weekStepLinks.next, /href="\/week\/2026-01-12\/"/);
   assert.match(monthHtml, /Identity governance and passkeys shape August/);
   assert.match(monthHtml, /For Entra administrators/);
   assert.match(monthHtml, /data-period-picker="month"/);
+  assert.match(monthHtml, /<strong><a href="#doc-2026-08-01-create-a-configuration-monitor-01">Configuration baselines expanded<\/a><\/strong>/);
   assert.match(monthHtml, /class="period-picker-month selected" href="\/month\/2026-08\/"/);
   assert.match(monthHtml, /<h2 class="rail-heading">Browse months<\/h2>/);
   assert.equal(monthHtml.indexOf('Browse months') < monthHtml.indexOf('By product'), true);

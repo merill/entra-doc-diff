@@ -9,6 +9,7 @@ test('period prompt requires specific content changes instead of count-only pros
   assert.match(PERIOD_SUMMARY_PROMPT, /most consequential, specific content changes/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /Avoid generic statements based mainly on counts/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /preview.*general availability.*retirements/i);
+  assert.match(PERIOD_SUMMARY_PROMPT, /copy the id.*sourceId/i);
 });
 
 test('period evidence preserves product breadth and Message Center signals', () => {
@@ -52,7 +53,7 @@ test('historical generator writes weekly and monthly Luna max summaries with usa
         headline: 'Passkey migration controls become clearer',
         overview: 'The documentation added specific passkey migration controls and rollout guidance.',
         adminImpact: 'Identity administrators should review the opt-out before enabling migration.',
-        keyChanges: [{ title: 'Migration opt-out documented', detail: 'A new setting gives administrators explicit migration control.', product: 'Entra ID' }]
+        keyChanges: [{ title: 'Migration opt-out documented', detail: 'A new setting gives administrators explicit migration control.', product: 'Entra ID', sourceId: 'doc-source' }]
       }),
       usage: { input_tokens: 1000, output_tokens: 500 }
     };
@@ -63,9 +64,14 @@ test('historical generator writes weekly and monthly Luna max summaries with usa
   assert.equal(result.generated, 2);
   assert.equal(requests.every(request => request.model === 'gpt-5.6-luna' && request.reasoning.effort === 'max'), true);
   assert.equal(stored.weeks['2026-07-27'].headline, 'Passkey migration controls become clearer');
+  assert.equal(stored.weeks['2026-07-27'].keyChanges[0].sourceId, 'doc-source');
   assert.equal(stored.months['2026-08'].reasoningEffort, 'max');
   assert.equal(stored.lastRun.requests, 2);
   assert.equal(stored.lastRun.costUsd, 0.0016);
+  assert.equal(JSON.parse(requests[0].input).representativeChanges[0].id.startsWith('doc-'), true);
+  assert.equal(requests[0].text.format.schema.properties.keyChanges.items.required.includes('sourceId'), true);
+  assert.match(requests[0].instructions, /Every key change must be supported by representativeChanges/);
+  assert.match(requests[0].instructions, /weeklyBriefs as context only/);
 });
 
 test('max reasoning retries an incomplete response with a larger token allowance and counts both attempts', async () => {

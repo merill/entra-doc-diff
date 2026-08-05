@@ -9,6 +9,7 @@ const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra a
 Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Distinguish new features, previews, general availability, retirements, changed behavior, security guidance, and ordinary documentation clarification. Explain concrete administrator impact or action only when the evidence supports it.
 
 Select three to five changes that best explain the period. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
+For every key change, copy the id of the single representativeChanges item that most directly supports it into sourceId. Every key change must be supported by representativeChanges. Treat weeklyBriefs as context only: never select a sourceId from a weekly brief or use one as the sole evidence for a key change. Never invent or alter an id.
 
 Avoid generic statements based mainly on counts, such as "documentation was updated across several products." Do not call something a launch merely because a new page appeared. Do not invent availability, dates, requirements, or recommendations. If the period is dominated by mechanical or low-impact edits, say so plainly and identify the most meaningful exceptions.
 
@@ -48,6 +49,7 @@ function selectPeriodEvidence(items, limit) {
 
 function evidenceItem(item) {
   return {
+    id: item.id,
     date: item.date,
     source: item.source === 'mc' ? 'Microsoft 365 Message Center' : 'Microsoft Learn documentation',
     changeType: item.changeType,
@@ -207,7 +209,8 @@ class PeriodSummaryGenerator {
     const keyChanges = Array.isArray(summary.keyChanges) ? summary.keyChanges.slice(0, 5).map(change => ({
       title: cleanText(change.title, 180),
       detail: cleanText(change.detail, 520),
-      product: cleanText(change.product, 100)
+      product: cleanText(change.product, 100),
+      sourceId: cleanText(change.sourceId, 180)
     })).filter(change => change.title && change.detail) : [];
     if (!summary || !cleanText(summary.headline, 180) || !cleanText(summary.overview, 1400) || !cleanText(summary.adminImpact, 800) || keyChanges.length === 0) {
       throw new Error(`Luna returned an incomplete ${kind} summary for ${key}`);
@@ -261,9 +264,10 @@ class PeriodSummaryGenerator {
                     properties: {
                       title: { type: 'string', maxLength: 180 },
                       detail: { type: 'string', maxLength: 520 },
-                      product: { type: 'string', maxLength: 100 }
+                      product: { type: 'string', maxLength: 100 },
+                      sourceId: { type: 'string', maxLength: 180 }
                     },
-                    required: ['title', 'detail', 'product'],
+                    required: ['title', 'detail', 'product', 'sourceId'],
                     additionalProperties: false
                   }
                 }
