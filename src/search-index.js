@@ -124,6 +124,72 @@ function buildBriefRecord(type, key, summary = {}) {
   };
 }
 
+function groupUpdateRecords(records, maximumItems = 16) {
+  const grouped = new Map();
+  for (const record of records) {
+    const meta = record.meta || {};
+    const key = [meta.date, meta.productSlug, meta.topicSlug, meta.source].join('|');
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(record);
+  }
+  const results = [];
+  for (const group of grouped.values()) {
+    group.sort((a, b) => a.meta.title.localeCompare(b.meta.title));
+    for (let offset = 0; offset < group.length; offset += maximumItems) {
+      const chunk = group.slice(offset, offset + maximumItems);
+      const first = chunk[0];
+      const items = chunk.map(record => ({
+        url: record.url,
+        title: record.meta.title,
+        description: record.meta.description,
+        date: record.meta.date,
+        product: record.meta.product,
+        productShort: record.meta.productShort,
+        productSlug: record.meta.productSlug,
+        productIcon: record.meta.productIcon,
+        topic: record.meta.topic,
+        topicSlug: record.meta.topicSlug,
+        topicIcon: record.meta.topicIcon,
+        source: record.meta.source,
+        sourceLabel: record.meta.sourceLabel,
+        changeType: record.meta.changeType,
+        searchText: record.content.slice(0, 5000)
+      }));
+      results.push({
+        url: `/day/${first.meta.date}/#product-${first.meta.productSlug}`,
+        content: chunk.map(record => record.content).join('\n'),
+        language: 'en',
+        meta: {
+          title: `${first.meta.productShort || first.meta.product} updates on ${periodLabel('day', first.meta.date)}`,
+          description: `${chunk.length} searchable Microsoft Entra updates.`,
+          date: first.meta.date,
+          product: first.meta.product,
+          productShort: first.meta.productShort,
+          productSlug: first.meta.productSlug,
+          productIcon: first.meta.productIcon,
+          topic: first.meta.topic,
+          topicSlug: first.meta.topicSlug,
+          topicIcon: first.meta.topicIcon,
+          source: first.meta.source,
+          sourceLabel: first.meta.sourceLabel,
+          recordType: 'update-group',
+          itemCount: String(chunk.length),
+          items: JSON.stringify(items)
+        },
+        filters: {
+          product: [first.meta.productSlug],
+          topic: [first.meta.topicSlug],
+          source: [first.meta.source],
+          changeType: [...new Set(chunk.flatMap(record => record.filters.changeType))],
+          recordType: ['update']
+        },
+        sort: { date: first.meta.date }
+      });
+    }
+  }
+  return results.sort((a, b) => b.sort.date.localeCompare(a.sort.date) || a.meta.title.localeCompare(b.meta.title));
+}
+
 async function loadSearchRecords(options = {}) {
   const generator = new StaticSiteGenerator(options);
   const summaries = await generator.loadPeriodSummaries();
@@ -136,19 +202,20 @@ async function loadSearchRecords(options = {}) {
   docs.filter(item => moment(item.date).isBefore(recentCutoff)).forEach(item => {
     item.url = `/day/${item.date}/#${item.id}`;
   });
-  const records = items.map(buildUpdateRecord);
+  const updateRecords = items.map(buildUpdateRecord);
+  const records = groupUpdateRecords(updateRecords);
   for (const [collection, type] of [[summaries.days, 'day'], [summaries.weeks, 'week'], [summaries.months, 'month']]) {
     for (const [key, summary] of Object.entries(collection || {})) {
       if (summary?.headline || summary?.overview) records.push(buildBriefRecord(type, key, summary));
     }
   }
-  return { records, docs: docs.length, messageCenter: mc.length, summaries };
+  return { records, docs: docs.length, messageCenter: mc.length, updateGroups: records.filter(record => record.meta.recordType === 'update-group').length, summaries };
 }
 
 async function buildSearchIndex(options = {}) {
   const websiteDir = path.resolve(options.websiteDir || 'website');
   const outputPath = path.join(websiteDir, 'pagefind');
-  const { records, docs, messageCenter } = await loadSearchRecords({ ...options, websiteDir });
+  const { records, docs, messageCenter, updateGroups } = await loadSearchRecords({ ...options, websiteDir });
   await fs.rm(outputPath, { recursive: true, force: true });
   const pagefind = await import('pagefind');
   const created = await pagefind.createIndex({
@@ -175,13 +242,14 @@ async function buildSearchIndex(options = {}) {
     generatedAt: new Date().toISOString(),
     records: records.length,
     updates: docs + messageCenter,
+    updateGroups,
     documentation: docs,
     messageCenter,
-    briefs: records.length - docs - messageCenter
+    briefs: records.filter(record => record.meta.recordType === 'brief').length
   };
   await fs.writeFile(path.join(websiteDir, 'search-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`Indexed ${manifest.records} search records (${manifest.updates} updates and ${manifest.briefs} editorial briefs).`);
+  console.log(`Indexed ${manifest.updates} updates in ${manifest.updateGroups} compact groups, plus ${manifest.briefs} editorial briefs.`);
   return manifest;
 }
 
-module.exports = { cleanText, cleanPatch, buildUpdateRecord, buildBriefRecord, loadSearchRecords, buildSearchIndex, PRODUCTS, TOPICS };
+module.exports = { cleanText, cleanPatch, buildUpdateRecord, buildBriefRecord, groupUpdateRecords, loadSearchRecords, buildSearchIndex, PRODUCTS, TOPICS };

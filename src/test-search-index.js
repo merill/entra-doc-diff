@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { cleanPatch, buildUpdateRecord, buildBriefRecord } = require('./search-index');
+const { cleanPatch, buildUpdateRecord, buildBriefRecord, groupUpdateRecords } = require('./search-index');
 
 const product = { name: 'Microsoft Entra ID', short: 'Entra ID', slug: 'entra-id', icon: 'entra-id.svg' };
 const topic = { name: 'Conditional Access', slug: 'conditional-access', icon: '/assets/topics/conditional-access.svg' };
@@ -45,4 +45,26 @@ test('editorial records link to their static period and stay separately filterab
   assert.deepEqual(record.filters.recordType, ['brief']);
   assert.deepEqual(record.filters.periodType, ['week']);
   assert.match(record.content, /migration deadlines/i);
+});
+
+test('update records are compacted while preserving exact result metadata and filters', () => {
+  const records = Array.from({ length: 19 }, (_, index) => buildUpdateRecord({
+    url: `/changes/2026-08-05/change-${index}/`,
+    title: `Conditional Access change ${index}`,
+    summary: `Policy behavior ${index}.`,
+    date: '2026-08-05',
+    source: 'docs',
+    sourceLabel: 'Microsoft Learn',
+    changeType: index === 0 ? 'New' : 'Updated',
+    product,
+    topic,
+    patch: `+setting-${index}`
+  }));
+  const groups = groupUpdateRecords(records, 16);
+  assert.equal(groups.length, 2);
+  assert.equal(JSON.parse(groups[0].meta.items).length, 16);
+  assert.equal(JSON.parse(groups[1].meta.items).length, 3);
+  assert.equal(JSON.parse(groups[0].meta.items)[0].url.startsWith('/changes/'), true);
+  assert.deepEqual(groups[0].filters.recordType, ['update']);
+  assert.deepEqual(new Set(groups[0].filters.changeType), new Set(['new', 'updated']));
 });
