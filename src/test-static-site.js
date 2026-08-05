@@ -208,15 +208,22 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /property="og:image:width" content="1200"/);
   assert.match(indexHtml, /property="og:image:height" content="630"/);
   assert.match(indexHtml, /name="twitter:card" content="summary_large_image"/);
+  for (const html of [indexHtml, dayHtml, weekIndexHtml, monthHtml, docDetailHtml, messageDetailHtml, aboutHtml]) {
+    assert.match(html, /https:\/\/cdn\.userjot\.com\/sdk\/v2\/uj\.js/);
+    assert.match(html, /window\.uj\.init\('cmsf6dr5931kz0ipdm14g1qbt',\{widget:true,theme:'auto',position:'right'\}\)/);
+    assert.doesNotMatch(html, /uj\.identify/);
+  }
+  assert.equal((indexHtml.match(/cdn\.userjot\.com\/sdk\/v2\/uj\.js/g) || []).length, 1);
   assert.match(indexHtml, /href="https:\/\/merill\.net"/);
   assert.doesNotMatch(indexHtml, /class="story-time"|class="source-label"/);
   assert.match(indexHtml, /class="product-update-group"/);
   assert.match(indexHtml, /class="landing-intro"/);
   assert.match(indexHtml, /Keep up with Microsoft Entra/);
-  assert.match(indexHtml, /Microsoft Entra changes every day/);
-  assert.match(indexHtml, /Learn more about this project →/);
+  assert.match(indexHtml, /Daily AI-generated highlights from Microsoft Learn and Message Center/);
+  assert.match(indexHtml, /About this project →/);
+  assert.doesNotMatch(indexHtml, /Microsoft Entra changes every day|Learn more about this project/);
   assert.match(dayIndexHtml, /class="landing-intro"/);
-  assert.match(dayIndexHtml, /href="\/about\/">Learn more about this project →<\/a>/);
+  assert.match(dayIndexHtml, /href="\/about\/">About this project →<\/a>/);
   assert.doesNotMatch(dayHtml, /class="landing-intro"|Keep up with Microsoft Entra/);
   for (const html of [indexHtml, dayIndexHtml, dayHtml]) {
     assert.match(html, /Microsoft Entra daily update/);
@@ -266,20 +273,30 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal((weekIndexHtml.match(/<li(?: class="selected")?><a href="\/week\//g) || []).length, 6);
   assert.match(weekIndexHtml, /<li class="selected"><a href="\/week\/2026-07-27\/" aria-current="page">/);
   assert.equal(weekIndexHtml.indexOf('Browse weeks') < weekIndexHtml.indexOf('By product'), true);
-  assert.doesNotMatch(weekIndexHtml, /Week by product|Previous week|Next week/);
+  assert.doesNotMatch(weekIndexHtml, /Week by product/);
+  assert.match(weekIndexHtml, /class="period-nav-previous" href="\/week\/2026-07-20\/">← Previous week<\/a>/);
+  assert.match(weekIndexHtml, /<span class="period-nav-next"><\/span>/);
   assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
   assert.match(weekIndexHtml, /class="period-key-changes"/);
+  assert.match(weekIndexHtml, /class="period-change-heading"><span title="Entra ID">Entra ID<\/span><strong>Migration control documented<\/strong>/);
+  assert.match(siteCss, /\.period-change-heading\{display:block;min-width:0\}/);
+  assert.match(siteCss, /\.period-change-heading span\{[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/);
   assert.equal((await fs.stat(path.join(websiteDir, 'week', '2026-06-22', 'index.html'))).size > 0, true);
   const emptyWeekHtml = await fs.readFile(path.join(websiteDir, 'week', '2026-06-22', 'index.html'), 'utf8');
   assert.match(emptyWeekHtml, /No tracked updates/);
   assert.match(generator.periodPicker([{ date: '2026-01-02' }], 'week', '2025-12-29'), /29 December 2025–4 January 2026/);
+  const weekStepLinks = generator.periodStepLinks([{ date: '2026-01-12' }, { date: '2025-12-29' }], 'week', '2026-01-05');
+  assert.match(weekStepLinks.previous, /href="\/week\/2025-12-29\/"/);
+  assert.match(weekStepLinks.next, /href="\/week\/2026-01-12\/"/);
   assert.match(monthHtml, /Identity governance and passkeys shape August/);
   assert.match(monthHtml, /For Entra administrators/);
   assert.match(monthHtml, /data-period-picker="month"/);
   assert.match(monthHtml, /class="period-picker-month selected" href="\/month\/2026-08\/"/);
   assert.match(monthHtml, /<h2 class="rail-heading">Browse months<\/h2>/);
   assert.equal(monthHtml.indexOf('Browse months') < monthHtml.indexOf('By product'), true);
-  assert.doesNotMatch(monthHtml, /<h2 class="rail-heading">By topic<\/h2>|Previous month|Next month/);
+  assert.doesNotMatch(monthHtml, /<h2 class="rail-heading">By topic<\/h2>/);
+  assert.match(monthHtml, /class="period-nav-previous" href="\/month\/2026-07\/">← Previous month<\/a>/);
+  assert.match(monthHtml, /<span class="period-nav-next"><\/span>/);
   assert.equal(generator.resolveDayDate([{ date: '2026-08-01' }], '2026-08-04'), '2026-08-01');
   const calendarHtml = generator.miniMonthCalendar([
     { date: '2026-07-31' },
@@ -324,10 +341,14 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /Why it exists/);
   assert.match(aboutHtml, /How it works/);
   assert.match(aboutHtml, /Made for the community/);
-  assert.match(aboutHtml, /Entra\.News.*weekly briefing for Microsoft Entra/);
-  assert.match(aboutHtml, /Bookmark.*daily\.entra\.news/);
+  assert.match(aboutHtml, /Daily automated AI entries are useful, but nothing beats content created and curated/);
+  assert.match(aboutHtml, /insights from Microsoft MVPs and identity subject-matter experts/);
+  assert.match(aboutHtml, /practical guidance learned the hard way/);
+  assert.match(aboutHtml, /Want to chat about Entra\?/);
   assert.match(aboutHtml, /href="https:\/\/discord\.entra\.news"/);
-  assert.match(aboutHtml, /updates are posted daily/);
+  assert.match(aboutHtml, /identity admins, architects, MVPs, and other Entra folks/);
+  assert.match(aboutHtml, /Join the Entra community on Discord/);
+  assert.doesNotMatch(aboutHtml, /Bookmark|updates are posted daily/);
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
   assert.match(indexHtml, /href="https:\/\/maester\.cloud"/);
@@ -338,6 +359,8 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /M365 Message Center Archive/);
   assert.match(indexHtml, /Shout me a cup of coffee/);
   assert.match(indexHtml, /href="https:\/\/github\.com\/sponsors\/merill"/);
+  assert.match(indexHtml, /<button class="footer-feedback-button" type="button" data-userjot-feedback>Report an issue or share feedback<\/button>/);
+  assert.match(siteJs, /window\.uj\?\.showWidget\(\{section:'feedback'\}\)/);
   assert.doesNotMatch(indexHtml, /Follow Merill on GitHub|href="https:\/\/github\.com\/merill"/);
   assert.match(indexHtml, /href="https:\/\/merill\.net" target="_blank" rel="noopener noreferrer">merill\.net/);
   assert.match(indexHtml, /href="https:\/\/entra\.news" target="_blank" rel="noopener noreferrer"[^>]*><img src="\/assets\/ui\/newspaper\.svg"/);
@@ -360,6 +383,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(siteJs, /data-local-day/);
   assert.match(siteJs, /hours ago|'in '/);
   assert.match(siteJs, /data-period-picker/);
+  assert.match(siteJs, /event\.composedPath\(\)\.includes\(root\)/);
   assert.match(siteJs, /event\.key!==['"]Escape['"]/);
   assert.match(siteJs, /aria-expanded/);
   assert.match(siteJs, /localStorage\.setItem\(THEME_STORAGE_KEY,value\)/);
