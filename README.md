@@ -132,6 +132,31 @@ npm run preview:site
 
 Open `http://127.0.0.1:4173/`. The generated site uses `daily.entra.news` as its canonical host and includes indexable day, week, month, product, topic, documentation-change, and Message Center pages. Recent documentation details lead with readable context and a formatted comparison, with the raw Markdown patch available as a secondary view.
 
+The generated `/compare/` page is a fully client-side documentation source explorer. Paste a configured public documentation URL to map it to its GitHub repository, load the file's latest two revisions through GitHub's public REST API, and render visual and Markdown diffs in the browser. Public use requires no credentials and normally makes three API requests per comparison. GitHub limits unauthenticated requests by IP; an optional read-only token can be saved in browser-local storage for a higher limit. Links from tracked change pages use `/compare/?url=…&view=diff` to open the complete diff without the URL-entry introduction.
+
+To compare two exact revisions, add `base=<older-commit-sha>&head=<newer-commit-sha>` to the compare URL. Both parameters are required; when neither is present, the client compares the latest two commits that changed the file.
+
+Documentation sources are declared in `assets/site/diff-config.js`. Each source maps a public site path to a GitHub repository path:
+
+```js
+window.DOC_DIFF_CONFIG = {
+  sources: [{
+    id: 'example-docs',
+    label: 'Example Docs',
+    siteUrl: 'https://docs.example.com/guide/',
+    stripLocale: true,
+    repositoryUrl: 'https://github.com/example/docs',
+    repositoryPathPrefix: 'content',
+    defaultBranch: 'main',
+    fileExtension: '.md'
+  }]
+};
+```
+
+`siteUrl` supplies both the allowed HTTPS host and the public path prefix. With `stripLocale`, a leading segment such as `en-us` is ignored while mapping. The example maps `https://docs.example.com/en-us/guide/start` to `content/start.md`. Include every supported source in the `sources` array.
+
+The checked-in static list currently covers Microsoft Entra, Azure, .NET, PowerShell, Microsoft 365, Microsoft Intune, Microsoft Fabric, Dynamics 365, SQL, Microsoft Graph, Visual Studio, ASP.NET Core, and Windows Server. Sources are matched in array order, so narrower routes belong before broad ones. An optional `query` object can select variants such as Microsoft Graph beta, and `pathAliases` can describe individual Learn-to-repository path exceptions without changing the client code.
+
 Message Center ingestion includes a post when either its service list or title contains the standalone word `Entra` (case-insensitive). Set `MC_DATA_PATH` to the Message Center repository's `@data` directory when building locally; the GitHub workflow clones that repository automatically.
 
 Or trigger the GitHub Action manually:
