@@ -188,6 +188,9 @@ test('RSS contains newest-first richly formatted daily briefs linked to daily pa
   assert.match(rss, /Review &amp; apply today&#0*39;s regenerated guidance\./);
   assert.match(rss, /https:\/\/daily\.entra\.news\/assets\/products\/entra-id\.svg/);
   assert.match(rss, /https:\/\/daily\.entra\.news\/assets\/topics\/conditional-access\.svg/);
+  assert.match(rss, /<table role="presentation" width="100%"/);
+  assert.match(rss, /<td width="46"[^>]*>[\s\S]*width:20px!important;max-width:20px!important;height:20px!important/);
+  assert.match(rss, /width:16px!important;max-width:16px!important;height:16px!important/);
   assert.match(rss, /href="https:\/\/daily\.entra\.news\/day\/2026-08-03\/#change-ca"[^>]*>Conditional Access<\/a>/);
   assert.match(rss, /margin:0 0 20px;padding:0 0 18px/);
   assert.match(rss, /View all updates for 3 August 2026/);
