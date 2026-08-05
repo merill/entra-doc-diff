@@ -134,7 +134,7 @@ test('related items preserve a relevant cross-source result', () => {
   assert.equal(related.some(candidate => candidate.id === 'MC100'), true);
 });
 
-test('RSS contains newest-first plain-English daily summaries linked to daily pages', () => {
+test('RSS contains newest-first richly formatted daily briefs linked to daily pages', () => {
   const rss = renderDailyRss([
     {
       date: '2026-08-01',
@@ -163,12 +163,17 @@ test('RSS contains newest-first plain-English daily summaries linked to daily pa
     '2026-08-03': {
       headline: 'Identity & access <review>',
       overview: 'Review & apply today\'s regenerated guidance.',
-      keyChanges: [{ title: 'Conditional Access', detail: 'A policy <setting> changed.' }],
+      keyChanges: [{ title: 'Conditional Access', detail: 'A policy <setting> changed.', product: 'Entra ID', sourceId: 'change-ca' }],
       adminImpact: 'Check sign-in policies.'
     }
-  });
+  }, 50, [{
+    id: 'change-ca',
+    product: { slug: 'entra-id' },
+    topic: { slug: 'conditional-access' }
+  }]);
   assert.match(rss, /<title>Entra\.News Daily summaries<\/title>/);
   assert.match(rss, /<description>Plain-English daily summaries of Microsoft Entra documentation and Message Center changes\.<\/description>/);
+  assert.match(rss, /xmlns:content="http:\/\/purl\.org\/rss\/1\.0\/modules\/content\/"/);
   assert.match(rss, /<language>en<\/language>/);
   assert.equal((rss.match(/<item>/g) || []).length, 3);
   assert.equal(rss.indexOf('/day/2026-08-04/') < rss.indexOf('/day/2026-08-03/'), true);
@@ -177,9 +182,17 @@ test('RSS contains newest-first plain-English daily summaries linked to daily pa
   assert.match(rss, /<link>https:\/\/daily\.entra\.news\/day\/2026-08-03\/<\/link>/);
   assert.match(rss, /<guid isPermaLink="true">https:\/\/daily\.entra\.news\/day\/2026-08-03\/<\/guid>/);
   assert.match(rss, /Identity &amp; access &lt;review&gt; — 3 August 2026/);
-  assert.match(rss, /Review &amp; apply today&apos;s regenerated guidance\.[\s\S]*Conditional Access: A policy changed\.[\s\S]*For Entra administrators: Check sign-in policies\./);
+  assert.match(rss, /<description><!\[CDATA\[<div/);
+  assert.match(rss, /<content:encoded><!\[CDATA\[<div/);
+  assert.match(rss, /Day in brief · 3 August 2026/);
+  assert.match(rss, /Review &amp; apply today&#0*39;s regenerated guidance\./);
+  assert.match(rss, /https:\/\/daily\.entra\.news\/assets\/products\/entra-id\.svg/);
+  assert.match(rss, /https:\/\/daily\.entra\.news\/assets\/topics\/conditional-access\.svg/);
+  assert.match(rss, /href="https:\/\/daily\.entra\.news\/day\/2026-08-03\/#change-ca"[^>]*>Conditional Access<\/a>/);
+  assert.match(rss, /margin:0 0 20px;padding:0 0 18px/);
+  assert.match(rss, /View all updates for 3 August 2026/);
   assert.doesNotMatch(rss, /today&apos;s guidance\./);
-  assert.doesNotMatch(rss, /per-change summary|\/changes\//);
+  assert.doesNotMatch(rss, /For Entra administrators|per-change summary|\/changes\//);
 });
 
 test('static generator writes indexable archive and detail pages', async () => {
@@ -278,6 +291,10 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /Entra\.News Daily/);
   assert.match(rssXml, /<link>https:\/\/daily\.entra\.news\/day\/2026-08-01\/<\/link>/);
   assert.match(rssXml, /Identity Governance guidance now explains how administrators can evaluate configuration drift/);
+  assert.match(rssXml, /<content:encoded><!\[CDATA\[<div/);
+  assert.match(rssXml, /https:\/\/daily\.entra\.news\/assets\/products\/id-governance\.svg/);
+  assert.match(rssXml, /https:\/\/daily\.entra\.news\/assets\/topics\/governance\.svg/);
+  assert.match(rssXml, /https:\/\/daily\.entra\.news\/day\/2026-08-01\/#doc-2026-08-01-create-a-configuration-monitor-01/);
   assert.doesNotMatch(rssXml, /\/changes\/|New administrator experience/);
   assert.match(indexHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/);
   assert.match(indexHtml, /<link rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png">/);
@@ -311,6 +328,7 @@ test('static generator writes indexable archive and detail pages', async () => {
     assert.match(html, /Day in brief/);
     assert.match(html, /Configuration monitoring defines a tenant baseline/);
     assert.doesNotMatch(html, /Plain-English daily brief/);
+    assert.doesNotMatch(html, /For Entra administrators|class="period-admin-focus"/);
   }
   assert.match(indexHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.match(indexHtml, /class="right-rail month-stats-rail period-product-rail day-rail"/);
@@ -320,6 +338,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /aria-label="1 August 2026, 2 changes"/);
   assert.match(indexHtml, /aria-label="2 August 2026, no changes; showing 1 August"/);
   assert.match(indexHtml, /class="mini-update-dot"/);
+  assert.match(siteCss, /\.mini-day\.selected\{[^}]*border-radius:6px/);
   assert.doesNotMatch(indexHtml, /class="mini-count"/);
   assert.match(indexHtml, /class="mini-day outside"[^>]*><span class="mini-day-number">27<\/span>/);
   assert.match(indexHtml, /href="\/day\/2026-08-01\/"/);
@@ -360,6 +379,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(weekIndexHtml, /class="period-nav-previous" href="\/week\/2026-07-20\/">← Previous week<\/a>/);
   assert.match(weekIndexHtml, /<span class="period-nav-next"><\/span>/);
   assert.match(weekIndexHtml, /Passkey migration guidance leads the week/);
+  assert.match(weekIndexHtml, /For Entra administrators/);
   assert.match(weekIndexHtml, /class="period-key-changes"/);
   assert.match(weekIndexHtml, /class="period-change-taxonomy"><img src="\/assets\/products\/id-governance\.svg" alt=""><img class="topic-icon" src="\/assets\/topics\/governance\.svg" alt=""><span title="ID Governance · Governance">ID Governance · Governance<\/span><\/div><strong><a href="#doc-2026-08-01-create-a-configuration-monitor-01">Migration control documented<\/a><\/strong>/);
   assert.match(weekIndexHtml, /id="doc-2026-08-01-create-a-configuration-monitor-01"/);
@@ -471,6 +491,9 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(compareHtml, /data-learn-diff-form/);
   assert.match(compareHtml, /data-live-visual-diff/);
   assert.match(compareHtml, /data-live-markdown-diff/);
+  assert.match(siteCss, /\.compare-revisions\{[^}]*margin:12px 0 20px/);
+  assert.match(siteCss, /\.compare-revision\{[^}]*grid-template-areas:"label commit date" "message message message"[^}]*padding:8px 11px/);
+  assert.match(siteCss, /\.compare-revision p\{[^}]*font-size:13px[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/);
   assert.match(compareHtml, /data-diff-navigator/);
   assert.match(compareHtml, /data-diff-previous/);
   assert.match(compareHtml, /data-diff-next/);
