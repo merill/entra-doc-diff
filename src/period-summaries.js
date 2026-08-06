@@ -74,6 +74,7 @@ class PeriodSummaryGenerator {
     this.reasoningEffort = options.reasoningEffort || process.env.OPENAI_PERIOD_SUMMARY_REASONING_EFFORT || 'max';
     this.maxOutputTokens = Number(options.maxOutputTokens || process.env.OPENAI_PERIOD_SUMMARY_MAX_OUTPUT_TOKENS || 12000);
     this.budgetUsd = Number(options.budgetUsd || process.env.OPENAI_PERIOD_SUMMARY_BUDGET_USD || 1.25);
+    this.dailyBudgetUsd = Number(options.dailyBudgetUsd || process.env.OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD || 0.25);
     this.inputPricePerMillion = Number(options.inputPricePerMillion || 0.20);
     this.outputPricePerMillion = Number(options.outputPricePerMillion || 1.20);
     this.transientRetries = Number(options.transientRetries ?? process.env.OPENAI_PERIOD_SUMMARY_TRANSIENT_RETRIES ?? 3);
@@ -85,6 +86,7 @@ class PeriodSummaryGenerator {
     this.runCostUsd = 0;
     this.runUsage = { inputTokens: 0, outputTokens: 0, requests: 0 };
     this.baseUsage = { inputTokens: 0, outputTokens: 0, requests: 0, costUsd: 0 };
+    this.baseDailyUsage = { inputTokens: 0, outputTokens: 0, requests: 0, costUsd: 0 };
   }
 
   async createResponse(request, label) {
@@ -136,27 +138,39 @@ class PeriodSummaryGenerator {
         const lastRun = { ...this.baseUsage, ...(data.lastRun || {}) };
         this.baseUsage = Number(lastRun.costUsd || 0) > stored.costUsd ? lastRun : stored;
       }
+      const utcDate = this.now.slice(0, 10);
+      this.baseDailyUsage = { ...this.baseDailyUsage, ...(data.usageByDay?.[utcDate] || {}) };
       return {
         days: {},
         weeks: {},
         months: {},
         ...data,
-        version: 2,
+        version: 3,
         days: data.days || {},
         weeks: data.weeks || {},
         months: data.months || {}
       };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
-      return { version: 2, days: {}, weeks: {}, months: {} };
+      return { version: 3, days: {}, weeks: {}, months: {}, usageByDay: {} };
     }
   }
 
   async saveStore(store) {
+    const utcDate = this.now.slice(0, 10);
+    const cutoff = moment.utc(utcDate).subtract(35, 'days').format('YYYY-MM-DD');
+    const usageByDay = Object.fromEntries(Object.entries(store.usageByDay || {}).filter(([date]) => date >= cutoff));
+    usageByDay[utcDate] = {
+      inputTokens: Number(this.baseDailyUsage.inputTokens || 0) + this.runUsage.inputTokens,
+      outputTokens: Number(this.baseDailyUsage.outputTokens || 0) + this.runUsage.outputTokens,
+      requests: Number(this.baseDailyUsage.requests || 0) + this.runUsage.requests,
+      costUsd: Number((Number(this.baseDailyUsage.costUsd || 0) + this.runCostUsd).toFixed(6))
+    };
     const output = {
       ...store,
       generatedAt: this.now,
       generator: { model: this.model, reasoningEffort: this.reasoningEffort },
+      usageByDay,
       lastRun: {
         ...this.runUsage,
         costUsd: Number(this.runCostUsd.toFixed(6))
@@ -247,6 +261,8 @@ class PeriodSummaryGenerator {
   async generateOne(kind, key, items, store) {
     if (!this.client) throw new Error('No OpenAI API key is available. Run the CLI in an interactive terminal and enter the key when prompted.');
     if (this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached for this run; completed periods were saved and the backfill can be resumed`);
+    const dailySpend = Number(this.baseDailyUsage.costUsd || 0) + this.runCostUsd;
+    if (dailySpend >= this.dailyBudgetUsd) throw new Error(`UTC-day period-summary budget of $${this.dailyBudgetUsd.toFixed(2)} has been reached; no additional requests will be started today (one in-flight request may cause a small final overshoot)`);
     const evidence = this.buildEvidence(kind, key, items, store);
     this.logger.log(`🧠 Writing ${kind} brief for ${key} with ${this.model} (${this.reasoningEffort} reasoning, ${items.length} updates)...`);
     const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens * 2, 25000)])];

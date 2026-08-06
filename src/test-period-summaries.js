@@ -63,13 +63,14 @@ test('historical generator writes daily, weekly, and monthly Luna max summaries 
   const stored = JSON.parse(await fs.readFile(path.join(websiteDir, 'period-summaries.json'), 'utf8'));
   assert.equal(result.generated, 3);
   assert.equal(requests.every(request => request.model === 'gpt-5.6-luna' && request.reasoning.effort === 'max'), true);
-  assert.equal(stored.version, 2);
+  assert.equal(stored.version, 3);
   assert.equal(stored.days['2026-08-01'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].keyChanges[0].sourceId, 'doc-source');
   assert.equal(stored.months['2026-08'].reasoningEffort, 'max');
   assert.equal(stored.lastRun.requests, 3);
   assert.equal(stored.lastRun.costUsd, 0.0024);
+  assert.equal(stored.usageByDay['2026-08-04'].requests, 3);
   assert.equal(JSON.parse(requests[0].input).representativeChanges[0].id.startsWith('doc-'), true);
   assert.equal(JSON.parse(requests[0].input).period.label, '1 August 2026');
   assert.equal('weeklyBriefs' in JSON.parse(requests[0].input), false);
@@ -207,6 +208,38 @@ test('backfill budget applies per run so an existing checkpoint can continue', a
   const result = await generator.run({ all: true, kinds: ['day'] });
   assert.equal(requests, 1);
   assert.equal(result.days, 1);
+});
+
+test('UTC-day usage ledger prevents a later scheduled run from starting another request', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-ledger-'));
+  const outputPath = path.join(root, 'period-summaries.json');
+  const item = {
+    id: 'doc-one', date: '2026-08-06', source: 'docs', changeType: 'Updated', additions: 1,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+    title: 'Daily guardrail', summary: 'A source changed.', adminImpact: 'Review it.'
+  };
+  const response = {
+    status: 'completed', model: 'gpt-5.6-luna',
+    output_text: JSON.stringify({
+      headline: 'Guardrail update', overview: 'The source changed during this refresh.', adminImpact: 'Review the update.',
+      keyChanges: [{ title: 'Source changed', detail: 'The changed source is summarized.', product: 'Entra ID', sourceId: 'doc-one' }]
+    }),
+    usage: { input_tokens: 1000, output_tokens: 1000 }
+  };
+  const first = new PeriodSummaryGenerator({
+    outputPath, now: '2026-08-06T00:15:00Z', dailyBudgetUsd: 0.001,
+    client: { responses: { create: async () => response } }, logger: { log() {}, warn() {} }
+  });
+  first.loadItems = async () => [item];
+  await first.run({ force: true, kinds: ['day'] });
+  const second = new PeriodSummaryGenerator({
+    outputPath, now: '2026-08-06T04:15:00Z', dailyBudgetUsd: 0.001,
+    client: { responses: { create: async () => { throw new Error('should not call OpenAI'); } } }, logger: { log() {}, warn() {} }
+  });
+  second.loadItems = async () => [item];
+  await assert.rejects(second.run({ force: true, kinds: ['day'] }), /UTC-day period-summary budget/);
+  const stored = JSON.parse(await fs.readFile(outputPath, 'utf8'));
+  assert.equal(stored.usageByDay['2026-08-06'].requests, 1);
 });
 
 test('max reasoning retries an incomplete response with a larger token allowance and counts both attempts', async () => {

@@ -5,12 +5,18 @@ permissions:
   
 on:
   schedule:
-    # Run after the 07:30 UTC MicrosoftDocs publish/sync cycle, with time for late changes to settle.
+    # Four-hour UTC cadence. The dedicated 08:15 run also sends the daily email.
+    - cron: '15 0,4,12,16,20 * * *'
     - cron: '15 8 * * *'
   workflow_dispatch:
     inputs:
       backfill_period_summaries:
         description: Regenerate historical weekly and monthly editorial briefs
+        required: false
+        type: boolean
+        default: false
+      send_email:
+        description: Send the pending daily email digest during this manual run
         required: false
         type: boolean
         default: false
@@ -42,7 +48,8 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Run docs monitor
+    - name: Run docs and Message Center monitor
+      id: monitor
       env:
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -52,6 +59,8 @@ jobs:
         OPENAI_SUMMARY_REASONING_EFFORT: "medium"
         OPENAI_SUMMARY_CONCURRENCY: "3"
         DISCORD_ENTRA_SCOUT_WEBHOOK_URL: ${{ secrets.DISCORD_ENTRA_SCOUT_WEBHOOK_URL }}
+        DISCORD_ENABLED: ${{ inputs.backfill_period_summaries != true }}
+        EMAIL_ENABLED: ${{ (github.event_name == 'schedule' && github.event.schedule == '15 8 * * *') || (github.event_name == 'workflow_dispatch' && inputs.send_email == true) }}
         MC_DATA_PATH: "./mc/@data"
         RECIPIENT_EMAIL: "merill@merill.net"
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
@@ -59,11 +68,13 @@ jobs:
       run: node src/monitor-docs.js
 
     - name: Generate daily, weekly, and monthly editorial briefs
+      if: steps.monitor.outputs.content_changed == 'true' || inputs.backfill_period_summaries == true
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_PERIOD_SUMMARY_MODEL: "gpt-5.6-luna"
         OPENAI_PERIOD_SUMMARY_REASONING_EFFORT: "max"
         OPENAI_PERIOD_SUMMARY_BUDGET_USD: "1.25"
+        OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD: "0.25"
         MC_DATA_PATH: "./mc/@data"
       run: |
         if [ "${{ inputs.backfill_period_summaries }}" = "true" ]; then
@@ -84,7 +95,7 @@ jobs:
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "Update website with daily report - $(date +'%Y-%m-%d')"
+          git commit -m "Refresh Entra.News content - $(date -u +'%Y-%m-%dT%H:%MZ')"
           git push
         fi
       
