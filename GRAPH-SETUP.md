@@ -1,6 +1,6 @@
-# 🔐 Microsoft Graph Email Setup Guide
+# 🔐 Microsoft Graph Failure-Alert Setup Guide
 
-This guide will help you set up an Entra ID app registration to send emails via Microsoft Graph instead of SendGrid.
+This guide sets up the Entra ID app registration used to email `merill@merill.net` when the Daily.Entra.News refresh workflow fails. Daily subscriber summaries are delivered by Kit, not Microsoft Graph.
 
 ## 📋 Prerequisites
 
@@ -59,12 +59,12 @@ This guide will help you set up an Entra ID app registration to send emails via 
    - Confirm by clicking **"Yes"**
    - Ensure the status shows **"Granted for [Your Organization]"** with a green checkmark
 
-## ✉️ Step 4: Keep Monitor Reports Unencrypted
+## ✉️ Step 4: Keep Failure Alerts Unencrypted
 
-The monitor omits the optional Graph `sensitivity` property and sends these custom headers:
+The failure notifier omits the optional Graph `sensitivity` property and sends these custom headers:
 
 ```text
-x-entra-docs-monitor: daily-report
+x-entra-docs-monitor: failure-alert
 x-entra-docs-encryption: none
 ```
 
@@ -81,4 +81,3 @@ If your organization automatically encrypts these reports, configure Exchange On
 5. Send a test report and confirm in message trace that no encryption or rights-protection rule was applied.
 
 Always scope the exception to the authenticated monitor sender. Don't exempt messages based only on a custom header, because an external sender could spoof it.
-

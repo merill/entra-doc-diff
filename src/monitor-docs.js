@@ -1925,43 +1925,30 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
       const messageCenterCount = mcResult.changed.length;
       const contentChanged = documentationCount + messageCenterCount > 0;
       const dateForUrl = moment.utc(this.now()).format('YYYY-MM-DD');
-      let cumulative = null;
-      let saveResult = { dateForUrl, websitePath: path.join(this.websiteDir, 'day', dateForUrl, 'index.html') };
 
       if (contentChanged) {
         const existing = await readJson(path.join(this.websiteDir, `${dateForUrl}.json`), this.emptyAnalysis());
-        cumulative = mergeDailyAnalysis(existing, incremental);
+        const cumulative = mergeDailyAnalysis(existing, incremental);
         // The richer day brief is generated once by the Luna-xhigh period pass.
         // Reuse the per-diff summaries here instead of paying for a
         // second grouped daily model call on every changed batch.
         cumulative.englishSummary = this.createFallbackEnglishSummary(cumulative);
         const html = this.generateHtmlReport(cumulative);
-        saveResult = await this.saveReport(html, cumulative);
-        state.pendingEmailEventIds = [...new Set([
-          ...state.pendingEmailEventIds,
-          ...allDocumentationChanges(incremental).map(file => file.eventId)
-        ])];
+        await this.saveReport(html, cumulative);
       } else {
         console.log('ℹ️ No new documentation or Message Center events; skipping AI and the static-site build.');
       }
 
       state.docsHead = cursor.head;
       state.messageCenterVersions = mcResult.versions;
+      // The daily subscriber digest is published by Kit after the site build.
+      // Clear the retired Graph-digest queue so legacy state cannot accumulate.
+      state.pendingEmailEventIds = [];
       state.migrated = true;
       await writeJsonAtomic(this.statePath, state);
 
       if (contentChanged) await this.publishDiscordUpdates(incremental, dateForUrl);
 
-      if (this.emailEnabled) {
-        const emailAnalysis = await this.loadQueuedEmailAnalysis(state.pendingEmailEventIds);
-        emailAnalysis.englishSummary = emailAnalysis.englishSummary || this.createFallbackEnglishSummary(emailAnalysis);
-        const sent = await this.sendEmail(this.generateHtmlReport(emailAnalysis), emailAnalysis, saveResult);
-        if (sent) {
-          state.pendingEmailEventIds = [];
-          state.lastEmailDate = dateForUrl;
-          await writeJsonAtomic(this.statePath, state);
-        }
-      }
       await this.writeRefreshStatus(contentChanged, { documentation: documentationCount, messageCenter: messageCenterCount });
       await this.setWorkflowOutputs({ content_changed: contentChanged, documentation_changes: documentationCount, message_center_changes: messageCenterCount });
       console.log(`✅ Monitor complete: ${documentationCount} documentation and ${messageCenterCount} Message Center event(s).`);

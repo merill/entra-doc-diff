@@ -294,7 +294,7 @@ test('successive monitor runs accumulate same-file commits and suppress cursor r
   const state = JSON.parse(await fs.readFile(path.join(websiteDir, 'monitor-state.json'), 'utf8'));
   assert.equal(state.docsHead, 'second');
   assert.equal(state.migrated, true);
-  assert.equal(state.pendingEmailEventIds.length, 2);
+  assert.deepEqual(state.pendingEmailEventIds, []);
   const status = JSON.parse(await fs.readFile(path.join(websiteDir, 'refresh-status.json'), 'utf8'));
   assert.deepEqual(status.sourceChanges, { documentation: 0, messageCenter: 0 });
   assert.equal(status.lastContentChangedAt, '2026-08-06T04:15:00.000Z');

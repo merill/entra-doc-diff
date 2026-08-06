@@ -98,7 +98,7 @@ The documentation notification contains the grouped English digest and one link 
 
 ### Kit daily email setup
 
-The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. The existing monitor workflow keeps the private Microsoft Graph report. After the dedicated 08:15 UTC email run succeeds and its static website commit is pushed, it calls the separate `daily-kit-broadcast.yml` workflow to publish the email-only Kit broadcast. The other four-hour refreshes never trigger subscriber email.
+The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. After the dedicated 08:15 UTC run succeeds and its static website commit is pushed, it calls the separate `daily-kit-broadcast.yml` workflow to publish the email-only Kit broadcast. The other four-hour refreshes never trigger subscriber email.
 
 1. Create a dedicated Kit Newsletter account and complete Kit's sending approval.
 2. Add and confirm `updates@daily.entra.news` as the account's default sending address. The API publisher omits `email_address`, allowing Kit to use this verified default. Set `KIT_SENDER_EMAIL` only if you intentionally need another sending address that is already verified in the same Kit account.
@@ -113,9 +113,12 @@ The public daily list is intentionally separate from the human-curated weekly En
 
 For a manual format test, open **Actions → Publish Daily Kit Broadcast → Run workflow**, choose the report date, and enable **Create a Kit draft without scheduling or sending it**. The workflow creates an unscheduled draft in Kit, where you can use Kit's preview or test-send controls for a single recipient. Drafts use a separate `daily-entra-news:YYYY-MM-DD:draft` marker, so they never prevent the real daily broadcast for that date. Delete the existing test draft in Kit before rerunning draft mode for the same date.
 
-The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account by omitting `subscriber_filter`, which Kit documents as the all-subscribers default. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site or Microsoft Graph report.
+The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account by omitting `subscriber_filter`, which Kit documents as the all-subscribers default. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site.
 
-### 3. **Microsoft Graph Setup**
+### 3. **Failure-alert email setup**
+
+Microsoft Graph is used only to alert `merill@merill.net` when the refresh workflow fails. The scheduled daily digest is published through Kit.
+
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
 2. Add **Mail.Send** application permission
 3. Grant admin consent for the permission
@@ -212,15 +215,13 @@ entra-doc-diff/
 4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
 5. **Refresh Briefs**: Regenerates the affected Luna-xhigh day, week, and month brief only when source content changed
 6. **Publish**: Merges events into cumulative UTC-day JSON, rebuilds the static site, and posts an incremental Discord update
-7. **Send Maintainer Email**: At 08:15 UTC, delivers all pending documentation events since the preceding digest through Microsoft Graph
-8. **Trigger Subscriber Brief**: After the website workflow succeeds, a serialized workflow schedules a concise, deduplicated Kit broadcast when the day contains meaningful updates
-9. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
+7. **Trigger Subscriber Brief**: After the 08:15 UTC website workflow succeeds, a serialized workflow schedules a concise, deduplicated Kit broadcast when the day contains meaningful updates
+8. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
 
 ## 🔧 Configuration Options
 
 ### Workflow Variables (in `daily-docs-monitor.yml`):
-- `RECIPIENT_EMAIL`: Where to send the reports
-- `cron`: Four-hour site/Discord schedule plus the dedicated 08:15 UTC email schedule
+- `cron`: Four-hour site/Discord schedule plus the dedicated 08:15 UTC Kit subscriber schedule
 - `OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD`: Shared UTC-day Luna-xhigh guardrail (currently `$0.25`)
 
 ### Script Configuration (in `monitor-docs.js`):
@@ -229,14 +230,9 @@ entra-doc-diff/
 - Email formatting and styling
 - Change summary algorithms
 
-## 📧 Email Delivery
+## 📧 Subscriber Email Delivery
 
-The system uses Microsoft Graph for reliable email delivery:
-- **HTML Format**: Rich, responsive design that works on all devices
-- **Text Fallback**: Plain text version for email clients that don't support HTML  
-- **Direct Links**: Every file mentioned links directly to GitHub
-- **Mobile Friendly**: Responsive design for mobile viewing
-- **Enterprise Integration**: Uses your organization's email infrastructure
+Kit publishes a richly formatted summary after the successful 08:15 UTC site refresh. It includes links back to Daily.Entra.News, uses Kit's confirmed-subscriber list and default template, and skips days without meaningful updates. Microsoft Graph is reserved for workflow-failure alerts.
 
 
 ## 📈 Monitoring & Troubleshooting
@@ -247,7 +243,7 @@ The system uses Microsoft Graph for reliable email delivery:
 - Failed runs will show specific error messages
 
 ### Common Issues:
-1. **Email not sending**: Check Microsoft Graph app permissions and admin consent
+1. **Subscriber email not sending**: Check the Kit API key, verified sending domain, and broadcast logs
 2. **No changes detected**: Verify repository access and date range
 3. **Rate limiting**: GitHub API has rate limits; monitor uses authentication to increase limits
 

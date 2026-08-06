@@ -8,10 +8,10 @@
 4. Select scopes: `public_repo` (for reading public repositories)
 5. Copy the generated token
 
-## Step 2: Set Up Microsoft Graph (Optional but recommended)
+## Step 2: Set Up Microsoft Graph for Failure Alerts (Optional)
 
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
-2. Add **Mail.Send** application permission and grant admin consent
+2. Add **Mail.Send** application permission and grant admin consent. This is used only to notify `merill@merill.net` when a refresh fails; daily subscriber summaries use Kit.
 3. Create a client secret
 4. Configure your sender email (must be a valid mailbox in your organization)
 
@@ -48,10 +48,10 @@ npm test
 ```
 
 ## Step 5: Enable the Workflow
-The GitHub Action runs daily at 8:15 AM UTC, after the late Microsoft Docs publish/sync cycle. You can also:
+The GitHub Action refreshes every four hours. The 08:15 UTC run also schedules the daily Kit subscriber summary after the site build. You can also:
 - Go to Actions tab → "Daily Entra Docs Monitor" → "Run workflow" to test manually
 - Check the logs to ensure everything is working
-- Look for email delivery in your inbox
+- Check Kit for the scheduled subscriber broadcast
 
 ## ⚡ Quick Tips
 - The first run might take a few minutes to set up
@@ -60,7 +60,7 @@ The GitHub Action runs daily at 8:15 AM UTC, after the late Microsoft Docs publi
 - Email delivery is optional - reports are always saved as artifacts
 
 ## 🔧 Troubleshooting
-- **No email received?** Check your Microsoft Graph app permissions and admin consent
+- **No subscriber email?** Check the Kit broadcast log, API key, and verified sending domain
 - **Action failed?** Check the Actions tab for detailed error logs
 - **Rate limits?** The GitHub token provides higher rate limits for API calls
 - **Token lifetime error?** Microsoft requires tokens to be 90 days or less for their repositories

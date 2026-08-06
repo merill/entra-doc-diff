@@ -16,7 +16,7 @@ on:
         type: boolean
         default: false
       send_email:
-        description: Send the pending daily email digest during this manual run
+        description: Publish the Kit subscriber summary during this manual run
         required: false
         type: boolean
         default: false
@@ -57,21 +57,15 @@ jobs:
       if: inputs.backfill_dates == ''
       id: monitor
       env:
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_SUMMARY_MODEL: "gpt-5.6-luna"
         OPENAI_SUMMARY_REASONING_EFFORT: "xhigh"
         OPENAI_SUMMARY_CONCURRENCY: "3"
         DISCORD_ENTRA_SCOUT_WEBHOOK_URL: ${{ secrets.DISCORD_ENTRA_SCOUT_WEBHOOK_URL }}
         DISCORD_ENABLED: ${{ inputs.backfill_period_summaries != true }}
-        EMAIL_ENABLED: ${{ (github.event_name == 'schedule' && github.event.schedule == '15 8 * * *') || (github.event_name == 'workflow_dispatch' && inputs.send_email == true) }}
         MC_DATA_PATH: "./mc/@data"
         KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
         KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
-        RECIPIENT_EMAIL: "merill@merill.net"
-        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         GITHUB_ACTIONS: "true"
       run: node src/monitor-docs.js
 

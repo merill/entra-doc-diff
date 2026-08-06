@@ -70,3 +70,11 @@ test('workflow runs the alert step only after a failure', () => {
   assert.match(workflow, /FAILURE_RECIPIENT_EMAIL: "merill@merill\.net"/);
   assert.match(workflow, /node scripts\/send-workflow-failure-email\.js/);
 });
+
+test('daily monitor does not send the retired Graph digest', () => {
+  const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
+  const monitorEnvironment = workflow.split('    - name: Run docs and Message Center monitor')[1]
+    .split('    - name: Regenerate recovered per-change summaries')[0];
+  assert.doesNotMatch(monitorEnvironment, /AZURE_CLIENT_ID|AZURE_CLIENT_SECRET|AZURE_TENANT_ID|EMAIL_ENABLED|RECIPIENT_EMAIL|SENDER_EMAIL/);
+  assert.match(workflow, /publish-kit:[\s\S]*Publish the daily subscriber email/);
+});
