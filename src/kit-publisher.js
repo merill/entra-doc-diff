@@ -1,4 +1,5 @@
 const SITE_URL = 'https://daily.entra.news';
+const { PRODUCTS, classifyTopic } = require('./static-site');
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, character => ({
@@ -44,6 +45,28 @@ function dateLabel(date) {
   }).format(parsed);
 }
 
+function productFromLabel(label) {
+  const value = String(label || '').toLowerCase();
+  if (!value) return null;
+  return [...PRODUCTS].sort((a, b) => b.name.length - a.name.length).find(product =>
+    value === product.name.toLowerCase()
+      || value === product.short.toLowerCase()
+      || value.includes(product.name.toLowerCase())
+      || value.includes(product.short.toLowerCase())
+  ) || null;
+}
+
+function changeTaxonomy(change) {
+  const product = productFromLabel(change.category);
+  const inferredTopic = classifyTopic('', change.title, change.detail);
+  const topic = inferredTopic?.slug !== 'general' ? inferredTopic : null;
+  return {
+    product,
+    topic,
+    labels: [product?.short || change.category, topic?.name].filter(Boolean)
+  };
+}
+
 class KitPublisher {
   constructor(options = {}) {
     this.apiKey = options.apiKey ?? process.env.KIT_API_KEY ?? '';
@@ -77,20 +100,25 @@ class KitPublisher {
     const changes = dailyChanges(summary);
     const headline = cleanText(summary.headline || `Microsoft Entra daily update`, 110);
     const overview = cleanText(summary.overview || analysis.englishSummary?.overview || 'Review today\'s tracked Microsoft Entra changes.', 1400);
-    const adminImpact = cleanText(summary.adminImpact, 800);
     const subject = cleanText(`${headline} — ${label}`, 150);
     const previewText = cleanText(overview, 180);
     const sendAt = new Date(this.now().getTime() + Math.max(1, this.scheduleDelayMinutes) * 60000).toISOString();
 
     const changeHtml = changes.map(change => {
       const href = change.sourceId ? `${dayUrl}#${encodeURIComponent(change.sourceId)}` : dayUrl;
-      const category = change.category
-        ? `<div style="margin:0 0 5px;color:#0d5745;font:700 11px/1.35 Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase">${escapeHtml(change.category)}</div>`
+      const taxonomy = changeTaxonomy(change);
+      const icons = [
+        taxonomy.product ? `<img src="${SITE_URL}/assets/products/${taxonomy.product.icon}" width="22" height="22" alt="" style="display:inline-block;width:22px!important;max-width:22px!important;height:22px!important;max-height:22px!important;object-fit:contain;vertical-align:middle">` : '',
+        taxonomy.topic ? `<img src="${SITE_URL}${taxonomy.topic.icon}" width="18" height="18" alt="" style="display:inline-block;width:18px!important;max-width:18px!important;height:18px!important;max-height:18px!important;object-fit:contain;vertical-align:middle">` : ''
+      ].filter(Boolean).join('<span style="display:inline-block;width:6px"></span>');
+      const category = taxonomy.labels.length
+        ? `<div style="margin:0 0 5px;color:#0d5745;font:700 11px/1.35 Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase">${escapeHtml(taxonomy.labels.join(' · '))}</div>`
         : '';
-      return `<div style="margin:0 0 20px;padding:0 0 18px;border-bottom:1px solid #d8d3c7">${category}<h2 style="margin:0 0 7px;font:600 18px/1.3 Georgia,serif"><a href="${escapeHtml(href)}" style="color:#11181d;text-decoration:none">${escapeHtml(change.title)}</a></h2>${change.detail ? `<p style="margin:0;color:#46514e;font:14px/1.55 Arial,sans-serif">${escapeHtml(change.detail)}</p>` : ''}</div>`;
+      const heading = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:0;border-collapse:collapse"><tr>${icons ? `<td width="50" valign="top" style="width:50px;min-width:50px;padding:1px 9px 0 0;vertical-align:top;white-space:nowrap">${icons}</td>` : ''}<td valign="top" style="padding:0;vertical-align:top">${category}<h2 style="margin:0 0 7px;font:600 18px/1.3 Georgia,serif"><a href="${escapeHtml(href)}" style="color:#11181d;text-decoration:none">${escapeHtml(change.title)}</a></h2></td></tr></table>`;
+      return `<div style="margin:0 0 20px;padding:0 0 18px;border-bottom:1px solid #d8d3c7">${heading}${change.detail ? `<p style="margin:5px 0 0;color:#46514e;font:14px/1.55 Arial,sans-serif">${escapeHtml(change.detail)}</p>` : ''}</div>`;
     }).join('');
 
-    const content = `<div style="max-width:680px;margin:0 auto;color:#11181d;font-family:Arial,sans-serif"><div style="margin:0 0 26px"><div style="margin:0 0 6px;color:#0d5745;font:700 11px/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase">Entra.News Daily · ${escapeHtml(label)}</div><h1 style="margin:0 0 12px;font:650 30px/1.2 Georgia,serif"><a href="${dayUrl}" style="color:#11181d;text-decoration:none">${escapeHtml(headline)}</a></h1><p style="margin:0;color:#263030;font:16px/1.6 Arial,sans-serif">${escapeHtml(overview)}</p></div>${changeHtml}${adminImpact ? `<div style="margin:24px 0;padding:16px 18px;background:#eef3ed;border-left:4px solid #0d5745"><strong style="font:700 14px/1.4 Arial,sans-serif">What Entra admins need to know</strong><p style="margin:6px 0 0;color:#263030;font:14px/1.55 Arial,sans-serif">${escapeHtml(adminImpact)}</p></div>` : ''}<p style="margin:28px 0 0"><a href="${dayUrl}" style="display:inline-block;padding:11px 17px;background:#0d5745;color:#fff;text-decoration:none;font:700 15px/1.3 Arial,sans-serif;border-radius:4px">View all updates for ${escapeHtml(label)} →</a></p><p style="margin:26px 0 0;color:#68716f;font:12px/1.5 Arial,sans-serif">Automated change intelligence from Microsoft Learn documentation and relevant Microsoft 365 Message Center announcements. Verify important details in the linked source material.</p></div>`;
+    const content = `<div style="max-width:680px;margin:0 auto;color:#11181d;font-family:Arial,sans-serif"><div style="margin:0 0 26px"><div style="margin:0 0 6px;color:#0d5745;font:700 11px/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase">Entra.News Daily · ${escapeHtml(label)}</div><h1 style="margin:0 0 12px;font:650 30px/1.2 Georgia,serif"><a href="${dayUrl}" style="color:#11181d;text-decoration:none">${escapeHtml(headline)}</a></h1><p style="margin:0;color:#263030;font:16px/1.6 Arial,sans-serif">${escapeHtml(overview)}</p></div>${changeHtml}<p style="margin:28px 0 0"><a href="${dayUrl}" style="display:inline-block;padding:11px 17px;background:#0d5745;color:#fff;text-decoration:none;font:700 15px/1.3 Arial,sans-serif;border-radius:4px">View all updates for ${escapeHtml(label)} →</a></p><p style="margin:26px 0 0;color:#68716f;font:12px/1.5 Arial,sans-serif">Automated change intelligence from Microsoft Learn documentation and relevant Microsoft 365 Message Center announcements. Verify important details in the linked source material.</p></div>`;
 
     return {
       content,
@@ -222,4 +250,4 @@ class KitPublisher {
   }
 }
 
-module.exports = { KitPublisher, cleanText, dailyChanges, escapeHtml };
+module.exports = { KitPublisher, changeTaxonomy, cleanText, dailyChanges, escapeHtml, productFromLabel };

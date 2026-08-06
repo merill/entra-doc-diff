@@ -8,6 +8,8 @@ const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra a
 
 Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Distinguish new features, previews, general availability, retirements, changed behavior, security guidance, and ordinary documentation clarification. Explain concrete administrator impact or action only when the evidence supports it.
 
+Write a crisp, news-style headline of roughly 8 to 14 words. Lead with the distinctive capability, setting, deadline, terminology, or administrator outcome—not the fact that Microsoft documentation changed. Do not begin with "Entra ID documentation", "Microsoft Entra documentation", "Entra ID documents", "Documentation update", or a date. For documentation-only changes, describe the specific terminology, prerequisite, example, scope, or procedure that changed without implying that product behavior changed. If recentHeadlines are supplied, vary the opening words and sentence structure; use them only as style history, never as evidence. Prefer one strong lead over a semicolon-separated list of every update.
+
 Select one to five changes that best explain the period. Prefer three to five when the evidence supports that breadth, but use one or two for a quiet day rather than repeating or stretching the evidence. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
 For every key change, copy the id of the single representativeChanges item that most directly supports it into sourceId. Every key change must be supported by representativeChanges. Treat weeklyBriefs as context only: never select a sourceId from a weekly brief or use one as the sole evidence for a key change. Never invent or alter an id.
 
@@ -215,6 +217,14 @@ class PeriodSummaryGenerator {
       productCounts: [...products.entries()].sort((a, b) => b[1] - a[1]).map(([product, count]) => ({ product, count })),
       representativeChanges: selected.map(evidenceItem)
     };
+    if (isDay) {
+      const recentHeadlines = Object.entries(store.days || {})
+        .filter(([date, summary]) => date < key && cleanText(summary?.headline, 180))
+        .sort(([a], [b]) => b.localeCompare(a))
+        .slice(0, 7)
+        .map(([date, summary]) => ({ date, headline: cleanText(summary.headline, 180) }));
+      if (recentHeadlines.length > 0) evidence.recentHeadlines = recentHeadlines;
+    }
     if (kind === 'month') {
       evidence.weeklyBriefs = Object.entries(store.weeks)
         .filter(([week]) => week.slice(0, 7) === key || moment(week).add(6, 'days').format('YYYY-MM').slice(0, 7) === key)
