@@ -75,6 +75,58 @@ test('Kit broadcast includes an explicitly configured verified sender', () => {
   assert.equal(publisher.buildBroadcast(fixture()).email_address, 'updates@daily.entra.news');
 });
 
+test('Kit draft mode creates an unscheduled draft with a separate marker', () => {
+  const publisher = new KitPublisher({
+    apiKey: 'test-key',
+    draftMode: true,
+    now: () => new Date('2026-08-06T08:20:00Z')
+  });
+  const payload = publisher.buildBroadcast(fixture());
+
+  assert.equal(payload.description, 'daily-entra-news:2026-08-06:draft');
+  assert.equal(payload.public, false);
+  assert.equal(payload.send_at, null);
+  assert.equal(publisher.marker('2026-08-06', false), 'daily-entra-news:2026-08-06');
+});
+
+test('an existing test draft does not prevent the real daily broadcast', async () => {
+  const requests = [];
+  const publisher = new KitPublisher({
+    apiKey: 'test-key',
+    now: () => new Date('2026-08-06T08:20:00Z'),
+    fetch: async (_url, options) => {
+      requests.push(options);
+      return options.method === 'GET'
+        ? response(200, { broadcasts: [{ id: 40, description: 'daily-entra-news:2026-08-06:draft' }] })
+        : response(201, { broadcast: { id: 41 } });
+    }
+  });
+
+  const result = await publisher.publishDaily(fixture());
+  assert.deepEqual(result, { status: 'scheduled', broadcastId: 41, sendAt: '2026-08-06T08:25:00.000Z' });
+  assert.deepEqual(requests.map(request => request.method), ['GET', 'POST']);
+});
+
+test('Kit draft mode creates a draft instead of scheduling a send', async () => {
+  const requests = [];
+  const publisher = new KitPublisher({
+    apiKey: 'test-key',
+    draftMode: true,
+    fetch: async (_url, options) => {
+      requests.push(options);
+      return options.method === 'GET'
+        ? response(200, { broadcasts: [] })
+        : response(201, { broadcast: { id: 43, status: 'draft' } });
+    }
+  });
+
+  const result = await publisher.publishDaily(fixture());
+  assert.deepEqual(result, { status: 'draft', broadcastId: 43 });
+  const payload = JSON.parse(requests.at(-1).body);
+  assert.equal(payload.description, 'daily-entra-news:2026-08-06:draft');
+  assert.equal(payload.send_at, null);
+});
+
 test('Kit publisher skips a day without meaningful updates', async () => {
   let calls = 0;
   const publisher = new KitPublisher({
@@ -194,4 +246,11 @@ test('Kit publish script loads the latest report and prefers its combined day su
   assert.equal(requestedDate(['--date', '2026-08-01']), '2026-08-01');
   assert.throws(() => requestedDate(['--date']), /YYYY-MM-DD/);
   assert.throws(() => requestedDate(['--date', 'not-a-date']), /YYYY-MM-DD/);
+});
+
+test('Kit workflow exposes and passes through the manual draft-mode toggle', async () => {
+  const workflow = await fs.readFile(path.join(__dirname, '..', '.github', 'workflows', 'daily-kit-broadcast.yml'), 'utf8');
+  assert.equal((workflow.match(/draft_mode:/g) || []).length, 2);
+  assert.match(workflow, /description: Create a Kit draft without scheduling or sending it/);
+  assert.match(workflow, /KIT_DRAFT_MODE: \$\{\{ inputs\.draft_mode \}\}/);
 });

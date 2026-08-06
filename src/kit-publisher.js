@@ -81,10 +81,11 @@ class KitPublisher {
     this.now = options.now || (() => new Date());
     this.logger = options.logger || console;
     this.dryRun = options.dryRun ?? process.env.KIT_DRY_RUN === 'true';
+    this.draftMode = options.draftMode ?? process.env.KIT_DRAFT_MODE === 'true';
   }
 
-  marker(date) {
-    return `daily-entra-news:${date}`;
+  marker(date, draftMode = this.draftMode) {
+    return `daily-entra-news:${date}${draftMode ? ':draft' : ''}`;
   }
 
   hasChanges(analysis = {}, summary = {}) {
@@ -102,7 +103,9 @@ class KitPublisher {
     const overview = cleanText(summary.overview || analysis.englishSummary?.overview || 'Review today\'s tracked Microsoft Entra changes.', 1400);
     const subject = cleanText(`${headline} — ${label}`, 150);
     const previewText = cleanText(overview, 180);
-    const sendAt = new Date(this.now().getTime() + Math.max(1, this.scheduleDelayMinutes) * 60000).toISOString();
+    const sendAt = this.draftMode
+      ? null
+      : new Date(this.now().getTime() + Math.max(1, this.scheduleDelayMinutes) * 60000).toISOString();
 
     const changeHtml = changes.map(change => {
       const href = change.sourceId ? `${dayUrl}#${encodeURIComponent(change.sourceId)}` : dayUrl;
@@ -198,9 +201,9 @@ class KitPublisher {
       try {
         const created = await this.request('POST', '/broadcasts', payload, { maxAttempts: 1 });
         return {
-          status: 'scheduled',
+          status: payload.send_at ? 'scheduled' : 'draft',
           broadcastId: created.broadcast?.id,
-          sendAt: payload.send_at
+          ...(payload.send_at ? { sendAt: payload.send_at } : {})
         };
       } catch (error) {
         if (!error.transient || attempt + 1 >= this.maxAttempts) throw error;
@@ -230,7 +233,9 @@ class KitPublisher {
 
     const payload = this.buildBroadcast({ date, analysis, summary });
     if (this.dryRun) {
-      this.logger.log(`KIT_DRY_RUN: would schedule ${payload.description} for ${payload.send_at}.`);
+      this.logger.log(this.draftMode
+        ? `KIT_DRY_RUN: would create draft ${payload.description}.`
+        : `KIT_DRY_RUN: would schedule ${payload.description} for ${payload.send_at}.`);
       return { status: 'dry-run', payload };
     }
     if (!this.apiKey) {
@@ -238,10 +243,15 @@ class KitPublisher {
       return { status: 'skipped', reason: 'not-configured' };
     }
 
-    const marker = this.marker(date);
+    const marker = payload.description;
     const result = await this.createBroadcastOnce(marker, payload);
     if (result.status === 'duplicate') {
       this.logger.log(`Kit broadcast ${marker} already exists as ${result.broadcastId}; skipping duplicate creation.`);
+      return result;
+    }
+
+    if (result.status === 'draft') {
+      this.logger.log(`Created Kit draft ${marker}${result.broadcastId ? ` as ${result.broadcastId}` : ''}; it will not send until manually tested or scheduled in Kit.`);
       return result;
     }
 

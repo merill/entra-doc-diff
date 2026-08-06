@@ -10,12 +10,22 @@ on:
         description: Report date to publish (UTC, YYYY-MM-DD); defaults to today
         required: false
         type: string
+      draft_mode:
+        description: Create a Kit draft without scheduling or sending it
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       report_date:
         description: Report date to publish (UTC, YYYY-MM-DD); defaults to today
         required: false
         type: string
+      draft_mode:
+        description: Create a Kit draft without scheduling or sending it
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: daily-kit-broadcast
@@ -58,9 +68,10 @@ jobs:
         echo "date=$REPORT_DATE" >> "$GITHUB_OUTPUT"
         echo "available=true" >> "$GITHUB_OUTPUT"
 
-    - name: Publish at most one Kit broadcast for the report date
+    - name: Create a Kit draft or publish at most one daily broadcast
       if: steps.report.outputs.available == 'true'
       env:
         KIT_API_KEY: ${{ secrets.KIT_API_KEY }}
+        KIT_DRAFT_MODE: ${{ inputs.draft_mode }}
         KIT_SCHEDULE_DELAY_MINUTES: "5"
       run: node scripts/publish-kit-broadcast.js --date "${{ steps.report.outputs.date }}"
