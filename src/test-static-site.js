@@ -323,7 +323,14 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(searchJs, /class="search-progress"/);
   assert.match(searchJs, /Math\.max\(0,360-/);
   assert.match(searchJs, /autoSearchDelay=600/);
-  assert.match(searchJs, /requestNumber\+=1;setSearchLoading\(false\);timer=setTimeout\(runSearch,autoSearchDelay\)/);
+  assert.match(searchJs, /defaultControlValues=\{product:'all',topic:'all',source:'all',recordType:'update',sort:'relevance'\}/);
+  assert.match(searchJs, /const hasQuery=\(\)=>Boolean\(input\.value\.trim\(\)\)/);
+  assert.match(searchJs, /Enter a word or phrase to search the archive\./);
+  assert.match(searchJs, /async function runSearch\(\)\{if\(!hasQuery\(\)\)\{resetSearch\(\);return\}/);
+  assert.match(searchJs, /pagefind\.search\(expandedQuery\(input\.value\),options\)/);
+  assert.doesNotMatch(searchJs, /pagefind\.search\(expandedQuery\(input\.value\)\|\|null/);
+  assert.match(searchJs, /if\(!hasQuery\(\)\)\{resetSearch\(\);return\}requestNumber\+=1;setSearchLoading\(false\);timer=setTimeout\(runSearch,autoSearchDelay\)/);
+  assert.match(searchJs, /hasQuery\(\)\?runSearch\(\):resetSearch\(\);\s*\n\}/);
   assert.match(searchHtml, /class="search-control search-select" data-search-select/);
   assert.match(searchHtml, /role="listbox" aria-labelledby="search-product-label"/);
   assert.match(searchHtml, /data-search-filter="filter" aria-hidden="true" tabindex="-1"/);
