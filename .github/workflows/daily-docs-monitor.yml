@@ -68,6 +68,8 @@ jobs:
         DISCORD_ENABLED: ${{ inputs.backfill_period_summaries != true }}
         EMAIL_ENABLED: ${{ (github.event_name == 'schedule' && github.event.schedule == '15 8 * * *') || (github.event_name == 'workflow_dispatch' && inputs.send_email == true) }}
         MC_DATA_PATH: "./mc/@data"
+        KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
+        KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
         RECIPIENT_EMAIL: "merill@merill.net"
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         GITHUB_ACTIONS: "true"
@@ -91,6 +93,8 @@ jobs:
         OPENAI_PERIOD_SUMMARY_BUDGET_USD: "1.25"
         OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD: "0.25"
         MC_DATA_PATH: "./mc/@data"
+        KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
+        KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
       run: |
         if [ -n "${{ inputs.backfill_dates }}" ]; then
           node scripts/generate-period-summaries.js --dates="${{ inputs.backfill_dates }}" --force
@@ -115,7 +119,7 @@ jobs:
           git commit -m "Refresh Entra.News content - $(date -u +'%Y-%m-%dT%H:%MZ')"
           git push
         fi
-      
+
     - name: Upload report artifact
       if: always()
       uses: actions/upload-artifact@v4
@@ -123,6 +127,13 @@ jobs:
         name: daily-report-${{ github.run_number }}
         path: reports/
         retention-days: 30
+
+  publish-kit:
+    name: Publish the daily subscriber email
+    needs: monitor-docs
+    if: needs.monitor-docs.result == 'success' && ((github.event_name == 'schedule' && github.event.schedule == '15 8 * * *') || (github.event_name == 'workflow_dispatch' && inputs.send_email == true))
+    uses: ./.github/workflows/daily-kit-broadcast.yml
+    secrets: inherit
 
   notify-failure:
     name: Email Merill when the refresh fails

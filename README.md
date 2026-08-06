@@ -6,6 +6,7 @@ An automated GitHub Actions workflow that monitors the [Microsoft Entra document
 
 - **📅 Daily Monitoring**: Automatically runs every day at 8:15 AM UTC, after Microsoft's late publish/sync cycle
 - **📧 Email Alerts**: Beautifully formatted HTML email reports sent to your inbox
+- **🗞️ Subscriber Broadcasts**: Concise Kit emails on days with meaningful Entra updates, with links to the full daily evidence
 - **🔍 Smart Analysis**: Categorizes changes into new files, modifications, and deletions
 - **💡 Change Summaries**: Provides detailed summaries of what changed in each modified file
 - **📊 Visual Reports**: Clean, responsive HTML reports with statistics and direct GitHub links
@@ -70,6 +71,12 @@ Go to your repository settings → Secrets and variables → Actions, and add:
 - **`SENDER_EMAIL`**: Email address to send from (must exist in your tenant)
 - **`OPENAI_API_KEY`**: OpenAI project API key used to generate per-diff and grouped plain-English summaries
 - **`DISCORD_ENTRA_SCOUT_WEBHOOK_URL`**: Shared Entra Scout incoming webhook for the Discord channel that receives both documentation and Message Center updates
+- **`KIT_API_KEY`**: Kit v4 API key for the dedicated Daily.Entra.News account; omit it until the Kit account is approved and ready to send
+
+Add these repository secrets for the public inline subscription form configuration:
+
+- **`KIT_DAILY_FORM_UID`**: The public `data-uid` from Kit's JavaScript form embed
+- **`KIT_DAILY_FORM_EMBED_SRC`**: The HTTPS `src` URL from Kit's JavaScript form embed; only Kit or ConvertKit hosts are accepted by the site generator
 
 The recipient email (`merill@merill.net`) is already configured in the workflow.
 
@@ -88,6 +95,23 @@ Both publishers override the webhook name to `Entra Scout` but omit `avatar_url`
 Discord messages disable all automatic mentions, retry rate limits and transient errors, and persist delivery IDs in `website/discord-state.json` so workflow reruns do not repost the same daily summary. Set `DISCORD_ENABLED=false` to disable delivery or `DISCORD_DRY_RUN=true` to build the queue without sending it.
 
 The documentation notification contains the grouped English digest and one link to the canonical `https://daily.entra.news/YYYY-MM-DD` daily page. It does not post separate cards for each documentation diff.
+
+### Kit daily email setup
+
+The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. The existing monitor workflow keeps the private Microsoft Graph report. After the dedicated 08:15 UTC email run succeeds and its static website commit is pushed, it calls the separate `daily-kit-broadcast.yml` workflow to publish the email-only Kit broadcast. The other four-hour refreshes never trigger subscriber email.
+
+1. Create a dedicated Kit Newsletter account and complete Kit's sending approval.
+2. Add and confirm `updates@daily.entra.news` as the sending address.
+3. Verify `daily.entra.news` as the sending domain with the SPF, DKIM, and DMARC records Kit supplies.
+4. Configure the account's default Classic or HTML email template with an unsubscribe link and physical address. The publisher deliberately uses the account default template.
+5. Create an inline form, leave double opt-in enabled, and customize its confirmation email and success state.
+6. Copy the JavaScript embed's `data-uid` and `src` values into the repository variables above.
+7. Create a Kit v4 API key and save it as the `KIT_API_KEY` repository secret.
+8. Test with seed subscribers in Outlook and Gmail before promoting the form publicly.
+
+`node scripts/publish-kit-broadcast.js --date YYYY-MM-DD` publishes a saved daily report manually. Set `KIT_DRY_RUN=true` to render and validate the payload without contacting Kit. Without `KIT_API_KEY`, the command exits successfully after reporting that Kit is not configured.
+
+The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site or Microsoft Graph report.
 
 ### 3. **Microsoft Graph Setup**
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
@@ -116,7 +140,7 @@ Analysis of 838 merge commits in `MicrosoftDocs/entra-docs` from May through ear
 
 Test the monitor manually:
 ```bash
-# Unit tests do not call OpenAI, Discord, or Microsoft Graph
+# Unit tests do not call OpenAI, Discord, Microsoft Graph, or Kit
 npm test
 
 # End-to-end local run without sending email or Discord messages
@@ -169,7 +193,8 @@ Or trigger the GitHub Action manually:
 ```
 entra-doc-diff/
 ├── .github/workflows/
-│   └── daily-docs-monitor.yml    # GitHub Actions workflow
+│   ├── daily-docs-monitor.yml    # Generate and publish the daily site/report
+│   └── daily-kit-broadcast.yml   # Send at most one Kit broadcast per report date
 ├── src/
 │   └── monitor-docs.js           # Main monitoring script  
 ├── reports/                      # Generated reports (local)
@@ -185,8 +210,9 @@ entra-doc-diff/
 4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
 5. **Refresh Briefs**: Regenerates the affected Luna-xhigh day, week, and month brief only when source content changed
 6. **Publish**: Merges events into cumulative UTC-day JSON, rebuilds the static site, and posts an incremental Discord update
-7. **Send Email**: At 08:15 UTC, delivers all pending documentation events since the preceding digest through Microsoft Graph
-8. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
+7. **Send Maintainer Email**: At 08:15 UTC, delivers all pending documentation events since the preceding digest through Microsoft Graph
+8. **Trigger Subscriber Brief**: After the website workflow succeeds, a serialized workflow schedules a concise, deduplicated Kit broadcast when the day contains meaningful updates
+9. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
 
 ## 🔧 Configuration Options
 

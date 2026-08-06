@@ -198,6 +198,17 @@ test('RSS contains newest-first richly formatted daily briefs linked to daily pa
   assert.doesNotMatch(rss, /For Entra administrators|per-change summary|\/changes\//);
 });
 
+test('daily email form falls back safely when Kit public configuration is missing or untrusted', () => {
+  const missing = new StaticSiteGenerator();
+  assert.match(missing.dailyEmailForm(), /daily RSS feed/);
+  const untrusted = new StaticSiteGenerator({
+    kitDailyFormUid: 'daily-form-123',
+    kitDailyFormEmbedSrc: 'https://example.com/form.js'
+  });
+  assert.match(untrusted.dailyEmailForm(), /daily RSS feed/);
+  assert.doesNotMatch(untrusted.dailyEmailForm(), /example\.com/);
+});
+
 test('static generator writes indexable archive and detail pages', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-'));
   const websiteDir = path.join(root, 'website');
@@ -274,7 +285,14 @@ test('static generator writes indexable archive and detail pages', async () => {
     StartDateTime: '2026-08-01T10:00:00Z',
     Body: { Content: '<p>Review the new administrator experience.</p>' }
   }));
-  const generator = new StaticSiteGenerator({ websiteDir, mcDataPath, detailDays: 60, generatedAt: '2026-08-04T09:00:00Z' });
+  const generator = new StaticSiteGenerator({
+    websiteDir,
+    mcDataPath,
+    detailDays: 60,
+    generatedAt: '2026-08-04T09:00:00Z',
+    kitDailyFormUid: 'daily-form-123',
+    kitDailyFormEmbedSrc: 'https://daily-entra-news.kit.com/daily-form-123/index.js'
+  });
   const result = await generator.build();
   assert.equal(result.messageCenter, 1);
   const indexHtml = await fs.readFile(path.join(websiteDir, 'index.html'), 'utf8');
@@ -508,6 +526,11 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /Why it exists/);
   assert.match(aboutHtml, /How it works/);
   assert.match(aboutHtml, /Made for the community/);
+  assert.match(aboutHtml, /id="daily-email"/);
+  assert.match(aboutHtml, /Get the daily update by email/);
+  assert.match(aboutHtml, /Emails are sent only on days with meaningful Microsoft Entra documentation or Message Center updates/);
+  assert.match(aboutHtml, /<script async data-uid="daily-form-123" src="https:\/\/daily-entra-news\.kit\.com\/daily-form-123\/index\.js"><\/script>/);
+  assert.doesNotMatch(aboutHtml, /Email signup will appear here/);
   assert.match(aboutHtml, /Daily automated AI entries are useful, but nothing beats content created and curated/);
   assert.match(aboutHtml, /insights from Microsoft MVPs and identity subject-matter experts/);
   assert.match(aboutHtml, /practical guidance learned the hard way/);
@@ -515,6 +538,11 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /href="https:\/\/discord\.entra\.news"/);
   assert.match(aboutHtml, /identity admins, architects, MVPs, and other Entra folks/);
   assert.match(aboutHtml, /Join the Entra community on Discord/);
+  assert.match(aboutHtml, /Get daily email updates/);
+  assert.match(aboutHtml, /Subscribe to the weekly update/);
+  assert.match(indexHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
+  assert.match(docDetailHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
+  assert.match(messageDetailHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
   assert.doesNotMatch(aboutHtml, /Bookmark|updates are posted daily/);
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
