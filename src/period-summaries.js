@@ -71,7 +71,7 @@ class PeriodSummaryGenerator {
     this.mcDataPath = options.mcDataPath || process.env.MC_DATA_PATH;
     this.outputPath = path.resolve(options.outputPath || path.join(this.websiteDir, 'period-summaries.json'));
     this.model = options.model || process.env.OPENAI_PERIOD_SUMMARY_MODEL || 'gpt-5.6-luna';
-    this.reasoningEffort = options.reasoningEffort || process.env.OPENAI_PERIOD_SUMMARY_REASONING_EFFORT || 'max';
+    this.reasoningEffort = options.reasoningEffort || process.env.OPENAI_PERIOD_SUMMARY_REASONING_EFFORT || 'xhigh';
     this.maxOutputTokens = Number(options.maxOutputTokens || process.env.OPENAI_PERIOD_SUMMARY_MAX_OUTPUT_TOKENS || 12000);
     this.budgetUsd = Number(options.budgetUsd || process.env.OPENAI_PERIOD_SUMMARY_BUDGET_USD || 1.25);
     this.dailyBudgetUsd = Number(options.dailyBudgetUsd || process.env.OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD || 0.25);

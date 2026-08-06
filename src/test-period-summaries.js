@@ -25,7 +25,7 @@ test('period evidence preserves product breadth and Message Center signals', () 
   assert.equal(selected.some(item => item.source === 'mc'), true);
 });
 
-test('historical generator writes daily, weekly, and monthly Luna max summaries with usage cost', async () => {
+test('historical generator writes daily, weekly, and monthly Luna xhigh summaries with usage cost', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-periods-'));
   const websiteDir = path.join(root, 'website');
   const mcDataPath = path.join(root, 'mc');
@@ -58,16 +58,16 @@ test('historical generator writes daily, weekly, and monthly Luna max summaries 
       usage: { input_tokens: 1000, output_tokens: 500 }
     };
   } } };
-  const generator = new PeriodSummaryGenerator({ websiteDir, mcDataPath, client, reasoningEffort: 'max', budgetUsd: 1.25, now: '2026-08-04T00:00:00Z' });
+  const generator = new PeriodSummaryGenerator({ websiteDir, mcDataPath, client, reasoningEffort: 'xhigh', budgetUsd: 1.25, now: '2026-08-04T00:00:00Z' });
   const result = await generator.run({ all: true });
   const stored = JSON.parse(await fs.readFile(path.join(websiteDir, 'period-summaries.json'), 'utf8'));
   assert.equal(result.generated, 3);
-  assert.equal(requests.every(request => request.model === 'gpt-5.6-luna' && request.reasoning.effort === 'max'), true);
+  assert.equal(requests.every(request => request.model === 'gpt-5.6-luna' && request.reasoning.effort === 'xhigh'), true);
   assert.equal(stored.version, 3);
   assert.equal(stored.days['2026-08-01'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].headline, 'Passkey migration controls become clearer');
   assert.equal(stored.weeks['2026-07-27'].keyChanges[0].sourceId, 'doc-source');
-  assert.equal(stored.months['2026-08'].reasoningEffort, 'max');
+  assert.equal(stored.months['2026-08'].reasoningEffort, 'xhigh');
   assert.equal(stored.lastRun.requests, 3);
   assert.equal(stored.lastRun.costUsd, 0.0024);
   assert.equal(stored.usageByDay['2026-08-04'].requests, 3);

@@ -73,7 +73,7 @@ Go to your repository settings → Secrets and variables → Actions, and add:
 
 The recipient email (`merill@merill.net`) is already configured in the workflow.
 
-The workflow defaults to `gpt-5.6-luna` with medium reasoning and three concurrent per-diff requests. Every material diff receives its own English summary. When a report contains multiple diffs, one additional Luna request groups related changes into a daily digest. You can override `OPENAI_SUMMARY_MODEL`, `OPENAI_SUMMARY_REASONING_EFFORT`, and `OPENAI_SUMMARY_CONCURRENCY`, or disable AI generation with `OPENAI_SUMMARY_ENABLED=false`. Deterministic fallbacks keep report generation, Discord delivery, and email working if OpenAI is unavailable.
+The workflow defaults to `gpt-5.6-luna` with `xhigh` reasoning and three concurrent per-diff requests. Every material diff receives its own English summary. When a report contains multiple diffs, one additional Luna request groups related changes into a daily digest. You can override `OPENAI_SUMMARY_MODEL`, `OPENAI_SUMMARY_REASONING_EFFORT`, and `OPENAI_SUMMARY_CONCURRENCY`, or disable AI generation with `OPENAI_SUMMARY_ENABLED=false`. Deterministic fallbacks keep report generation, Discord delivery, and email working if OpenAI is unavailable.
 
 ### Discord setup
 
@@ -183,7 +183,7 @@ entra-doc-diff/
 2. **Fetch New Events**: Continues from a persisted documentation commit cursor and Message Center version map
 3. **Filter Files**: Focuses on `.md` files in the `docs/` directory
 4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
-5. **Refresh Briefs**: Regenerates the affected Luna-max day, week, and month brief only when source content changed
+5. **Refresh Briefs**: Regenerates the affected Luna-xhigh day, week, and month brief only when source content changed
 6. **Publish**: Merges events into cumulative UTC-day JSON, rebuilds the static site, and posts an incremental Discord update
 7. **Send Email**: At 08:15 UTC, delivers all pending documentation events since the preceding digest through Microsoft Graph
 8. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
@@ -193,7 +193,7 @@ entra-doc-diff/
 ### Workflow Variables (in `daily-docs-monitor.yml`):
 - `RECIPIENT_EMAIL`: Where to send the reports
 - `cron`: Four-hour site/Discord schedule plus the dedicated 08:15 UTC email schedule
-- `OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD`: Shared UTC-day Luna-max guardrail (currently `$0.25`)
+- `OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD`: Shared UTC-day Luna-xhigh guardrail (currently `$0.25`)
 
 ### Script Configuration (in `monitor-docs.js`):
 - `targetRepo`: Repository to monitor (currently `MicrosoftDocs/entra-docs`)

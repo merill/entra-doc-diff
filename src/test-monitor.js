@@ -127,7 +127,7 @@ test('each diff receives its own Luna English summary', async () => {
 
   assert.equal(requests.length, 1);
   assert.equal(requests[0].model, 'gpt-5.6-luna');
-  assert.equal(requests[0].reasoning.effort, 'medium');
+  assert.equal(requests[0].reasoning.effort, 'xhigh');
   assert.equal(requests[0].store, false);
   assert.equal(requests[0].text.format.name, 'entra_diff_summary');
   assert.match(requests[0].input, /new-preview\.md/);

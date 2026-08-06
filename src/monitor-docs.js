@@ -51,7 +51,7 @@ class EntraDocsMonitor {
     // OpenAI configuration for the plain-English daily digest.
     this.openAISummaryEnabled = process.env.OPENAI_SUMMARY_ENABLED !== 'false';
     this.openAISummaryModel = process.env.OPENAI_SUMMARY_MODEL || 'gpt-5.6-luna';
-    this.openAISummaryReasoningEffort = process.env.OPENAI_SUMMARY_REASONING_EFFORT || 'medium';
+    this.openAISummaryReasoningEffort = process.env.OPENAI_SUMMARY_REASONING_EFFORT || 'xhigh';
     this.openAISummaryConcurrency = Math.min(8, Math.max(1, Number(process.env.OPENAI_SUMMARY_CONCURRENCY) || 3));
     this.openAIClient = process.env.OPENAI_API_KEY ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -1931,8 +1931,8 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
       if (contentChanged) {
         const existing = await readJson(path.join(this.websiteDir, `${dateForUrl}.json`), this.emptyAnalysis());
         cumulative = mergeDailyAnalysis(existing, incremental);
-        // The richer day brief is generated once by the Luna-max period pass.
-        // Reuse the per-diff medium summaries here instead of paying for a
+        // The richer day brief is generated once by the Luna-xhigh period pass.
+        // Reuse the per-diff summaries here instead of paying for a
         // second grouped daily model call on every changed batch.
         cumulative.englishSummary = this.createFallbackEnglishSummary(cumulative);
         const html = this.generateHtmlReport(cumulative);
