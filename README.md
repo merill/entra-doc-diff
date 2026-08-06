@@ -101,7 +101,7 @@ The documentation notification contains the grouped English digest and one link 
 The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. The existing monitor workflow keeps the private Microsoft Graph report. After the dedicated 08:15 UTC email run succeeds and its static website commit is pushed, it calls the separate `daily-kit-broadcast.yml` workflow to publish the email-only Kit broadcast. The other four-hour refreshes never trigger subscriber email.
 
 1. Create a dedicated Kit Newsletter account and complete Kit's sending approval.
-2. Add and confirm `updates@daily.entra.news` as the sending address.
+2. Add and confirm `updates@daily.entra.news` as the account's default sending address. The API publisher omits `email_address`, allowing Kit to use this verified default. Set `KIT_SENDER_EMAIL` only if you intentionally need another sending address that is already verified in the same Kit account.
 3. Verify `daily.entra.news` as the sending domain with the SPF, DKIM, and DMARC records Kit supplies.
 4. Configure the account's default Classic or HTML email template with an unsubscribe link and physical address. The publisher deliberately uses the account default template.
 5. Create an inline form, leave double opt-in enabled, and customize its confirmation email and success message.
@@ -111,7 +111,7 @@ The public daily list is intentionally separate from the human-curated weekly En
 
 `node scripts/publish-kit-broadcast.js --date YYYY-MM-DD` publishes a saved daily report manually. Set `KIT_DRY_RUN=true` to render and validate the payload without contacting Kit. Without `KIT_API_KEY`, the command exits successfully after reporting that Kit is not configured.
 
-The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site or Microsoft Graph report.
+The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account by omitting `subscriber_filter`, which Kit documents as the all-subscribers default. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site or Microsoft Graph report.
 
 ### 3. **Microsoft Graph Setup**
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)

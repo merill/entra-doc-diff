@@ -43,7 +43,6 @@ function fixture(overrides = {}) {
 test('Kit broadcast payload is concise, escaped, linked, and scheduled as email-only', () => {
   const publisher = new KitPublisher({
     apiKey: 'test-key',
-    senderEmail: 'updates@daily.entra.news',
     now: () => new Date('2026-08-06T08:20:00Z'),
     scheduleDelayMinutes: 5
   });
@@ -52,15 +51,24 @@ test('Kit broadcast payload is concise, escaped, linked, and scheduled as email-
   assert.equal(payload.description, 'daily-entra-news:2026-08-06');
   assert.equal(payload.subject, 'Conditional Access <policy> guidance changed — 6 August 2026');
   assert.equal(payload.preview_text, 'Review & validate the new "policy" behavior.');
-  assert.equal(payload.email_address, 'updates@daily.entra.news');
+  assert.equal('email_address' in payload, false);
   assert.equal(payload.public, false);
   assert.equal(payload.published_at, null);
   assert.equal(payload.send_at, '2026-08-06T08:25:00.000Z');
-  assert.deepEqual(payload.subscriber_filter, [{ all: [{ type: 'all_subscribers' }] }]);
+  assert.equal('subscriber_filter' in payload, false);
   assert.match(payload.content, /Conditional Access &lt;policy&gt; guidance changed/);
   assert.match(payload.content, /Review &amp; validate the new &quot;policy&quot; behavior/);
   assert.match(payload.content, /href="https:\/\/daily\.entra\.news\/day\/2026-08-06\/#doc-policy"/);
   assert.doesNotMatch(payload.content, /<policy>|<setting>/);
+});
+
+test('Kit broadcast includes an explicitly configured verified sender', () => {
+  const publisher = new KitPublisher({
+    apiKey: 'test-key',
+    senderEmail: 'updates@daily.entra.news'
+  });
+
+  assert.equal(publisher.buildBroadcast(fixture()).email_address, 'updates@daily.entra.news');
 });
 
 test('Kit publisher skips a day without meaningful updates', async () => {
