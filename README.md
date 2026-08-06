@@ -104,10 +104,10 @@ The public daily list is intentionally separate from the human-curated weekly En
 2. Add and confirm `updates@daily.entra.news` as the sending address.
 3. Verify `daily.entra.news` as the sending domain with the SPF, DKIM, and DMARC records Kit supplies.
 4. Configure the account's default Classic or HTML email template with an unsubscribe link and physical address. The publisher deliberately uses the account default template.
-5. Create an inline form, leave double opt-in enabled, and customize its confirmation email and success state.
+5. Create an inline form, leave double opt-in enabled, and customize its confirmation email and success message.
 6. Copy the JavaScript embed's `data-uid` and `src` values into the repository variables above.
 7. Create a Kit v4 API key and save it as the `KIT_API_KEY` repository secret.
-8. Test with seed subscribers in Outlook and Gmail before promoting the form publicly.
+8. Test the popup, success message, confirmation email, and final opt-in with seed subscribers in Outlook and Gmail before promoting the form publicly.
 
 `node scripts/publish-kit-broadcast.js --date YYYY-MM-DD` publishes a saved daily report manually. Set `KIT_DRY_RUN=true` to render and validate the payload without contacting Kit. Without `KIT_API_KEY`, the command exits successfully after reporting that Kit is not configured.
 
