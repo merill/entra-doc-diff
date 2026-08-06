@@ -6,6 +6,7 @@ const { parse } = require('node-html-parser');
 const htmlDiff = require('node-htmldiff');
 const simpleGit = require('simple-git');
 const { topicIconPath } = require('./topic-icons');
+const { nextScheduledRefresh, readJson, writeJsonAtomic } = require('./update-state');
 
 const SITE = {
   name: 'Entra.News Daily',
@@ -17,15 +18,6 @@ const SITE = {
 const USERJOT_PROJECT_ID = 'cmsf6dr5931kz0ipdm14g1qbt';
 
 const REFRESH_SCHEDULE_UTC = { hour: 8, minute: 15 };
-
-function nextRefreshAfter(value) {
-  const generated = moment.utc(value);
-  const next = generated.clone().startOf('day')
-    .hour(REFRESH_SCHEDULE_UTC.hour)
-    .minute(REFRESH_SCHEDULE_UTC.minute);
-  if (!next.isAfter(generated)) next.add(1, 'day');
-  return next.toISOString();
-}
 
 function dateAtRefresh(date) {
   return `${date}T${String(REFRESH_SCHEDULE_UTC.hour).padStart(2, '0')}:${String(REFRESH_SCHEDULE_UTC.minute).padStart(2, '0')}:00Z`;
@@ -608,6 +600,8 @@ const localDateTimeFormatter=new Intl.DateTimeFormat(undefined,{year:'numeric',m
 const localDayFormatter=new Intl.DateTimeFormat(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 function localizeDates(){document.querySelectorAll('[data-local-datetime]').forEach(item=>{const value=new Date(item.dateTime);if(!Number.isNaN(value.getTime()))item.textContent=localDateTimeFormatter.format(value)});document.querySelectorAll('[data-local-day]').forEach(item=>{const value=new Date(item.dateTime);if(!Number.isNaN(value.getTime()))item.textContent=localDayFormatter.format(value)})}
 function updateRelativeTimes(){const now=Date.now();document.querySelectorAll('[data-relative-time]').forEach(item=>{const value=new Date(item.dataset.relativeTime).getTime();if(Number.isNaN(value))return;const difference=value-now;const hours=Math.abs(difference)/3600000;const amount=hours<10?Math.max(.1,Math.round(hours*10)/10):Math.round(hours);const label=amount===1?'hour':'hours';item.textContent=difference<0?amount+' '+label+' ago':'in '+amount+' '+label})}
+function nextFourHourRefresh(value=new Date()){const current=new Date(value);for(let offset=0;offset<=1;offset+=1){for(const hour of [0,4,8,12,16,20]){const candidate=new Date(Date.UTC(current.getUTCFullYear(),current.getUTCMonth(),current.getUTCDate()+offset,hour,15));if(candidate>current)return candidate}}return new Date(current.getTime()+14400000)}
+async function syncRefreshStatus(){try{const response=await fetch('/refresh-status.json',{cache:'no-store'});if(!response.ok)throw new Error('refresh status unavailable');const status=await response.json();const last=document.querySelector('[data-refresh-last]');if(last&&status.lastCheckedAt){last.dateTime=status.lastCheckedAt;last.dataset.localDatetime='';last.dataset.refreshLast='';const value=new Date(status.lastCheckedAt);if(!Number.isNaN(value.getTime()))last.textContent=localDateTimeFormatter.format(value)}const lastRelative=document.querySelector('[data-refresh-last-relative]');if(lastRelative&&status.lastCheckedAt)lastRelative.dataset.relativeTime=status.lastCheckedAt;const next=document.querySelector('[data-refresh-next]');if(next){const declared=new Date(status.nextScheduledAt||0);next.dataset.relativeTime=(declared>Date.now()?declared:nextFourHourRefresh()).toISOString()}updateRelativeTimes()}catch{}}
 function pickerPad(value){return String(value).padStart(2,'0')}
 function pickerDateKey(value){return value.getFullYear()+'-'+pickerPad(value.getMonth()+1)+'-'+pickerPad(value.getDate())}
 function pickerMondayKey(value){const date=new Date(value.getFullYear(),value.getMonth(),value.getDate());date.setDate(date.getDate()-((date.getDay()+6)%7));return pickerDateKey(date)}
@@ -618,7 +612,7 @@ function renderMonthPicker(root){const selected=root.dataset.selected;const min=
 document.querySelectorAll('[data-period-picker]').forEach(root=>{const trigger=root.querySelector('[data-picker-trigger]');const popover=root.querySelector('[data-picker-popover]');trigger.addEventListener('click',()=>{const opening=popover.hidden;document.querySelectorAll('[data-picker-popover]').forEach(item=>{item.hidden=true;const other=item.closest('[data-period-picker]')?.querySelector('[data-picker-trigger]');if(other)other.setAttribute('aria-expanded','false')});popover.hidden=!opening;trigger.setAttribute('aria-expanded',String(opening));if(opening)setTimeout(()=>popover.querySelector('.selected-week,.period-picker-month.selected,a,button:not(:disabled)')?.focus(),0)});root.addEventListener('click',event=>{const shift=event.target.closest('[data-picker-shift]');if(!shift||shift.disabled)return;const amount=Number(shift.dataset.pickerShift);if(root.dataset.periodPicker==='week'){const parts=root.dataset.display.split('-').map(Number);const next=new Date(parts[0],parts[1]-1+amount,1);root.dataset.display=next.getFullYear()+'-'+pickerPad(next.getMonth()+1);renderWeekPicker(root)}else{root.dataset.display=String(Number(root.dataset.display)+amount);renderMonthPicker(root)}})});
 document.addEventListener('click',event=>{document.querySelectorAll('[data-period-picker]').forEach(root=>{if(event.composedPath().includes(root))return;const popover=root.querySelector('[data-picker-popover]');popover.hidden=true;root.querySelector('[data-picker-trigger]').setAttribute('aria-expanded','false')})});
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;document.querySelectorAll('[data-period-picker]').forEach(root=>{const popover=root.querySelector('[data-picker-popover]');if(popover.hidden)return;popover.hidden=true;const trigger=root.querySelector('[data-picker-trigger]');trigger.setAttribute('aria-expanded','false');trigger.focus()})});
-localizeDates();updateRelativeTimes();setInterval(updateRelativeTimes,60000);
+localizeDates();syncRefreshStatus();updateRelativeTimes();setInterval(updateRelativeTimes,60000);
 `;
 
 const SEARCH_JS = `
@@ -662,7 +656,6 @@ class StaticSiteGenerator {
     this.detailDays = Number(options.detailDays || process.env.STATIC_SITE_DETAIL_DAYS || 45);
     const generatedAt = moment.utc(options.generatedAt);
     this.generatedAt = (generatedAt.isValid() ? generatedAt : moment.utc()).toISOString();
-    this.nextRefreshAt = nextRefreshAfter(this.generatedAt);
     this.generatedUrls = new Set(['/']);
     this.periodSummaries = { days: {}, weeks: {}, months: {} };
   }
@@ -819,7 +812,8 @@ class StaticSiteGenerator {
         services: message.Services || [],
         tags: message.Tags || [],
         startDate: message.StartDateTime,
-        endDate: message.EndDateTime
+        endDate: message.EndDateTime,
+        lastModifiedDateTime: message.LastModifiedDateTime || message.StartDateTime
       };
     });
   }
@@ -847,8 +841,7 @@ class StaticSiteGenerator {
   }
 
   footer() {
-    const generatedLabel = moment.utc(this.generatedAt).format('D MMM YYYY, HH:mm');
-    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><div class="footer-feature-lockup"><img class="footer-feature-logo" src="/assets/ui/maester.png" alt=""><h2><a href="https://maester.cloud">Maester Cloud</a></h2></div><p>Everyone loves using Maester to track their Microsoft Entra and Microsoft 365 tenant security configuration. Maester Cloud turns those daily results into a continuous security record, with 5+ years of history, drift detection, and alerts when your posture changes.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time datetime="${this.generatedAt}" data-local-datetime>${generatedLabel}</time> <span class="refresh-relative" data-relative-time="${this.generatedAt}">recently</span></span><span>Next refresh <span class="refresh-relative" data-relative-time="${this.nextRefreshAt}">in 24 hours</span></span></div></div><nav aria-label="Footer"><button class="footer-feedback-button" type="button" data-userjot-feedback>Report an issue or share feedback</button><a class="footer-rss-link" href="/rss.xml"><img src="/assets/ui/rss.svg" alt="">Daily RSS</a><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>`;
+    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><div class="footer-feature-lockup"><img class="footer-feature-logo" src="/assets/ui/maester.png" alt=""><h2><a href="https://maester.cloud">Maester Cloud</a></h2></div><p>Everyone loves using Maester to track their Microsoft Entra and Microsoft 365 tenant security configuration. Maester Cloud turns those daily results into a continuous security record, with 5+ years of history, drift detection, and alerts when your posture changes.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time data-refresh-last>checking…</time> <span class="refresh-relative" data-refresh-last-relative>recently</span></span><span>Next refresh <span class="refresh-relative" data-refresh-next>within four hours</span></span></div></div><nav aria-label="Footer"><button class="footer-feedback-button" type="button" data-userjot-feedback>Report an issue or share feedback</button><a class="footer-rss-link" href="/rss.xml"><img src="/assets/ui/rss.svg" alt="">Daily RSS</a><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer><script src="/assets/site.js"></script></body></html>`;
     return footer.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
   }
 
@@ -1201,6 +1194,16 @@ class StaticSiteGenerator {
   }
 
   async build() {
+    const refreshStatusPath = path.join(this.websiteDir, 'refresh-status.json');
+    const refreshStatus = await readJson(refreshStatusPath, null);
+    if (!refreshStatus?.lastCheckedAt) {
+      await writeJsonAtomic(refreshStatusPath, {
+        lastCheckedAt: this.generatedAt,
+        lastContentChangedAt: this.generatedAt,
+        nextScheduledAt: nextScheduledRefresh(this.generatedAt),
+        sourceChanges: { documentation: 0, messageCenter: 0 }
+      });
+    }
     for (const directory of ['changes','day','week','month','products','topics','message-center','about','compare','search']) {
       await fs.rm(path.join(this.websiteDir, directory), { recursive: true, force: true });
     }

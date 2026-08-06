@@ -61,33 +61,44 @@ class DiscordPublisher {
       ...(analysis.modifiedFiles || []),
       ...(analysis.deletedFiles || [])
     ];
-    if (files.length === 0) return null;
+    const messageCenterItems = analysis.messageCenterItems || [];
+    if (files.length === 0 && messageCenterItems.length === 0) return null;
 
     const englishSummary = analysis.englishSummary || {};
     const fallbackSummary = files
       .map(file => file.englishSummary?.summary)
       .filter(Boolean)
       .join(' ');
-    const groups = Array.isArray(englishSummary.groups) && englishSummary.groups.length > 0
+    const documentationGroups = Array.isArray(englishSummary.groups) && englishSummary.groups.length > 0
       ? englishSummary.groups
-      : [{
+      : files.length ? [{
           category: files[0].englishSummary?.category || 'Documentation update',
           title: files.length === 1
             ? files[0].englishSummary?.headline || 'Microsoft Entra documentation update'
             : `${files.length} Microsoft Entra documentation updates`,
           summary: fallbackSummary || `${files.length} Microsoft Entra documentation file${files.length === 1 ? '' : 's'} changed.`,
           sourceFiles: files.map(file => file.filename)
-        }];
+        }] : [];
+    const messageCenterGroups = messageCenterItems.map(item => ({
+      category: item.changeType || 'Message Center',
+      title: item.title,
+      summary: item.summary,
+      sourceFiles: []
+    }));
+    const groups = [...documentationGroups, ...messageCenterGroups];
     const hash = crypto.createHash('sha256')
-      .update(files.map(file => this.getDiffEventId(file)).sort().join('\n'))
+      .update([
+        ...files.map(file => file.eventId || this.getDiffEventId(file)),
+        ...messageCenterItems.map(item => item.eventId || `message-center:${item.id}:${item.lastModifiedDateTime || item.version || item.date}`)
+      ].sort().join('\n'))
       .digest('hex')
       .substring(0, 16);
 
     return {
-      eventId: `entra-docs:daily:${dateForUrl}:${hash}`,
+      eventId: `entra-news:batch:${dateForUrl}:${hash}`,
       type: 'daily',
       title: `Microsoft Entra daily update — ${dateForUrl}`,
-      description: englishSummary.overview || `Today's report includes ${files.length} Microsoft Entra documentation update${files.length === 1 ? '' : 's'}.`,
+      description: englishSummary.overview || `${files.length} documentation and ${messageCenterItems.length} Message Center update${files.length + messageCenterItems.length === 1 ? '' : 's'} were detected.`,
       groups,
       url: this.getReportUrl(dateForUrl)
     };
@@ -236,6 +247,10 @@ class DiscordPublisher {
       console.log(`🧪 Discord dry run: ${Object.keys(state.pending).length} message(s) would be published`);
       return { published: 0, pending: Object.keys(state.pending).length, skipped: 0 };
     }
+
+    // Persist the queue before the first network request so a terminated run
+    // can resume without rediscovering or duplicating the source events.
+    await this.saveState(state);
 
     let publishedCount = 0;
     for (const [eventId, event] of Object.entries(state.pending)) {

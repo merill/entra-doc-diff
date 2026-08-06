@@ -83,6 +83,19 @@ test('a single documentation diff still produces one daily summary', () => {
   assert.match(payload.embeds[0].fields[0].value, /updated product behavior/i);
 });
 
+test('a Message Center-only batch produces one incremental daily summary', () => {
+  const publisher = new DiscordPublisher({ enabled: false });
+  const event = publisher.createDailySummaryEvent({
+    newFiles: [], modifiedFiles: [], deletedFiles: [],
+    messageCenterItems: [{
+      id: 'MC123', eventId: 'message-center:MC123:2026-08-06T04:00:00Z',
+      title: 'Microsoft Entra rollout updated', summary: 'The rollout schedule changed.', changeType: 'Major update'
+    }]
+  }, '2026-08-06');
+  assert.match(event.eventId, /^entra-news:batch:2026-08-06:/);
+  assert.equal(event.groups[0].title, 'Microsoft Entra rollout updated');
+});
+
 test('Discord payload accepts an explicit public avatar URL override', () => {
   const publisher = new DiscordPublisher({
     enabled: true,

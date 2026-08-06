@@ -100,16 +100,16 @@ The documentation notification contains the grouped English digest and one link 
 
 ### 4. **Customize (Optional)**
 Edit `.github/workflows/daily-docs-monitor.yml` to:
-- Change the schedule (currently 8:15 AM UTC daily)
+- Change the four-hour schedule (currently 00:15 through 20:15 UTC)
 - Modify the recipient email
-- Adjust the timezone
+- Change the dedicated 08:15 UTC email slot
 
 ## 🕒 Optimal Timing
 
 Analysis of 838 merge commits in `MicrosoftDocs/entra-docs` from May through early August 2026 found recurring publish/sync cycles around 07:30, 12:30, 17:30, and 22:30 UTC. The 07:30 cycle consistently includes the late Pacific-day changes and its repository sync normally completes by approximately 07:38 UTC.
 
-- **Chosen schedule**: 8:15 AM UTC daily
-- **Why**: Provides a 35–45 minute buffer after the late publish/sync cycle while publishing the daily update soon afterwards
+- **Chosen schedule**: 00:15, 04:15, 08:15, 12:15, 16:15, and 20:15 UTC
+- **Why**: Captures each recurring publish/sync cycle soon after it settles while retaining 08:15 UTC as the complete daily email slot
 - **Visitor display**: The generated site converts refresh timestamps and daily-page dates to the reader's local timezone in the browser
 
 ## 🧪 Testing
@@ -179,20 +179,21 @@ entra-doc-diff/
 
 ## 🛠️ How It Works
 
-1. **GitHub Actions Trigger**: Runs daily at scheduled time
-2. **Fetch Commits**: Uses GitHub API to get last 24 hours of commits
+1. **GitHub Actions Trigger**: Runs every four hours at `:15`
+2. **Fetch New Events**: Continues from a persisted documentation commit cursor and Message Center version map
 3. **Filter Files**: Focuses on `.md` files in the `docs/` directory
 4. **Analyze Changes**: Categorizes file modifications and asks Luna for one English summary per material diff
-5. **Group Changes**: For multiple diffs, asks Luna for one additional product/documentation-area digest
-6. **Publish**: Writes summaries into JSON and the static Entra.News Daily site, then posts deduplicated Discord embeds
-7. **Send Email**: Delivers the complete report through Microsoft Graph without requesting Outlook sensitivity
+5. **Refresh Briefs**: Regenerates the affected Luna-max day, week, and month brief only when source content changed
+6. **Publish**: Merges events into cumulative UTC-day JSON, rebuilds the static site, and posts an incremental Discord update
+7. **Send Email**: At 08:15 UTC, delivers all pending documentation events since the preceding digest through Microsoft Graph
 8. **Archive**: Saves the report as a GitHub Actions artifact and publishes the static output
 
 ## 🔧 Configuration Options
 
 ### Workflow Variables (in `daily-docs-monitor.yml`):
 - `RECIPIENT_EMAIL`: Where to send the reports
-- `cron`: Schedule (currently `'15 8 * * *'` for 8:15 AM UTC)
+- `cron`: Four-hour site/Discord schedule plus the dedicated 08:15 UTC email schedule
+- `OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD`: Shared UTC-day Luna-max guardrail (currently `$0.25`)
 
 ### Script Configuration (in `monitor-docs.js`):
 - `targetRepo`: Repository to monitor (currently `MicrosoftDocs/entra-docs`)

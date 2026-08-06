@@ -1,5 +1,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('fs').promises;
+const os = require('os');
+const path = require('path');
 
 const EntraDocsMonitor = require('./monitor-docs');
 
@@ -239,4 +242,60 @@ test('rendered summaries escape model-provided HTML', () => {
   assert.doesNotMatch(html, /<b>Unsafe/);
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /Safe &amp; useful/);
+});
+
+test('pending email events are collected across UTC day files without duplicates', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-email-queue-'));
+  const websiteDir = path.join(root, 'website');
+  await fs.mkdir(websiteDir, { recursive: true });
+  const first = createFile({ commitSha: 'first', eventId: 'entra-docs:first:added:docs/id-governance/new-preview.md' });
+  const second = createFile({ commitSha: 'second', eventId: 'entra-docs:second:added:docs/id-governance/new-preview.md' });
+  await fs.writeFile(path.join(websiteDir, '2026-08-05.json'), JSON.stringify(createAnalysis([first])));
+  await fs.writeFile(path.join(websiteDir, '2026-08-06.json'), JSON.stringify(createAnalysis([second])));
+  const monitor = new EntraDocsMonitor({ websiteDir, reportsDir: path.join(root, 'reports') });
+  const queued = await monitor.loadQueuedEmailAnalysis([first.eventId, second.eventId, second.eventId]);
+  assert.deepEqual(queued.newFiles.map(file => file.commitSha), ['first', 'second']);
+  assert.equal(queued.summary.totalCommits, 2);
+});
+
+test('successive monitor runs accumulate same-file commits and suppress cursor replay', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-monitor-runs-'));
+  const websiteDir = path.join(root, 'website');
+  const reportsDir = path.join(root, 'reports');
+  const mcDataPath = path.join(root, 'mc');
+  await fs.mkdir(mcDataPath, { recursive: true });
+  await fs.writeFile(path.join(mcDataPath, 'messages.json'), '[]');
+  const discordPublisher = {
+    publish: async () => ({ published: 1, pending: 0, skipped: 0 }),
+    getDiffAnchor: file => `change-${file.commitSha}`
+  };
+
+  const runWith = async (file, timestamp) => {
+    const monitor = new EntraDocsMonitor({
+      websiteDir, reportsDir, mcDataPath, discordPublisher,
+      now: () => new Date(timestamp), emailEnabled: false
+    });
+    monitor.openAISummaryEnabled = false;
+    monitor.setupRepository = async () => {};
+    monitor.getDocumentationCursor = async () => ({ head: file.commitSha, commits: [{ hash: file.commitSha }], fallback: false });
+    monitor.analyzeChanges = async () => createAnalysis([file]);
+    await monitor.ensureReportsDir();
+    return monitor.run();
+  };
+
+  const first = createFile({ status: 'modified', commitSha: 'first' });
+  const second = createFile({ status: 'modified', commitSha: 'second' });
+  assert.equal((await runWith(first, '2026-08-06T00:15:00Z')).contentChanged, true);
+  assert.equal((await runWith(second, '2026-08-06T04:15:00Z')).contentChanged, true);
+  assert.equal((await runWith(second, '2026-08-06T08:15:00Z')).contentChanged, false);
+
+  const daily = JSON.parse(await fs.readFile(path.join(websiteDir, '2026-08-06.json'), 'utf8'));
+  assert.deepEqual(daily.modifiedFiles.map(file => file.commitSha), ['first', 'second']);
+  const state = JSON.parse(await fs.readFile(path.join(websiteDir, 'monitor-state.json'), 'utf8'));
+  assert.equal(state.docsHead, 'second');
+  assert.equal(state.migrated, true);
+  assert.equal(state.pendingEmailEventIds.length, 2);
+  const status = JSON.parse(await fs.readFile(path.join(websiteDir, 'refresh-status.json'), 'utf8'));
+  assert.deepEqual(status.sourceChanges, { documentation: 0, messageCenter: 0 });
+  assert.equal(status.lastContentChangedAt, '2026-08-06T04:15:00.000Z');
 });

@@ -55,6 +55,11 @@ async function main() {
 }
 
 main().catch(error => {
+  if (/UTC-day period-summary budget/.test(error.message || '')) {
+    console.warn(`⚠️ ${error.message}`);
+    console.warn('The completed summaries were saved; continuing the site build with the latest available briefs.');
+    return;
+  }
   console.error(`❌ Unable to generate period summaries: ${error.message}`);
   process.exitCode = 1;
 });

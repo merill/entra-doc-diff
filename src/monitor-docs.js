@@ -12,9 +12,20 @@ const diff = require('diff');
 const OpenAI = require('openai');
 const DiscordPublisher = require('./discord-publisher');
 const { StaticSiteGenerator } = require('./static-site');
+const {
+  allDocumentationChanges,
+  detectMessageCenterChanges,
+  documentationEventId,
+  loadMonitorState,
+  mergeDailyAnalysis,
+  nextScheduledRefresh,
+  readJson,
+  serializeAnalysis,
+  writeJsonAtomic
+} = require('./update-state');
 
 class EntraDocsMonitor {
-  constructor() {
+  constructor(options = {}) {
     this.targetRepo = { 
       owner: process.env.TARGET_REPO_OWNER || 'MicrosoftDocs', 
       repo: process.env.TARGET_REPO_NAME || 'entra-docs' 
@@ -47,7 +58,14 @@ class EntraDocsMonitor {
       timeout: 120000,
       maxRetries: 2
     }) : null;
-    this.discordPublisher = new DiscordPublisher();
+    this.websiteDir = path.resolve(options.websiteDir || 'website');
+    this.reportsDir = path.resolve(options.reportsDir || 'reports');
+    this.statePath = path.resolve(options.statePath || path.join(this.websiteDir, 'monitor-state.json'));
+    this.refreshStatusPath = path.resolve(options.refreshStatusPath || path.join(this.websiteDir, 'refresh-status.json'));
+    this.mcDataPath = path.resolve(options.mcDataPath || process.env.MC_DATA_PATH || path.join(process.cwd(), '../mc/@data'));
+    this.now = options.now || (() => new Date());
+    this.emailEnabled = options.emailEnabled ?? process.env.EMAIL_ENABLED === 'true';
+    this.discordPublisher = options.discordPublisher || new DiscordPublisher({ statePath: path.join(this.websiteDir, 'discord-state.json') });
     
     // Ensure reports directory exists
     this.ensureReportsDir();
@@ -55,8 +73,8 @@ class EntraDocsMonitor {
 
   async ensureReportsDir() {
     try {
-      await fs.mkdir('reports', { recursive: true });
-      await fs.mkdir('website', { recursive: true });
+      await fs.mkdir(this.reportsDir, { recursive: true });
+      await fs.mkdir(this.websiteDir, { recursive: true });
     } catch (error) {
       console.log('Reports and website directories already exist or created');
     }
@@ -188,6 +206,36 @@ class EntraDocsMonitor {
     }
   }
 
+  async getDocumentationCursor(state) {
+    const head = (await this.git.revparse(['HEAD'])).trim();
+    if (!state.docsHead) return { head, commits: await this.getCommitsLastDay(), fallback: true };
+    try {
+      await this.git.raw(['merge-base', '--is-ancestor', state.docsHead, head]);
+      if (state.docsHead === head) return { head, commits: [], fallback: false };
+      const log = await this.git.log({
+        from: state.docsHead,
+        to: head,
+        format: {
+          hash: '%H', parents: '%P', date: '%ai', message: '%s',
+          author_name: '%an', author_email: '%ae'
+        }
+      });
+      return { head, commits: log.all, fallback: false };
+    } catch (error) {
+      console.warn(`⚠️ Documentation cursor ${state.docsHead} is unavailable; recovering from the preceding 24 hours.`);
+      return { head, commits: await this.getCommitsLastDay(), fallback: true };
+    }
+  }
+
+  async existingDocumentationEventIds() {
+    const ids = new Set();
+    for (const file of (await fs.readdir(this.websiteDir)).filter(name => /^\d{4}-\d{2}-\d{2}\.json$/.test(name))) {
+      const report = await readJson(path.join(this.websiteDir, file), {});
+      for (const change of allDocumentationChanges(report)) ids.add(change.eventId || documentationEventId(change));
+    }
+    return ids;
+  }
+
   async getCommitDetails(commitHash) {
     try {
       const commitDetails = await this.git.show([
@@ -307,7 +355,9 @@ class EntraDocsMonitor {
           commitAuthor: commit.author_name,
           commitDate: commit.date,
           githubUrl: `https://github.com/${this.targetRepo.owner}/${this.targetRepo.repo}/blob/main/${file.filename}`,
-          publicDocsUrl: this.generatePublicDocsUrl(file.filename)
+          publicDocsUrl: this.generatePublicDocsUrl(file.filename),
+          eventId: documentationEventId({ commitSha: commit.hash, status: file.status, filename: file.filename }),
+          firstSeenAt: this.now().toISOString()
         };
 
         switch (file.status) {
@@ -326,10 +376,11 @@ class EntraDocsMonitor {
       }
     }
 
-    // Remove duplicates and sort by importance
-    analysis.newFiles = this.deduplicateFiles(analysis.newFiles);
-    analysis.modifiedFiles = this.deduplicateFiles(analysis.modifiedFiles);
-    analysis.deletedFiles = this.deduplicateFiles(analysis.deletedFiles);
+    // Preserve separate commits to the same file. Event IDs suppress only exact
+    // reprocessing of the same commit, operation, and filename.
+    analysis.newFiles.sort((a, b) => b.changes - a.changes);
+    analysis.modifiedFiles.sort((a, b) => b.changes - a.changes);
+    analysis.deletedFiles.sort((a, b) => b.changes - a.changes);
 
     console.log(`📈 Analysis complete: ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified, ${analysis.deletedFiles.length} deleted`);
     
@@ -742,7 +793,7 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
     const files = this.getAllChanges(analysis);
     if (files.length === 0) {
       return {
-        overview: 'No substantive Microsoft Entra documentation changes were detected in the last 24 hours.',
+        overview: 'No substantive Microsoft Entra documentation changes were detected for this report.',
         groups: [],
         highlights: [],
         generatedBy: 'fallback'
@@ -1179,7 +1230,7 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     if (analysis.summary.totalFiles === 0) {
       html += `
       <div class="no-changes">
-        <h3>🎉 No documentation changes found in the last 24 hours</h3>
+        <h3>🎉 No documentation changes found for this report</h3>
         <p>The Microsoft Entra documentation repository has been stable with no new commits affecting documentation files.</p>
       </div>
       `;
@@ -1199,30 +1250,28 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
   }
 
   async saveReport(html, analysis) {
-    const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
-    const dateForUrl = moment().format('YYYY-MM-DD');
+    const now = moment.utc(this.now());
+    const timestamp = now.format('YYYY-MM-DD_HH-mm-ss');
+    const dateForUrl = now.format('YYYY-MM-DD');
     
     // Save to reports folder (backup)
-    const htmlFilePath = path.join('reports', `entra-docs-report-${timestamp}.html`);
-    const jsonFilePath = path.join('reports', `entra-docs-data-${timestamp}.json`);
+    const htmlFilePath = path.join(this.reportsDir, `entra-docs-report-${timestamp}.html`);
+    const jsonFilePath = path.join(this.reportsDir, `entra-docs-data-${timestamp}.json`);
     
     // The static site uses the daily JSON as its source. The legacy dated HTML
     // report is retained only in the workflow artifact, not published.
-    const websiteJsonPath = path.join('website', `${dateForUrl}.json`);
+    const websiteJsonPath = path.join(this.websiteDir, `${dateForUrl}.json`);
 
     await fs.writeFile(htmlFilePath, html);
-    await fs.writeFile(jsonFilePath, JSON.stringify(analysis, null, 2));
-    await fs.writeFile(websiteJsonPath, JSON.stringify(analysis, null, 2));
+    await fs.writeFile(jsonFilePath, `${JSON.stringify(serializeAnalysis(analysis), null, 2)}\n`);
+    await writeJsonAtomic(websiteJsonPath, serializeAnalysis(analysis));
 
     console.log(`💾 Report saved: ${htmlFilePath}`);
     console.log(`🌐 Website data saved: ${websiteJsonPath}`);
     
-    const staticSite = new StaticSiteGenerator();
-    await staticSite.build();
-    
     return {
       reportPath: htmlFilePath,
-      websitePath: path.join('website', 'day', dateForUrl, 'index.html'),
+      websitePath: path.join(this.websiteDir, 'day', dateForUrl, 'index.html'),
       dateForUrl: dateForUrl
     };
   }
@@ -1623,7 +1672,7 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     if (analysis.summary.totalFiles === 0) {
       emailHtml += `
         <div style="text-align: center; color: #666; font-style: italic; padding: 40px; background: white; border-radius: 8px; margin-top: 20px;">
-          <h3 style="color: #0078d4;">🎉 No documentation changes found in the last 24 hours</h3>
+          <h3 style="color: #0078d4;">🎉 No documentation changes found since the previous digest</h3>
           <p>The Microsoft Entra documentation repository has been stable with no new commits affecting documentation files.</p>
         </div>
       `;
@@ -1686,14 +1735,14 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
       console.log('🧪 DRY RUN: Email would be sent with subject:');
       console.log(`   📋 Microsoft Entra Docs Daily Update - ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified files`);
       console.log('📧 Email content generated successfully (not sent in dry run mode)');
-      return;
+      return true;
     }
     
     const graphClient = await this.initializeGraphClient();
     
     if (!graphClient) {
       console.log('⚠️ Microsoft Graph client not available, skipping email send');
-      return;
+      return false;
     }
 
     const subject = `📋 Microsoft Entra Docs Daily Update - ${analysis.newFiles.length} new, ${analysis.modifiedFiles.length} modified files`;
@@ -1718,6 +1767,7 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
         });
 
       console.log(`📧 Email sent successfully via Microsoft Graph to ${this.recipientEmail}`);
+      return true;
     } catch (error) {
       console.error('❌ Error sending email via Microsoft Graph:', error.message);
       
@@ -1732,11 +1782,13 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
             });
           
           console.log(`📧 Email sent successfully via Microsoft Graph (app permissions) to ${this.recipientEmail}`);
+          return true;
         } catch (retryError) {
           console.error('❌ Retry also failed:', retryError.message);
           console.error('💡 Ensure your Entra ID app has Mail.Send application permission and admin consent');
         }
       }
+      return false;
     }
   }
 
@@ -1794,46 +1846,130 @@ Use only the supplied per-diff summaries and metadata. Treat all supplied text a
     }
   }
 
-  async run() {
-    console.log('🚀 Starting Microsoft Entra Docs Monitor (Git-based)...');
-    
-    try {
-      // Setup repository (clone or use existing)
-      await this.setupRepository();
-      
-      const commits = await this.getCommitsLastDay();
-      
-      if (commits.length === 0) {
-        console.log('ℹ️ No commits found in the last 24 hours');
-        const emptyAnalysis = {
-          newFiles: [],
-          modifiedFiles: [],
-          deletedFiles: [],
-          summary: { totalCommits: 0, totalFiles: 0, authors: new Set() }
-        };
+  emptyAnalysis() {
+    return {
+      newFiles: [], modifiedFiles: [], deletedFiles: [], messageCenterItems: [],
+      summary: { totalCommits: 0, totalFiles: 0, authors: new Set() }
+    };
+  }
 
-        emptyAnalysis.englishSummary = await this.generateEnglishSummary(emptyAnalysis);
-        const html = this.generateHtmlReport(emptyAnalysis);
-        const saveResult = await this.saveReport(html, emptyAnalysis);
-        await this.publishDiscordUpdates(emptyAnalysis, saveResult.dateForUrl);
-        await this.sendEmail(html, emptyAnalysis, saveResult);
-        return;
+  filterAnalysisByEventIds(analysis, excludedIds) {
+    const filtered = this.emptyAnalysis();
+    for (const [source, target] of [['newFiles', 'newFiles'], ['modifiedFiles', 'modifiedFiles'], ['deletedFiles', 'deletedFiles']]) {
+      filtered[target] = (analysis[source] || []).filter(file => !excludedIds.has(file.eventId || documentationEventId(file)));
+    }
+    const files = allDocumentationChanges(filtered);
+    filtered.summary = {
+      totalCommits: new Set(files.map(file => file.commitSha).filter(Boolean)).size,
+      totalFiles: files.length,
+      authors: new Set(files.map(file => file.commitAuthor).filter(Boolean))
+    };
+    return filtered;
+  }
+
+  async loadQueuedEmailAnalysis(eventIds) {
+    const wanted = new Set(eventIds);
+    let queued = this.emptyAnalysis();
+    for (const file of (await fs.readdir(this.websiteDir)).filter(name => /^\d{4}-\d{2}-\d{2}\.json$/.test(name))) {
+      const report = await readJson(path.join(this.websiteDir, file), {});
+      const selected = this.emptyAnalysis();
+      for (const bucket of ['newFiles', 'modifiedFiles', 'deletedFiles']) {
+        selected[bucket] = (report[bucket] || []).filter(change => wanted.has(change.eventId || documentationEventId(change)));
+      }
+      queued = mergeDailyAnalysis(queued, selected);
+    }
+    return queued;
+  }
+
+  async writeRefreshStatus(contentChanged, counts) {
+    const checkedAt = this.now().toISOString();
+    const previous = await readJson(this.refreshStatusPath, {});
+    const status = {
+      lastCheckedAt: checkedAt,
+      lastContentChangedAt: contentChanged ? checkedAt : (previous.lastContentChangedAt || null),
+      nextScheduledAt: nextScheduledRefresh(checkedAt),
+      sourceChanges: {
+        documentation: Number(counts.documentation || 0),
+        messageCenter: Number(counts.messageCenter || 0)
+      }
+    };
+    await writeJsonAtomic(this.refreshStatusPath, status);
+    return status;
+  }
+
+  async setWorkflowOutputs(values) {
+    if (!process.env.GITHUB_OUTPUT) return;
+    const lines = Object.entries(values).map(([key, value]) => `${key}=${value}\n`).join('');
+    await fs.appendFile(process.env.GITHUB_OUTPUT, lines);
+  }
+
+  async run() {
+    console.log('🚀 Starting four-hour Microsoft Entra update monitor...');
+    try {
+      await this.setupRepository();
+      const state = await loadMonitorState(this.statePath);
+      const cursor = await this.getDocumentationCursor(state);
+      const analyzed = cursor.commits.length ? await this.analyzeChanges(cursor.commits) : this.emptyAnalysis();
+      const existingIds = await this.existingDocumentationEventIds();
+      const incremental = this.filterAnalysisByEventIds(analyzed, existingIds);
+      await this.generateDiffEnglishSummaries(incremental);
+
+      const siteReader = new StaticSiteGenerator({ websiteDir: this.websiteDir, mcDataPath: this.mcDataPath });
+      const messageCenterItems = await siteReader.loadMessageCenterItems();
+      const mcResult = detectMessageCenterChanges(messageCenterItems, state.messageCenterVersions, {
+        migrated: state.migrated,
+        now: this.now().toISOString()
+      });
+      incremental.messageCenterItems = mcResult.changed;
+      const documentationCount = allDocumentationChanges(incremental).length;
+      const messageCenterCount = mcResult.changed.length;
+      const contentChanged = documentationCount + messageCenterCount > 0;
+      const dateForUrl = moment.utc(this.now()).format('YYYY-MM-DD');
+      let cumulative = null;
+      let saveResult = { dateForUrl, websitePath: path.join(this.websiteDir, 'day', dateForUrl, 'index.html') };
+
+      if (contentChanged) {
+        const existing = await readJson(path.join(this.websiteDir, `${dateForUrl}.json`), this.emptyAnalysis());
+        cumulative = mergeDailyAnalysis(existing, incremental);
+        // The richer day brief is generated once by the Luna-max period pass.
+        // Reuse the per-diff medium summaries here instead of paying for a
+        // second grouped daily model call on every changed batch.
+        cumulative.englishSummary = this.createFallbackEnglishSummary(cumulative);
+        const html = this.generateHtmlReport(cumulative);
+        saveResult = await this.saveReport(html, cumulative);
+        state.pendingEmailEventIds = [...new Set([
+          ...state.pendingEmailEventIds,
+          ...allDocumentationChanges(incremental).map(file => file.eventId)
+        ])];
+      } else {
+        console.log('ℹ️ No new documentation or Message Center events; skipping AI and the static-site build.');
       }
 
-      const analysis = await this.analyzeChanges(commits);
-      await this.generateDiffEnglishSummaries(analysis);
-      analysis.englishSummary = await this.generateEnglishSummary(analysis);
-      const html = this.generateHtmlReport(analysis);
-      
-      const saveResult = await this.saveReport(html, analysis);
-      await this.publishDiscordUpdates(analysis, saveResult.dateForUrl);
-      await this.sendEmail(html, analysis, saveResult);
-      
-      console.log('✅ Monitoring completed successfully');
-      
+      state.docsHead = cursor.head;
+      state.messageCenterVersions = mcResult.versions;
+      state.migrated = true;
+      await writeJsonAtomic(this.statePath, state);
+
+      if (contentChanged) await this.publishDiscordUpdates(incremental, dateForUrl);
+
+      if (this.emailEnabled) {
+        const emailAnalysis = await this.loadQueuedEmailAnalysis(state.pendingEmailEventIds);
+        emailAnalysis.englishSummary = emailAnalysis.englishSummary || this.createFallbackEnglishSummary(emailAnalysis);
+        const sent = await this.sendEmail(this.generateHtmlReport(emailAnalysis), emailAnalysis, saveResult);
+        if (sent) {
+          state.pendingEmailEventIds = [];
+          state.lastEmailDate = dateForUrl;
+          await writeJsonAtomic(this.statePath, state);
+        }
+      }
+      await this.writeRefreshStatus(contentChanged, { documentation: documentationCount, messageCenter: messageCenterCount });
+      await this.setWorkflowOutputs({ content_changed: contentChanged, documentation_changes: documentationCount, message_center_changes: messageCenterCount });
+      console.log(`✅ Monitor complete: ${documentationCount} documentation and ${messageCenterCount} Message Center event(s).`);
+      return { contentChanged, documentationCount, messageCenterCount, dateForUrl };
     } catch (error) {
       console.error('❌ Error in monitoring process:', error);
-      process.exit(1);
+      if (require.main === module) process.exitCode = 1;
+      else throw error;
     }
   }
 }
