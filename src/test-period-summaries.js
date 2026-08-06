@@ -117,6 +117,48 @@ test('current generation includes the latest day by default', async () => {
   assert.equal(result.days, 1);
 });
 
+test('explicit recovery dates regenerate only their days and affected periods', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-explicit-periods-'));
+  const requests = [];
+  const generator = new PeriodSummaryGenerator({
+    outputPath: path.join(root, 'period-summaries.json'),
+    client: { responses: { create: async request => {
+      const period = JSON.parse(request.input).period;
+      requests.push(period);
+      return {
+        status: 'completed', model: 'gpt-5.6-luna',
+        output_text: JSON.stringify({
+          headline: `${period.label} summary`, overview: 'The selected period is summarized.',
+          adminImpact: 'Review the selected briefing.',
+          keyChanges: [{ title: 'Selected change', detail: 'The selected change is included.', product: 'Entra ID', sourceId: 'doc-selected' }]
+        }),
+        usage: { input_tokens: 100, output_tokens: 100 }
+      };
+    } } },
+    logger: { log() {}, warn() {} }
+  });
+  generator.loadItems = async () => [
+    {
+      id: 'doc-selected', date: '2026-08-05', source: 'docs', changeType: 'Updated', additions: 2,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'Selected', summary: 'The selected change.', adminImpact: 'Review it.'
+    },
+    {
+      id: 'doc-latest', date: '2026-08-06', source: 'docs', changeType: 'Updated', additions: 1,
+      product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+      title: 'Latest', summary: 'A later change.', adminImpact: 'Review it.'
+    }
+  ];
+
+  const result = await generator.run({ dates: ['2026-08-05'], force: true });
+  const stored = JSON.parse(await fs.readFile(generator.outputPath, 'utf8'));
+  assert.deepEqual(requests.map(period => period.type), ['day', 'week', 'month']);
+  assert.deepEqual(Object.keys(stored.days), ['2026-08-05']);
+  assert.deepEqual(Object.keys(stored.weeks), ['2026-08-03']);
+  assert.deepEqual(Object.keys(stored.months), ['2026-08']);
+  assert.equal(result.generated, 3);
+});
+
 test('daily backfill checkpoints completed dates and resumes after a failure', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-daily-resume-'));
   const outputPath = path.join(root, 'period-summaries.json');

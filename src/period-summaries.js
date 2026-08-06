@@ -323,7 +323,7 @@ class PeriodSummaryGenerator {
     throw new Error(`Unable to generate ${kind} ${key}`);
   }
 
-  async run({ all = false, force = false, kinds = ['day', 'week', 'month'] } = {}) {
+  async run({ all = false, force = false, kinds = ['day', 'week', 'month'], dates = [] } = {}) {
     const items = await this.loadItems();
     if (items.length === 0) throw new Error('No Entra changes were available to summarize');
     const store = await this.loadStore();
@@ -339,9 +339,14 @@ class PeriodSummaryGenerator {
     // Backfill newest days first so the landing page and RSS feed improve
     // immediately even if a long historical run is interrupted.
     const days = [...new Set(items.map(item => item.date))].sort().reverse();
-    const dayKeys = requestedKinds.has('day') ? (all ? days : [latestDate]) : [];
-    const weekKeys = requestedKinds.has('week') ? (all ? weeks : [latestWeek]) : [];
-    const monthKeys = requestedKinds.has('month') ? (all ? months : [latestMonth]) : [];
+    const requestedDates = [...new Set(dates.map(String))].sort();
+    const invalidDates = requestedDates.filter(date => !/^\d{4}-\d{2}-\d{2}$/.test(date) || !days.includes(date));
+    if (invalidDates.length > 0) throw new Error(`Unknown or invalid summary date(s): ${invalidDates.join(', ')}`);
+    const explicitWeeks = [...new Set(requestedDates.map(date => moment(date).startOf('isoWeek').format('YYYY-MM-DD')))];
+    const explicitMonths = [...new Set(requestedDates.map(date => date.slice(0, 7)))];
+    const dayKeys = requestedKinds.has('day') ? (requestedDates.length > 0 ? requestedDates : (all ? days : [latestDate])) : [];
+    const weekKeys = requestedKinds.has('week') ? (requestedDates.length > 0 ? explicitWeeks : (all ? weeks : [latestWeek])) : [];
+    const monthKeys = requestedKinds.has('month') ? (requestedDates.length > 0 ? explicitMonths : (all ? months : [latestMonth])) : [];
 
     try {
       for (const day of dayKeys) {

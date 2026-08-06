@@ -20,6 +20,11 @@ on:
         required: false
         type: boolean
         default: false
+      backfill_dates:
+        description: Regenerate recovered dates without sending email or Discord (comma-separated YYYY-MM-DD)
+        required: false
+        type: string
+        default: ''
 
 concurrency:
   group: entra-docs-monitor
@@ -49,6 +54,7 @@ jobs:
       run: npm install
       
     - name: Run docs and Message Center monitor
+      if: inputs.backfill_dates == ''
       id: monitor
       env:
         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -67,8 +73,17 @@ jobs:
         GITHUB_ACTIONS: "true"
       run: node src/monitor-docs.js
 
+    - name: Regenerate recovered per-change summaries
+      if: inputs.backfill_dates != ''
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_SUMMARY_MODEL: "gpt-5.6-luna"
+        OPENAI_SUMMARY_REASONING_EFFORT: "medium"
+        OPENAI_SUMMARY_CONCURRENCY: "3"
+      run: node scripts/regenerate-diff-summaries.js --dates="${{ inputs.backfill_dates }}"
+
     - name: Generate daily, weekly, and monthly editorial briefs
-      if: steps.monitor.outputs.content_changed == 'true' || inputs.backfill_period_summaries == true
+      if: steps.monitor.outputs.content_changed == 'true' || inputs.backfill_period_summaries == true || inputs.backfill_dates != ''
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_PERIOD_SUMMARY_MODEL: "gpt-5.6-luna"
@@ -77,7 +92,9 @@ jobs:
         OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD: "0.25"
         MC_DATA_PATH: "./mc/@data"
       run: |
-        if [ "${{ inputs.backfill_period_summaries }}" = "true" ]; then
+        if [ -n "${{ inputs.backfill_dates }}" ]; then
+          node scripts/generate-period-summaries.js --dates="${{ inputs.backfill_dates }}" --force
+        elif [ "${{ inputs.backfill_period_summaries }}" = "true" ]; then
           node scripts/generate-period-summaries.js --all
         else
           node scripts/generate-period-summaries.js --current --force
@@ -106,3 +123,22 @@ jobs:
         name: daily-report-${{ github.run_number }}
         path: reports/
         retention-days: 30
+
+  notify-failure:
+    name: Email Merill when the refresh fails
+    needs: monitor-docs
+    if: always() && needs.monitor-docs.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout notification script
+      uses: actions/checkout@v4
+
+    - name: Send failure email
+      continue-on-error: true
+      env:
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        FAILURE_RECIPIENT_EMAIL: "merill@merill.net"
+      run: node scripts/send-workflow-failure-email.js

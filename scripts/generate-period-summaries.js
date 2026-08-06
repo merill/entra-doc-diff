@@ -33,7 +33,8 @@ function readHidden(prompt) {
 }
 
 async function main() {
-  const args = new Set(process.argv.slice(2));
+  const rawArgs = process.argv.slice(2);
+  const args = new Set(rawArgs);
   const selectedKinds = [
     ['--days', 'day'],
     ['--weeks', 'week'],
@@ -46,10 +47,15 @@ async function main() {
     mcDataPath: process.env.MC_DATA_PATH,
     apiKey
   });
+  const datesArgument = rawArgs.find(argument => argument.startsWith('--dates='));
+  const dates = datesArgument
+    ? datesArgument.slice('--dates='.length).split(',').map(value => value.trim()).filter(Boolean)
+    : [];
   const result = await generator.run({
     all: args.has('--all'),
     force: args.has('--force'),
-    kinds: selectedKinds.length > 0 ? selectedKinds : undefined
+    kinds: selectedKinds.length > 0 ? selectedKinds : undefined,
+    dates
   });
   console.log(`✅ Period summaries ready: ${result.generated} API request(s) in this run (${result.days} days, ${result.weeks} weeks, ${result.months} months available), $${result.costUsd.toFixed(4)} estimated API cost.`);
 }
