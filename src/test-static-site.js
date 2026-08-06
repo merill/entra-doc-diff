@@ -207,6 +207,14 @@ test('daily email form falls back safely when Kit public configuration is missin
   });
   assert.match(untrusted.dailyEmailForm(), /daily RSS feed/);
   assert.doesNotMatch(untrusted.dailyEmailForm(), /example\.com/);
+  const trusted = new StaticSiteGenerator({
+    kitDailyFormUid: 'daily-form-123',
+    kitDailyFormEmbedSrc: 'https://daily-entra-news.kit.com/daily-form-123/index.js'
+  });
+  assert.match(trusted.dailyEmailForm(), /data-kit-form-uid="daily-form-123"/);
+  assert.match(trusted.dailyEmailForm(), /data-kit-form-src="https:\/\/daily-entra-news\.kit\.com\/daily-form-123\/index\.js"/);
+  assert.match(trusted.dailyEmailForm(), /Loading the secure signup form/);
+  assert.doesNotMatch(trusted.dailyEmailForm(), /<script/);
 });
 
 test('static generator writes indexable archive and detail pages', async () => {
@@ -529,7 +537,8 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /id="daily-email"/);
   assert.match(aboutHtml, /Get the daily update by email/);
   assert.match(aboutHtml, /Emails are sent only on days with meaningful Microsoft Entra documentation or Message Center updates/);
-  assert.match(aboutHtml, /<script async data-uid="daily-form-123" src="https:\/\/daily-entra-news\.kit\.com\/daily-form-123\/index\.js"><\/script>/);
+  assert.match(aboutHtml, /data-kit-form-uid="daily-form-123" data-kit-form-src="https:\/\/daily-entra-news\.kit\.com\/daily-form-123\/index\.js"/);
+  assert.doesNotMatch(aboutHtml, /<script async data-uid="daily-form-123"/);
   assert.doesNotMatch(aboutHtml, /Email signup will appear here/);
   assert.match(aboutHtml, /Daily automated AI entries are useful, but nothing beats content created and curated/);
   assert.match(aboutHtml, /insights from Microsoft MVPs and identity subject-matter experts/);
@@ -540,9 +549,20 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(aboutHtml, /Join the Entra community on Discord/);
   assert.match(aboutHtml, /Get daily email updates/);
   assert.match(aboutHtml, /Subscribe to the weekly update/);
-  assert.match(indexHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
-  assert.match(docDetailHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
-  assert.match(messageDetailHtml, /href="\/about\/#daily-email">Get daily email updates<\/a>/);
+  assert.match(indexHtml, /href="\/about\/\?subscribe=daily"[^>]*data-daily-email-open[^>]*>Get daily email updates<\/a>/);
+  assert.match(docDetailHtml, /href="\/about\/\?subscribe=daily"[^>]*data-daily-email-open[^>]*>Get daily email updates<\/a>/);
+  assert.match(messageDetailHtml, /href="\/about\/\?subscribe=daily"[^>]*data-daily-email-open[^>]*>Get daily email updates<\/a>/);
+  assert.match(aboutHtml, /<dialog class="daily-email-dialog" id="daily-email-dialog" data-daily-email-dialog/);
+  assert.match(aboutHtml, /<dialog class="daily-email-dialog" id="daily-email-pending-dialog" data-daily-email-pending-dialog/);
+  assert.match(aboutHtml, /Check your inbox/);
+  assert.match(aboutHtml, /Confirm your subscription/);
+  assert.match(siteCss, /\.daily-email-dialog::backdrop/);
+  assert.match(siteCss, /\.daily-email-trigger\{/);
+  assert.match(siteJs, /document\.createElement\('script'\)/);
+  assert.match(siteJs, /consumeDailyEmailQuery\('subscription','pending'\)/);
+  assert.match(siteJs, /consumeDailyEmailQuery\('subscribe','daily'\)/);
+  assert.match(siteJs, /history\.replaceState\(null,''/);
+  assert.match(siteJs, /data-kit-daily-form/);
   assert.doesNotMatch(aboutHtml, /Bookmark|updates are posted daily/);
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
