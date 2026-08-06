@@ -30,7 +30,7 @@ function fixture(overrides = {}) {
       overview: 'Review & validate the new "policy" behavior.',
       adminImpact: 'Check sign-in policies before rollout.',
       keyChanges: [{
-        title: 'Policy <setting> updated',
+        title: 'Conditional Access policy <setting> updated',
         detail: 'The guidance now covers safer & clearer defaults.',
         product: 'Entra ID',
         sourceId: 'doc-policy'
@@ -59,6 +59,10 @@ test('Kit broadcast payload is concise, escaped, linked, and scheduled as email-
   assert.match(payload.content, /Conditional Access &lt;policy&gt; guidance changed/);
   assert.match(payload.content, /Review &amp; validate the new &quot;policy&quot; behavior/);
   assert.match(payload.content, /href="https:\/\/daily\.entra\.news\/day\/2026-08-06\/#doc-policy"/);
+  assert.match(payload.content, /src="https:\/\/daily\.entra\.news\/assets\/products\/entra-id\.svg"/);
+  assert.match(payload.content, /src="https:\/\/daily\.entra\.news\/assets\/topics\/conditional-access\.svg"/);
+  assert.match(payload.content, /Entra ID · Conditional Access/);
+  assert.doesNotMatch(payload.content, /What Entra admins need to know|Check sign-in policies before rollout/);
   assert.doesNotMatch(payload.content, /<policy>|<setting>/);
 });
 

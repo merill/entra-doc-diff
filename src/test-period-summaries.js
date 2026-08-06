@@ -10,6 +10,31 @@ test('period prompt requires specific content changes instead of count-only pros
   assert.match(PERIOD_SUMMARY_PROMPT, /Avoid generic statements based mainly on counts/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /preview.*general availability.*retirements/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /copy the id.*sourceId/i);
+  assert.match(PERIOD_SUMMARY_PROMPT, /Do not begin with.*Entra ID documentation/i);
+  assert.match(PERIOD_SUMMARY_PROMPT, /recentHeadlines.*style history, never as evidence/i);
+});
+
+test('daily evidence includes recent headlines only as style context', () => {
+  const generator = new PeriodSummaryGenerator();
+  const item = {
+    id: 'doc-current', date: '2026-08-06', source: 'docs', changeType: 'Updated', additions: 4,
+    product: { slug: 'entra-id', short: 'Entra ID' }, topic: { name: 'Authentication' },
+    title: 'Customer-managed telephony terminology', summary: 'The terminology changed.', adminImpact: 'No action required.'
+  };
+  const store = {
+    days: {
+      '2026-08-05': { headline: 'MemberOf retirement sets a November cleanup deadline' },
+      '2026-08-04': { headline: 'SMS and voice MFA deadlines narrow to public-cloud tenants' },
+      '2026-08-06': { headline: 'The current headline must not be included' }
+    }
+  };
+
+  const evidence = generator.buildEvidence('day', '2026-08-06', [item], store);
+  assert.deepEqual(evidence.recentHeadlines, [
+    { date: '2026-08-05', headline: 'MemberOf retirement sets a November cleanup deadline' },
+    { date: '2026-08-04', headline: 'SMS and voice MFA deadlines narrow to public-cloud tenants' }
+  ]);
+  assert.equal(evidence.recentHeadlines.some(entry => entry.date === '2026-08-06'), false);
 });
 
 test('period evidence preserves product breadth and Message Center signals', () => {
