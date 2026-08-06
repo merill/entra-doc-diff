@@ -47,7 +47,7 @@ function dateLabel(date) {
 class KitPublisher {
   constructor(options = {}) {
     this.apiKey = options.apiKey ?? process.env.KIT_API_KEY ?? '';
-    this.senderEmail = options.senderEmail || process.env.KIT_SENDER_EMAIL || 'updates@daily.entra.news';
+    this.senderEmail = String(options.senderEmail ?? process.env.KIT_SENDER_EMAIL ?? '').trim();
     this.apiBaseUrl = options.apiBaseUrl || 'https://api.kit.com/v4';
     const scheduleDelayMinutes = Number(options.scheduleDelayMinutes ?? process.env.KIT_SCHEDULE_DELAY_MINUTES ?? 5);
     const maxAttempts = Number(options.maxAttempts ?? 4);
@@ -95,15 +95,14 @@ class KitPublisher {
     return {
       content,
       description: this.marker(date),
-      email_address: this.senderEmail,
+      ...(this.senderEmail ? { email_address: this.senderEmail } : {}),
       preview_text: previewText,
       subject,
       public: false,
       published_at: null,
       send_at: sendAt,
       thumbnail_alt: null,
-      thumbnail_url: null,
-      subscriber_filter: [{ all: [{ type: 'all_subscribers' }] }]
+      thumbnail_url: null
     };
   }
 
