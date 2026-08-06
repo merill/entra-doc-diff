@@ -4,6 +4,18 @@ const GITHUB_TOKEN_STORAGE_KEY='entra-news-github-token';
 function applyTheme(theme,persist){const value=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=value;document.documentElement.style.colorScheme=value;document.querySelectorAll('[data-theme-option]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeOption===value)));if(persist){try{localStorage.setItem(THEME_STORAGE_KEY,value)}catch{}}}
 document.querySelectorAll('[data-theme-option]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeOption,true)));
 applyTheme(document.documentElement.dataset.theme||'light',false);
+const dailyEmailDialog=document.querySelector('[data-daily-email-dialog]');
+let dailyEmailReturnFocus=null;
+let dailyEmailFormRequested=false;
+function syncDailyEmailDialogLock(){document.body.classList.toggle('daily-email-dialog-open',Boolean(document.querySelector('.daily-email-dialog[open]')))}
+function openDailyEmailDialog(dialog,trigger=null){if(!dialog||typeof dialog.showModal!=='function')return false;if(dialog.open)return true;dailyEmailReturnFocus=trigger||document.activeElement;dialog.showModal();syncDailyEmailDialogLock();setTimeout(()=>dialog.querySelector('[data-daily-email-close],button,input')?.focus(),0);return true}
+function closeDailyEmailDialog(dialog){if(!dialog?.open)return;dialog.close();syncDailyEmailDialogLock();dailyEmailReturnFocus?.focus?.();dailyEmailReturnFocus=null}
+function loadDailyEmailForm(){if(dailyEmailFormRequested)return;const host=dailyEmailDialog?.querySelector('[data-kit-daily-form]');if(!host)return;const source=host.dataset.kitFormSrc,uid=host.dataset.kitFormUid;if(!source||!uid)return;dailyEmailFormRequested=true;const script=document.createElement('script');script.async=true;script.dataset.uid=uid;script.src=source;script.addEventListener('load',()=>host.querySelector('[data-kit-form-loading]')?.remove());script.addEventListener('error',()=>{host.querySelector('[data-kit-form-loading]')?.remove();host.insertAdjacentHTML('beforeend','<div class="daily-email-fallback"><p>The signup form could not load. Please try again or use the <a href="/rss.xml">daily RSS feed</a>.</p></div>')});host.appendChild(script)}
+document.querySelectorAll('[data-daily-email-open]').forEach(trigger=>trigger.addEventListener('click',event=>{if(!openDailyEmailDialog(dailyEmailDialog,trigger))return;event.preventDefault();loadDailyEmailForm()}));
+document.querySelectorAll('[data-daily-email-close]').forEach(button=>button.addEventListener('click',()=>closeDailyEmailDialog(button.closest('dialog'))));
+document.querySelectorAll('.daily-email-dialog').forEach(dialog=>{dialog.addEventListener('click',event=>{if(event.target===dialog)closeDailyEmailDialog(dialog)});dialog.addEventListener('close',syncDailyEmailDialogLock)});
+function consumeDailyEmailSubscribeQuery(){const url=new URL(location.href);if(url.searchParams.get('subscribe')!=='daily')return false;url.searchParams.delete('subscribe');history.replaceState(null,'',url.pathname+(url.search?'?'+url.searchParams.toString():'')+url.hash);return true}
+if(consumeDailyEmailSubscribeQuery()){openDailyEmailDialog(dailyEmailDialog);loadDailyEmailForm()}
 const githubTokenDrawer=document.querySelector('[data-github-token-drawer]');
 const githubTokenBackdrop=document.querySelector('[data-github-token-backdrop]');
 const githubTokenInput=document.querySelector('[data-github-token-input]');
