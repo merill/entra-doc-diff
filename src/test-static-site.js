@@ -415,6 +415,10 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(dayHtml, /What changed today/);
   assert.match(dayHtml, /class="story-description">This readable summary explains the configuration baseline change in full/);
   assert.match(dayHtml, /Day by product/);
+  assert.match(siteCss, /\.left-rail \.product-list a[^}]*text-decoration:none/);
+  assert.match(siteCss, /\.left-rail \.topic-rail \.plain-list a/);
+  assert.match(siteCss, /\.detail-aside \.plain-list a/);
+  assert.match(siteCss, /\.period-product-rail \.rail-count-list a:hover[^}]*background:var\(--green-soft\)[^}]*box-shadow:inset 3px 0 0 var\(--green\)/);
   assert.match(dayHtml, /class="mini-calendar-grid"/);
   assert.match(dayHtml, /href="#product-id-governance"/);
   assert.match(dayHtml, /class="change-pill updated">Updated/);
