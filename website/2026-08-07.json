@@ -1,5 +1,56 @@
 {
-  "newFiles": [],
+  "newFiles": [
+    {
+      "filename": "docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md",
+      "status": "added",
+      "additions": 302,
+      "deletions": 0,
+      "changes": 302,
+      "patch": "diff --git a/docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md b/docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md\nnew file mode 100644\nindex 00000000000..a69e7eb5d15\n--- /dev/null\n+++ b/docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md\n@@ -0,0 +1,302 @@\n+---\n+title: Token Protection deployment guide - Web apps (Preview)\n+description: Deploy Token Protection with Microsoft Entra Conditional Access for web apps that access Azure Resource Manager\n+ms.service: entra-id\n+ms.subservice: conditional-access\n+ms.topic: how-to\n+ms.date: 08/06/2026\n+author: anfield27\n+ms.author: sgrandhi\n+ms.reviewer: sgrandhi\n+ai-usage: ai-assisted\n+---\n+# Token Protection deployment guide - Web apps (Preview)\n+\n+This guide covers the steps required to deploy and enforce Token Protection for sign-in session tokens used by web (browser-based) applications that access Azure Resource Manager (ARM).\n+\n+For an overview of Token Protection and supported platforms, see [Token Protection in Microsoft Entra Conditional Access](concept-token-protection.md). Review the overview documentation before using this deployment guide.\n+\n+> [!NOTE]\n+> Token Protection for web applications is currently in preview. Preview features are still in development, and their capabilities might change over time. These features are available before an official release so that customers can get early access and provide feedback.\n+\n+> [!NOTE]\n+> Since support for web applications is in preview, we recommend that you first deploy Token Protection for native applications, including enforcing the policy for at least a pilot group of users, before you try this preview for web applications. For guidance, see the deployment guides for [Windows](deployment-guide-token-protection-windows.md) and [Apple](deployment-guide-token-protection-apple.md) devices.\n+\n+## Prerequisites\n+\n+[!INCLUDE [Microsoft Entra ID P1 license](~/includes/entra-p1-license.md)]\n+\n+## Supported applications, resources, and browsers\n+\n+### Applications\n+\n+- Azure portal\n+- Microsoft Intune admin center\n+- Microsoft Entra admin center\n+- Microsoft Engage Center\n+- Microsoft Engage Hub\n+\n+Only the preceding web applications are supported. Users' **access to other web applications accessing ARM is blocked** when policy is enforced. Top web applications that access ARM but are **not supported** include, but aren't limited to:\n+\n+- Microsoft 365 Security and Compliance Center\n+- Microsoft AppSource\n+- Azure Data Factory\n+- Azure AI Studio App\n+- Azure Synapse Studio\n+- Microsoft Power BI\n+- Microsoft Developer Portal\n+- Azure OpenAI Studio\n+- Power Platform admin center\n+\n+### Supported resources\n+\n+- Azure Resource Manager (ARM), configured in Conditional Access as the **Windows Azure Service Management API** resource.\n+\n+### Supported platforms and browsers\n+\n+| Platform | Supported browsers | Device requirement |\n+| --- | --- | --- |\n+| Windows 11 (build 26100.8246 / 26200.8246 or later) | Microsoft Edge, Google Chrome | Microsoft Entra joined, hybrid joined, or registered<sup>1</sup> |\n+| macOS | Microsoft Edge, Google Chrome | MDM-managed only |\n+\n+<sup>1</sup> Some device registration types aren't supported. See the list of [unsupported device registration types](deployment-guide-token-protection-windows.md).\n+\n+## Enable Token Protection for ARM on Windows and macOS\n+\n+To minimize the likelihood of user disruption due to app, browser, or device incompatibility, follow these recommendations:\n+\n+- Start with a pilot group of users and expand over time.\n+- Create a Conditional Access policy for Token Protection in [report-only mode](concept-conditional-access-report-only.md) before enforcing it.\n+- Capture both interactive and non-interactive sign-in logs.\n+- Analyze these logs long enough to cover normal application use. Instructions for analyzing and understanding user impact are described in the following sections.\n+- Add known, reliable users to a user group and enforce the policy.\n+\n+This process helps assess your users' readiness for token protection enforcement.\n+\n+### Step 1: Configure end user devices\n+\n+Complete the following on each device either manually or via Group Policy or Intune.\n+\n+#### Windows\n+\n+1. Ensure the device runs **Windows 11 build 26100.8246 / 26200.8246 or later**.\n+1. Enable this preview by setting the following registry value:\n+\n+    ```\n+    [HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\BrowserCore]\n+    \"EnablePlatformAuth\"=dword:00000001\n+    ```\n+\n+1. Install the Microsoft Single Sign-On browser extension:\n+    - **Google Chrome:** Install [Microsoft Single Sign On](https://chromewebstore.google.com/detail/microsoft-single-sign-on/ppnbnpeolgkicgegkbkbjmhlideopiji) from the Chrome Web Store, select **Add to Chrome** > **Add extension**, and confirm it appears in the toolbar.\n+    - **Microsoft Edge:** Go to `edge://extensions`, turn on **Allow extensions from other stores**, install the Microsoft Single Sign On extension, and confirm it's enabled.\n+\n+#### macOS\n+\n+1. Install the Microsoft Company Portal or deploy it via your MDM solution. Company Portal serves as the authentication broker for Microsoft Entra sign-ins.\n+1. Enable hardware-backed registration using one of the following options:\n+    - **Option A:** Enable the [Microsoft Enterprise SSO plug-in](../../identity-platform/apple-sso-plugin.md).\n+    - **Option B:** Configure **Platform SSO for macOS**. Platform SSO uses hardware-backed storage by default and requires no extra flag configuration. For setup instructions, see [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/intune-service/configuration/platform-sso-macos).\n+1. Install the **Microsoft Single Sign-On** browser extension in Microsoft Edge or Google Chrome, as described in the preceding Windows section.\n+\n+#### What to expect after Step 1\n+\n+Once the device meets the prerequisites and configuration propagates, authentication requests from supported applications and browsers stop completing entirely inside the browser and are instead handled by the platform authentication broker. This behavior is what allows those applications to use device-bound sign-in session tokens, such as [Primary Refresh Tokens (PRTs)](../devices/concept-primary-refresh-token.md), and satisfy the Token Protection Conditional Access policy.\n+\n+Plan for the following:\n+\n+- **Allow at least 24 hours for the change to take effect.** The switch to broker-based authentication isn't immediate after the registry value, extension, or Platform SSO profile is applied. Don't move to Step 2 until this window passes, or your report-only data doesn't accurately show readiness.\n+- **The transition is automatic in most cases.** Users generally take no action; existing browser sessions continue to work while the change propagates.\n+- **Some users see a brief sign-in dialog.** During the preview, users accessing the Azure portal might briefly see a \"Signing you in…\" message stating that a new window is opening. **No new window appears and no user action is required**, and sign-in completes on its own. Optionally, communicate this behavior to your pilot group in advance so it isn't reported as a failure.\n+\n+### Step 2: Create the Conditional Access policy in report-only mode\n+\n+Once you wait 24 hours after finishing Step 1, you can continue to set a policy in report-only mode to review enforcement readiness.\n+\n+1. Sign in to the Microsoft Entra admin center as at least a **Conditional Access Administrator**.\n+1. Browse to **Entra ID** > **Conditional Access** > **Policies**, then select **New policy** and give it a name.\n+1. Under **Assignments** > **Users**, include your pilot or test users. Don't include your organization's emergency access or break-glass accounts.\n+1. Under **Target resources** > **Resources (formerly cloud apps)** > **Include** > **Select resources**, select **Windows Azure Service Management API**.\n+1. Under **Conditions** > **Device platforms**, set **Configure** to **Yes** and include **Windows**, **macOS**, or both.\n+1. Under **Conditions** > **Client apps**, set **Configure** to **Yes** and include **Browser**. Make sure not to select **Mobile apps and desktop clients** for this preview.\n+1. Under **Access controls** > **Session**, select **Require token protection for sign-in sessions**, then select **Select**.\n+1. Set **Enable policy** to **Report-only** and select **Create**.\n+\n+> [!TIP]\n+> Because Conditional Access policies requiring token protection are currently only available for Windows and Apple devices, it's necessary to secure your environment against potential policy bypass when an attacker might appear to come from a different platform.\n+>\n+> In addition, you should configure the following policies:\n+>\n+> - [Block access from unknown platforms](policy-all-users-device-unknown-unsupported.md)\n+> - [Require device compliance for all known platforms](policy-all-users-device-compliance.md)\n+\n+### Step 3: Review readiness for enforcement with logs and metrics\n+\n+After the report-only policy is in place and running, you should review the [Policy impact](concept-conditional-access-report-only.md), analyze your [sign-in logs](../monitoring-health/concept-sign-ins.md), and [investigate with Log Analytics](../monitoring-health/howto-analyze-activity-logs-log-analytics.md) to review enforcement readiness.\n+\n+#### Sign-in logs\n+\n+To view Token Protection related sign-in events in the admin center:\n+\n+1. Sign in to the **Microsoft Entra admin center** as at least a **Conditional Access Administrator**.\n+1. Browse to **Entra ID** > **Monitoring & health** > **Sign-in logs**.\n+1. Add the **Token Protection – Sign-in session status code** column to your view to quickly see related sign-in events. Also, filter to the **Azure Resource Manager** resource and set **Client app** to **Browser** to isolate the sign-in requests related to this preview.\n+1. Select the sign-in event you're investigating.\n+1. Review the **Conditional Access** and **Report-only** tabs, depending on the policy state, and select your token protection policy.\n+1. Under **Session controls**, check whether the policy requirements were satisfied.\n+1. Select the **Basic info** tab and check the **Token Protection - Sign-in Session** field for more information.\n+\n+The sign-in logs include a `tokenProtectionStatusDetails` property that indicates whether a request uses a device-bound token:\n+\n+```json\n+\"tokenProtectionStatusDetails\": {\n+  \"signInSessionStatus\": \"bound | unbound\",\n+  \"signInSessionStatusCode\": <code>\n+}\n+```\n+\n+> [!NOTE]\n+> On macOS only, users on devices that were registered to Microsoft Entra ID before the Token Protection policy was enforced are prompted to reauthenticate once the policy is enforced. They complete a one-time device registration upgrade, achieved by signing in again, to access resources. You can identify these users by **status codes 1003 and 1004**. Because users in this state can self-remediate, **they're eligible for policy enforcement**.\n+\n+#### Sign-in session status codes\n+\n+To understand why a request shows as *unbound* or to identify which users you can apply the policy to, refer to the following status codes.\n+\n+| Status code | Description | Action required |\n+| --- | --- | --- |\n+| 1002 | Unbound – request is unbound due to the lack of Microsoft Entra ID device state. | User must register or join the device. |\n+| 1003 | Unbound – device not registered with secure credentials (legacy registration). | **Windows:** This error could be due to an [unsupported device registration](deployment-guide-token-protection-windows.md) type, or the device wasn't registered using fresh sign-in credentials.<br>**macOS:** User performs a one-time device registration upgrade (self-remediable). |\n+| 1004 (macOS only) | Unbound – device registration isn't hardware-backed. | User performs a one-time device registration upgrade (self-remediable). |\n+| 1005 | Unbound – unspecified reason. | Varies; investigate with the correlation ID. |\n+| 1006 | Unbound – OS version isn't supported. | User upgrades the OS to Windows 11 build 26100.8246 / 26200.8246 or later, or to a supported macOS version. |\n+| 1007 | Unbound – not hardware-backed; the signed-in user isn't the registered device owner. | User reregisters, or the registered owner performs the upgrade. |\n+| 1008 | Unbound – client doesn't use an authentication broker, such as WAM. | The client isn't integrated with the platform broker, or the broker or extension isn't installed. For browsers, install and enable the Microsoft Single Sign-On extension and enable platform authentication. |\n+\n+> [!TIP]\n+> For the browser scenario, **1008** and **1002** are the codes you see most often during onboarding. They usually mean the Microsoft Single Sign-On browser extension is missing or disabled, platform authentication isn't enabled (on Windows, the `EnablePlatformAuth` registry value isn't set), an unsupported browser such as Firefox or Safari is in use, or the app doesn't support token protection.\n+\n+#### Identify self-remediable users (macOS only)\n+\n+On macOS, codes 1003 and 1004 are self-remediable through a one-time device registration upgrade.\n+\n+To identify requests that are compliant or upgradeable with user action, filter for:\n+\n+- `signInSessionStatus == bound`, or\n+- `signInSessionStatus == unbound` with `signInSessionStatusCode` of `1003` or `1004`.\n+\n+Sample Microsoft Graph query for non-interactive sign-ins:\n+\n+```http\n+GET https://graph.microsoft.com/beta/auditLogs/signIns?$filter=(\n+  signInEventTypes/any(t: t eq 'nonInteractiveUser')\n+  and resourceDisplayName eq 'Azure Resource Manager'\n+  and (tokenProtectionStatusDetails/signInSessionStatusCode eq 1003\n+    or tokenProtectionStatusDetails/signInSessionStatusCode eq 1004\n+    or tokenProtectionStatusDetails/signInSessionStatus eq 'bound'))\n+```\n+\n+When Token Protection is enforced for these users, they're prompted to sign in again and can access resources once they finish authenticating.\n+\n+#### Log Analytics\n+\n+You can also use Log Analytics to query interactive and non-interactive sign-in logs for requests blocked due to Token Protection enforcement failure. These queries are samples only and are subject to change. They filter on the Azure Resource Manager resource and add readiness metrics so you can distinguish hard blocks from self-remediable ones.\n+\n+##### Requests by application\n+\n+The following sample query searches the non-interactive sign-in logs for the last seven days, highlighting blocked versus allowed requests to ARM by application, and flags blocks that users can self-remediate. Swap in `SigninLogs` to review interactive browser sign-ins instead.\n+\n+```kusto\n+// Select the log to query (SigninLogs or AADNonInteractiveUserSignInLogs)\n+// SigninLogs\n+AADNonInteractiveUserSignInLogs\n+// Adjust the time range below\n+| where TimeGenerated > ago(7d)\n+| project Id, ConditionalAccessPolicies, Status, UserPrincipalName, AppDisplayName,\n+    ResourceDisplayName, TokenProtectionStatusDetails\n+| where ConditionalAccessPolicies != \"[]\"\n+| where ResourceDisplayName == \"Azure Resource Manager\"\n+// Add UserPrincipalName if you want to filter to a specific user\n+// | where UserPrincipalName == \"<user_principal_name>\"\n+| mv-expand todynamic(ConditionalAccessPolicies)\n+| where ConditionalAccessPolicies[\"enforcedSessionControls\"] contains '[\"Binding\"]'\n+    or ConditionalAccessPolicies[\"enforcedSessionControls\"] contains '[\"SignInTokenProtection\"]'\n+| where ConditionalAccessPolicies.result != \"reportOnlyNotApplied\"\n+    and ConditionalAccessPolicies.result != \"notApplied\"\n+| extend SessionNotSatisfyResult = ConditionalAccessPolicies[\"sessionControlsNotSatisfied\"]\n+| extend Result = case(\n+    SessionNotSatisfyResult contains 'SignInTokenProtection'\n+        or SessionNotSatisfyResult contains 'Binding', 'Block', 'Allow')\n+| extend parsedBindingDetails = parse_json(TokenProtectionStatusDetails)\n+| extend bindingStatusCode = tostring(parsedBindingDetails[\"signInSessionStatusCode\"])\n+| extend IsSelfRemediable = Result == \"Block\"\n+    and (bindingStatusCode == \"1003\" or bindingStatusCode == \"1004\")\n+| summarize by Id, UserPrincipalName, AppDisplayName, Result, IsSelfRemediable\n+| summarize Requests = count(),\n+    Users = dcount(UserPrincipalName),\n+    Allow = countif(Result == \"Allow\"),\n+    Block = countif(Result == \"Block\"),\n+    BlockSelfRemediable = countif(IsSelfRemediable == true),\n+    BlockedUsers = dcountif(UserPrincipalName, Result == \"Block\"),\n+    BlockedUsersSelfRemediable = dcountif(UserPrincipalName, IsSelfRemediable == true)\n+    by AppDisplayName\n+| extend PctAllowed = round(100.0 * Allow / (Allow + Block), 2)\n+| extend PctEnforceable = round(100.0 * (Allow + BlockSelfRemediable) / (Allow + Block), 2)\n+| project AppDisplayName, Requests, Users, Allow, Block,\n+    BlockSelfRemediable, BlockedUsers, BlockedUsersSelfRemediable,\n+    PctAllowed, PctEnforceable\n+| sort by Requests desc\n+```\n+\n+##### Requests by user\n+\n+The following query looks at the non-interactive sign-in logs for the last seven days, highlighting blocked versus allowed requests to ARM by user, with the same self-remediable and enforceable metrics.\n+\n+```kusto\n+// Per-user query for the Azure portal -> ARM web app scenario\n+// SigninLogs\n+AADNonInteractiveUserSignInLogs\n+// Adjust the time range below\n+| where TimeGenerated > ago(7d)\n+| project Id, ConditionalAccessPolicies, UserPrincipalName, AppDisplayName,\n+    ResourceDisplayName, TokenProtectionStatusDetails\n+| where ConditionalAccessPolicies != \"[]\"\n+| where ResourceDisplayName == \"Azure Resource Manager\"\n+// Add UserPrincipalName if you want to filter to a specific user\n+// | where UserPrincipalName == \"<user_principal_name>\"\n+| mv-expand todynamic(ConditionalAccessPolicies)\n+| where ConditionalAccessPolicies[\"enforcedSessionControls\"] contains '[\"Binding\"]'\n+    or ConditionalAccessPolicies[\"enforcedSessionControls\"] contains '[\"SignInTokenProtection\"]'\n+| where ConditionalAccessPolicies.result != \"reportOnlyNotApplied\"\n+    and ConditionalAccessPolicies.result != \"notApplied\"\n+| extend SessionNotSatisfyResult = ConditionalAccessPolicies.sessionControlsNotSatisfied\n+| extend Result = case(\n+    SessionNotSatisfyResult contains 'SignInTokenProtection'\n+        or SessionNotSatisfyResult contains 'Binding', 'Block', 'Allow')\n+| extend parsedBindingDetails = parse_json(TokenProtectionStatusDetails)\n+| extend bindingStatusCode = tostring(parsedBindingDetails[\"signInSessionStatusCode\"])\n+| extend IsSelfRemediable = Result == \"Block\"\n+    and (bindingStatusCode == \"1003\" or bindingStatusCode == \"1004\")\n+| summarize by Id, UserPrincipalName, AppDisplayName, ResourceDisplayName, Result, IsSelfRemediable\n+| summarize Requests = count(),\n+    Allow = countif(Result == \"Allow\"),\n+    Block = countif(Result == \"Block\"),\n+    BlockSelfRemediable = countif(IsSelfRemediable == true)\n+    by UserPrincipalName, AppDisplayName, ResourceDisplayName\n+| extend PctAllowed = round(100.0 * Allow / (Allow + Block), 2)\n+| extend PctEnforceable = round(100.0 * (Allow + BlockSelfRemediable) / (Allow + Block), 2)\n+| project UserPrincipalName, AppDisplayName, ResourceDisplayName,\n+    Requests, Allow, Block, BlockSelfRemediable,\n+    PctAllowed, PctEnforceable\n+| sort by UserPrincipalName asc\n+```\n+\n+### Step 4: Enforce the policy\n+\n+After reviewing sign-in log data and confirming that your targeted users and devices are ready, move the **Enable policy** toggle from **Report-only** to **On**.\n+\n+## Related content\n+\n+- [Token Protection in Microsoft Entra Conditional Access](concept-token-protection.md)\n+- [Token Protection deployment guide - Windows](deployment-guide-token-protection-windows.md)\n+- [Token Protection deployment guide - Apple platforms](deployment-guide-token-protection-apple.md)\n+- [What is a Primary Refresh Token?](../devices/concept-primary-refresh-token.md)\n",
+      "baseCommitSha": "fa18450cd3dc886ef5bb39d7598f2caebfaf33e2",
+      "commitSha": "f95723be0d1a7ccf45c4f30743009663a7ce7aeb",
+      "commitMessage": "Add Token Protection deployment guide for web apps (Preview) (#14034)",
+      "commitAuthor": "peterzenz",
+      "commitDate": "2026-08-06 16:12:17 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/deployment-guide-token-protection-web-apps",
+      "eventId": "entra-docs:f95723be0d1a7ccf45c4f30743009663a7ce7aeb:added:docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md",
+      "firstSeenAt": "2026-08-07T20:58:42.867Z",
+      "englishSummary": {
+        "category": "New documentation",
+        "headline": "New preview deployment guide for Token Protection web apps",
+        "summary": "Adds a guide for deploying and enforcing Token Protection with Conditional Access for supported browser-based applications accessing Azure Resource Manager. Web application support is explicitly in preview and limited to listed apps, platforms, browsers, and device configurations.",
+        "adminImpact": "Administrators should review the prerequisites and limitations, then use report-only mode and a pilot group before enforcement. Microsoft Entra ID P1 is required, with additional Windows or macOS device setup.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/global-secure-access/how-to-configure-mcp-firewall.md",
+      "status": "added",
+      "additions": 280,
+      "deletions": 0,
+      "changes": 280,
+      "patch": "diff --git a/docs/global-secure-access/how-to-configure-mcp-firewall.md b/docs/global-secure-access/how-to-configure-mcp-firewall.md\nnew file mode 100644\nindex 00000000000..5de7951b94a\n--- /dev/null\n+++ b/docs/global-secure-access/how-to-configure-mcp-firewall.md\n@@ -0,0 +1,280 @@\n+---\r\n+title: Configure Global Secure Access MCP firewall to secure Model Context Protocol traffic\r\n+description: \"Learn how to configure the Global Secure Access MCP firewall to inspect, audit, and enforce Allow or Block policies on Model Context Protocol traffic between AI agents and remote MCP servers.\"\r\n+ms.topic: how-to\r\n+ms.date: 08/06/2026\r\n+ms.reviewer: katabish\r\n+ms.custom: sfi-image-nochange\r\n+ai-usage: ai-assisted\r\n+\r\n+#customer intent: As an IT admin, I want to configure the Global Secure Access MCP firewall so that I can inspect and control Model Context Protocol traffic between AI agents and remote MCP servers.\r\n+\r\n+---\r\n+\r\n+# Configure Global Secure Access MCP firewall to secure MCP traffic (preview)\r\n+\r\n+As AI agents increasingly rely on external tools, APIs, and data sources to reason and act, the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) has emerged as the standard interface for communication between large language models (LLMs) and tools. This shift also introduces new security risks. MCP servers expose powerful capabilities—such as file access, database queries, and tool execution—that create a large attack surface if left unguarded. Without comprehensive controls, malicious or misconfigured agents can exfiltrate sensitive data, trigger unintended side effects, or impersonate trusted services.\r\n+\r\n+The Global Secure Access MCP firewall is a network-based, identity-centric security control that provides centralized visibility, policy enforcement, and runtime protection for MCP traffic between AI agents and remote MCP servers. It extends the Global Secure Access Security Service Edge (SSE) capabilities—identity-based access, Conditional Access, and Continuous Access Evaluation —to the MCP protocol layer.\r\n+\r\n+Global Secure Access can now inspect, audit, and enforce security policies on every MCP interaction—including tool invocations, resource access, prompt templates, and server metadata—without requiring changes to the MCP protocol specification, or to MCP client, host, or server implementations, bringing Zero Trust model for AI agents at a globally distributed edge.\r\n+\r\n+> [!NOTE]\r\n+> The MCP firewall is currently in preview. This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here. For more information, see the [Microsoft Entra preview terms](https://azure.microsoft.com/support/legal/preview-supplemental-terms/).\r\n+\r\n+This article explains how to create an MCP policy to inspect and control MCP traffic that flows through Global Secure Access.\r\n+\r\n+## Supported scenarios\r\n+\r\n+The MCP firewall inspects MCP traffic (JSON-RPC 2.0 over streamable HTTP and Server-Sent Events) and enforces **Allow** or **Block** decisions based on various conditions. It supports the following key scenarios:\r\n+\r\n+- **Block all MCP traffic.** Disable all MCP communication across the tenant until you review and approve trusted MCP servers.\r\n+\r\n+- **Allow or block MCP servers.** Create allow-lists or deny-lists of MCP servers based on server URL patterns.\r\n+\r\n+- **Allow or block MCP primitives.** Selectively allow or block **Tools**, **Resources**, or **Prompt templates** on a per-server basis.\r\n+\r\n+- **Allow or block specific methods and protocol versions.** Block MCP connection attempts over unencrypted HTTP or enforce protocol hygiene by blocking connections from outdated, potentially vulnerable MCP versions.\r\n+\r\n+## Prerequisites\r\n+\r\n+To configure the MCP firewall, you need the following prerequisites:\r\n+\r\n+- A valid Microsoft Entra tenant.\r\n+\r\n+- A valid Microsoft Entra Internet Access license. For details, see the licensing section of [What is Global Secure Access](overview-what-is-global-secure-access.md). If needed, you can [purchase licenses or get trial licenses](https://aka.ms/azureadlicense).\r\n+\r\n+- A user with the [Global Secure Access Administrator](reference-role-based-permissions.md#global-secure-access-administrator) role to configure Global Secure Access settings.\r\n+\r\n+- A user with the [Conditional Access Administrator](reference-role-based-permissions.md#conditional-access-administrator) role to configure Conditional Access policies.\r\n+\r\n+- The Global Secure Access client installed on a device (or virtual machine) that is Microsoft Entra joined or Microsoft Entra hybrid joined.\r\n+\r\n+- [Transport Layer Security (TLS) inspection](how-to-transport-layer-security.md) enabled. TLS inspection is required because MCP messages travel in the encrypted payload of the traffic. Without TLS inspection, Global Secure Access can’t parse or enforce MCP policy.\r\n+\r\n+## Initial configuration\r\n+\r\n+To prepare your environment for MCP policies, complete the following initial setup steps:\r\n+\r\n+1. [Enable the Internet Access traffic forwarding profile](how-to-manage-internet-access-profile.md#enable-the-internet-access-traffic-forwarding-profile) and ensure correct user assignments.\r\n+\r\n+2. [Configure the TLS inspection policy](how-to-transport-layer-security.md) so that MCP traffic is decrypted for inspection.\r\n+\r\n+3. Install and configure the Global Secure Access client:\r\n+\r\n+    1. Install the Global Secure Access client on Windows or macOS.\r\n+       > [!IMPORTANT]\r\n+       > Before you continue, verify that the client’s internet traffic is routed through Global Secure Access.\r\n+\r\n+    2. Select the **Global Secure Access** icon and select the **Troubleshooting** tab.\r\n+    3. Under **Advanced Diagnostics**, select **Run tool**.\r\n+    4. In the Global Secure Access Advanced Diagnostics window, select the **Forwarding Profile** tab.\r\n+    5. Verify that **Internet Access** rules are present in the **Rules** section. This configuration might take up to 15 minutes to apply to clients after you enable the Internet Access traffic profile in the Microsoft Entra admin center.\r\n+\r\n+4. Confirm that the client can reach MCP servers that you plan to cover with MCP policies.\r\n+\r\n+## Configure an MCP policy\r\n+\r\n+To configure the MCP firewall, complete the following steps:\r\n+\r\n+1. Create an MCP policy.\r\n+\r\n+2. Link the MCP policy to a security profile.\r\n+\r\n+3. Configure a Conditional Access policy.\r\n+\r\n+### Create an MCP policy\r\n+\r\n+1.  Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Secure Access Administrator](reference-role-based-permissions.md#global-secure-access-administrator).\r\n+2.  Browse to **Global Secure Access** > **Secure** > **MCP policies (Preview)**.\r\n+3.  Select **+ Create policy**.\r\n+4.  On the **Basics** tab, enter the policy **Name** and **Description**.\r\n+5.  On the **Policy settings** tab, pick a **Default action** of Allow or Block.\r\n+6.  On the **Add rules** tab, add one or more rules. For each rule, enter the **Rule name**, **Priority, Description**, **Status**, and then configure the matching conditions.\r\n+7.  Configure **MCP protocol versions** to allow or block based on MCP version used for communication.\r\n+\r\n+:::image type=\"content\" source=\"media/how-to-configure-mcp-firewall/mcp-protocol-version.png\" alt-text=\"Screenshot showing MCP protocol version.\" lightbox=\"media/how-to-configure-mcp-firewall/mcp-protocol-version.png\":::\r\n+\r\n+8.  You may also configure specific **MCP methods**, **Transport protocol**, and **Protected resource metadata**.\r\n+9.  Configure **MCP server primitives** based on your requirements:\r\n+\r\n+  - **Block all MCP traffic.** Add a block rule with no server or primitive scoping to disable all MCP protocol traffic across the assigned users.\r\n+\r\n+  - **Match on discovered MCP servers.** Scope the rule to a discovered MCP server based on Gen AI insights\r\n+\r\n+    - Click on **View suggested MCP servers from recent activity**.\r\n+\r\n+    - Pick one or more servers and tools from suggested MCP servers.\r\n+\r\n+    - Select **Add servers and tools**.\r\n+\r\n+  - **Match on known MCP servers.** Scope the rule to one or more known MCP servers by:\r\n+\r\n+    - **Server URL** — enter the server URL, or a comma separated list.\r\n+\r\n+    - Click on **Add server.**\r\n+\r\n+  - **Match on discovered tools.** Discover and add the tools that a server exposes:\r\n+\r\n+    - Add an MCP server URL. Select **Add server**.\r\n+\r\n+    - Once the server is added, select **Discover**.\r\n+\r\n+    - Tools available under this server are listed and a classification is auto applied.\r\n+\r\n+    - You can granularly select the tools to be in scope for this rule.\r\n+\r\n+    - Select a matching condition on the tool name for this rule to be applied.\r\n+\r\n+:::image type=\"content\" source=\"media/how-to-configure-mcp-firewall/mcp-discovered-tools.png\" alt-text=\"Screenshot showing discovered tools.\" lightbox=\"media/how-to-configure-mcp-firewall/mcp-discovered-tools.png\":::\r\n+\r\n+  - **Add a primitive manually.** If an MCP server requires authentication or isn't reachable, tools, resources, or prompts can be added manually as well.\r\n+\r\n+    - Add an MCP server URL. Select **Add server**.\r\n+\r\n+    - Select **Add Manually.**\r\n+\r\n+    - Choose the primitive **type** from **Tool, Resource, or Prompt.**\r\n+\r\n+    - Provide a **Name** and **Description.**\r\n+\r\n+    - Select **Add**.\r\n+\r\n+    - Select a matching condition on the tool name for this rule to be applied.\r\n+\r\n+:::image type=\"content\" source=\"media/how-to-configure-mcp-firewall/mcp-manual-tools.png\" alt-text=\"Screenshot showing manual option.\" lightbox=\"media/how-to-configure-mcp-firewall/mcp-manual-tools.png\":::\r\n+\r\n+10. Set the **Action** to **Allow** or **Block**.\r\n+11. Click **Add**.\r\n+12. Select **Next** when all rules are added.\r\n+13. On the **Review** tab, review your settings.\r\n+14. Click **Create** to create the policy.\r\n+\r\n+> [!TIP]\r\n+> To discover which MCP servers and tools are in use in your organization before you author rules, review MCP traffic in **Global Secure Access** > **Monitor** > **Generative AI Insights**. Select an `initialize` response event to see a server’s reported tools and capabilities. For more information, see [How to view Model Context Protocol (MCP) traffic logs in Global Secure Access](how-to-view-model-context-protocol-logging.md).\r\n+> These insights also feed into the **View suggested MCP servers from recent activity** option above.\r\n+\r\n+\r\n+### Link the MCP policy to a security profile\r\n+\r\n+1. Browse to **Global Secure Access** > **Secure** > **Security profiles**.\r\n+\r\n+2. Select the security profile you want to modify.\r\n+\r\n+3. Switch to the **Link policies** view.\r\n+\r\n+4. Configure the link:\r\n+\r\n+1. Select **+ Link a policy** > **Existing MCP policy**.\r\n+\r\n+2. From the **Policy name** menu, select the MCP policy you created.\r\n+\r\n+3. Keep the default values for **Position** and **State**.\r\n+\r\n+4. Select **Add**.\r\n+\r\n+5. Close the security profile.\r\n+\r\n+### Configure a Conditional Access policy\r\n+\r\n+To enforce the Global Secure Access security profile, create a Conditional Access policy with the following configuration:\r\n+\r\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com).\r\n+\r\n+2. Browse to **Identity** > **Protection** > **Conditional Access**.\r\n+\r\n+3. Select **+ Create new policy**.\r\n+\r\n+4. Name the policy.\r\n+\r\n+5. Select the users and groups to apply the policy to.\r\n+\r\n+6. Set the **Target resources** to **All internet resources with Global Secure Access**.\r\n+\r\n+7. Configure the **Network**, **Conditions**, and **Grant** sections according to your needs.\r\n+\r\n+8. Under **Session**, select **Use Global Secure Access Security Profile** and select the security profile you created.\r\n+\r\n+9. To create the policy, select **Create**.\r\n+\r\n+For more information, see [Create and link a Conditional Access policy](how-to-configure-web-content-filtering.md#create-and-link-conditional-access-policy).\r\n+\r\n+The MCP policy is successfully configured.\r\n+\r\n+## Test the MCP policy\r\n+\r\n+Test the configuration by using an MCP client or AI agent on a managed device with GSA to connect to an MCP server that matches your policy conditions. Verify that the policy allows or blocks the traffic as expected.\r\n+\r\n+### Example 1: Block a specific tool on an MCP server\r\n+\r\n+This example blocks a single tool while allowing the rest of an MCP server.\r\n+\r\n+1. In your MCP policy, add a rule with the **Action** set to **Block**.\r\n+\r\n+2. Under matching conditions, set the **Server URL** to the target MCP server and add a **Tool name** condition that matches the tool you want to block.\r\n+\r\n+3. Link the policy to a security profile and enforce it with a Conditional Access policy, as described earlier.\r\n+\r\n+4. On a managed device with the Global Secure Access client installed, use an MCP client or agent to connect to the server and invoke the blocked tool.\r\n+\r\n+5. Verify that the tool call is blocked while other tools on the same server continue to work.\r\n+\r\n+6. To confirm the block, review **Global Secure Access** > **Monitor** > **Traffic logs** and the MCP activity in **Generative AI Insights**.\r\n+\r\n+### Example 2: Only allow approved MCP servers\r\n+\r\n+This example blocks all connections while allowing an approved list of MCP servers.\r\n+\r\n+1. In your MCP policy, add a default action of **Block**.\r\n+\r\n+2. Create a rule with the **Action** set to **Allow**.\r\n+\r\n+3. Under matching conditions, set the **Server URL** to the list of allowed MCP servers.\r\n+\r\n+4. Link the policy to a security profile and enforce it with a Conditional Access policy, as described earlier.\r\n+\r\n+5. On a managed device with the Global Secure Access client installed, use an MCP client or agent to connect to the server.\r\n+\r\n+6. Verify that connections only to the specified servers are allowed. Connection to any other server gets blocked.\r\n+\r\n+7. To confirm the block, review **Global Secure Access** > **Monitor** > **Traffic logs** and the MCP activity in **Generative AI Insights**.\r\n+\r\n+## Monitoring and logging\r\n+\r\n+### Review Global Secure Access traffic logs\r\n+\r\n+To view the network-level traffic logs and confirm allow or block decisions:\r\n+\r\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Reports Reader](../identity/role-based-access-control/permissions-reference.md#reports-reader).\r\n+\r\n+2. Browse to **Global Secure Access** > **Monitor** > **Traffic logs**.\r\n+\r\n+### Review MCP activity in Generative AI Insights\r\n+\r\n+To review MCP sessions, tool invocations, and discovered servers:\r\n+\r\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Security Reader](../identity/role-based-access-control/permissions-reference.md#security-reader).\r\n+\r\n+2. Browse to **Global Secure Access** > **Monitor** > **Generative AI Insights**.\r\n+\r\n+3. Use the **Activity** filter and select **MCP** to view only MCP traffic events.\r\n+\r\n+For details on the fields captured and how to interpret them, see [How to view Model Context Protocol (MCP) traffic logs in Global Secure Access](how-to-view-model-context-protocol-logging.md).\r\n+\r\n+## Known limitations\r\n+\r\n+- The MCP firewall inspects MCP traffic over streamable HTTP and Server-Sent Events transport only. MCP traffic over stdio or other non-HTTP transport isn’t supported.\r\n+\r\n+- Only **remote** MCP servers are inspected. Local MCP servers that run on a device aren’t visible to Global Secure Access.\r\n+\r\n+- JSON-RPC batches aren’t inspected.\r\n+\r\n+- When specific tools, resources, or prompts are configured under MCP server primitives, these details are not rendered in the UI on subsequent retrieval of the rules. The details can be verified using Microsoft Graph API instead.\r\n+\r\n+## Related content\r\n+\r\n+- [How to view Model Context Protocol (MCP) traffic logs in Global Secure Access](how-to-view-model-context-protocol-logging.md)\r\n+\r\n+- [Create content policies for network content filtering](how-to-network-content-filtering.md)\r\n+\r\n+- [Configure Transport Layer Security inspection](how-to-transport-layer-security.md)\r\n",
+      "baseCommitSha": "8b4195aeff0bb61a55d682865647be35aa5227f3",
+      "commitSha": "2f377c04d8d534c914d462539bbb5ac81e25cbad",
+      "commitMessage": "Add MCP firewall configuration how-to article (#14032)",
+      "commitAuthor": "Kamran Tabish",
+      "commitDate": "2026-08-06 14:28:35 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-mcp-firewall.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-mcp-firewall",
+      "eventId": "entra-docs:2f377c04d8d534c914d462539bbb5ac81e25cbad:added:docs/global-secure-access/how-to-configure-mcp-firewall.md",
+      "firstSeenAt": "2026-08-07T20:58:42.911Z",
+      "englishSummary": {
+        "category": "Preview",
+        "headline": "New preview guide for the Global Secure Access MCP firewall",
+        "summary": "Microsoft added a how-to article for configuring the Global Secure Access MCP firewall to inspect, audit, and allow or block Model Context Protocol traffic. It covers server, primitive, method, and protocol-version controls for supported MCP traffic.",
+        "adminImpact": "Administrators need Global Secure Access and Conditional Access Administrator roles, an Internet Access license, a joined device with the Global Secure Access client, and TLS inspection enabled. The firewall is currently in preview.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "modifiedFiles": [
     {
       "filename": "docs/identity/devices/howto-arc-sign-in-windows.md",
@@ -25,20 +76,747 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 0,
+      "changes": 3,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\nindex 45cdc255207..248d263d12f 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n@@ -179,6 +179,9 @@ This PATCH request requires the `User-OnPremisesSyncBehavior.ReadWrite.All` Micr\n Alternatively, to clear `onPremisesObjectIdentifier` with ADSyncTools version 2.5.0 or later, run the following commands:\n \n ```powershell\n+# Import ADSyncTools module\n+Import-Module ADSyncTools -MinimumVersion 2.5\n+\n # Provide the user's identity.\n $userId = \"<userId>\"\n \n",
+      "baseCommitSha": "fedafff4aabf9f7ded9a140e7c065464d503e72c",
+      "commitSha": "efee450d91c223b3702f27bd4b7c7117bdb705d6",
+      "commitMessage": "Update instructions for ADSyncTools module usage",
+      "commitAuthor": "Nuno Alexandre",
+      "commitDate": "2026-08-07 10:02:55 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant",
+      "eventId": "entra-docs:efee450d91c223b3702f27bd4b7c7117bdb705d6:modified:docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "firstSeenAt": "2026-08-07T20:58:42.725Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Installation guide adds ADSyncTools import step",
+        "summary": "The existing-tenant installation documentation now instructs administrators to import the ADSyncTools module with a minimum version of 2.5.",
+        "adminImpact": "Administrators following the guide should use the added Import-Module command before proceeding.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 3,
+      "changes": 3,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\nindex 66db4950666..45cdc255207 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n@@ -179,9 +179,6 @@ This PATCH request requires the `User-OnPremisesSyncBehavior.ReadWrite.All` Micr\n Alternatively, to clear `onPremisesObjectIdentifier` with ADSyncTools version 2.5.0 or later, run the following commands:\n \n ```powershell\n-# Import ADSyncTools module\n-Import-Module ADSyncTools\n-\n # Provide the user's identity.\n $userId = \"<userId>\"\n \n",
+      "baseCommitSha": "ff7c5bd67d2f0be2fb303c2010995dd3effeaf15",
+      "commitSha": "ecc1f52a009a59fd8bac9e1de0523e87ff780877",
+      "commitMessage": "Learn Editor: Update how-to-connect-install-existing-tenant.md",
+      "commitAuthor": "Nuno Alexandre",
+      "commitDate": "2026-08-07 16:59:43 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant",
+      "eventId": "entra-docs:ecc1f52a009a59fd8bac9e1de0523e87ff780877:modified:docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "firstSeenAt": "2026-08-07T20:58:42.763Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Removed ADSyncTools import step from existing-tenant setup guide",
+        "summary": "The documentation no longer includes the “Import ADSyncTools module” heading and `Import-Module ADSyncTools` command.",
+        "adminImpact": "Administrators using this guide will not see that module-import step. The diff provides no evidence of a product change or new requirement.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "status": "modified",
+      "additions": 15,
+      "deletions": 10,
+      "changes": 25,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\nindex 99824b9b69a..66db4950666 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md\n@@ -179,6 +179,9 @@ This PATCH request requires the `User-OnPremisesSyncBehavior.ReadWrite.All` Micr\n Alternatively, to clear `onPremisesObjectIdentifier` with ADSyncTools version 2.5.0 or later, run the following commands:\n \n ```powershell\n+# Import ADSyncTools module\n+Import-Module ADSyncTools\n+\n # Provide the user's identity.\n $userId = \"<userId>\"\n \n@@ -199,16 +202,18 @@ After you clear the value, rerun synchronization.\n If you can't remediate affected objects before enforcement, enable the tenant-level feature flag `allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled`. This flag is disabled by default. Leave the flag disabled unless you need a temporary bypass while you complete remediation.\n \n ```powershell\n-$baseUri = \"https://graph.microsoft.com/beta\"\n-$onPremSync = Get-MgDirectoryOnPremiseSynchronization\n-$uri = \"$baseUri/directory/onPremisesSynchronization/$($onPremSync.Id)\"\n-$params = @{\n-    features = @{\n-        allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled = $true\n-    }\n-}\n-Invoke-MgGraphRequest -Method PATCH -Uri $uri -Body $params\n-(Get-MgDirectoryOnPremiseSynchronization).Features | fl\n+# Connect to Microsoft Graph\n+Connect-MgGraph -Scopes \"OnPremDirectorySynchronization.ReadWrite.All\"\n+\n+# Temporary Disable allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled\n+$DirectorySync = Get-MgDirectoryOnPremiseSynchronization\n+$DirectorySync.Features.AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled = $true # To re-enable hard match protection, set it $false\n+Update-MgDirectoryOnPremiseSynchronization -Features $DirectorySync.Features -OnPremisesDirectorySynchronizationId $DirectorySync.Id\n+\n+# Get AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled value\n+$DirectorySync = Get-MgDirectoryOnPremiseSynchronization\n+$DirectorySync.Features.AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled\n+\n ```\n \n > [!WARNING]\n",
+      "baseCommitSha": "1a979b90b3f51bab584833aab4942c4ec3e0924a",
+      "commitSha": "ff7c5bd67d2f0be2fb303c2010995dd3effeaf15",
+      "commitMessage": "Learn Editor: Update how-to-connect-install-existing-tenant.md",
+      "commitAuthor": "Nuno Alexandre",
+      "commitDate": "2026-08-07 16:57:38 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant",
+      "eventId": "entra-docs:ff7c5bd67d2f0be2fb303c2010995dd3effeaf15:modified:docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+      "firstSeenAt": "2026-08-07T20:58:42.783Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated instructions for configuring on-premises synchronization",
+        "summary": "The documentation replaces a direct Microsoft Graph beta PATCH request with Microsoft Graph PowerShell cmdlets, including the `OnPremDirectorySynchronization.ReadWrite.All` scope. It now sets `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` to `$true` temporarily and explains that `$false` re-enables hard match protection.",
+        "adminImpact": "Administrators following this procedure should use the revised commands and account for the required Graph permission and temporary protection change.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md b/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\nindex f52922478b4..d41f8d46490 100644\n--- a/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\n+++ b/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\n@@ -74,7 +74,7 @@ Scoping filters are configured as part of the attribute mappings for each Micros\n \n ::: zone pivot=\"cross-tenant-synchronization\"\n \n-2. Browse to **Entra ID** > **External Identities** > **Cross-tenant Synchronization** > **Configurations**.\n+2. Browse to **Entra ID** > **Cross-tenant Synchronization** > **Configurations**.\n \n 3. Select your configuration.\n \n",
+      "baseCommitSha": "42f45e0ba37213e194c3b20f77fd5507dbdec422",
+      "commitSha": "1a979b90b3f51bab584833aab4942c4ec3e0924a",
+      "commitMessage": "Remove 'External Identities' from navigation steps (#14044)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-07 12:41:55 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts",
+      "eventId": "entra-docs:1a979b90b3f51bab584833aab4942c4ec3e0924a:modified:docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "firstSeenAt": "2026-08-07T20:58:42.814Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated navigation path for cross-tenant synchronization rules",
+        "summary": "The documentation now directs administrators to Entra ID > Cross-tenant Synchronization > Configurations, removing the External Identities step.",
+        "adminImpact": "Administrators should use the revised navigation path when following the procedure.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/customize-application-attributes.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 3,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/app-provisioning/customize-application-attributes.md b/docs/identity/app-provisioning/customize-application-attributes.md\nindex 72d2284249c..1711e928344 100644\n--- a/docs/identity/app-provisioning/customize-application-attributes.md\n+++ b/docs/identity/app-provisioning/customize-application-attributes.md\n@@ -84,9 +84,7 @@ The Microsoft Entra provisioning service can be deployed in both \"green field\" s\n \n A selected number of applications, such as ServiceNow, Box, and G Suite, support the ability to provision group and user objects. Group objects can contain group properties such as display names and email aliases, along with group members.\n \n-![Example shows ServiceNow with provisioned Group and User objects](./media/customize-application-attributes/24.png)\n-\n-Group provisioning can be optionally enabled or disabled by selecting the group mapping under **Attribute Mapping**, and setting **Enabled** to the option you want. For apps that support group sync, enable or disable group sync by navigating to the **Scoping filters** page. \n+For apps that support group sync, enable or disable group sync by navigating to the **Scoping filters** page. \n \n The attributes provisioned as part of Group objects can be customized in the same manner as User objects, described previously. \n \n",
+      "baseCommitSha": "f95723be0d1a7ccf45c4f30743009663a7ce7aeb",
+      "commitSha": "62a11557435003ef624089cb9f01af267260b179",
+      "commitMessage": "Update customization instructions for group attributes",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-07 11:21:52 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/customize-application-attributes.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/customize-application-attributes",
+      "eventId": "entra-docs:62a11557435003ef624089cb9f01af267260b179:modified:docs/identity/app-provisioning/customize-application-attributes.md",
+      "firstSeenAt": "2026-08-07T20:58:42.839Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Group sync instructions simplified",
+        "summary": "The documentation removes an example image and the instructions to enable or disable group provisioning through Attribute Mapping. It now directs administrators to the Scoping filters page for apps that support group sync.",
+        "adminImpact": "Review your procedures and use Scoping filters to manage group sync as documented.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/concept-token-protection.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "patch": "diff --git a/docs/identity/conditional-access/concept-token-protection.md b/docs/identity/conditional-access/concept-token-protection.md\nindex 8e1c8c3b1ca..1268b9292c1 100644\n--- a/docs/identity/conditional-access/concept-token-protection.md\n+++ b/docs/identity/conditional-access/concept-token-protection.md\n@@ -78,6 +78,7 @@ Select the guide for your target platform:\n \n - **Windows**: [Token Protection deployment guide - Windows](deployment-guide-token-protection-windows.md)\n - **iOS, iPadOS, and macOS**: [Token Protection deployment guide - Apple](deployment-guide-token-protection-apple.md)\n+- **Web apps that access Azure Resource Manager (Preview)**: [Token Protection deployment guide - Web apps](deployment-guide-token-protection-web-apps.md)\n \n ## Related content \n \n",
+      "baseCommitSha": "fa18450cd3dc886ef5bb39d7598f2caebfaf33e2",
+      "commitSha": "f95723be0d1a7ccf45c4f30743009663a7ce7aeb",
+      "commitMessage": "Add Token Protection deployment guide for web apps (Preview) (#14034)",
+      "commitAuthor": "peterzenz",
+      "commitDate": "2026-08-06 16:12:17 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-token-protection.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection",
+      "eventId": "entra-docs:f95723be0d1a7ccf45c4f30743009663a7ce7aeb:modified:docs/identity/conditional-access/concept-token-protection.md",
+      "firstSeenAt": "2026-08-07T20:58:42.858Z",
+      "englishSummary": {
+        "category": "New documentation",
+        "headline": "Token Protection guide added for ARM-accessing web apps",
+        "summary": "The Conditional Access token protection documentation now links to a deployment guide for web apps that access Azure Resource Manager. The linked guidance is marked Preview.",
+        "adminImpact": "Administrators can use the new guide when evaluating or deploying token protection for these web apps; no required action is specified.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/includes/licensing-agent-id.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 6,
+      "changes": 7,
+      "patch": "diff --git a/docs/includes/licensing-agent-id.md b/docs/includes/licensing-agent-id.md\nindex 4486becbf61..0fd173b11ef 100644\n--- a/docs/includes/licensing-agent-id.md\n+++ b/docs/includes/licensing-agent-id.md\n@@ -13,9 +13,4 @@ Microsoft Entra Agent ID is a product within Microsoft Entra that provides the p\n \n [Microsoft Agent 365](/microsoft-agent-365/overview) enables agents to operate across Microsoft 365 services and enterprise workflows, which requires a **Microsoft Agent 365** license for each user. For pricing details, see [Microsoft Agent 365 plans and pricing](https://www.microsoft.com/microsoft-agent-365#plans-and-pricing).\n \n-Extending Microsoft Entra security features to agents requires **Microsoft 365 E7** (includes Agent 365 and Microsoft Entra Suite) or **Microsoft 365 E5** paired with a **Microsoft Agent 365** license. Customers without E5 or E7 can use the following standalone licensing options with a **Microsoft Agent 365** license:\n-\n-- **Conditional Access for agents**: Microsoft Entra ID P1\n-- **ID Protection for agents**: Microsoft Entra ID P2\n-- **ID Governance for agents**: Microsoft Entra ID P1\n-- **Network controls for agents**: Microsoft Entra Internet Access, included in Microsoft Entra Suite or licensed separately. For more information, see [What is Global Secure Access](../global-secure-access/overview-what-is-global-secure-access.md#licensing-overview).\n\\ No newline at end of file\n+Extending Microsoft Entra security features to agents requires Microsoft Agent 365. Agent 365 is included with Microsoft 365 E7 and is available as an add-on to Microsoft E5/A5/Business Premium (or Microsoft Defender Suite + Microsoft Purview Suite). See our latest [Agent 365 product terms for more details](https://www.microsoft.com/licensing/terms/productoffering/Agent365/EAEAS#clause-2755-h3-1).\n\\ No newline at end of file\n",
+      "baseCommitSha": "2f377c04d8d534c914d462539bbb5ac81e25cbad",
+      "commitSha": "fa18450cd3dc886ef5bb39d7598f2caebfaf33e2",
+      "commitMessage": "Update Agent ID licensing to reference Agent 365 product terms (#14038)",
+      "commitAuthor": "Danny Strockis",
+      "commitDate": "2026-08-06 15:09:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-agent-id.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/includes/licensing-agent-id",
+      "eventId": "entra-docs:fa18450cd3dc886ef5bb39d7598f2caebfaf33e2:modified:docs/includes/licensing-agent-id.md",
+      "firstSeenAt": "2026-08-07T20:58:42.894Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Agent licensing guidance now points to Microsoft Agent 365",
+        "summary": "The documentation replaces standalone Entra licensing options for agents with guidance that Microsoft Agent 365 is required. It states that Agent 365 is included with Microsoft 365 E7 and available as an add-on to Microsoft E5, A5, Business Premium, or Defender Suite plus Purview Suite.",
+        "adminImpact": "Review the updated Agent 365 licensing guidance and product terms when evaluating licensing for Entra security features for agents.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/customize-application-attributes.md",
+      "status": "modified",
+      "additions": 14,
+      "deletions": 26,
+      "changes": 40,
+      "patch": "diff --git a/docs/identity/app-provisioning/customize-application-attributes.md b/docs/identity/app-provisioning/customize-application-attributes.md\nindex 9acb43d50ce..72d2284249c 100644\n--- a/docs/identity/app-provisioning/customize-application-attributes.md\n+++ b/docs/identity/app-provisioning/customize-application-attributes.md\n@@ -2,7 +2,7 @@\n title: Tutorial - Customize Microsoft Entra attribute mappings in Application Provisioning\n description: Learn about attribute mappings for Software as a Service (SaaS) apps in Microsoft Entra Application Provisioning. Learn what attributes are and how you can modify them to address your business needs.\n ms.topic: tutorial\n-ms.date: 03/04/2025\n+ms.date: 08/06/2026\n ms.reviewer: arvinh\n ai-usage: ai-assisted\n ---\n@@ -25,29 +25,18 @@ You can customize the default attribute-mappings according to your business need\n ## Editing user attribute-mappings\n \n \n-Follow these steps to access the **Mappings** feature of user provisioning:\n+Follow these steps to access the **Attribute Mapping** feature of user provisioning:\n \n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).\n 1. Browse to **Entra ID** > **Enterprise apps**.\n 1. A list of all configured apps is shown, including apps that were added from the gallery.\n 1. Select any app to load its app management pane, where you can view reports and manage app settings.\n 1. Select **Provisioning** to manage user account provisioning settings for the selected app.\n-1. Expand **Mappings** to view and edit the user attributes that flow between Microsoft Entra ID and the target application. If the target application supports it, this section lets you optionally configure provisioning of groups and user accounts.\n+1. Under **Manage**, select **Attribute Mapping**. The attribute mapping page displays a table of current mappings organized by object type (**Users** and **Groups**). The table shows the **Source Attribute**, **Target Attribute**, **Mapping Type**, and **Matching Precedence** for each mapping.\n \n-   ![Use Mappings to view and edit user attributes](./media/customize-application-attributes/21.png)\n+1. To edit an existing mapping, select the pencil icon to the right of the mapping row. The **Edit Attribute** screen opens, where you can modify the user attributes that flow between Microsoft Entra ID and the target application.\n \n-1. Select a **Mappings** configuration to open the related **Attribute Mapping** screen. SaaS applications require certain attribute-mappings to function correctly. For required attributes, the **Delete** feature is unavailable.\n-\n-   ![Use Attribute Mapping to configure attribute mappings for apps](./media/customize-application-attributes/22.png)\n-\n-   In this screenshot, you can see that the **Username** attribute of a managed object in Salesforce is populated with the **userPrincipalName** value of the linked Microsoft Entra Object.\n-   \n-   > [!NOTE]\n-   > Clearing **Create** doesn't affect existing users. If **Create** isn't selected, you can't create new users.   \n-\n-1. Select an existing **Attribute Mapping** to open the **Edit Attribute** screen. Here you can edit the user attributes that flow between Microsoft Entra ID and the target application.\n-\n-   ![Use Edit Attribute to edit user attributes](./media/customize-application-attributes/23.png)\n+2. To delete a mapping, select the trash can icon to the right of the mapping row. For required attributes, the **Delete** option is unavailable.\n \n ### Understanding attribute-mapping types\n \n@@ -97,7 +86,7 @@ A selected number of applications, such as ServiceNow, Box, and G Suite, support\n \n ![Example shows ServiceNow with provisioned Group and User objects](./media/customize-application-attributes/24.png)\n \n-Group provisioning can be optionally enabled or disabled by selecting the group mapping under **Mappings**, and setting **Enabled** to the option you want in the **Attribute Mapping** screen.\n+Group provisioning can be optionally enabled or disabled by selecting the group mapping under **Attribute Mapping**, and setting **Enabled** to the option you want. For apps that support group sync, enable or disable group sync by navigating to the **Scoping filters** page. \n \n The attributes provisioned as part of Group objects can be customized in the same manner as User objects, described previously. \n \n@@ -108,7 +97,7 @@ The attributes provisioned as part of Group objects can be customized in the sam\n \n The user attributes supported for a given application are preconfigured. Most application's user management APIs don't support schema discovery. So, the Microsoft Entra provisioning service isn't able to dynamically generate the list of supported attributes by making calls to the application.\n \n-However, some applications support custom attributes, and the Microsoft Entra provisioning service can read and write to custom attributes. To enter their definitions into the Microsoft Entra admin center, select the **Show advanced options** check box at the bottom of the **Attribute Mapping** screen, and then select **Edit attribute list for** your app.\n+However, some applications support custom attributes, and the Microsoft Entra provisioning service can read and write to custom attributes. To enter their definitions into the Microsoft Entra admin center, select the **Advanced Options** dropdown menu at the top of the **Attribute Mapping** page, and then select **Edit target User attributes**.\n \n Applications and systems that support customization of the attribute list include:\n \n@@ -122,7 +111,7 @@ Applications and systems that support customization of the attribute list includ\n \n \n > [!NOTE]\n-> Editing the list of supported attributes is only recommended for administrators who have customized the schema of their applications and systems, and have first-hand knowledge of how their custom attributes have been defined or if a source attribute isn't automatically displayed in the Microsoft Entra admin center UI. This sometimes requires familiarity with the APIs and developer tools provided by an application or system. The ability to edit the list of supported attributes is locked down by default, but customers can enable the capability by navigating to the following URL: https://portal.azure.com/?Microsoft_AAD_Connect_Provisioning_forceSchemaEditorEnabled=true . You can then navigate to your application to view the [attribute list](#editing-the-list-of-supported-attributes). \n+> Editing the list of supported attributes is only recommended for administrators who have customized the schema of their applications and systems, and have first-hand knowledge of how their custom attributes have been defined or if a source attribute isn't automatically displayed in the Microsoft Entra admin center UI. This sometimes requires familiarity with the APIs and developer tools provided by an application or system. The ability to edit the list of supported attributes is locked down by default, but customers can enable the capability by navigating to the following URL: https://portal.azure.com/?Microsoft_AAD_Connect_Provisioning_forceSchemaEditorEnabled=true . You can then navigate to your application to view the [attribute list](#editing-the-list-of-supported-attributes). The **Advanced Options** dropdown on the **Attribute Mapping** page provides access to **Edit target User attributes** and **Edit schema**.\n \n > [!NOTE]\n > When a directory extension attribute in Microsoft Entra ID doesn't show up automatically in your attribute mapping drop-down, you can manually add it to the \"Microsoft Entra attribute list\".  When manually adding Microsoft Entra directory extension attributes to your provisioning app, note that directory extension attribute names are case-sensitive. For example: If you have a directory extension attribute named `extension_53c9e2c0exxxxxxxxxxxxxxxx_acmeCostCenter`, make sure you enter it in the same format as defined in the directory. Provisioning multi-valued directory extension attributes is not supported.    \n@@ -147,19 +136,18 @@ When you're editing the list of supported attributes, the following properties a\n #### Provisioning a custom extension attribute to a SCIM compliant application\n \n The SCIM Request for Comments (RFC) defines a core user and group schema, while also allowing for extensions to the schema to meet your application's needs. To add a custom attribute to a SCIM application:\n-  1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).\n+  1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator). \n   1. Browse to **Entra ID** > **Enterprise apps**.\n   1. Select your application, and then select **Provisioning**.\n-  1. Under **Mappings**, select the object (user or group) for which you'd like to add a custom attribute.\n-  1. At the bottom of the page, select **Show advanced options**.\n-  1. Select **Edit attribute list for AppName**.\n+  1. Under **Manage**, select **Attribute Mapping**, and then select the object type (**Users** or **Groups**) for which you'd like to add a custom attribute.\n+  1. Select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n \n       > [!NOTE]\n       > If the **Edit attribute list for AppName** option doesn't appear, navigate to your application using the URL `https://portal.azure.com/?Microsoft_AAD_Connect_Provisioning_forceSchemaEditorEnabled=true` to enable the schema editor.\n-\n+   \n   1. At the bottom of the attribute list, enter information about the custom attribute in the fields provided. Then select **Add Attribute**.\n \n-For SCIM applications, the attribute name must follow the pattern shown in the example. The \"CustomExtensionName\" and \"CustomAttribute\" can be customized per your application's requirements, for example: urn:ietf:params:scim:schemas:extension:CustomExtensionName:2.0:User:CustomAttribute \n+For SCIM applications, the attribute name must follow the pattern shown in the example. The ```CustomExtensionName``` and ```CustomAttribute``` can be customized per your application's requirements, for example: ```urn:ietf:params:scim:schemas:extension:CustomExtensionName:2.0:User:CustomAttribute```. \n \n These instructions are only applicable to SCIM-enabled applications. Applications such as ServiceNow and Salesforce aren't integrated with Microsoft Entra ID using SCIM, and therefore they don't require this specific namespace when adding a custom attribute.\n \n@@ -462,7 +450,7 @@ Certain attributes such as phoneNumbers and emails are multi-value attributes wh\n \n ## Restoring the default attributes and attribute-mappings\n \n-Should you need to start over and reset your existing mappings back to their default state, you can select the **Restore default mappings** check box and save the configuration. Doing so sets all mappings and scoping filters as if the application was added to your Microsoft Entra tenant from the application gallery.\n+If you need to reset your mapping settings back to their default state, select **Attribute mapping** > **Restore default mappings** to restore and save the configuration. Doing so sets all mappings and scoping filters as if the application was added to your Microsoft Entra tenant from the application gallery. This will also restart synchronization.\n \n Selecting this option forces a resynchronization of all users while the provisioning service is running.\n \n",
+      "baseCommitSha": "d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03",
+      "commitSha": "8b4195aeff0bb61a55d682865647be35aa5227f3",
+      "commitMessage": "[App Provisioning] Update attribute mapping and scoping filter docs for new UX (#14035)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-06 17:01:46 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/customize-application-attributes.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/customize-application-attributes",
+      "eventId": "entra-docs:8b4195aeff0bb61a55d682865647be35aa5227f3:modified:docs/identity/app-provisioning/customize-application-attributes.md",
+      "firstSeenAt": "2026-08-07T20:58:42.930Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Attribute mapping documentation updated for the revised UX",
+        "summary": "The article now directs administrators to Manage > Attribute Mapping, with mappings organized by Users and Groups. It documents row-level edit and delete controls, group sync via Scoping filters, and the Advanced Options menu for custom attributes.",
+        "adminImpact": "Update administrative procedures to use the new navigation and controls. The documented minimum role remains Application Administrator.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "status": "modified",
+      "additions": 33,
+      "deletions": 38,
+      "changes": 71,
+      "patch": "diff --git a/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md b/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\nindex 92455a226af..f52922478b4 100644\n--- a/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\n+++ b/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md\n@@ -2,7 +2,7 @@\n title: Scoping users or groups to be provisioned with scoping filters in Microsoft Entra ID\n description: Learn how to use scoping filters to define attribute-based rules that determine which users or groups are provisioned in Microsoft Entra ID.\n ms.topic: how-to\n-ms.date: 03/04/2025\n+ms.date: 08/06/2026\n ms.reviewer: arvinh\n zone_pivot_groups: app-provisioning-cross-tenant-synchronization\n ai-usage: ai-assisted\n@@ -57,24 +57,24 @@ According to this scoping filter, users must satisfy the following criteria to b\n * Their job title must not be null or empty.\n \n ## Create scoping filters\n+\n Scoping filters are configured as part of the attribute mappings for each Microsoft Entra user provisioning connector. The following procedure assumes that you already set up automatic provisioning for [one of the supported applications](~/identity/saas-apps/tutorial-list.md) and are adding a scoping filter to it.\n \n ### Create a scoping filter\n \n-\n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).\n \n ::: zone pivot=\"app-provisioning\"\n \n 2. Browse to **Entra ID** > **Enterprise apps** > **All applications**.\n \n-3. Select the application for which you have configured automatic provisioning: for example, \"ServiceNow\".\n+3. Select the application for which you have configured automatic provisioning: for example, **ServiceNow**.\n \n ::: zone-end\n \n ::: zone pivot=\"cross-tenant-synchronization\"\n \n-2. Browse to **Entra ID** > **External Identities** > **Cross-tenant Synchronization** > **Configurations**\n+2. Browse to **Entra ID** > **External Identities** > **Cross-tenant Synchronization** > **Configurations**.\n \n 3. Select your configuration.\n \n@@ -82,35 +82,36 @@ Scoping filters are configured as part of the attribute mappings for each Micros\n \n 4. Select the **Provisioning** tab.\n \n-::: zone pivot=\"app-provisioning\"\n-\n-5. In the **Mappings** section, select the mapping that you want to configure a scoping filter for: for example, \"Synchronize Microsoft Entra users to ServiceNow\".\n-\n-::: zone-end\n+5. Under **Manage**, select **Scoping filters**.\n+The scoping filters page displays two tabs: **Users** and **Groups**. Select the tab for the object type you want to scope.\n \n-::: zone pivot=\"cross-tenant-synchronization\"\n+6. Select the pencil icon to edit. The **Configure Scoping Filters** wizard opens and walks you through the following steps:\n \n-5. In the **Mappings** section, select the mapping that you want to configure a scoping filter for: for example, \"Provision Microsoft Entra users\".\n+   a. **Scope Settings** — Configure which objects are enabled for provisioning.\n+   \n+   b. **Scope by assignment** — Choose whether to scope users and groups by assignment (recommended).\n+   \n+   c. **Users and groups** — Select the users and groups to include in scope. This option determines which users are assigned to the app. This is the same list of users and groups used for single sign-on. For more information, see [Assign users and groups to an application](~/identity/enterprise-apps/assign-user-or-group-access-portal.md).\n+   \n+   d. **Scope by attribute** — Define attribute-based scoping clauses. Select a source **Attribute Name**, an **Operator**, and an **Attribute Value** to match against.\n+   \n+   e. **Review** — Review your scoping filter configuration and confirm changes.\n \n-::: zone-end\n+8. In the **Scope by attribute** step, define clauses to filter users based on attribute values. The following operators are supported:\n \n-6. Select the **Source object scope** menu.\n-7. Select **Add scoping filter**.\n-8. Define a clause by selecting a source **Attribute Name**, an **Operator**, and an **Attribute Value** to match against. The following operators are supported:\n+   a. **&**. Clause returns \"true\" if the evaluated attribute exists in the input string value.\n \n-   a. **&**. Clause returns \"true\" if the evaluated attribute exists in the input string value. \n+   b. **!&**. Clause returns \"true\" if the evaluated attribute does not exist in the input string value.\n \n-   b. **!&**. Clause returns \"true\" if the evaluated attribute does not exist in the input string value. \n-   \n    c. **ENDS_WITH**. Clause returns \"true\" if the evaluated attribute ends with the input string value.\n \n    d. **EQUALS**. Clause returns \"true\" if the evaluated attribute matches the input string value exactly (case sensitive).\n \n-   e. **Greater_Than.** Clause returns \"true\" if the evaluated attribute is greater than the value. The value specified on the scoping filter must be an integer and the attribute on the user must be an integer [0,1,2,...]. \n- \n-   f. **Greater_Than_OR_EQUALS.** Clause returns \"true\" if the evaluated attribute is greater than or equal to the value. The value specified on the scoping filter must be an integer and the attribute on the user must be an integer [0,1,2,...]. \n-   \n-   g. **Includes.** Clause returns \"true\" if the evaluated attribute contains the string value (case sensitive) as described [here](/dotnet/api/system.string.contains). \n+   e. **Greater_Than.** Clause returns \"true\" if the evaluated attribute is greater than the value. The value specified on the scoping filter must be an integer and the attribute on the user must be an integer [0,1,2,...].\n+\n+   f. **Greater_Than_OR_EQUALS.** Clause returns \"true\" if the evaluated attribute is greater than or equal to the value. The value specified on the scoping filter must be an integer and the attribute on the user must be an integer [0,1,2,...].\n+\n+   g. **Includes.** Clause returns \"true\" if the evaluated attribute contains the string value (case sensitive) as described [here](/dotnet/api/system.string.contains).\n \n    h. **IS FALSE**. Clause returns \"true\" if the evaluated attribute contains a Boolean value of false.\n \n@@ -124,25 +125,19 @@ Scoping filters are configured as part of the attribute mappings for each Micros\n \n    m. **NOT REGEX MATCH**. Clause returns \"true\" if the evaluated attribute doesn't match a regular expression pattern. It returns \"false\" if the attribute is null / empty.\n \n-   n. **REGEX MATCH**. Clause returns \"true\" if the evaluated attribute matches a regular expression pattern. For example: `([1-9][0-9])` matches any number between 10 and 99 (case sensitive).   \n-\n->[!IMPORTANT] \n-> - The IsMemberOf filter is not supported currently.\n-> - The members attribute on a group is not supported currently.\n-> - Filtering is not supported for multi-valued attributes.\n-> - Scoping filters will return \"false\" if the value is null / empty.\n-\n-9. Optionally, repeat steps 7-8 to add more scoping clauses.\n-\n-10. In **Scoping Filter Title**, add a name for your scoping filter.\n+   n. **REGEX MATCH**. Clause returns \"true\" if the evaluated attribute matches a regular expression pattern. For example: `([1-9][0-9])` matches any number between 10 and 99 (case sensitive).\n \n-11. Select **OK**.\n+   > [!IMPORTANT]\n+   > - The IsMemberOf filter is not supported currently.\n+   > - The members attribute on a group is not supported currently.\n+   > - Filtering is not supported for multi-valued attributes.\n+   > - Scoping filters will return \"false\" if the value is null / empty.\n \n-12. Select **OK** again on the **Scoping Filters** screen. Optionally, repeat steps 6-11 to add another scoping filter.\n+9. Add more scoping clauses as needed within the **Scope by attribute** step.\n \n-13. Select **Save** on the **Attribute Mapping** screen. \n+10. On the **Review** step, verify your scoping filter configuration and select **Save**.\n \n->[!IMPORTANT] \n+> [!IMPORTANT]\n > Saving a new scoping filter triggers a new full sync for the application, where all users in the source system are evaluated again against the new scoping filter. If a user in the application was previously in scope for provisioning, but falls out of scope, their account is disabled or deprovisioned in the application. To override this default behavior, refer to [Skip deletion for user accounts that go out of scope](~/identity/app-provisioning/skip-out-of-scope-deletions.md).\n \n ## Common scoping filters\n",
+      "baseCommitSha": "d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03",
+      "commitSha": "8b4195aeff0bb61a55d682865647be35aa5227f3",
+      "commitMessage": "[App Provisioning] Update attribute mapping and scoping filter docs for new UX (#14035)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-06 17:01:46 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts",
+      "eventId": "entra-docs:8b4195aeff0bb61a55d682865647be35aa5227f3:modified:docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+      "firstSeenAt": "2026-08-07T20:58:42.942Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Scoping filter guidance updated for the provisioning UI",
+        "summary": "The documentation replaces the former Mappings-based steps with a Scoping filters wizard covering assignment-based and attribute-based filtering for users and groups. Existing operator details and limitations remain documented.",
+        "adminImpact": "Administrators configuring filters should follow the new Manage > Scoping filters path and review the wizard’s scope settings. No product launch or required migration is evidenced by this documentation update.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md",
+      "status": "modified",
+      "additions": 29,
+      "deletions": 33,
+      "changes": 62,
+      "patch": "diff --git a/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md b/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md\nindex 889a0d19b18..b05ab1f8118 100644\n--- a/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md\n+++ b/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md\n@@ -2,7 +2,7 @@\n title: Configure cross-tenant synchronization\n description: \"Configure cross-tenant synchronization using the Microsoft Entra admin center. Step-by-step guide covering trust settings, provisioning scope, attribute mappings, and testing.\"\n ms.topic: how-to\n-ms.date: 05/27/2026\n+ms.date: 08/06/2026\n ms.custom: it-pro, sfi-image-nochange\n ai-usage: ai-assisted\n zone_pivot_groups: same-cloud-cross-cloud-synchronization\n@@ -89,7 +89,7 @@ By the end of this article, you'll be able to:\n \n 1. Learn about [how the provisioning service works](../app-provisioning/how-provisioning-works.md).\n \n-1. Determine who will be in [Scope for provisioning](../app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md?toc=/entra/identity/multi-tenant-organizations/toc.json&pivots=cross-tenant-synchronization).\n+1. Determine who will be in [scope for provisioning](../app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md?toc=/entra/identity/multi-tenant-organizations/toc.json&pivots=cross-tenant-synchronization).\n \n 1. Determine what data to [map between tenants](../app-provisioning/customize-application-attributes.md).\n ::: zone-end\n@@ -224,7 +224,7 @@ In this step, you automatically redeem invitations in the source tenant.\n \n ![Icon for the source tenant.](../../media/common/icons/entra-id-purple.png)<br/>**Source tenant**\n \n-1. In the source tenant, browse to **Entra ID** > **External Identities** > **Cross-tenant synchronization**.\n+1. In the source tenant, browse to **Entra ID** > **Cross-tenant synchronization**.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/navigation-cross-tenant-sync-entra.png\" alt-text=\"Screenshot that shows the Cross-tenant synchronization navigation in the Microsoft Entra admin center.\" lightbox=\"./media/cross-tenant-synchronization-configure/navigation-cross-tenant-sync-entra.png\":::\n \n@@ -268,27 +268,21 @@ In this step, you automatically redeem invitations in the source tenant.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/configuration-select.png\" alt-text=\"Screenshot that shows the Cross-tenant synchronization Configurations page and a new configuration.\" lightbox=\"./media/cross-tenant-synchronization-configure/configuration-select.png\":::\n \n-1. Select **Get started**.\n+1. Select **New configuration** to create a new provisioning configuration.\n \n-1. Set the **Provisioning Mode** to **Automatic**.\n-\n-1. Under the **Admin Credentials** section, change the **Authentication Method** to **Cross Tenant Synchronization Policy**.\n+1. Under the **Admin credentials** section, in the **Tenant Id** box, enter the tenant ID of the target tenant.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-policy.png\" alt-text=\"Screenshot that shows the Provisioning page with the Cross-tenant Synchronization Policy selected.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-policy.png\":::\n \n-1. In the **Tenant Id** box, enter the tenant ID of the target tenant.\n-\n-1. Select **Test Connection** to test the connection.\n+1. Select **Test connection** to test the connection.\n \n     You should see a message that the supplied credentials are authorized to enable provisioning. If the test connection fails, see [Troubleshoot common cross-tenant synchronization scenarios](#troubleshoot-common-cross-tenant-synchronization-scenarios) later in this article.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-test-connection-success.png\" alt-text=\"Screenshot that shows a testing connection notification.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-test-connection-success.png\":::\n \n-1. Select **Save**.\n+1. Select **Create**.\n \n-    Mappings and Settings sections appear.\n-\n-1. Close the **Provisioning** page.\n+    It can take a few seconds to create the new provisioning configuration.\n \n ## Step 7: Define who is in scope for provisioning\n \n@@ -301,19 +295,23 @@ The Microsoft Entra provisioning service allows you to define who will be provis\n \n Start small. Test with a small set of users before rolling out to everyone. When the scope for provisioning is set to assigned users and groups, you can control it by assigning one or two users to the configuration. You can further refine who is in scope for provisioning by creating attribute-based scoping filters, described in the [next step](#step-8-optional-define-who-is-in-scope-for-provisioning-with-scoping-filters).\n \n-1. In the source tenant, select **Provisioning** and expand the **Settings** section.\n+1. In the source tenant, on the **Overview** page, select the **Properties** tab.\n+\n+    :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-settings.png\" alt-text=\"Screenshot of the Overview page that shows the Properties tab.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-settings.png\":::\n+\n+1. Next to the **Basics** heading, select the pencil icon to open the **Basics** pane.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\" alt-text=\"Screenshot of the Provisioning page that shows the Settings section with the Scope and Provisioning Status options.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\":::\n \n 1. In the **Scope** list, select whether to synchronize all users in the source tenant or only users assigned to the configuration.\n \n-    It's recommended that you select **Sync only assigned users and groups** instead of **Sync all users**. Reducing the number of users in scope improves performance. \n+    It's recommended that you select **Sync only assigned users** instead of **Sync all users**. Reducing the number of users in scope improves performance.\n \n     ::: zone pivot=\"same-cloud-synchronization\"\n     If you want to synchronize groups, you must select **Sync only assigned users and groups**.\n     ::: zone-end\n \n-1. If you made any changes, select **Save**.\n+1. If you made any changes, select **Apply**.\n \n 1. On the configuration page, select **Users and groups**.\n \n@@ -381,23 +379,21 @@ Regardless of the value you selected for **Scope** in the previous step, you can\n \n Attribute mappings allow you to define how data should flow between the source tenant and target tenant. For information on how to customize the default attribute mappings, see [Tutorial - Customize user provisioning attribute-mappings for SaaS applications in Microsoft Entra ID](../app-provisioning/customize-application-attributes.md).\n \n-1. In the source tenant, select **Provisioning** and expand the **Mappings** section.\n-\n-1. Select **Provision Microsoft Entra ID Users**.\n+1. In the source tenant, select **Attribute mapping**.\n \n-1. On the **Attribute Mapping** page, scroll down to review the user attributes that are synchronized between tenants in the **Attribute Mappings** section.\n+1. On the **Attribute mapping** page, scroll down to review the user attributes that are synchronized between tenants.\n \n-    The first attribute, alternativeSecurityIdentifier, is an internal attribute used to uniquely identify the user across tenants, match users in the source tenant with existing users in the target tenant, and ensure that each user only has one account. The matching attribute can't be changed. Attempting to change the matching attribute or adding additional matching attributes will result in a `schemaInvalid` error.\n+    The **AltSecIdFromNetId([netId]) (alternativeSecurityIds)** is an internal attribute used to uniquely identify the user across tenants, match users in the source tenant with existing users in the target tenant, and ensure that each user only has one account. The matching attribute can't be changed. Attempting to change the matching attribute or adding additional matching attributes will result in a `schemaInvalid` error.\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-attribute-mapping.png\" alt-text=\"Screenshot of the Attribute Mapping page that shows the list of Microsoft Entra attributes.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-attribute-mapping.png\":::\n \n-1. Select the **Member (userType)** attribute to open the **Edit Attribute** page.\n+1. For the **Member (userType)** attribute, select the pencil icon to open the **Edit Attribute Mapping** page.\n \n-1. Review the **Constant Value** setting for the **userType** attribute.\n+1. Review the **Constant attribute** setting, which by default is set to **Member**.\n \n     This setting defines the type of user that will be created in the target tenant and can be one of the values in the following table. By default, users will be created as external member (B2B collaboration users). For more information, see [Properties of a Microsoft Entra B2B collaboration user](../../external-id/user-properties.md).\n \n-    | Constant Value | Description |\n+    | Constant attribute | Description |\n     | --- | --- |\n     | **Member** | Default. Users will be created as external member (B2B collaboration users) in the target tenant. Users will be able to function as any internal member of the target tenant. |\n     | **Guest** | Users will be created as external guests (B2B collaboration users) in the target tenant. |\n@@ -411,7 +407,7 @@ Attribute mappings allow you to define how data should flow between the source t\n \n     :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-attribute-mapping-member.png\" alt-text=\"Screenshot of the Edit Attribute page that shows the Member attribute.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-attribute-mapping-member.png\":::\n \n-1. If you want to define any transformations, on the **Attribute Mapping** page, select the attribute you want to transform, such as **displayName**.\n+1. If you want to define any transformations, on the **Attribute mapping** page, select the pencil icon for the attribute you want to transform, such as **displayName**.\n \n 1. Set the **Mapping type** to **Expression**.\n \n@@ -437,13 +433,13 @@ Attribute mappings allow you to define how data should flow between the source t\n \n ![Icon for the source tenant.](../../media/common/icons/entra-id-purple.png)<br/>**Source tenant**\n \n-1. In the source tenant, select **Provisioning** and expand the **Settings** section.\n+1. In the source tenant, on the **Overview** page, select the **Properties** tab.\n \n-    :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\" alt-text=\"Screenshot of the Provisioning page that shows the Settings section with the Scope and Provisioning Status options.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\":::\n+1. Next to the **Basics** heading, select the pencil icon to open the **Basics** pane.\n \n-1. Select the **Send an email notification when a failure occurs** checkbox.\n+    :::image type=\"content\" source=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\" alt-text=\"Screenshot of the Provisioning page that shows the Settings section with the Scope and Provisioning Status options.\" lightbox=\"./media/cross-tenant-synchronization-configure/provisioning-settings-edit.png\":::\n \n-1. In the **Notification Email** box, enter the email address of a person or group who should receive provisioning error notifications.\n+1. In the **Notification email** box, enter the email address of a person or group who should receive provisioning error notifications.\n \n     Email notifications are sent within 24 hours of the job entering quarantine state. For custom alerts, see [Understand how provisioning integrates with Azure Monitor logs](../app-provisioning/application-provisioning-log-analytics.md).\n \n@@ -451,7 +447,7 @@ Attribute mappings allow you to define how data should flow between the source t\n \n     For more information, see [Enable accidental deletions prevention in the Microsoft Entra provisioning service](../app-provisioning/accidental-deletions.md?toc=/entra/identity/multi-tenant-organizations/toc.json&pivots=cross-tenant-synchronization).\n \n-1. Select **Save** to save any changes.\n+1. Select **Apply** to save any changes.\n \n ## Step 11: Test provision on demand\n \n@@ -459,7 +455,7 @@ Attribute mappings allow you to define how data should flow between the source t\n \n Now that you have a configuration, you can test on-demand provisioning with one of your users.\n \n-1. In the source tenant, browse to **Entra ID** > **External Identities** > **Cross-tenant synchronization**.\n+1. In the source tenant, browse to **Entra ID** > **Cross-tenant synchronization**.\n \n 1. Select **Configurations** and then select your configuration.\n \n@@ -497,7 +493,7 @@ Now that you have a configuration, you can test on-demand provisioning with one\n \n The provisioning job starts the initial synchronization cycle of all users defined in **Scope** of the **Settings** section. The initial cycle takes longer to perform than subsequent cycles, which occur approximately every 40 minutes as long as the Microsoft Entra provisioning service is running.\n \n-1. In the source tenant, browse to **Entra ID** > **External Identities** > **Cross-tenant synchronization**.\n+1. In the source tenant, browse to **Entra ID** > **Cross-tenant synchronization**.\n \n 1. Select **Configurations** and then select your configuration.\n \n",
+      "baseCommitSha": "49d17f8b5818409f80c4525e73ff2dea033d80a9",
+      "commitSha": "d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03",
+      "commitMessage": "[Entra MTO] [Cross-tenant sync] New user experience (#14036)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-06 16:43:58 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/multi-tenant-organizations/cross-tenant-synchronization-configure",
+      "eventId": "entra-docs:d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03:modified:docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md",
+      "firstSeenAt": "2026-08-07T20:58:42.961Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Cross-tenant synchronization configuration steps updated",
+        "summary": "The guide now reflects revised Entra portal navigation and controls, including **New configuration**, **Create**, **Overview > Properties**, and **Attribute mapping**. It also updates terminology and scope-setting guidance.",
+        "adminImpact": "Administrators following the guide should use the updated navigation and control names and revise internal runbooks accordingly. This documents an interface change, not a new product launch.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/multi-tenant-organizations/whats-new.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "patch": "diff --git a/docs/identity/multi-tenant-organizations/whats-new.md b/docs/identity/multi-tenant-organizations/whats-new.md\nindex 862cb08a9ef..cf8d4f85ea7 100644\n--- a/docs/identity/multi-tenant-organizations/whats-new.md\n+++ b/docs/identity/multi-tenant-organizations/whats-new.md\n@@ -19,6 +19,7 @@ This article provides information about new features and documentation improveme\n \n | Date | Area | Description |\n | --- | --- | --- |\n+| August 2026 | Cross-tenant synchronization | Revised configuration steps for updated Overview, Attribute mapping, Provisioning configuration, and Basics settings pages. See [Configure cross-tenant synchronization](cross-tenant-synchronization-configure.md). |\n | March 2026 | Cross-tenant synchronization | Added support for security group synchronization (same cloud) in preview. See [Group synchronization](cross-tenant-synchronization-overview.md#group-synchronization) and [Configure cross-tenant synchronization](cross-tenant-synchronization-configure.md?pivots=same-cloud-synchronization). |\n \n ## 2025\n",
+      "baseCommitSha": "49d17f8b5818409f80c4525e73ff2dea033d80a9",
+      "commitSha": "d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03",
+      "commitMessage": "[Entra MTO] [Cross-tenant sync] New user experience (#14036)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-06 16:43:58 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/multi-tenant-organizations/whats-new.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/multi-tenant-organizations/whats-new",
+      "eventId": "entra-docs:d3b5c2dca98a4e6ab3aab6f35b93cbbb189a3d03:modified:docs/identity/multi-tenant-organizations/whats-new.md",
+      "firstSeenAt": "2026-08-07T20:58:42.971Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Cross-tenant synchronization configuration steps revised",
+        "summary": "The August 2026 update revises configuration steps for the Overview, Attribute mapping, Provisioning configuration, and Basics settings pages.",
+        "adminImpact": "Administrators configuring cross-tenant synchronization should follow the updated steps and linked configuration guidance.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/expression-builder.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 4,
+      "changes": 6,
+      "patch": "diff --git a/docs/identity/app-provisioning/expression-builder.md b/docs/identity/app-provisioning/expression-builder.md\nindex cd02a677701..d0be2f96e4b 100644\n--- a/docs/identity/app-provisioning/expression-builder.md\n+++ b/docs/identity/app-provisioning/expression-builder.md\n@@ -2,7 +2,7 @@\n title: Understand how expression builder works with Application Provisioning in Microsoft Entra ID\n description: Understand how expression builder works with Application Provisioning in Microsoft Entra ID.\n ms.topic: concept-article\n-ms.date: 03/04/2025\n+ms.date: 08/06/2026\n ms.reviewer: arvinh\n ai-usage: ai-assisted\n ---\n@@ -17,9 +17,7 @@ For reference on building expressions, see [Reference for writing expressions fo\n \n ## Finding the expression builder\n \n-In application provisioning, you use expressions for attribute mappings. You access Expression Builder on the attribute mapping page by selecting the **Advanced Options** dropdown and then selecting **Expression builder**.\n-\n-:::image type=\"content\" source=\"media/expression-builder/accessing-expression-builder.png\" alt-text=\"The checkbox to show advanced settings is selected and a link is shown that says expression builder\" lightbox=\"media/expression-builder/accessing-expression-builder.png\":::\n+In application provisioning, you use expressions for attribute mappings. You access Expression Builder on the attribute mapping page by selecting the **Expression builder** from the left navigation menu.\n \n ## Using expression builder\n \n",
+      "baseCommitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitSha": "4623dc5f58dc74ea1a9eef6af7c9007a42ee19be",
+      "commitMessage": "Update expression-builder.md",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-06 14:47:50 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/expression-builder.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/expression-builder",
+      "eventId": "entra-docs:4623dc5f58dc74ea1a9eef6af7c9007a42ee19be:modified:docs/identity/app-provisioning/expression-builder.md",
+      "firstSeenAt": "2026-08-07T20:58:45.336Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Expression Builder access instructions updated",
+        "summary": "The documentation now says to open Expression Builder from the left navigation menu instead of Attribute Mapping > Advanced Options. The page date was also updated from March 4, 2025, to August 6, 2026, and the access screenshot was removed.",
+        "adminImpact": "Administrators following the previous navigation path should use the Expression builder option in the left navigation menu.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md b/docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md\nindex 9d138b0a62b..8ac5a1e3cea 100644\n--- a/docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md\n+++ b/docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md\n@@ -4,7 +4,7 @@ description: Learn how to configure automatic assignments based on rules for an\n author: markwahl-msft\n ms.subservice: entitlement-management\n ms.topic: how-to\n-ms.date: 07/28/2026\n+ms.date: 08/05/2026\n ms.reviewer: mwahl\n ai-usage: ai-assisted\n #Customer Intent: As an IT admin, I want to configure automatic assignment policies for an access package so that I can automatically assign access based on rules.\n@@ -17,7 +17,7 @@ You can use rules to determine access package assignment based on identity prope\n    > It is suggested to only use one automatic assignment policy per access package. Configuring more than one auto-assignment policy is supported ONLY if you ensure there is no overlap with users in scope for each policy. If a user matches more than one automatic assignment policy, this is not supported and there may be subsequent problems losing access should a user fall out of scope of one policy but not the other.\n \n > [!IMPORTANT]\n-> The preview of the `memberOf` rule operator is ending. Starting October 27, 2026, automatic assignment policies whose membership rule uses `memberOf` are quarantined. The policies remain, but assignment processing stops, and no assignments are added or removed until you remove `memberOf` from the rule. Before October 27, 2026, [identify the policies that use the memberOf attribute](#find-automatic-assignment-policies-that-use-the-memberof-attribute) and rebuild each rule with a supported attribute-based operator. If no equivalent rule covers your scenario, plan an alternative assignment method before you remove the policy that contains the rule, so that assignments aren't dropped. Automatic assignment policies that don't use `memberOf` aren't affected. For more information, see [Configure dynamic membership groups with the memberOf attribute](../identity/users/groups-dynamic-rule-member-of.md).\n+> The preview of the `memberOf` rule operator is ending. Starting November 3, 2026, automatic assignment policies whose membership rule uses `memberOf` are quarantined. The policies remain, but assignment processing stops, and no assignments are added or removed until you remove `memberOf` from the rule. Before November 3, 2026, [identify the policies that use the memberOf attribute](#find-automatic-assignment-policies-that-use-the-memberof-attribute) and rebuild each rule with a supported attribute-based operator. If no equivalent rule covers your scenario, plan an alternative assignment method before you remove the policy that contains the rule, so that assignments aren't dropped. Automatic assignment policies that don't use `memberOf` aren't affected. For more information, see [Configure dynamic membership groups with the memberOf attribute](../identity/users/groups-dynamic-rule-member-of.md).\n \n This article describes how to create an access package automatic assignment policy for an existing access package.\n \n@@ -112,7 +112,7 @@ New-MgEntitlementManagementAssignmentPolicy -BodyParameter $pparams\n \n ## Find automatic assignment policies that use the memberOf attribute\n \n-Because support for the `memberOf` rule operator ends on October 27, 2026, you need to find the automatic assignment policies in your tenant whose membership rule includes `memberOf`, so that you can rebuild those rules or plan an alternative assignment method.\n+Because support for the `memberOf` rule operator ends on November 3, 2026, you need to find the automatic assignment policies in your tenant whose membership rule includes `memberOf`, so that you can rebuild those rules or plan an alternative assignment method.\n \n You can find those policies in PowerShell with the [Microsoft Graph PowerShell](https://www.powershellgallery.com/packages/Microsoft.Graph.Authentication/) `Microsoft.Graph.Authentication` module. An identity in an appropriate role with the delegated `EntitlementManagement.Read.All` permission can run the following script. The script is read only, so it doesn't change any policy.\n \n",
+      "baseCommitSha": "8ced874cb00af43033fd56c9389f81d343fc4ad3",
+      "commitSha": "7ef6e218489ecc8631b25ae5879bf5d663ea2bc3",
+      "commitMessage": "Update memberOf preview end date to November 3, 2026",
+      "commitAuthor": "Jeremy Conley",
+      "commitDate": "2026-08-05 12:32:04 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-access-package-auto-assignment-policy",
+      "eventId": "entra-docs:7ef6e218489ecc8631b25ae5879bf5d663ea2bc3:modified:docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md",
+      "firstSeenAt": "2026-08-07T20:58:45.369Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "End date for `memberOf` preview updated to November 3, 2026",
+        "summary": "The documentation now states that support for the `memberOf` rule operator ends November 3, 2026, replacing October 27, 2026. Policies using it will be quarantined and stop processing assignments from that date.",
+        "adminImpact": "Find affected automatic assignment policies and rebuild their rules or plan an alternative assignment method before the updated end date.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/includes/licensing-conditional-access.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4,
+      "patch": "diff --git a/docs/includes/licensing-conditional-access.md b/docs/includes/licensing-conditional-access.md\nindex b9411c63b62..93e1f2c9594 100644\n--- a/docs/includes/licensing-conditional-access.md\n+++ b/docs/includes/licensing-conditional-access.md\n@@ -17,7 +17,9 @@ Customers with [Microsoft 365 Business Premium licenses](/office365/servicedescr\n \n Risk-based policies require access to [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md), which is a Microsoft Entra ID P2 feature.\n \n-Conditional Access for agents requires a [Microsoft Agent 365 license](https://www.microsoft.com/microsoft-agent-365#plans-and-pricing) to apply policies to agents through [Microsoft Entra Agent ID](../agent-id/what-is-microsoft-entra-agent-id.md#how-to-get-started).\n+Conditional Access for agents requires a [Microsoft Agent 365 license](https://www.microsoft.com/microsoft-agent-365#plans-and-pricing) to apply policies to agents through [Microsoft Entra Agent ID](../agent-id/what-is-microsoft-entra-agent-id.md#how-to-get-started). This can be with one of the following license plans:\n+\t- **Microsoft 365 E7**, which includes Agent 365 and Microsoft Entra Suite, to provide governance of user and agent identities.\n+\t- **Microsoft Agent 365** license paired with at least Microsoft Entra P1 or Microsoft 365 E3.\n \n Other products and features that could interact with Conditional Access policies require appropriate licensing for those products and features.\n \n",
+      "baseCommitSha": "b61cb23bb53a7a5c92f0b4e30f51ac6e0d452dae",
+      "commitSha": "7611c96010f84ec0739f88058642348d78615d8e",
+      "commitMessage": "Clarify licensing requirements for Conditional Access agents",
+      "commitAuthor": "Grace Nagy",
+      "commitDate": "2026-08-04 12:22:44 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-conditional-access.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/includes/licensing-conditional-access",
+      "eventId": "entra-docs:7611c96010f84ec0739f88058642348d78615d8e:modified:docs/includes/licensing-conditional-access.md",
+      "firstSeenAt": "2026-08-07T20:58:45.379Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Conditional Access agent licensing requirements clarified",
+        "summary": "The documentation now lists two supported licensing options: Microsoft 365 E7, which includes Agent 365 and Microsoft Entra Suite, or Microsoft Agent 365 paired with at least Microsoft Entra P1 or Microsoft 365 E3.",
+        "adminImpact": "Administrators should verify that they have one of these licensing combinations before applying Conditional Access policies to agents through Microsoft Entra Agent ID.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/howto-target-agent-identities.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/conditional-access/howto-target-agent-identities.md b/docs/identity/conditional-access/howto-target-agent-identities.md\nindex 89b9e2506ac..b3402bc7fe5 100644\n--- a/docs/identity/conditional-access/howto-target-agent-identities.md\n+++ b/docs/identity/conditional-access/howto-target-agent-identities.md\n@@ -24,7 +24,9 @@ Each section builds on the previous one to form a complete policy.\n \n ## Prerequisites\n \n-- An Agent 365 license\n+- One of the following license plans:\n+\t- **Microsoft 365 E7**, which includes Agent 365 and Microsoft Entra Suite, to provide governance of user and agent identities.\n+\t- **Microsoft Agent 365** license paired with at least Microsoft Entra P1 or Microsoft 365 E3.\n - [Conditional Access Administrator](../../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator) to create and manage Conditional Access policies\n - At least one agent identity registered in your tenant\n \n",
+      "baseCommitSha": "add954622572d8fd7e4c588f5c63d416b8c40f44",
+      "commitSha": "b61cb23bb53a7a5c92f0b4e30f51ac6e0d452dae",
+      "commitMessage": "Clarify prerequisites for Agent 365 licensing",
+      "commitAuthor": "Grace Nagy",
+      "commitDate": "2026-08-04 12:19:50 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/howto-target-agent-identities.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/howto-target-agent-identities",
+      "eventId": "entra-docs:b61cb23bb53a7a5c92f0b4e30f51ac6e0d452dae:modified:docs/identity/conditional-access/howto-target-agent-identities.md",
+      "firstSeenAt": "2026-08-07T20:58:45.389Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Clarified licensing prerequisites for agent identity governance",
+        "summary": "The documentation now lists two license options: Microsoft 365 E7, or Microsoft Agent 365 paired with Microsoft Entra P1 or Microsoft 365 E3.",
+        "adminImpact": "Administrators should verify that their tenant uses one of the documented licensing combinations.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/includes/licensing-conditional-access.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/includes/licensing-conditional-access.md b/docs/includes/licensing-conditional-access.md\nindex 5a3fef04be6..b9411c63b62 100644\n--- a/docs/includes/licensing-conditional-access.md\n+++ b/docs/includes/licensing-conditional-access.md\n@@ -17,7 +17,7 @@ Customers with [Microsoft 365 Business Premium licenses](/office365/servicedescr\n \n Risk-based policies require access to [Microsoft Entra ID Protection](~/id-protection/overview-identity-protection.md), which is a Microsoft Entra ID P2 feature.\n \n-Starting soon, Conditional Access for agents will require a [Microsoft Agent 365 license](https://www.microsoft.com/microsoft-agent-365#plans-and-pricing) to apply policies to agents through [Microsoft Entra Agent ID](../agent-id/what-is-microsoft-entra-agent-id.md#how-to-get-started).\n+Conditional Access for agents requires a [Microsoft Agent 365 license](https://www.microsoft.com/microsoft-agent-365#plans-and-pricing) to apply policies to agents through [Microsoft Entra Agent ID](../agent-id/what-is-microsoft-entra-agent-id.md#how-to-get-started).\n \n Other products and features that could interact with Conditional Access policies require appropriate licensing for those products and features.\n \n",
+      "baseCommitSha": "cbbcac957872fb5f0026c40a24ed8bcc99bf294f",
+      "commitSha": "add954622572d8fd7e4c588f5c63d416b8c40f44",
+      "commitMessage": "A365 Required for Conditional Access for agents",
+      "commitAuthor": "Grace Nagy",
+      "commitDate": "2026-08-03 17:23:36 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/includes/licensing-conditional-access.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/includes/licensing-conditional-access",
+      "eventId": "entra-docs:add954622572d8fd7e4c588f5c63d416b8c40f44:modified:docs/includes/licensing-conditional-access.md",
+      "firstSeenAt": "2026-08-07T20:58:45.398Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "License requirement for Conditional Access for agents clarified",
+        "summary": "The documentation now states that Conditional Access for agents requires a Microsoft Agent 365 license to apply policies through Microsoft Entra Agent ID, replacing “Starting soon.”",
+        "adminImpact": "Administrators need the specified license when applying these policies to agents; no other action is stated.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/howto-target-agent-identities.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 3,
+      "changes": 5,
+      "patch": "diff --git a/docs/identity/conditional-access/howto-target-agent-identities.md b/docs/identity/conditional-access/howto-target-agent-identities.md\nindex 300e9fd640b..89b9e2506ac 100644\n--- a/docs/identity/conditional-access/howto-target-agent-identities.md\n+++ b/docs/identity/conditional-access/howto-target-agent-identities.md\n@@ -24,8 +24,7 @@ Each section builds on the previous one to form a complete policy.\n \n ## Prerequisites\n \n-- A Microsoft Entra ID P1 or P2 license\n-- Agent 365 license will soon be required\n+- An Agent 365 license\n - [Conditional Access Administrator](../../identity/role-based-access-control/permissions-reference.md#conditional-access-administrator) to create and manage Conditional Access policies\n - At least one agent identity registered in your tenant\n \n@@ -170,4 +169,4 @@ Access controls determine what happens when conditions are met. For more informa\n ## Related content\n \n - [Conditional Access for agent identities](agent-id.md)\n-- [Configure policy for autonomous agent access](policy-autonomous-agents.md)\n\\ No newline at end of file\n+- [Configure policy for autonomous agent access](policy-autonomous-agents.md)\n",
+      "baseCommitSha": "a0cd379ac39208e3bec5105771b887332829a495",
+      "commitSha": "cbbcac957872fb5f0026c40a24ed8bcc99bf294f",
+      "commitMessage": "A365 license requirement",
+      "commitAuthor": "Grace Nagy",
+      "commitDate": "2026-08-03 17:16:53 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/howto-target-agent-identities.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/howto-target-agent-identities",
+      "eventId": "entra-docs:cbbcac957872fb5f0026c40a24ed8bcc99bf294f:modified:docs/identity/conditional-access/howto-target-agent-identities.md",
+      "firstSeenAt": "2026-08-07T20:58:45.408Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Agent 365 license now listed for targeting agent identities",
+        "summary": "The documentation replaces the Microsoft Entra ID P1/P2 license requirement and the note that an Agent 365 license would soon be required with a direct Agent 365 license requirement.",
+        "adminImpact": "Administrators should verify that they have an Agent 365 license before configuring policies for autonomous agent access.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/export-import-provisioning-configuration.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/export-import-provisioning-configuration.md b/docs/identity/app-provisioning/export-import-provisioning-configuration.md\nindex bd83e22a4ad..fd32f92c215 100644\n--- a/docs/identity/app-provisioning/export-import-provisioning-configuration.md\n+++ b/docs/identity/app-provisioning/export-import-provisioning-configuration.md\n@@ -24,7 +24,7 @@ To export your configuration:\n \n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](~/identity/role-based-access-control/permissions-reference.md#application-administrator).\n 1. Browse to **Entra ID** > **Enterprise apps** and choose your application.\n-1. In the left navigation pane, select **provisioning**. From the provisioning configuration page, select **attribute mappings**, then **show advanced options**, and finally **review your schema**. The schema editor opens.\n+1. In the left navigation pane, select **Provisioning**. Under **Manage**, select **Attribute Mapping**. Select the **Advanced Options** dropdown, and then select **Edit schema**. The schema editor opens.\n 1. Select download in the command bar at the top of the page to download your schema.\n \n ### Disaster recovery - roll back to a known good state\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/export-import-provisioning-configuration.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/export-import-provisioning-configuration",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/export-import-provisioning-configuration.md",
+      "firstSeenAt": "2026-08-07T20:58:45.423Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated schema editor navigation instructions",
+        "summary": "The documentation now directs administrators to Provisioning > Manage > Attribute Mapping > Advanced Options > Edit schema, replacing the previous navigation labels and path.",
+        "adminImpact": "Use the updated navigation to open the schema editor. The change describes UI instructions only; no feature or behavior change is stated.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/expression-builder.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/expression-builder.md b/docs/identity/app-provisioning/expression-builder.md\nindex 7dc35a6809c..cd02a677701 100644\n--- a/docs/identity/app-provisioning/expression-builder.md\n+++ b/docs/identity/app-provisioning/expression-builder.md\n@@ -17,7 +17,7 @@ For reference on building expressions, see [Reference for writing expressions fo\n \n ## Finding the expression builder\n \n-In application provisioning, you use expressions for attribute mappings. You access Express Builder on the attribute-mapping page by selecting **Show advanced options** and then select **Expression builder**.\n+In application provisioning, you use expressions for attribute mappings. You access Expression Builder on the attribute mapping page by selecting the **Advanced Options** dropdown and then selecting **Expression builder**.\n \n :::image type=\"content\" source=\"media/expression-builder/accessing-expression-builder.png\" alt-text=\"The checkbox to show advanced settings is selected and a link is shown that says expression builder\" lightbox=\"media/expression-builder/accessing-expression-builder.png\":::\n \n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/expression-builder.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/expression-builder",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/expression-builder.md",
+      "firstSeenAt": "2026-08-07T20:58:45.433Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated Expression Builder navigation instructions",
+        "summary": "The documentation now says to open the **Advanced Options** dropdown, then select **Expression builder**, on the attribute mapping page. This replaces the previous **Show advanced options** wording.",
+        "adminImpact": "Administrators following the provisioning documentation should use the updated UI labels to find Expression Builder.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md b/docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md\nindex 18f48ea158a..a00f0ff88f7 100644\n--- a/docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md\n+++ b/docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md\n@@ -29,7 +29,7 @@ In this step, we'll add the two attributes \"HireDate\" and \"JobCode\" that are not\n 1. Click on the **Edit Provisioning** button. \n 1. Expand the **Mappings** section and click on the attribute mapping link. <br>\n    :::image type=\"content\" border=\"true\" source=\"./media/inbound-provisioning-api-custom-attributes/edit-attribute-mapping.png\" alt-text=\"Screenshot of edit attribute mapping.\" lightbox=\"./media/inbound-provisioning-api-custom-attributes/edit-attribute-mapping.png\":::\n-1. Scroll down the **Attribute Mappings** page. Select **Show advanced options** and click on the **Edit attribute list for API** link.\n+1. On the **Attribute Mapping** page, select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n    :::image type=\"content\" border=\"true\" source=\"./media/inbound-provisioning-api-custom-attributes/edit-api-attribute-list.png\" alt-text=\"Screenshot of edit API attribute list.\" lightbox=\"./media/inbound-provisioning-api-custom-attributes/edit-api-attribute-list.png\":::\n 1. Scroll down to the end of the **Edit Attribute List** page.\n 1. Add the following two attributes to the list as SCIM schema extensions. You can use your own SCIM schema namespace. <br>\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/inbound-provisioning-api-custom-attributes",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md",
+      "firstSeenAt": "2026-08-07T20:58:45.443Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated navigation steps for API attribute editing",
+        "summary": "The documentation replaces the previous Attribute Mappings instructions with the current Attribute Mapping page, Advanced Options dropdown, and Edit target User attributes selection.",
+        "adminImpact": "Administrators should use the updated UI labels and navigation when configuring API attribute mappings.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/inbound-provisioning-api-faqs.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/inbound-provisioning-api-faqs.md b/docs/identity/app-provisioning/inbound-provisioning-api-faqs.md\nindex 023dbdbfa3c..753f2aa2073 100644\n--- a/docs/identity/app-provisioning/inbound-provisioning-api-faqs.md\n+++ b/docs/identity/app-provisioning/inbound-provisioning-api-faqs.md\n@@ -98,7 +98,7 @@ Refer to the tutorial [Extend API-driven provisioning to sync custom attributes]\n \n You may have a scenario where you want to send all users to the API endpoint, but only include certain users in the provisioning flow and exclude the rest.\n \n-You can achieve this using the **Scoping filter**. In the provisioning app configuration, you can define a source object scope and exclude certain users from processing either using an \"inclusion rule\" (for example, only process users where department EQUALS **Sales**) or an \"exclusion rule\" (for example, exclude users belonging to Sales, department NOT EQUALS **Sales**).\n+You can achieve this using a **scoping filter**. In the provisioning app configuration, you can define scoping filter rules to exclude certain users from processing either using an \"inclusion rule\" (for example, only process users where department EQUALS **Sales**) or an \"exclusion rule\" (for example, exclude users belonging to Sales, department NOT EQUALS **Sales**).\n  \n  See [Scoping users or groups to be provisioned with scoping filters](define-conditional-rules-for-provisioning-user-accounts.md).\n \n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/inbound-provisioning-api-faqs.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/inbound-provisioning-api-faqs",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/inbound-provisioning-api-faqs.md",
+      "firstSeenAt": "2026-08-07T20:58:45.452Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Provisioning FAQ updates scoping-filter terminology",
+        "summary": "The FAQ changes “Scoping filter” to “scoping filter” and clarifies that administrators define scoping filter rules to include or exclude users from processing. The existing Sales example remains.",
+        "adminImpact": "No product or configuration change is indicated; administrators may simply use the updated terminology when consulting the FAQ.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/on-premises-ldap-connector-linux.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/on-premises-ldap-connector-linux.md b/docs/identity/app-provisioning/on-premises-ldap-connector-linux.md\nindex 1d240c1d530..21440429bea 100644\n--- a/docs/identity/app-provisioning/on-premises-ldap-connector-linux.md\n+++ b/docs/identity/app-provisioning/on-premises-ldap-connector-linux.md\n@@ -319,7 +319,7 @@ In this section, you'll configure the mapping between the Microsoft Entra user's\n  1. In the Microsoft Entra admin center, under **Enterprise applications**, select the **On-premises ECMA app** application, and then select the **Provisioning** page.\n  2. Select **Edit provisioning**.\n  3. Expand **Mappings** and select **Provision Microsoft Entra users**. If this is the first time you've configured the attribute mappings for this application, there's only one mapping present as a placeholder.\n- 1. To confirm that the schema of the directory server is available in Microsoft Entra ID, select the **Show advanced options** checkbox and select **Edit attribute list for ScimOnPremises**. Ensure that all the attributes selected in the configuration wizard are listed.  If not, then wait several minutes for the schema to refresh, then select **Attribute Mapping** in the navigation line, and then select **Edit attribute list for ScimOnPremises** again to reload the page.  Once you see the attributes listed, then cancel from this page to return to the mappings list.\n+ 1. To confirm that the schema of the directory server is available in Microsoft Entra ID, select the **Advanced Options** dropdown and select **Edit target User attributes**. Ensure that all the attributes selected in the configuration wizard are listed.  If not, then wait several minutes for the schema to refresh, then select **Attribute Mapping** in the navigation line, and then select **Edit target User attributes** again to reload the page.  Once you see the attributes listed, then cancel from this page to return to the mappings list.\n  1. Every user in a directory must have a unique distinguished name.  You can specify how the connector should construct a distinguished name by using an attribute mapping. Select **Add New Mapping**. Use the following values to create the mapping, changing the distinguished names in the expression to match that of the organizational unit or other container in your target directory.\n     - Mapping type: expression\n     - Expression: `Join(\"\", \"CN=\", Word([userPrincipalName], 1, \"@\"), \",DC=Contoso,DC=lab\")`\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/on-premises-ldap-connector-linux.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-ldap-connector-linux",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/on-premises-ldap-connector-linux.md",
+      "firstSeenAt": "2026-08-07T20:58:45.464Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated LDAP connector UI instructions",
+        "summary": "The documentation now refers to the **Advanced Options** dropdown and **Edit target User attributes** instead of the former UI labels.",
+        "adminImpact": "Administrators configuring on-premises LDAP provisioning should use the updated labels when verifying that directory schema attributes are available in Microsoft Entra ID.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/on-premises-powershell-connector.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/on-premises-powershell-connector.md b/docs/identity/app-provisioning/on-premises-powershell-connector.md\nindex ca06be1841f..dfc1e00904d 100644\n--- a/docs/identity/app-provisioning/on-premises-powershell-connector.md\n+++ b/docs/identity/app-provisioning/on-premises-powershell-connector.md\n@@ -323,7 +323,7 @@ You'll use the Azure portal to configure the mapping between the Microsoft Entra\n 1. Select **Provisioning**.\n 1. Select **Edit provisioning**, and wait 10 seconds.\n 1. Expand **Mappings** and select **Provision Microsoft Entra users**. If this is the first time you've configured the attribute mappings for this application, there will be only one mapping present, for a placeholder.\n-1. To confirm that the schema is available in Microsoft Entra ID, select the **Show advanced options** checkbox and select **Edit attribute list for ScimOnPremises**. Ensure that all the attributes selected in the configuration wizard are listed.  If not, then wait several minutes for the schema to refresh, and then reload the page.  Once you see the attributes listed, then cancel from this page to return to the mappings list.\n+1. To confirm that the schema is available in Microsoft Entra ID, select the **Advanced Options** dropdown and select **Edit target User attributes**. Ensure that all the attributes selected in the configuration wizard are listed.  If not, then wait several minutes for the schema to refresh, and then reload the page.  Once you see the attributes listed, then cancel from this page to return to the mappings list.\n 1. Now, on the select on the **userPrincipalName** PLACEHOLDER mapping.  This mapping is added by default when you first configure on-premises provisioning. Change the value to match the following:\n  \n    |Mapping type|Source attribute|Target attribute|\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/on-premises-powershell-connector.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-powershell-connector",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/on-premises-powershell-connector.md",
+      "firstSeenAt": "2026-08-07T20:58:45.474Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated UI instructions for checking the provisioning schema",
+        "summary": "The documentation replaces the old “Show advanced options” and “Edit attribute list for ScimOnPremises” labels with “Advanced Options” and “Edit target User attributes.”",
+        "adminImpact": "Administrators should use the updated UI labels when verifying that configured attributes are available in Microsoft Entra ID.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/on-premises-web-services-connector.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/on-premises-web-services-connector.md b/docs/identity/app-provisioning/on-premises-web-services-connector.md\nindex 7c100c017f9..a9c4ab63656 100644\n--- a/docs/identity/app-provisioning/on-premises-web-services-connector.md\n+++ b/docs/identity/app-provisioning/on-premises-web-services-connector.md\n@@ -249,7 +249,7 @@ You'll use the Azure portal to configure the mapping between the Microsoft Entra\n \n      ![Screenshot that shows provisioning a user.](~/includes/media\\app-provisioning-sql\\configure-10.png)\n \n- 5. To confirm that the schema of your application is available in Microsoft Entra ID, select the **Show advanced options** checkbox and select **Edit attribute list for ScimOnPremises**. Ensure that all the attributes selected in the configuration wizard are listed. If not, then wait several minutes for the schema to refresh, and then reload the page. Once you see the attributes listed, then cancel from this page to return to the mappings list.\n+ 5. To confirm that the schema of your application is available in Microsoft Entra ID, select the **Advanced Options** dropdown and select **Edit target User attributes**. Ensure that all the attributes selected in the configuration wizard are listed. If not, then wait several minutes for the schema to refresh, and then reload the page. Once you see the attributes listed, then cancel from this page to return to the mappings list.\n  6. Now, select on the **userPrincipalName** PLACEHOLDER mapping. This mapping is added by default when you first configure on-premises provisioning.  \n  \n :::image type=\"content\" source=\"~/includes/media/app-provisioning-sql/configure-11.png\" alt-text=\"Screenshot of placeholder.\" lightbox=\"~/includes/media/app-provisioning-sql/configure-11.png\":::\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/on-premises-web-services-connector.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/on-premises-web-services-connector",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/on-premises-web-services-connector.md",
+      "firstSeenAt": "2026-08-07T20:58:45.486Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated provisioning UI instructions",
+        "summary": "The documentation replaces the old **Show advanced options** checkbox and **Edit attribute list for ScimOnPremises** labels with **Advanced Options** and **Edit target User attributes**.",
+        "adminImpact": "Administrators should use the updated UI labels when verifying that application attributes are available in Microsoft Entra ID.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/plan-cloud-hr-provision.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/plan-cloud-hr-provision.md b/docs/identity/app-provisioning/plan-cloud-hr-provision.md\nindex b04f2d10b28..41dac42c7cd 100644\n--- a/docs/identity/app-provisioning/plan-cloud-hr-provision.md\n+++ b/docs/identity/app-provisioning/plan-cloud-hr-provision.md\n@@ -354,7 +354,7 @@ When you initiate the Joiners process, gather the following requirements:\n - Do you plan to use the cloud HR app to Microsoft Entra user provisioning to manage both employees and contingent workers?\n - Do you plan to roll out the cloud HR app to Microsoft Entra user provisioning only for a subset of the cloud HR app users? An example might be employees only.\n \n-Depending on your requirements, when you configure attribute mappings, you can set the **Source Object Scope** field to select which sets of users in the cloud HR app should be in scope for provisioning to Active Directory. For more information, see the cloud HR app tutorial for commonly used scoping filters.\n+Depending on your requirements, when you configure attribute mappings, you can use scoping filters to select which sets of users in the cloud HR app should be in scope for provisioning to Active Directory. For more information, see the cloud HR app tutorial for commonly used scoping filters.\n \n ### Determine matching attributes\n \n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/plan-cloud-hr-provision.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/plan-cloud-hr-provision",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/plan-cloud-hr-provision.md",
+      "firstSeenAt": "2026-08-07T20:58:45.497Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated cloud HR provisioning terminology",
+        "summary": "The guide now refers to using “scoping filters” instead of the “Source Object Scope” field when selecting users for provisioning to Active Directory.",
+        "adminImpact": "Administrators should use the updated terminology and follow the linked cloud HR app tutorial for scoping-filter examples. No new feature or availability change is indicated.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/provision-custom-security-attributes.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/app-provisioning/provision-custom-security-attributes.md b/docs/identity/app-provisioning/provision-custom-security-attributes.md\nindex 0e49409d50e..db9e0b4cd15 100644\n--- a/docs/identity/app-provisioning/provision-custom-security-attributes.md\n+++ b/docs/identity/app-provisioning/provision-custom-security-attributes.md\n@@ -72,7 +72,7 @@ This example includes custom security attributes that you could add to your tena\n \n    :::image type=\"content\" source=\"media/provision-custom-security-attributes/attribute-mapping.png\" alt-text=\"Screenshot of the attribute mapping screen.\":::\n \n-1. Define source attributes that you want to store sensitive HR data, then check the **Show advanced options** box to open the attribute list.\n+1. Define source attributes that you want to store sensitive HR data, then select the **Advanced Options** dropdown to open the attribute list.\n 1. Select **Edit attribute list for API** to identify those attributes that you want to test.\n \n    :::image type=\"content\" source=\"media/provision-custom-security-attributes/show-advanced-options.png\" alt-text=\"Screenshot of the Edit attribute list for API screen.\":::\n@@ -348,7 +348,7 @@ With this topology, here is how the end-to-end flow works:\n 1. The app creates/updates the user account in on-premises Active Directory using the Employee ID as the matching identifier.  \n 1. Microsoft Entra Connect Sync / Cloud Sync synchronizes the user profile to Microsoft Entra ID.  \n 1. If you’ve configured Workday Writeback, email or phone number information is written back to Workday.  \n-1. The **Workday-to-Microsoft Entra ID provisioning** app is configured to only process updates and set confidential attributes as custom security attributes. Use the schema editor under **Show advanced options** to remove default attribute mappings like `accountEnabled` and `isSoftDeleted` that are not relevant in this scenario.  \n+1. The **Workday-to-Microsoft Entra ID provisioning** app is configured to only process updates and set confidential attributes as custom security attributes. Use **Edit schema** under the **Advanced Options** dropdown to remove default attribute mappings like `accountEnabled` and `isSoftDeleted` that are not relevant in this scenario.  \n \n :::image type=\"content\" source=\"media/provision-custom-security-attributes/attribute-mapping-hybrid.png\" alt-text=\"Screenshot of attribute mapping for hybrid users.\":::\n \n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/provision-custom-security-attributes.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/provision-custom-security-attributes",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/provision-custom-security-attributes.md",
+      "firstSeenAt": "2026-08-07T20:58:45.508Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated provisioning UI instructions",
+        "summary": "The documentation now refers to the **Advanced Options** dropdown instead of **Show advanced options**, and directs administrators to **Edit schema** for modifying attribute mappings.",
+        "adminImpact": "Use the updated UI labels when configuring custom security attributes or editing Workday provisioning schemas.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/sap-successfactors-integration-reference.md",
+      "status": "modified",
+      "additions": 21,
+      "deletions": 27,
+      "changes": 48,
+      "patch": "diff --git a/docs/identity/app-provisioning/sap-successfactors-integration-reference.md b/docs/identity/app-provisioning/sap-successfactors-integration-reference.md\nindex d7706b41370..03d2ccae296 100644\n--- a/docs/identity/app-provisioning/sap-successfactors-integration-reference.md\n+++ b/docs/identity/app-provisioning/sap-successfactors-integration-reference.md\n@@ -144,9 +144,8 @@ When Microsoft Entra provisioning service queries SuccessFactors, it retrieves a\n \n To retrieve more attributes, follow the steps listed:\n     \n-1. Browse to **Enterprise Applications** > **SuccessFactors App** > **Provisioning** > **Edit Provisioning** > **attribute-mapping page**.\n-1. Scroll down and click **Show advanced options**.\n-1. Click on **Edit attribute list for SuccessFactors**. \n+1. Browse to **Enterprise Applications** > **SuccessFactors App** > **Provisioning** > **Edit Provisioning** > **Attribute Mapping** page.\n+1. Select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n \n    > [!NOTE] \n    > If the **Edit attribute list for SuccessFactors** option doesn't show in the Microsoft Entra admin center, use the URL *https://portal.azure.com/?Microsoft_AAD_IAM_forceSchemaEditorEnabled=true* to access the page. \n@@ -260,8 +259,8 @@ If you're running into any of these issues or prefer mapping employment status t\n \n Use the steps to update your mapping to retrieve these codes. \n \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app. \n-1. Under **Show advanced options**, click on **Edit SuccessFactors attribute list**. \n+1. Open the attribute mapping page of your SuccessFactors provisioning app. \n+1. Under the **Advanced Options** dropdown, select **Edit target User attributes**. \n 1. Find the attribute `emplStatus` and update the JSONPath to `$.employmentNav.results[0].jobInfoNav.results[0].emplStatusNav.externalCode`. The update makes the connector retrieve the employment status codes in the table. \n 1. Save the changes. \n 1. In the attribute mapping blade, update the expression mapping for the account status flag. \n@@ -289,9 +288,8 @@ If your HR process uses Option 2, then Employee Central adds a new *EmpEmploymen\n \n You can handle both scenarios so that the new employment data shows up when a conversion or rehire occurs. Bulk update the provisioning app schema using the steps listed:  \n \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app. \n-1. Scroll down and click **Show advanced options**.\n-1. Click on the link **Review your schema here** to open the schema editor. \n+1. Open the attribute mapping page of your SuccessFactors provisioning app. \n+1. Select the **Advanced Options** dropdown and then select **Edit schema** to open the schema editor. \n \n    >![Screenshot shows the Review your schema here link that opens the schema editor.](media/sap-successfactors-integration-reference/review-schema.png#lightbox)\n \n@@ -319,9 +317,8 @@ Using the JSONPath root of `$.employmentNav.results[0]` or `$.employmentNav.resu\n \n This section describes how you can update the JSONPath settings to definitely retrieve the current active employment record of the user. It also handles worker conversion and rehiring scenarios. \n \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app. \n-1. Scroll down and click **Show advanced options**.\n-1. Click on the link **Review your schema here** to open the schema editor. \n+1. Open the attribute mapping page of your SuccessFactors provisioning app. \n+1. Select the **Advanced Options** dropdown and then select **Edit schema** to open the schema editor. \n 1. Click on the **Download** link to save a copy of the schema before editing. \n 1. In the schema editor, press Ctrl-H key to open the find-replace control.\n 1. Perform the following find replace operations. Ensure there's no leading or trailing space when performing the find-replace operations. If you're using `[-1:]` index instead of `[0]`, then update the *string-to-find* field accordingly. \n@@ -334,7 +331,7 @@ This section describes how you can update the JSONPath settings to definitely re\n \n 1. Save the schema.\n 1. The above process updates all JSONPath expressions. \n-1. For prehire processing to work, the JSONPath associated with `startDate` attribute must use either `[0]` or `[-1:]` index. Under **Show advanced options**, click on **Edit SuccessFactors attribute list**. Find the attribute `startDate` and set it to the value `$.employmentNav.results[-1:].startDate`\n+1. For prehire processing to work, the JSONPath associated with `startDate` attribute must use either `[0]` or `[-1:]` index. Under the **Advanced Options** dropdown, select **Edit target User attributes**. Find the attribute `startDate` and set it to the value `$.employmentNav.results[-1:].startDate`\n 1. Save the schema.\n 1. To ensure that terminations are processed as expected, you can use one of the following settings in the attribute mapping section.\n  \n@@ -356,9 +353,8 @@ When a user in Employee Central is processed for global assignment, SuccessFacto\n \n To fetch attributes belonging to the standard assignment and global assignment user profile, use the steps listed: \n \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app. \n-1. Scroll down and click **Show advanced options**.\n-1. Click on the link **Review your schema here** to open the schema editor.   \n+1. Open the attribute mapping page of your SuccessFactors provisioning app. \n+1. Select the **Advanced Options** dropdown and then select **Edit schema** to open the schema editor.   \n 1. Click on the **Download** link to save a copy of the schema before editing.   \n 1. In the schema editor, press Ctrl-H key to open the find-replace control.\n 1. In the find text box, copy, and paste the value `$.employmentNav.results[0]`\n@@ -368,10 +364,9 @@ To fetch attributes belonging to the standard assignment and global assignment u\n 1. The above process updates all JSONPath expressions as follows: \n    * Old JSONPath: `$.employmentNav.results[0].jobInfoNav.results[0].departmentNav.name_localized`\n    * New JSONPath: `$.employmentNav.results[?(@.assignmentClass == 'ST')].jobInfoNav.results[0].departmentNav.name_localized`\n-1. Reload the attribute-mapping blade of the app. \n-1. Scroll down and click **Show advanced options**.\n-1. Click on **Edit attribute list for SuccessFactors**.\n-1. Add new attributes to fetch global assignment data. For example: if you want to fetch the department name associated with a global assignment profile, you can add the attribute *globalAssignmentDepartment* with the JSONPath expression set to `$.employmentNav.results[?(@.assignmentClass == 'GA')].jobInfoNav.results[0].departmentNav.name_localized`. \n+1. Reload the attribute mapping page of the app. \n+1. Select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n+1. Add new attributes to fetch global assignment data.For example: if you want to fetch the department name associated with a global assignment profile, you can add the attribute *globalAssignmentDepartment* with the JSONPath expression set to `$.employmentNav.results[?(@.assignmentClass == 'GA')].jobInfoNav.results[0].departmentNav.name_localized`. \n 1. You can now either flow both department values to Active Directory attributes or selectively flow a value using expression mapping. Example: the expression sets the value of AD *department* attribute to *globalAssignmentDepartment* if present, else it sets the value to *department* associated with standard assignment. \n    * `IIF(IsPresent([globalAssignmentDepartment]),[globalAssignmentDepartment],[department])`\n \n@@ -385,10 +380,9 @@ To fetch attributes belonging to the standard assignment and global assignment u\n When a user in Employee Central has concurrent/multiple jobs, there are two *EmpEmployment* and *User* entities with *assignmentClass* set to \"ST\". \n To fetch attributes belonging to both jobs, use the steps listed: \n \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app. \n-1. Scroll down and click **Show advanced options**.\n-1. Click on **Edit attribute list for SuccessFactors**.\n-1. Let's say you want to pull the department associated with job 1 and job 2. The predefined attribute *department* already fetches the value of department for the first job. You can define a new attribute called *secondJobDepartment* and set the JSONPath expression to `$.employmentNav.results[1].jobInfoNav.results[0].departmentNav.name_localized`\n+1. Open the attribute mapping page of your SuccessFactors provisioning app. \n+1. Select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n+1. Let's say you want to pull the department associated with job 1 and job 2.The predefined attribute *department* already fetches the value of department for the first job. You can define a new attribute called *secondJobDepartment* and set the JSONPath expression to `$.employmentNav.results[1].jobInfoNav.results[0].departmentNav.name_localized`\n 1. You can now either flow both department values to Active Directory attributes or selectively flow a value using expression mapping. \n 1. Save the mapping. \n 1. Test the configuration using [provision on demand](provision-on-demand.md). \n@@ -411,11 +405,11 @@ Inbound user provisioning from SAP SuccessFactors to on premises Active Director\n The default behavior of the provisioning service is to process prehires in the Onboarding module. \n \n If you want to exclude processing of prehires in the Onboarding module, update your provisioning job configuration as follows: \n-1. Open the attribute-mapping blade of your SuccessFactors provisioning app.\n-1. Under show advanced options, edit the SuccessFactors attribute list to add a new attribute called `userStatus`.\n+1. Open the attribute mapping page of your SuccessFactors provisioning app.\n+1. Under the **Advanced Options** dropdown, select **Edit target User attributes** to add a new attribute called `userStatus`.\n 1. Set the JSONPath API expression for this attribute as: `$.employmentNav.results[0].userNav.status`\n-1. Save the schema to return back to the attribute mapping blade. \n-1. Edit the Source Object scope to apply a scoping filter `userStatus NOT EQUALS`\n+1. Save the schema to return back to the attribute mapping page. \n+1. Select **Scoping filters** and apply a scoping filter `userStatus NOT EQUALS`.\n 1. Save the mapping and validate that the scoping filter works using provisioning on demand. \n \n > [!NOTE]\n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/sap-successfactors-integration-reference.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/sap-successfactors-integration-reference",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/sap-successfactors-integration-reference.md",
+      "firstSeenAt": "2026-08-07T20:58:45.519Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "SuccessFactors provisioning steps updated for revised UI labels",
+        "summary": "The documentation replaces older attribute-mapping navigation with the newer labels: **Advanced Options**, **Edit target User attributes**, and **Edit schema**.",
+        "adminImpact": "Administrators following the guide should use the updated navigation when editing SuccessFactors attributes or schemas. The diff indicates a documentation update, not a new feature launch.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/workday-retrieve-pronoun-information.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/workday-retrieve-pronoun-information.md b/docs/identity/app-provisioning/workday-retrieve-pronoun-information.md\nindex 887ef59cd7d..8b1359a99af 100644\n--- a/docs/identity/app-provisioning/workday-retrieve-pronoun-information.md\n+++ b/docs/identity/app-provisioning/workday-retrieve-pronoun-information.md\n@@ -64,7 +64,7 @@ To retrieve pronouns from Workday, update your Microsoft Entra provisioning app\n      >[!div class=\"mx-imgBorder\"] \n      >![Screenshot of Microsoft Entra admin center provisioning app with Workday version.](./media/workday-pronoun-data/update-workday-version.png)\n \n-1. Open the **Attribute mappings** blade. Scroll down and click **Show advanced options**. Click on **Edit attribute list for Workday**.\n+1. Open the **Attribute Mapping** page. Select the **Advanced Options** dropdown and then select **Edit target User attributes**.\n 1. If your provisioning app is configured to use the default WWS API version v21.1, then [reference this article to review and update the XPATHs for each attribute](workday-attribute-reference.md#xpath-values-for-workday-web-services-wws-api-v30).\n 1. Add a new attribute called **PreferredPronoun** with XPATH \n \n",
+      "baseCommitSha": "1f100329eb5af063271c1f2bbf71c8f993dc8997",
+      "commitSha": "b9db8e9148bd1c6f988e355130377a1bc1fad54f",
+      "commitMessage": "[App Provisioning] Update old UI references across provisioning docs for new UX",
+      "commitAuthor": "jenniferf-skc",
+      "commitDate": "2026-03-05 14:42:50 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/workday-retrieve-pronoun-information.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/workday-retrieve-pronoun-information",
+      "eventId": "entra-docs:b9db8e9148bd1c6f988e355130377a1bc1fad54f:modified:docs/identity/app-provisioning/workday-retrieve-pronoun-information.md",
+      "firstSeenAt": "2026-08-07T20:58:45.526Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Updated Workday pronoun setup navigation",
+        "summary": "The instructions now refer to the Attribute Mapping page, the Advanced Options dropdown, and Edit target User attributes instead of the previous UI labels.",
+        "adminImpact": "Administrators should use the updated navigation when configuring Workday attribute mappings; the change documents the UI path only.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
   "messageCenterItems": [],
   "summary": {
-    "totalCommits": 1,
-    "totalFiles": 1,
+    "totalCommits": 18,
+    "totalFiles": 31,
     "authors": [
-      "Michael Greene"
+      "ArvindHarinder1",
+      "Danny Strockis",
+      "Grace Nagy",
+      "Jeremy Conley",
+      "Kamran Tabish",
+      "Michael Greene",
+      "Nuno Alexandre",
+      "jenniferf-skc",
+      "peterzenz"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 0 new, 1 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "overview": "Today's report includes 2 new, 29 updated, and 0 removed Microsoft Entra documentation files across 8 documentation areas.",
     "groups": [
+      {
+        "category": "New documentation",
+        "title": "identity/conditional-access",
+        "summary": "Adds a guide for deploying and enforcing Token Protection with Conditional Access for supported browser-based applications accessing Azure Resource Manager. Web application support is explicitly in preview and limited to listed apps, platforms, browsers, and device configurations. The Conditional Access token protection documentation now links to a deployment guide for web apps that access Azure Resource Manager. The linked guidance is marked Preview. The documentation now lists two license options: Microsoft 365 E7, or Microsoft Agent 365 paired with Microsoft Entra P1 or Microsoft 365 E3. The documentation replaces the Microsoft Entra ID P1/P2 license requirement and the note that an Agent",
+        "sourceFiles": [
+          "docs/identity/conditional-access/deployment-guide-token-protection-web-apps.md",
+          "docs/identity/conditional-access/concept-token-protection.md",
+          "docs/identity/conditional-access/howto-target-agent-identities.md",
+          "docs/identity/conditional-access/howto-target-agent-identities.md"
+        ]
+      },
+      {
+        "category": "Preview",
+        "title": "global-secure-access",
+        "summary": "Microsoft added a how-to article for configuring the Global Secure Access MCP firewall to inspect, audit, and allow or block Model Context Protocol traffic. It covers server, primitive, method, and protocol-version controls for supported MCP traffic.",
+        "sourceFiles": [
+          "docs/global-secure-access/how-to-configure-mcp-firewall.md"
+        ]
+      },
       {
         "category": "Documentation change",
         "title": "identity/devices",
@@ -46,13 +824,108 @@
         "sourceFiles": [
           "docs/identity/devices/howto-arc-sign-in-windows.md"
         ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/hybrid",
+        "summary": "The existing-tenant installation documentation now instructs administrators to import the ADSyncTools module with a minimum version of 2.5. The documentation no longer includes the “Import ADSyncTools module” heading and `Import-Module ADSyncTools` command. The documentation replaces a direct Microsoft Graph beta PATCH request with Microsoft Graph PowerShell cmdlets, including the `OnPremDirectorySynchronization.ReadWrite.All` scope. It now sets `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` to `$true` temporarily and explains that `$false` re-enables hard match protection.",
+        "sourceFiles": [
+          "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+          "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md",
+          "docs/identity/hybrid/connect/how-to-connect-install-existing-tenant.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/app-provisioning",
+        "summary": "The documentation now directs administrators to Entra ID > Cross-tenant Synchronization > Configurations, removing the External Identities step. The documentation removes an example image and the instructions to enable or disable group provisioning through Attribute Mapping. It now directs administrators to the Scoping filters page for apps that support group sync. The article now directs administrators to Manage > Attribute Mapping, with mappings organized by Users and Groups. It documents row-level edit and delete controls, group sync via Scoping filters, and the Advanced Options menu for custom attributes. The documentation replaces the former Mappings-based steps with a Scoping filters w",
+        "sourceFiles": [
+          "docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+          "docs/identity/app-provisioning/customize-application-attributes.md",
+          "docs/identity/app-provisioning/customize-application-attributes.md",
+          "docs/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md",
+          "docs/identity/app-provisioning/expression-builder.md",
+          "docs/identity/app-provisioning/export-import-provisioning-configuration.md",
+          "docs/identity/app-provisioning/expression-builder.md",
+          "docs/identity/app-provisioning/inbound-provisioning-api-custom-attributes.md",
+          "docs/identity/app-provisioning/inbound-provisioning-api-faqs.md",
+          "docs/identity/app-provisioning/on-premises-ldap-connector-linux.md",
+          "docs/identity/app-provisioning/on-premises-powershell-connector.md",
+          "docs/identity/app-provisioning/on-premises-web-services-connector.md",
+          "docs/identity/app-provisioning/plan-cloud-hr-provision.md",
+          "docs/identity/app-provisioning/provision-custom-security-attributes.md",
+          "docs/identity/app-provisioning/sap-successfactors-integration-reference.md",
+          "docs/identity/app-provisioning/workday-retrieve-pronoun-information.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "includes",
+        "summary": "The documentation replaces standalone Entra licensing options for agents with guidance that Microsoft Agent 365 is required. It states that Agent 365 is included with Microsoft 365 E7 and available as an add-on to Microsoft E5, A5, Business Premium, or Defender Suite plus Purview Suite. The documentation now lists two supported licensing options: Microsoft 365 E7, which includes Agent 365 and Microsoft Entra Suite, or Microsoft Agent 365 paired with at least Microsoft Entra P1 or Microsoft 365 E3. The documentation now states that Conditional Access for agents requires a Microsoft Agent 365 license to apply policies through Microsoft Entra Agent ID, replacing “Starting soon.”",
+        "sourceFiles": [
+          "docs/includes/licensing-agent-id.md",
+          "docs/includes/licensing-conditional-access.md",
+          "docs/includes/licensing-conditional-access.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/multi-tenant-organizations",
+        "summary": "The guide now reflects revised Entra portal navigation and controls, including **New configuration**, **Create**, **Overview > Properties**, and **Attribute mapping**. It also updates terminology and scope-setting guidance. The August 2026 update revises configuration steps for the Overview, Attribute mapping, Provisioning configuration, and Basics settings pages.",
+        "sourceFiles": [
+          "docs/identity/multi-tenant-organizations/cross-tenant-synchronization-configure.md",
+          "docs/identity/multi-tenant-organizations/whats-new.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "id-governance",
+        "summary": "The documentation now states that support for the `memberOf` rule operator ends November 3, 2026, replacing October 27, 2026. Policies using it will be quarantined and stop processing assignments from that date.",
+        "sourceFiles": [
+          "docs/id-governance/entitlement-management-access-package-auto-assignment-policy.md"
+        ]
       }
     ],
     "highlights": [
       {
+        "category": "New documentation",
+        "headline": "identity/conditional-access",
+        "detail": "Adds a guide for deploying and enforcing Token Protection with Conditional Access for supported browser-based applications accessing Azure Resource Manager. Web application support is explicitly in preview and limited to listed apps, platforms, browsers, and device configurations. The Conditional Access token protection documentation now links to a deployment guide for web apps that access Azure Resource Manager. The linked guidance is marked Preview. The documentation now lists two license options: Microsoft 365 E7, or Microsoft Agent 365 paired with Microsoft Entra P1 or Microsoft 365 E3. The documentation replaces the Microsoft Entra ID P1/P2 license requirement and the note that an Agent"
+      },
+      {
+        "category": "Preview",
+        "headline": "global-secure-access",
+        "detail": "Microsoft added a how-to article for configuring the Global Secure Access MCP firewall to inspect, audit, and allow or block Model Context Protocol traffic. It covers server, primitive, method, and protocol-version controls for supported MCP traffic."
+      },
+      {
         "category": "Documentation change",
         "headline": "identity/devices",
         "detail": "The documentation now describes Microsoft Entra joining as intended for Arc-enabled machines planned not to join another domain, replacing the stronger “can't join” wording. It still directs administrators to disconnect from Microsoft Entra by uninstalling the extension if another domain join is needed."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/hybrid",
+        "detail": "The existing-tenant installation documentation now instructs administrators to import the ADSyncTools module with a minimum version of 2.5. The documentation no longer includes the “Import ADSyncTools module” heading and `Import-Module ADSyncTools` command. The documentation replaces a direct Microsoft Graph beta PATCH request with Microsoft Graph PowerShell cmdlets, including the `OnPremDirectorySynchronization.ReadWrite.All` scope. It now sets `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` to `$true` temporarily and explains that `$false` re-enables hard match protection."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/app-provisioning",
+        "detail": "The documentation now directs administrators to Entra ID > Cross-tenant Synchronization > Configurations, removing the External Identities step. The documentation removes an example image and the instructions to enable or disable group provisioning through Attribute Mapping. It now directs administrators to the Scoping filters page for apps that support group sync. The article now directs administrators to Manage > Attribute Mapping, with mappings organized by Users and Groups. It documents row-level edit and delete controls, group sync via Scoping filters, and the Advanced Options menu for custom attributes. The documentation replaces the former Mappings-based steps with a Scoping filters w"
+      },
+      {
+        "category": "Documentation change",
+        "headline": "includes",
+        "detail": "The documentation replaces standalone Entra licensing options for agents with guidance that Microsoft Agent 365 is required. It states that Agent 365 is included with Microsoft 365 E7 and available as an add-on to Microsoft E5, A5, Business Premium, or Defender Suite plus Purview Suite. The documentation now lists two supported licensing options: Microsoft 365 E7, which includes Agent 365 and Microsoft Entra Suite, or Microsoft Agent 365 paired with at least Microsoft Entra P1 or Microsoft 365 E3. The documentation now states that Conditional Access for agents requires a Microsoft Agent 365 license to apply policies through Microsoft Entra Agent ID, replacing “Starting soon.”"
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/multi-tenant-organizations",
+        "detail": "The guide now reflects revised Entra portal navigation and controls, including **New configuration**, **Create**, **Overview > Properties**, and **Attribute mapping**. It also updates terminology and scope-setting guidance. The August 2026 update revises configuration steps for the Overview, Attribute mapping, Provisioning configuration, and Basics settings pages."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "id-governance",
+        "detail": "The documentation now states that support for the `memberOf` rule operator ends November 3, 2026, replacing October 27, 2026. Policies using it will be quarantined and stop processing assignments from that date."
       }
     ],
     "generatedBy": "fallback"
