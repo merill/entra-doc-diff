@@ -28,6 +28,8 @@ Add these secrets:
 - `SENDER_EMAIL`: Your authorized sender email
 - `OPENAI_API_KEY`: Your OpenAI project API key for generating per-diff and grouped English summaries
 - `DISCORD_ENTRA_SCOUT_WEBHOOK_URL`: Shared Entra Scout incoming webhook for the Discord Entra updates channel. Store the same URL under this secret name in the Message Center repository.
+- `KIT_API_KEY`: Kit v4 API key for daily subscriber broadcasts
+- `HEALTHCHECKS_PING_URL`: Private Healthchecks.io ping URL for the scheduled pipeline check
 
 The workflow uses the OpenAI Responses API with `gpt-5.6-luna` and `xhigh` reasoning. It summarizes every diff separately and makes one additional grouping request when multiple diffs are detected. If the key is missing or an API request fails, the site, JSON, Discord feed, and email use deterministic fallback text.
 
@@ -48,10 +50,12 @@ npm test
 ```
 
 ## Step 5: Enable the Workflow
-The GitHub Action refreshes every four hours. The 08:15 UTC run also schedules the daily Kit subscriber summary after the site build. You can also:
+The GitHub Action refreshes every four hours. Every scheduled run reconciles Kit: runs before 08:15 UTC verify recent delivery, while the 08:15 and later runs safely create or deduplicate the current UTC day's subscriber summary. You can also:
 - Go to Actions tab → "Daily Entra Docs Monitor" → "Run workflow" to test manually
 - Check the logs to ensure everything is working
 - Check Kit for the scheduled subscriber broadcast
+
+Configure the Healthchecks.io check with cron `15 0,4,8,12,16,20 * * *`, timezone `UTC`, and a two-hour grace period. Enable an email notification before relying on it for outage detection. Scheduled runs and non-draft manual Kit runs report health; draft smoke tests do not.
 
 ## ⚡ Quick Tips
 - The first run might take a few minutes to set up

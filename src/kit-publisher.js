@@ -73,8 +73,10 @@ class KitPublisher {
     this.senderEmail = String(options.senderEmail ?? process.env.KIT_SENDER_EMAIL ?? '').trim();
     this.apiBaseUrl = options.apiBaseUrl || 'https://api.kit.com/v4';
     const scheduleDelayMinutes = Number(options.scheduleDelayMinutes ?? process.env.KIT_SCHEDULE_DELAY_MINUTES ?? 5);
+    const verificationGraceMinutes = Number(options.verificationGraceMinutes ?? process.env.KIT_SEND_VERIFICATION_GRACE_MINUTES ?? 30);
     const maxAttempts = Number(options.maxAttempts ?? 4);
     this.scheduleDelayMinutes = Number.isFinite(scheduleDelayMinutes) && scheduleDelayMinutes >= 1 ? scheduleDelayMinutes : 5;
+    this.verificationGraceMinutes = Number.isFinite(verificationGraceMinutes) && verificationGraceMinutes >= 1 ? verificationGraceMinutes : 30;
     this.maxAttempts = Number.isInteger(maxAttempts) && maxAttempts >= 1 ? maxAttempts : 4;
     this.fetch = options.fetch || globalThis.fetch;
     this.sleep = options.sleep || (milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)));
@@ -187,8 +189,57 @@ class KitPublisher {
   }
 
   async findBroadcast(marker) {
-    const existing = await this.request('GET', '/broadcasts?per_page=1000');
-    return (existing.broadcasts || []).find(broadcast => broadcast.description === marker);
+    let after;
+    const seenCursors = new Set();
+
+    while (true) {
+      const cursor = after ? `&after=${encodeURIComponent(after)}` : '';
+      const existing = await this.request('GET', `/broadcasts?per_page=1000${cursor}`);
+      const match = (existing.broadcasts || []).find(broadcast => broadcast.description === marker);
+      if (match) return match;
+
+      const pagination = existing.pagination || {};
+      if (!pagination.has_next_page) return undefined;
+      if (!pagination.end_cursor || seenCursors.has(pagination.end_cursor)) {
+        throw new Error('Kit broadcast pagination did not advance to a new cursor');
+      }
+      seenCursors.add(pagination.end_cursor);
+      after = pagination.end_cursor;
+    }
+  }
+
+  async verifyBroadcast(broadcast) {
+    if (!broadcast?.id) throw new Error('Cannot verify a Kit broadcast without an id');
+    const response = await this.request('GET', `/broadcasts/${encodeURIComponent(broadcast.id)}/stats`);
+    const stats = response.broadcast?.stats || {};
+    const lifecycleStatus = String(stats.status || '').toLowerCase();
+
+    if (lifecycleStatus === 'completed') {
+      this.logger.log(`Verified Kit broadcast ${broadcast.id} completed for ${broadcast.description || 'the daily email'}.`);
+      return { status: 'verified', lifecycleStatus, broadcastId: broadcast.id };
+    }
+
+    if (lifecycleStatus === 'scheduled' || lifecycleStatus === 'sending') {
+      const sendAt = new Date(broadcast.send_at || '');
+      if (Number.isNaN(sendAt.getTime())) {
+        throw new Error(`Kit broadcast ${broadcast.id} is ${lifecycleStatus} but has no valid send_at timestamp`);
+      }
+      const deadline = sendAt.getTime() + (this.verificationGraceMinutes * 60000);
+      if (this.now().getTime() <= deadline) {
+        this.logger.log(`Kit broadcast ${broadcast.id} is ${lifecycleStatus}; completion verification remains within the ${this.verificationGraceMinutes}-minute grace period.`);
+        return { status: 'pending', lifecycleStatus, broadcastId: broadcast.id, sendAt: broadcast.send_at };
+      }
+      throw new Error(`Kit broadcast ${broadcast.id} remained ${lifecycleStatus} more than ${this.verificationGraceMinutes} minutes after ${broadcast.send_at}`);
+    }
+
+    throw new Error(`Kit broadcast ${broadcast.id} has unexpected delivery status ${lifecycleStatus || 'unknown'}`);
+  }
+
+  async verifyDaily(date, options = {}) {
+    const marker = this.marker(date, false);
+    const broadcast = options.broadcast || await this.findBroadcast(marker);
+    if (!broadcast) return { status: 'missing', marker };
+    return this.verifyBroadcast(broadcast);
   }
 
   async createBroadcastOnce(marker, payload) {
