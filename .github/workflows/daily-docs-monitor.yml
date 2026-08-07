@@ -5,7 +5,7 @@ permissions:
   
 on:
   schedule:
-    # Four-hour UTC cadence. The dedicated 08:15 run also sends the daily email.
+    # Four-hour UTC cadence. Runs at and after 08:15 reconcile the daily email.
     - cron: '15 0,4,12,16,20 * * *'
     - cron: '15 8 * * *'
   workflow_dispatch:
@@ -35,6 +35,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Signal scheduled refresh start
+      if: github.event_name == 'schedule'
+      continue-on-error: true
+      env:
+        HEALTHCHECKS_PING_URL: ${{ secrets.HEALTHCHECKS_PING_URL }}
+      run: |
+        if [ -z "$HEALTHCHECKS_PING_URL" ]; then
+          echo "HEALTHCHECKS_PING_URL is not configured; skipping the external heartbeat."
+          exit 0
+        fi
+        curl --fail --silent --show-error --max-time 10 --retry 3 "${HEALTHCHECKS_PING_URL%/}/start"
+
     - name: Checkout this repository
       uses: actions/checkout@v4
       
@@ -125,8 +137,10 @@ jobs:
   publish-kit:
     name: Publish the daily subscriber email
     needs: monitor-docs
-    if: needs.monitor-docs.result == 'success' && ((github.event_name == 'schedule' && github.event.schedule == '15 8 * * *') || (github.event_name == 'workflow_dispatch' && inputs.send_email == true))
+    if: needs.monitor-docs.result == 'success' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.send_email == true))
     uses: ./.github/workflows/daily-kit-broadcast.yml
+    with:
+      auto_mode: ${{ github.event_name == 'schedule' }}
     secrets: inherit
 
   notify-failure:
@@ -146,4 +160,28 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
         FAILURE_RECIPIENT_EMAIL: "merill@merill.net"
+        FAILURE_COMPONENT: "site refresh"
       run: node scripts/send-workflow-failure-email.js
+
+  report-health:
+    name: Report scheduled pipeline health
+    needs: [monitor-docs, publish-kit]
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Signal scheduled pipeline result
+      continue-on-error: true
+      env:
+        HEALTHCHECKS_PING_URL: ${{ secrets.HEALTHCHECKS_PING_URL }}
+        MONITOR_RESULT: ${{ needs.monitor-docs.result }}
+        KIT_RESULT: ${{ needs.publish-kit.result }}
+      run: |
+        if [ -z "$HEALTHCHECKS_PING_URL" ]; then
+          echo "HEALTHCHECKS_PING_URL is not configured; skipping the external heartbeat."
+          exit 0
+        fi
+        PING_URL="${HEALTHCHECKS_PING_URL%/}"
+        if [ "$MONITOR_RESULT" != "success" ] || [ "$KIT_RESULT" != "success" ]; then
+          PING_URL="$PING_URL/fail"
+        fi
+        curl --fail --silent --show-error --max-time 10 --retry 3 "$PING_URL"

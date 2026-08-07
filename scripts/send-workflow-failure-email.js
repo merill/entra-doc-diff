@@ -18,6 +18,7 @@ function workflowContext(env = process.env) {
   return {
     workflow: env.GITHUB_WORKFLOW || 'Daily Entra Docs Monitor',
     job: env.GITHUB_JOB || 'monitor-docs',
+    component: env.FAILURE_COMPONENT || 'refresh',
     repository,
     branch: env.GITHUB_REF_NAME || '',
     commit: env.GITHUB_SHA || '',
@@ -30,7 +31,9 @@ function workflowContext(env = process.env) {
 
 function buildFailureMessage(context, sender, recipient = DEFAULT_RECIPIENT) {
   const runLabel = context.runNumber ? `run ${context.runNumber}` : 'scheduled run';
+  const component = context.component || 'refresh';
   const details = [
+    ['Component', component],
     ['Workflow', context.workflow],
     ['Job', context.job],
     ['Repository', context.repository],
@@ -46,7 +49,7 @@ function buildFailureMessage(context, sender, recipient = DEFAULT_RECIPIENT) {
     : '';
 
   return {
-    subject: `Daily.Entra.News refresh failed — ${runLabel}`,
+    subject: `Daily.Entra.News ${component} failed — ${runLabel}`,
     importance: 'high',
     internetMessageHeaders: [
       { name: 'x-entra-docs-monitor', value: 'failure-alert' },
@@ -54,7 +57,7 @@ function buildFailureMessage(context, sender, recipient = DEFAULT_RECIPIENT) {
     ],
     body: {
       contentType: 'HTML',
-      content: `<div style="max-width:680px;margin:0 auto;font-family:Segoe UI,Arial,sans-serif;color:#1f2328"><div style="padding:18px 22px;border-left:5px solid #b42318;background:#fff1f0"><h1 style="margin:0 0 8px;font-size:22px;color:#8a1c13">Daily.Entra.News refresh failed</h1><p style="margin:0;line-height:1.5">The scheduled update job did not complete, so detected content might not have reached the site.</p></div><table style="margin-top:22px;border-collapse:collapse;font-size:14px">${rows}</table>${runLink}<p style="margin-top:24px;color:#666;font-size:12px">This automated alert was sent by the Daily.Entra.News GitHub Actions workflow.</p></div>`
+      content: `<div style="max-width:680px;margin:0 auto;font-family:Segoe UI,Arial,sans-serif;color:#1f2328"><div style="padding:18px 22px;border-left:5px solid #b42318;background:#fff1f0"><h1 style="margin:0 0 8px;font-size:22px;color:#8a1c13">Daily.Entra.News ${escapeHtml(component)} failed</h1><p style="margin:0;line-height:1.5">The ${escapeHtml(component)} job did not complete. Open the Actions run to review the failure and any delivery impact.</p></div><table style="margin-top:22px;border-collapse:collapse;font-size:14px">${rows}</table>${runLink}<p style="margin-top:24px;color:#666;font-size:12px">This automated alert was sent by the Daily.Entra.News GitHub Actions workflow.</p></div>`
     },
     toRecipients: [{ emailAddress: { address: recipient } }],
     from: { emailAddress: { address: sender } }

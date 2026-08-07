@@ -4,7 +4,7 @@ An automated GitHub Actions workflow that monitors the [Microsoft Entra document
 
 ## 🚀 Features
 
-- **📅 Daily Monitoring**: Automatically runs every day at 8:15 AM UTC, after Microsoft's late publish/sync cycle
+- **📅 Four-hour Monitoring**: Refreshes at six UTC slots and reconciles the daily subscriber email from 8:15 AM onward
 - **📧 Email Alerts**: Beautifully formatted HTML email reports sent to your inbox
 - **🗞️ Subscriber Broadcasts**: Concise Kit emails on days with meaningful Entra updates, with links to the full daily evidence
 - **🔍 Smart Analysis**: Categorizes changes into new files, modifications, and deletions
@@ -72,6 +72,7 @@ Go to your repository settings → Secrets and variables → Actions, and add:
 - **`OPENAI_API_KEY`**: OpenAI project API key used to generate per-diff and grouped plain-English summaries
 - **`DISCORD_ENTRA_SCOUT_WEBHOOK_URL`**: Shared Entra Scout incoming webhook for the Discord channel that receives both documentation and Message Center updates
 - **`KIT_API_KEY`**: Kit v4 API key for the dedicated Daily.Entra.News account; omit it until the Kit account is approved and ready to send
+- **`HEALTHCHECKS_PING_URL`**: Private Healthchecks.io ping URL for detecting scheduled runs that never start or finish
 
 Add these repository secrets for the public inline subscription form configuration:
 
@@ -98,7 +99,7 @@ The documentation notification contains the grouped English digest and one link 
 
 ### Kit daily email setup
 
-The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. After the dedicated 08:15 UTC run succeeds and its static website commit is pushed, it calls the separate `daily-kit-broadcast.yml` workflow to publish the email-only Kit broadcast. The other four-hour refreshes never trigger subscriber email.
+The public daily list is intentionally separate from the human-curated weekly Entra.News newsletter. Every successful scheduled refresh calls the separate `daily-kit-broadcast.yml` workflow. Before 08:15 UTC it verifies the previous delivery without creating today's broadcast; at and after 08:15 it reconciles today's report. The later 12:15, 16:15, and 20:15 runs therefore recover an email missed because an earlier Actions run was delayed, dropped, or failed.
 
 1. Create a dedicated Kit Newsletter account and complete Kit's sending approval.
 2. Add and confirm `updates@daily.entra.news` as the account's default sending address. The API publisher omits `email_address`, allowing Kit to use this verified default. Set `KIT_SENDER_EMAIL` only if you intentionally need another sending address that is already verified in the same Kit account.
@@ -109,15 +110,17 @@ The public daily list is intentionally separate from the human-curated weekly En
 7. Create a Kit v4 API key and save it as the `KIT_API_KEY` repository secret.
 8. Test the popup, success message, confirmation email, and final opt-in with seed subscribers in Outlook and Gmail before promoting the form publicly.
 
-`node scripts/publish-kit-broadcast.js --date YYYY-MM-DD` publishes a saved daily report manually. Set `KIT_DRY_RUN=true` to render and validate the payload without contacting Kit. Without `KIT_API_KEY`, the command exits successfully after reporting that Kit is not configured.
+`node scripts/publish-kit-broadcast.js --date YYYY-MM-DD` publishes a saved daily report manually. `node scripts/publish-kit-broadcast.js --auto` runs the same-day reconciliation used by Actions. Set `KIT_DRY_RUN=true` to render and validate a manual payload without contacting Kit. Without `KIT_API_KEY`, manual mode exits successfully after reporting that Kit is not configured; automatic reconciliation fails so the missing production configuration is visible.
 
-For a manual format test, open **Actions → Publish Daily Kit Broadcast → Run workflow**, choose the report date, and enable **Create a Kit draft without scheduling or sending it**. The workflow creates an unscheduled draft in Kit, where you can use Kit's preview or test-send controls for a single recipient. Drafts use a separate `daily-entra-news:YYYY-MM-DD:draft` marker, so they never prevent the real daily broadcast for that date. Delete the existing test draft in Kit before rerunning draft mode for the same date.
+For a manual format test, open **Actions → Publish Daily Kit Broadcast → Run workflow**, choose the report date, and enable **Create a Kit draft without scheduling or sending it**. The workflow creates an unscheduled draft in Kit, where you can use Kit's preview or test-send controls for a single recipient. Drafts use a separate `daily-entra-news:YYYY-MM-DD:draft` marker, so they never prevent the real daily broadcast for that date. Delete the existing test draft in Kit before rerunning draft mode for the same date. Draft runs do not update Healthchecks.io; a successful non-draft manual run records the day's production completion.
 
-The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account by omitting `subscriber_filter`, which Kit documents as the all-subscribers default. The Kit workflow serializes all runs, requires the selected date's report to exist, and checks an internal `daily-entra-news:YYYY-MM-DD` marker before every create attempt. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again. Authentication and validation failures stop immediately without undoing the already-published site.
+The publisher uses the combined daily editorial brief, including relevant Message Center items, and falls back to the documentation digest when necessary. It sends only when the selected day contains changes, schedules delivery five minutes ahead, and targets all confirmed subscribers in the dedicated account by omitting `subscriber_filter`, which Kit documents as the all-subscribers default. The Kit workflow serializes all runs and checks an internal `daily-entra-news:YYYY-MM-DD` marker across every cursor-paginated result page before creating a broadcast. After an ambiguous transient POST failure it re-lists broadcasts before retrying, so a broadcast that Kit accepted despite a lost response is not created again.
+
+Later reconciliations query Kit's delivery stats. `completed` verifies success; `scheduled` and `sending` remain healthy for 30 minutes after `send_at`; overdue or unexpected states fail the workflow and trigger the subscriber-email alert. The first run after midnight also verifies the previous UTC day. If that day had meaningful changes but never received a marker, the workflow reports the missed window but does not send stale mail.
 
 ### 3. **Failure-alert email setup**
 
-Microsoft Graph is used only to alert `merill@merill.net` when the refresh workflow fails. The scheduled daily digest is published through Kit.
+Microsoft Graph is used only to alert `merill@merill.net` when either the site refresh or subscriber-email workflow fails. The alert identifies the failed component and links to its Actions run. The scheduled daily digest is published through Kit.
 
 1. Create an Entra ID app registration in [Azure Portal](https://portal.azure.com)
 2. Add **Mail.Send** application permission
@@ -127,11 +130,20 @@ Microsoft Graph is used only to alert `merill@merill.net` when the refresh workf
 
 📚 **Detailed setup guide**: See [GRAPH-SETUP.md](./GRAPH-SETUP.md) for step-by-step instructions.
 
-### 4. **Customize (Optional)**
+### 4. **External heartbeat setup**
+
+1. Create a Healthchecks.io check named `Daily.Entra.News scheduled pipeline`.
+2. Use cron schedule `15 0,4,8,12,16,20 * * *`, timezone `UTC`, and a two-hour grace period.
+3. Enable the desired email notification integration.
+4. Save the check's private ping URL as the repository secret `HEALTHCHECKS_PING_URL`.
+
+Scheduled runs send `/start`, success, and `/fail` signals. Non-draft manual Kit runs send the same signals, allowing a successful manual recovery to mark the check healthy; draft smoke tests deliberately remain silent. If GitHub Actions never starts a scheduled run, Healthchecks.io alerts after the grace period. Heartbeat request failures do not block content or email publishing.
+
+### 5. **Customize (Optional)**
 Edit `.github/workflows/daily-docs-monitor.yml` to:
 - Change the four-hour schedule (currently 00:15 through 20:15 UTC)
 - Modify the recipient email
-- Change the dedicated 08:15 UTC email slot
+- Change the 08:15 UTC automatic email cutoff
 
 ## 🕒 Optimal Timing
 
@@ -232,7 +244,7 @@ entra-doc-diff/
 
 ## 📧 Subscriber Email Delivery
 
-Kit publishes a richly formatted summary after the successful 08:15 UTC site refresh. It includes links back to Daily.Entra.News, uses Kit's confirmed-subscriber list and default template, and skips days without meaningful updates. Microsoft Graph is reserved for workflow-failure alerts.
+Kit publishes a richly formatted summary on the first successful reconciliation at or after 08:15 UTC. Later same-day runs safely retry, delivery status is verified, and days without meaningful updates remain silent. Microsoft Graph is reserved for workflow-failure alerts.
 
 
 ## 📈 Monitoring & Troubleshooting
@@ -241,6 +253,7 @@ Kit publishes a richly formatted summary after the successful 08:15 UTC site ref
 - View run history in the Actions tab
 - Each run shows detailed logs of the monitoring process
 - Failed runs will show specific error messages
+- Healthchecks.io alerts when the scheduled pipeline does not report success within two hours of a UTC slot
 
 ### Common Issues:
 1. **Subscriber email not sending**: Check the Kit API key, verified sending domain, and broadcast logs

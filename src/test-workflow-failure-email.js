@@ -64,10 +64,20 @@ test('failure email authenticates and sends through Microsoft Graph', async () =
   assert.equal(payload.message.subject, message.subject);
 });
 
+test('failure message identifies the subscriber email component', () => {
+  const context = workflowContext({ ...environment, FAILURE_COMPONENT: 'subscriber email' });
+  const message = buildFailureMessage(context, environment.SENDER_EMAIL, environment.FAILURE_RECIPIENT_EMAIL);
+
+  assert.equal(message.subject, 'Daily.Entra.News subscriber email failed — run 396');
+  assert.match(message.body.content, /subscriber email job did not complete/);
+  assert.match(message.body.content, /<th[^>]*>Component<\/th><td[^>]*>subscriber email<\/td>/);
+});
+
 test('workflow runs the alert step only after a failure', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
   assert.match(workflow, /notify-failure:\n\s+name: Email Merill when the refresh fails\n\s+needs: monitor-docs\n\s+if: always\(\) && needs\.monitor-docs\.result == 'failure'/);
   assert.match(workflow, /FAILURE_RECIPIENT_EMAIL: "merill@merill\.net"/);
+  assert.match(workflow, /FAILURE_COMPONENT: "site refresh"/);
   assert.match(workflow, /node scripts\/send-workflow-failure-email\.js/);
 });
 
@@ -77,4 +87,14 @@ test('daily monitor does not send the retired Graph digest', () => {
     .split('    - name: Regenerate recovered per-change summaries')[0];
   assert.doesNotMatch(monitorEnvironment, /AZURE_CLIENT_ID|AZURE_CLIENT_SECRET|AZURE_TENANT_ID|EMAIL_ENABLED|RECIPIENT_EMAIL|SENDER_EMAIL/);
   assert.match(workflow, /publish-kit:[\s\S]*Publish the daily subscriber email/);
+});
+
+test('scheduled runs reconcile Kit every time and report external health', () => {
+  const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
+
+  assert.match(workflow, /github\.event_name == 'schedule' \|\| \(github\.event_name == 'workflow_dispatch' && inputs\.send_email == true\)/);
+  assert.match(workflow, /auto_mode: \$\{\{ github\.event_name == 'schedule' \}\}/);
+  assert.match(workflow, /Signal scheduled refresh start[\s\S]*HEALTHCHECKS_PING_URL[\s\S]*\/start/);
+  assert.match(workflow, /report-health:[\s\S]*needs: \[monitor-docs, publish-kit\][\s\S]*PING_URL="\$PING_URL\/fail"/);
+  assert.match(workflow, /continue-on-error: true/);
 });
