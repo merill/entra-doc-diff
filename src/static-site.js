@@ -873,7 +873,7 @@ class StaticSiteGenerator {
   }
 
   header(active = '') {
-    const nav = [{key:'day',label:'Day',url:'/'},{key:'week',label:'Week',url:'/week/'},{key:'month',label:'Month',url:'/month/'},{key:'message-center',label:'Message Center',url:'/message-center/'},{key:'compare',label:'Diff',url:'https://microsoftx.com/',external:true},{key:'search',label:'Search',url:'/search/'}];
+    const nav = [{key:'day',label:'Day',url:'/'},{key:'week',label:'Week',url:'/week/'},{key:'month',label:'Month',url:'/month/'},{key:'message-center',label:'Message Center',url:'/message-center/'},{key:'compare',label:'Diff',url:'https://mx.merill.net/',external:true},{key:'search',label:'Search',url:'/search/'}];
     const sun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg>';
     const moon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
     const settings = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
@@ -1222,7 +1222,7 @@ class StaticSiteGenerator {
     let source;
     try { source = new URL(item.publicUrl); } catch { return ''; }
     if (source.protocol !== 'https:' || source.hostname.toLowerCase() !== 'learn.microsoft.com') return '';
-    const target = new URL(source.pathname, 'https://learn.microsoftx.com');
+    const target = new URL(source.pathname, 'https://mx.merill.net');
     target.search = source.search;
     target.hash = source.hash;
     if (/^[0-9a-f]{7,40}$/i.test(item.baseCommitSha || '') && /^[0-9a-f]{7,40}$/i.test(item.commitSha || '')) {
@@ -1328,7 +1328,7 @@ class StaticSiteGenerator {
     for(const item of mc) await this.write(`message-center/${item.id}/index.html`,this.renderMcDetail(item,items));
     await this.write('rss.xml',renderDailyRss(reports,this.periodSummaries.days,50,items));
     await this.write('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${SITE.url}/sitemap.xml\n`);
-    await this.write('llms.txt',`# ${SITE.name}\n\n${SITE.description}\n\n- [Latest day](${SITE.url}/)\n- [Current week](${SITE.url}/week/)\n- [Products](${SITE.url}/products/)\n- [Topics](${SITE.url}/topics/)\n- [Message Center](${SITE.url}/message-center/)\n- [Search the archive](${SITE.url}/search/)\n- [Compare a Learn page](https://microsoftx.com/)\n- [About](${SITE.url}/about/)\n- [RSS](${SITE.url}/rss.xml)\n`);
+    await this.write('llms.txt',`# ${SITE.name}\n\n${SITE.description}\n\n- [Latest day](${SITE.url}/)\n- [Current week](${SITE.url}/week/)\n- [Products](${SITE.url}/products/)\n- [Topics](${SITE.url}/topics/)\n- [Message Center](${SITE.url}/message-center/)\n- [Search the archive](${SITE.url}/search/)\n- [Compare a Learn page](https://mx.merill.net/)\n- [About](${SITE.url}/about/)\n- [RSS](${SITE.url}/rss.xml)\n`);
     await this.write('CNAME',`${SITE.host}\n`);
     const sitemap=[...this.generatedUrls].filter(url=>!url.startsWith('/assets/')).map(url=>`<url><loc>${SITE.url}${url}</loc></url>`).join('');
     await this.write('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${sitemap}</urlset>`);
