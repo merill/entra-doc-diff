@@ -27,6 +27,21 @@ test('product classification recognizes governance and workload identity', () =>
   assert.equal(classifyProduct('', 'Harden federated credentials for workload identities').slug, 'workload-id');
 });
 
+test('MicrosoftX diff URLs preserve Learn state and exact revisions', () => {
+  const generator = new StaticSiteGenerator({ websiteDir: path.join(os.tmpdir(), 'unused-entra-site') });
+  const result = new URL(generator.microsoftXDiffUrl({
+    publicUrl: 'https://learn.microsoft.com/en-us/entra/identity/example?tabs=portal#step-1',
+    baseCommitSha: 'a'.repeat(40),
+    commitSha: 'b'.repeat(40)
+  }));
+  assert.equal(result.origin, 'https://learn.microsoftx.com');
+  assert.equal(result.pathname, '/en-us/entra/identity/example');
+  assert.equal(result.searchParams.get('tabs'), 'portal');
+  assert.equal(result.searchParams.get('_mx_base'), 'a'.repeat(40));
+  assert.equal(result.searchParams.get('_mx_head'), 'b'.repeat(40));
+  assert.equal(result.hash, '#step-1');
+});
+
 test('topic icon logic prioritizes Conditional Access titles and authentication references', () => {
   assert.equal(classifyTopic('docs/identity/security.md', 'Conditional Access authentication strength', 'Authentication controls and sign-in requirements.').slug, 'conditional-access');
   assert.equal(classifyTopic('docs/architecture/overview.md', 'Identity architecture', 'This authentication reference explains passwordless sign-in.').slug, 'authentication');
@@ -342,7 +357,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /href="https:\/\/merill\.net"/);
   assert.match(indexHtml, /<script defer data-site="nuj3pzyz" data-domain="daily\.entra\.news" src="https:\/\/piqo\.app\/piqo\.js"><\/script>/);
   assert.equal((indexHtml.match(/https:\/\/piqo\.app\/piqo\.js/g) || []).length, 1);
-  assert.match(indexHtml, /href="\/compare\/">Diff<\/a><a href="\/search\/" class="nav-icon" aria-label="Search" title="Search"><svg/);
+  assert.match(indexHtml, /href="https:\/\/microsoftx\.com\/" target="_blank" rel="noopener noreferrer">Diff<\/a><a href="\/search\/" class="nav-icon" aria-label="Search" title="Search"><svg/);
   assert.doesNotMatch(indexHtml, /href="\/search\/">Search<\/a>/);
   assert.match(searchHtml, /href="\/search\/" class="nav-icon" aria-current="page" aria-label="Search" title="Search">/);
   assert.match(searchJs, /Searching 25,877 archived updates/);
@@ -514,13 +529,18 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(siteCss, /@media\(max-width:760px\)\{\.editorial-summary\{display:block;width:100%\}/);
   assert.match(siteCss, /\.theme-option\[aria-pressed="true"\]/);
   assert.match(siteCss, /:root\[data-theme="dark"\]\{color-scheme:dark/);
+  assert.match(siteCss, /\.diff-link\{color:#a94700\}/);
+  assert.match(siteCss, /\.diff-link-icon\{[^}]*mask:url\("\/assets\/ui\/compare-items\.svg"\)/);
+  assert.match(siteCss, /:root\[data-theme="dark"\] \.diff-link\{color:#ff9b4a\}/);
   assert.match(docDetailHtml, /class="doc-source-intro"/);
   assert.match(docDetailHtml, /The comparison below shows only the changed extract/);
   assert.doesNotMatch(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content|Open the full article/);
-  assert.match(docDetailHtml, /head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">Open the full-page diff<\/a> for complete context/);
-  assert.match(docDetailHtml, /href="\/compare\/\?url=https%3A%2F%2Flearn\.microsoft\.com%2Fen-us%2Fentra%2Fid-governance%2F&amp;base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">/);
-  assert.equal((docDetailHtml.match(/Open on Microsoft Learn ↗/g) || []).length, 2);
-  assert.equal((docDetailHtml.match(/href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer"><img src="\/assets\/ui\/microsoft\.svg" alt="">Open on Microsoft Learn ↗<\/a>/g) || []).length, 2);
+  assert.match(docDetailHtml, /Use the full-page view for complete context/);
+  assert.equal((docDetailHtml.match(/View full page diff ↗/g) || []).length, 2);
+  assert.equal((docDetailHtml.match(/href="https:\/\/learn\.microsoftx\.com\/en-us\/entra\/id-governance\/\?_mx_base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;_mx_head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" target="_blank" rel="noopener noreferrer"><span class="diff-link-icon" aria-hidden="true"><\/span>View full page diff ↗<\/a>/g) || []).length, 2);
+  assert.equal((docDetailHtml.match(/View on Microsoft Learn ↗/g) || []).length, 2);
+  assert.equal((docDetailHtml.match(/href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer"><img src="\/assets\/ui\/microsoft\.svg" alt="">View on Microsoft Learn ↗<\/a>/g) || []).length, 2);
+  assert.doesNotMatch(docDetailHtml, /\/compare\/\?url=/);
   assert.match(docDetailHtml, /data-diff-tab="markdown">Markdown<\/button>/);
   assert.doesNotMatch(docDetailHtml, /Raw Markdown/);
   assert.match(docDetailHtml, /aria-label="Markdown Git diff"/);
@@ -570,7 +590,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(aboutHtml, /Bookmark|updates are posted daily/);
   assert.match(aboutHtml, /github\.com\/merill\/entra-doc-diff\/issues/);
   assert.match(indexHtml, /href="\/about\/"/);
-  assert.match(indexHtml, /href="\/compare\/">Diff<\/a>/);
+  assert.match(indexHtml, /href="https:\/\/microsoftx\.com\/" target="_blank" rel="noopener noreferrer">Diff<\/a>/);
   assert.match(compareHtml, /See what changed on a Microsoft Learn page/);
   assert.match(learnDiffJs, /See what changed on a Microsoft Learn page/);
   assert.match(compareHtml, /data-learn-diff-form/);
