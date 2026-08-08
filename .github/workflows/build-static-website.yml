@@ -1,0 +1,68 @@
+name: Build generated website
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-static-website.yml'
+      - 'assets/site/**'
+      - 'scripts/build-static-site.js'
+      - 'scripts/build-search-index.js'
+      - 'src/search-index.js'
+      - 'src/static-site.js'
+      - 'src/topic-icons.js'
+      - 'src/update-state.js'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+concurrency:
+  group: entra-docs-monitor
+  cancel-in-progress: false
+
+jobs:
+  build-website:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Clone Entra Docs repository
+        run: git clone --filter=blob:none https://github.com/MicrosoftDocs/entra-docs.git entra-docs
+
+      - name: Clone Message Center repository
+        run: git clone --depth 1 https://github.com/merill/mc.git mc
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build generated website
+        env:
+          MC_DATA_PATH: './mc/@data'
+          KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
+          KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
+        run: npm run build:site
+
+      - name: Commit generated website
+        run: |
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+          git add website/
+          if git diff --staged --quiet; then
+            echo 'Generated website is already current.'
+          else
+            git commit -m "Rebuild Entra website for ${GITHUB_SHA::7}"
+            git push
+          fi
