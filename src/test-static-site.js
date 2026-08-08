@@ -519,8 +519,8 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(docDetailHtml, /extract of the Microsoft Learn article showing only the changed content|Open the full article/);
   assert.match(docDetailHtml, /head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">Open the full-page diff<\/a> for complete context/);
   assert.match(docDetailHtml, /href="\/compare\/\?url=https%3A%2F%2Flearn\.microsoft\.com%2Fen-us%2Fentra%2Fid-governance%2F&amp;base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;head=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb&amp;view=diff">/);
-  assert.equal((docDetailHtml.match(/Open full page diff →/g) || []).length, 2);
-  assert.doesNotMatch(docDetailHtml, /Open on Microsoft Learn/);
+  assert.equal((docDetailHtml.match(/Open on Microsoft Learn ↗/g) || []).length, 2);
+  assert.equal((docDetailHtml.match(/href="https:\/\/learn\.microsoft\.com\/en-us\/entra\/id-governance\/" target="_blank" rel="noopener noreferrer"><img src="\/assets\/ui\/microsoft\.svg" alt="">Open on Microsoft Learn ↗<\/a>/g) || []).length, 2);
   assert.match(docDetailHtml, /data-diff-tab="markdown">Markdown<\/button>/);
   assert.doesNotMatch(docDetailHtml, /Raw Markdown/);
   assert.match(docDetailHtml, /aria-label="Markdown Git diff"/);
