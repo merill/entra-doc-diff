@@ -62,6 +62,7 @@ function buildUpdateRecord(item) {
       source: scalarMeta(item.source),
       sourceLabel: scalarMeta(item.sourceLabel),
       changeType: scalarMeta(item.changeType),
+      changeNature: scalarMeta(item.changeNature),
       recordType: 'update'
     },
     filters: {
@@ -69,6 +70,7 @@ function buildUpdateRecord(item) {
       topic: [scalarMeta(item.topic?.slug)],
       source: [scalarMeta(item.source)],
       changeType: [String(item.changeType || 'updated').toLowerCase().replace(/\s+/g, '-')],
+      changeNature: [String(item.changeNature || 'unclassified').toLowerCase().replace(/\s+/g, '-')],
       recordType: ['update']
     },
     sort: { date: scalarMeta(item.date) }

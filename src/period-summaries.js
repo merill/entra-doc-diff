@@ -6,9 +6,11 @@ const { StaticSiteGenerator } = require('./static-site');
 
 const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra administrators about the supplied period.
 
-Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Distinguish new features, previews, general availability, retirements, changed behavior, security guidance, and ordinary documentation clarification. Explain concrete administrator impact or action only when the evidence supports it.
+Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Judge internally whether changes are new features, previews, general availability changes, retirements, changed behavior, security guidance, or ordinary documentation clarification, and let your wording reflect that judgement. Explain concrete administrator impact or action only when the evidence supports it.
 
-Write a crisp, news-style headline of roughly 8 to 14 words. Lead with the distinctive capability, setting, deadline, terminology, or administrator outcome—not the fact that Microsoft documentation changed. Do not begin with "Entra ID documentation", "Microsoft Entra documentation", "Entra ID documents", "Documentation update", or a date. For documentation-only changes, describe the specific terminology, prerequisite, example, scope, or procedure that changed without implying that product behavior changed. If recentHeadlines are supplied, vary the opening words and sentence structure; use them only as style history, never as evidence. Prefer one strong lead over a semicolon-separated list of every update.
+For documentation changes, use diffEvidence as the primary factual source whenever it is supplied. Extract the exact setting, value, limitation, prerequisite, date, procedure, or behavior that changed instead of paraphrasing a generic fallback summary or commit title.
+
+Write a crisp, news-style headline of roughly 8 to 14 words. Lead with the distinctive capability, setting, deadline, terminology, or administrator outcome—not the fact that Microsoft documentation changed. Do not begin with "Entra ID documentation", "Microsoft Entra documentation", "Entra ID documents", "Documentation update", or a date. For documentation-only changes, describe the specific terminology, prerequisite, example, scope, or procedure that changed without implying that product behavior changed. Describe what the change is, never what it is not: drop disclaimers such as "this is a documentation clarification, not evidence of a new feature" or "not a new feature, preview, general availability change, or retirement" and state the change itself. If recentHeadlines are supplied, vary the opening words and sentence structure; use them only as style history, never as evidence. Prefer one strong lead over a semicolon-separated list of every update.
 
 Select one to five changes that best explain the period. Prefer three to five when the evidence supports that breadth, but use one or two for a quiet day rather than repeating or stretching the evidence. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
 For every key change, copy the id of the single representativeChanges item that most directly supports it into sourceId. Every key change must be supported by representativeChanges. Treat weeklyBriefs as context only: never select a sourceId from a weekly brief or use one as the sole evidence for a key change. Never invent or alter an id.
@@ -49,8 +51,24 @@ function selectPeriodEvidence(items, limit) {
   return selected.sort((a, b) => periodImpact(b) - periodImpact(a) || b.date.localeCompare(a.date));
 }
 
+function extractDiffEvidence(patch, maxCharacters = 3000) {
+  const evidence = [];
+  let characterCount = 0;
+  for (const line of String(patch || '').split(/\r?\n/)) {
+    if ((!line.startsWith('+') && !line.startsWith('-')) || line.startsWith('+++') || line.startsWith('---')) continue;
+    const content = line.slice(1).trim();
+    if (!content || content.length < 8) continue;
+    const truncated = content.length > 420 ? `${content.slice(0, 420)}…` : content;
+    const evidenceLine = `${line[0]} ${truncated}`;
+    if (characterCount + evidenceLine.length > maxCharacters) break;
+    evidence.push(evidenceLine);
+    characterCount += evidenceLine.length;
+  }
+  return evidence.join('\n');
+}
+
 function evidenceItem(item) {
-  return {
+  const evidence = {
     id: item.id,
     date: item.date,
     source: item.source === 'mc' ? 'Microsoft 365 Message Center' : 'Microsoft Learn documentation',
@@ -61,6 +79,11 @@ function evidenceItem(item) {
     summary: String(item.summary || '').slice(0, 700),
     adminImpact: String(item.adminImpact || '').slice(0, 420)
   };
+  if (item.source === 'docs' && item.summaryGeneratedBy !== 'openai') {
+    const diffEvidence = extractDiffEvidence(item.patch);
+    if (diffEvidence) evidence.diffEvidence = diffEvidence;
+  }
+  return evidence;
 }
 
 function cleanText(value, maxLength) {

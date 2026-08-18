@@ -263,6 +263,9 @@ test('static generator writes indexable archive and detail pages', async () => {
       commitSha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/id-governance/',
       englishSummary: {
+        category: 'Public preview',
+        actionRequired: true,
+        generatedBy: 'openai',
         summary: 'This readable summary explains the configuration baseline change in full so administrators can understand the update before opening the source diff.',
         adminImpact: 'Entra administrators should compare the documented baseline with their tenant configuration and investigate unexpected drift.'
       }
@@ -457,7 +460,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(siteCss, /\.period-product-rail \.rail-count-list a:hover[^}]*background:var\(--green-soft\)[^}]*box-shadow:inset 3px 0 0 var\(--green\)/);
   assert.match(dayHtml, /class="mini-calendar-grid"/);
   assert.match(dayHtml, /href="#product-id-governance"/);
-  assert.match(dayHtml, /class="change-pill updated">Updated/);
+  assert.match(dayHtml, /class="change-pill nature public-preview">Public preview/);
+  assert.match(dayHtml, /class="change-pill action-required">Action required/);
+  const unclassifiedDayHtml = await fs.readFile(path.join(websiteDir, 'day', '2026-06-15', 'index.html'), 'utf8');
+  assert.match(unclassifiedDayHtml, /class="change-pill updated">Updated/);
+  assert.doesNotMatch(unclassifiedDayHtml, /change-pill nature/);
+  assert.match(siteCss, /:root\[data-theme="dark"\] \.change-pill\.nature\.public-preview\{/);
   assert.match(dayHtml, /class="change-pill new">New/);
   assert.match(dayHtml, /<time datetime="2026-08-01T08:15:00Z" data-local-day>/);
   assert.match(dayHtml, /class="theme-picker" role="group" aria-label="Color theme"/);

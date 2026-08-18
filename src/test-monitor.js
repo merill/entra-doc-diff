@@ -113,7 +113,8 @@ test('each diff receives its own Luna English summary', async () => {
           status: 'completed',
           model: 'gpt-5.6-luna-2026-07-01',
           output_text: JSON.stringify({
-            category: 'Preview',
+            category: 'Public preview',
+            actionRequired: true,
             headline: 'Identity Governance preview documentation added',
             summary: 'Microsoft added documentation for an Identity Governance preview capability.',
             adminImpact: 'Administrators can review the documented prerequisites before testing the preview.'
@@ -132,80 +133,50 @@ test('each diff receives its own Luna English summary', async () => {
   assert.equal(requests[0].text.format.name, 'entra_diff_summary');
   assert.match(requests[0].input, /new-preview\.md/);
   assert.equal(analysis.newFiles[0].englishSummary.generatedBy, 'openai');
-  assert.equal(analysis.newFiles[0].englishSummary.category, 'Preview');
+  assert.equal(analysis.newFiles[0].englishSummary.category, 'Public preview');
+  assert.equal(analysis.newFiles[0].englishSummary.actionRequired, true);
+  assert.match(requests[0].instructions, /The category carries the classification/);
 });
 
-test('multiple diffs receive one additional Luna grouping call', async () => {
-  const first = createFile({
-    englishSummary: {
-      category: 'Preview',
-      headline: 'Governance preview added',
-      summary: 'A governance preview was documented.',
-      adminImpact: 'Review before testing.',
-      generatedBy: 'openai'
-    }
-  });
-  const second = createFile({
-    filename: 'docs/id-governance/updated-workflow.md',
-    status: 'modified',
-    commitSha: 'def456',
-    publicDocsUrl: 'https://learn.microsoft.com/en-us/entra/id-governance/updated-workflow',
-    englishSummary: {
-      category: 'Feature update',
-      headline: 'Workflow guidance updated',
-      summary: 'Workflow configuration guidance changed.',
-      adminImpact: 'Check existing workflow configuration.',
-      generatedBy: 'openai'
-    }
-  });
-  const analysis = createAnalysis([first, second]);
-  const requests = [];
+test('an unsupported category falls back to Doc update and action defaults to false', async () => {
   const monitor = new EntraDocsMonitor();
+  const analysis = createAnalysis();
+
   monitor.openAIClient = {
     responses: {
-      create: async request => {
-        requests.push(request);
-        return {
-          status: 'completed',
-          model: 'gpt-5.6-luna-2026-07-01',
-          output_text: JSON.stringify({
-            overview: 'Two related Identity Governance documentation changes were published.',
-            groups: [{
-              category: 'Preview',
-              title: 'Identity Governance capabilities and workflows',
-              summary: 'The changes document a preview and update related workflow guidance.',
-              sourceFiles: [first.filename, second.filename]
-            }]
-          })
-        };
-      }
+      create: async () => ({
+        status: 'completed',
+        model: 'gpt-5.6-luna-2026-07-01',
+        output_text: JSON.stringify({
+          category: 'Documentation change',
+          headline: 'Wording clarified',
+          summary: 'A sentence was reworded.',
+          adminImpact: 'No administrator action follows from this edit.'
+        })
+      })
     }
   };
 
-  analysis.englishSummary = await monitor.generateEnglishSummary(analysis);
+  await monitor.generateDiffEnglishSummaries(analysis);
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0].text.format.name, 'entra_grouped_summary');
-  assert.match(requests[0].input, /updated-workflow\.md/);
-  assert.equal(analysis.englishSummary.generatedBy, 'openai');
-  assert.deepEqual(analysis.englishSummary.groups[0].sourceFiles, [first.filename, second.filename]);
-  assert.equal(analysis.englishSummary.highlights.length, 1);
+  assert.equal(analysis.newFiles[0].englishSummary.category, 'Doc update');
+  assert.equal(analysis.newFiles[0].englishSummary.actionRequired, false);
 });
 
-test('per-diff and grouped summaries fall back without an OpenAI client', async () => {
+test('per-diff summaries fall back without an OpenAI client', async () => {
   const monitor = new EntraDocsMonitor();
   const analysis = createAnalysis();
   monitor.openAIClient = null;
 
   await monitor.generateDiffEnglishSummaries(analysis);
-  const summary = await monitor.generateEnglishSummary(analysis);
+  const summary = monitor.createFallbackEnglishSummary(analysis);
 
   assert.equal(analysis.newFiles[0].englishSummary.generatedBy, 'fallback');
   assert.equal(summary.generatedBy, 'fallback');
   assert.equal(summary.groups.length, 1);
 });
 
-test('daily HTML and JSON contain the per-diff and grouped English summaries', async () => {
+test('daily HTML and JSON contain the per-diff and fallback day summaries', async () => {
   const monitor = new EntraDocsMonitor();
   const analysis = createAnalysis();
   analysis.newFiles[0].englishSummary = {

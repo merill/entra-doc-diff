@@ -8,6 +8,8 @@ const { PeriodSummaryGenerator, PERIOD_SUMMARY_PROMPT, selectPeriodEvidence } = 
 test('period prompt requires specific content changes instead of count-only prose', () => {
   assert.match(PERIOD_SUMMARY_PROMPT, /most consequential, specific content changes/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /Avoid generic statements based mainly on counts/i);
+  assert.match(PERIOD_SUMMARY_PROMPT, /use diffEvidence as the primary factual source/i);
+  assert.match(PERIOD_SUMMARY_PROMPT, /never what it is not/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /preview.*general availability.*retirements/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /copy the id.*sourceId/i);
   assert.match(PERIOD_SUMMARY_PROMPT, /Do not begin with.*Entra ID documentation/i);
