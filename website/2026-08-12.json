@@ -1,0 +1,370 @@
+{
+  "newFiles": [
+    {
+      "filename": "docs/global-secure-access/concept-web-filtering.md",
+      "status": "added",
+      "additions": 138,
+      "deletions": 0,
+      "changes": 138,
+      "patch": "diff --git a/docs/global-secure-access/concept-web-filtering.md b/docs/global-secure-access/concept-web-filtering.md\nnew file mode 100644\nindex 00000000000..47232cec8e8\n--- /dev/null\n+++ b/docs/global-secure-access/concept-web-filtering.md\n@@ -0,0 +1,138 @@\n+---\n+title: Web filtering in Global Secure Access (V2)\n+description: \"Learn how the V2 web filtering object model works in Microsoft Entra Internet Access, including policies, rules, destination matching, and V1 coexistence.\"\n+ms.topic: concept-article\n+ms.date: 07/21/2026\n+ms.subservice: entra-internet-access\n+ai-usage: ai-assisted\n+---\n+\n+# Web filtering in Global Secure Access (V2)\n+\n+Web filtering in Microsoft Entra Internet Access lets you control internet access for your organization based on website categorization, Uniform Resource Locators (URLs), and fully qualified domain names (FQDNs). The V2 object model aligns web filtering with the same policy structure used by other Global Secure Access security features, giving you a single, consistent way to author and manage filtering rules.\n+\n+This article explains what changes in the V2 model, how policies and rules are structured, how destination matching works, and how V2 coexists with the earlier V1 (web content filtering) model. To configure web filtering, see [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md).\n+\n+## Overview\n+\n+The V2 object model is the platform foundation for all newer Global Secure Access Internet Access Policies. Newer policy types, such as Threat Intelligence, file type and content filtering, and Cloud Firewall, are authored in this model, where a single policy contains multiple rules per security profile.\n+\n+Historically, web filtering used a separate V1 model (also referred to as web content filtering, or the OMv1 model) with a different management flow. Bringing web filtering into the V2 model provides one consistent authoring and management experience across all Global Secure Access filtering features.\n+\n+> [!NOTE]\n+> As part of the V2 model, the feature name changes from Web Content Filtering to Web Filtering. Existing V1 web content filtering policies continue to function unchanged until you migrate them.\n+\n+## What's new in V2\n+\n+The V2 object model introduces two major changes to how you author and manage web filtering.\n+\n+### A single policy with multiple rules\n+\n+In V1, you could create multiple web content filtering policies and link several of them to a security profile. In V2, a security profile contains a single web filtering policy that holds multiple rules. Instead of creating a new policy for each intent, you add a rule to the policy.\n+\n+This structure mirrors the structure used by other V2 security features, so the authoring experience is the same regardless of which filtering capability you configure.\n+\n+The two models also differ in where the action lives and in how they behave when no rule matches:\n+\n+- In V1, a policy has no default action. It acts only when one of its rules matches, and the action is defined on the policy while its rules carry destinations only.\n+- In V2, each rule carries its own action, and the policy defines a default action that applies when no rule matches. As a result, a V2 policy always produces an outcome, whereas a V1 policy takes effect only on a match.\n+\n+The following table compares how policies are structured in each model.\n+\n+| Aspect | V1 (web content filtering) | V2 (web filtering) |\n+| --- | --- | --- |\n+| Policies per security profile | Multiple policies can be linked. | Exactly one policy. |\n+| Default action | None. The policy acts only if a rule matches. | Yes. Applied when no rule matches. |\n+| Where the action is defined | On the policy. Rules carry destinations only. | On each rule, plus a policy default action. |\n+\n+### FQDN destinations are handled as URLs\n+\n+In V1, web filtering supported three separate destination types (FQDN, URL, and web category), and each type matched traffic differently. In V2, the standalone FQDN type is removed. FQDN destinations are expressed as URL destinations and follow the URL user experience and matching logic.\n+\n+The following table summarizes the destination match types available in each model.\n+\n+| Destination type | V1 (web content filtering) | V2 (web filtering) |\n+| --- | --- | --- |\n+| Web category | Supported. | Supported. |\n+| URL | Supported. | Supported. |\n+| FQDN | Supported as a distinct type. | Expressed as a URL destination. |\n+\n+## Policies, rules, and security profiles\n+\n+Understanding how the V2 objects relate helps you plan your filtering configuration.\n+\n+- **Rule**: The unit that defines a destination (web category or URL) and the action to take (**Allow** or **Block**). Rules are evaluated in priority order within a policy.\n+- **Policy**: A single web filtering policy contains one or more rules once configured. In V2, a security profile contains one web filtering policy. Each policy also defines a default action, which is the behavior applied when no rule in the policy matches.\n+- **Security profile**: A grouping of filtering policies that you link to a Microsoft Entra Conditional Access policy to make enforcement user-aware and context-aware. For more information, see [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md).\n+\n+Conditional Access remains the delivery mechanism for user and context awareness. Security profiles are referenced by profile identifier (GUID) in Conditional Access session controls, and those references remain valid across the transition to V2.\n+\n+## Author a web filtering policy\n+\n+You create a web filtering policy in the Microsoft Entra admin center by browsing to **Global Secure Access** > **Secure** > **Web Filtering Policies (V2)** and selecting **Create policy**. The create experience is organized into **Basics**, **Policy settings**, and **Review** tabs.\n+\n+- On the **Basics** tab, you provide a name and description for the policy. The page also shows the policy evaluation order across Global Secure Access security modules.\n+- On the **Policy settings** tab, you set the **Default action**, which is the predefined behavior applied when no rules in the policy match. You can set the default action to **Allow** or **Block**.\n+- On the **Review** tab, you confirm the policy configuration before you create it.\n+\n+> [!NOTE]\n+> A new policy is created without any rules. After you create the policy, add rules to define the destinations and actions it enforces.\n+\n+## Add rules to a policy\n+\n+After the policy exists, you add web filtering rules to it. Each rule defines the traffic it matches and the action to take when it matches.\n+\n+A web filtering rule includes the following settings:\n+\n+- **Rule name, description, and priority**: Rules are evaluated in priority order within the policy.\n+- **Status**: Enable or disable the rule.\n+- **Source** (optional): Scope the rule to a session type, such as User or Agent.\n+- **HTTP method request** (optional): Scope the rule to specific HTTP methods.\n+- **Destination matching**: Specify the URLs, FQDNs, and web categories the rule applies to.\n+- **Rule action**: Set the rule to **Allow** or **Block**.\n+\n+## Destination matching behavior\n+\n+Web category matching is unchanged between V1 and V2. URL matching behavior is important to understand, especially for destinations that were previously authored as FQDNs.\n+\n+- **URL matching**: A URL destination scopes the rule to the address you enter and its sub-paths.\n+- **Former FQDN destinations**: Because the FQDN type is expressed as a URL in V2, a destination that was previously an exact FQDN match is evaluated using URL logic. A migrated FQDN destination can match sub-paths of the address rather than only the exact host.\n+\n+> [!IMPORTANT]\n+> When you author a former FQDN destination as a URL in V2, matching behavior can differ from the V1 FQDN behavior. Review your destinations to confirm they match the traffic you intend.\n+\n+## How V2 coexists with V1\n+\n+You can adopt V2 without interrupting your existing web filtering enforcement. The models are designed to run side by side during the transition.\n+\n+- **Higher priority for V2**: V2 web filtering policies are evaluated at a higher priority than V1 web content filtering policies.\n+- **Evaluation in series**: When both a V1 and a V2 policy apply, both modules run in series until you remove the V1 policy. For how a match in one module affects the other, see [How evaluation works across V1 and V2](#how-evaluation-works-across-v1-and-v2).\n+- **Consistent logging**: Matches are recorded using the existing traffic logs schema, including web category and the profile, policy, and rule names and identifiers. To review traffic, browse to **Global Secure Access** > **Monitor** > **Traffic logs**.\n+\n+## How evaluation works across V1 and V2\n+\n+When a user has both V1 and V2 policies applied, Global Secure Access evaluates them as two separate modules that run in sequence, not as one merged policy set:\n+\n+1. The V2 module runs first. It finds the first security profile applicable to the user that contains a V2 web filtering policy and produces an outcome: either a matched rule's action or, if no rule matches, the policy's default action. A V2 policy always produces an outcome.\n+1. The V1 module runs second, only if V2 didn't block. If the V2 outcome is **Block**, the request is blocked and evaluation stops. If the V2 outcome is **Allow**, evaluation falls through to the V1 module, which evaluates all V1 policies linked to the user's profiles in priority order and applies the final action.\n+\n+The key consequence is that **Block** and **Allow** aren't symmetric across the two modules:\n+\n+- A V2 **Block** is terminal. It takes effect regardless of any V1 policy, and regardless of profile priority.\n+- A V2 **Allow** (including an explicit rule match) isn't terminal. It only means that the V2 module has no objection, and a V1 policy can still block the same traffic.\n+\n+In short, a V2 policy can add blocks that override V1, but it can't force-allow traffic that a V1 policy blocks.\n+\n+> [!IMPORTANT]\n+> Because both modules evaluate across all of the user's applicable profiles rather than stopping at the highest-priority profile, a V2 **Block** on a lower-priority profile can override an **Allow** on a higher-priority profile. Review the following examples before you run a mixed V1/V2 configuration.\n+\n+**Example 1: A V2 Block overrides a higher-priority V1 Allow.** Profile 1 (priority 100) has a V1 policy that allows `espn.com` and no V2 policy. Profile 2 (priority 200) has a V2 policy that blocks the Sports category. The V2 module skips Profile 1 (no V2 policy), evaluates Profile 2's V2 **Block**, and blocks the request to `espn.com`. Profile 1's higher priority doesn't apply, because the V2 module runs first and **Block** is terminal.\n+\n+**Example 2: An explicit V2 Allow doesn't override a V1 Block.** Profile 1 (priority 100) has a V2 rule that explicitly allows `example.com`. Profile 2 (priority 200) has a V1 policy that blocks `example.com`. The V2 module matches the explicit **Allow**, but **Allow** isn't terminal, so evaluation falls through to the V1 module, which blocks `example.com`. The explicit V2 **Allow** is overridden.\n+\n+> [!NOTE]\n+> After you create a V2 web filtering policy, the V1 web content filtering experience becomes update-and-delete only. You can edit or remove existing V1 policies, but you can't create new ones. To return to authoring V1 policies, remove all V2 web filtering policies.\n+\n+## Next steps\n+\n+- [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md)\n",
+      "baseCommitSha": "05a2bb7ad9363d78f0270b1d019c72610e86b9a4",
+      "commitSha": "5a4470bf64070f6f9ce6cf84d01deb16cbd224eb",
+      "commitMessage": "Add Web filtering (V2) concept article (#13950)",
+      "commitAuthor": "Michael Aldridge",
+      "commitDate": "2026-08-11 12:21:08 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-web-filtering.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/concept-web-filtering",
+      "eventId": "entra-docs:5a4470bf64070f6f9ce6cf84d01deb16cbd224eb:added:docs/global-secure-access/concept-web-filtering.md",
+      "firstSeenAt": "2026-08-12T02:43:37.671Z",
+      "englishSummary": {
+        "category": "New documentation",
+        "headline": "New documentation explains Web filtering V2",
+        "summary": "A new concept article documents the V2 web filtering model in Microsoft Entra Internet Access, including policies, rules, destination matching, and coexistence with V1 web content filtering.",
+        "adminImpact": "V2 uses one policy per security profile, multiple rules with individual actions, and a default action. FQDN destinations are configured as URLs. Existing V1 policies continue to function until migrated.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity-platform/optional-claims.md",
+      "status": "modified",
+      "additions": 72,
+      "deletions": 3,
+      "changes": 75,
+      "patch": "diff --git a/docs/identity-platform/optional-claims.md b/docs/identity-platform/optional-claims.md\nindex f1d8f91cede..81075776438 100644\n--- a/docs/identity-platform/optional-claims.md\n+++ b/docs/identity-platform/optional-claims.md\n@@ -3,7 +3,7 @@ title: Configure optional claims\n description: Learn how to configure optional claims and attributes in access tokens issued by Microsoft identity platform; optional claims can add useful user information for your app.\n manager: pmwongera\n ms.custom:\n-ms.date: 07/22/2026\n+ms.date: 08/11/2026\n ms.reviewer: ludwignick\n ms.service: identity-platform\n ai-usage: ai-assisted\n@@ -311,11 +311,80 @@ Configure claims in the manifest:\n \n 1. When you're finished updating the manifest, select **Save** to save the manifest.\n \n-## amr claim\n+## AMR claim\n \n The `amr` (authentication method references) claim identifies how the user authenticated. The `amr` claim is sent by default for Salesforce applications, so no configuration change is required for those apps. For all other SAML applications, the application administrator must add the optional `amr` claim with the `include_granular_amr` additional property to the app registration to request AMR claims. The `multipleauthn` and `mfa` values are emitted only when the user has completed MFA.\n \n-For SAML, see [authnmethodreferences](single-sign-on-saml-protocol.md#authnmethodreferences) for more details.\n+### Configure granular AMR values for a SAML application\n+\n+The Microsoft Entra admin center doesn't currently provide a UI option for `include_granular_amr`. Configure this property in the application manifest or by using Microsoft Graph. The `include_granular_amr` property modifies the `amr` claim to emit granular authentication method values in SAML tokens.\n+\n+To configure the application manifest:\n+\n+1. In the [Microsoft Entra admin center](https://entra.microsoft.com), browse to **Entra ID** > **App registrations**.\n+1. Select the app registration.\n+1. Under **Manage**, select **Manifest**.\n+1. Add or update the `optionalClaims` property with the following configuration. Preserve any existing optional claims that your application requires.\n+\n+    ```json\n+    \"optionalClaims\": {\n+        \"saml2Token\": [\n+            {\n+                \"name\": \"amr\",\n+                \"essential\": false,\n+                \"additionalProperties\": [\n+                    \"include_granular_amr\"\n+                ]\n+            }\n+        ]\n+    }\n+    ```\n+\n+1. Select **Save**.\n+\n+Alternatively, use the Microsoft Graph [Update application](/graph/api/application-update) API. Replace `{applicationObjectId}` with the object ID of the application registration. Include any existing optional claim configuration that you want to retain in the request body.\n+\n+```http\n+PATCH https://graph.microsoft.com/v1.0/applications/{applicationObjectId}\n+Content-Type: application/json\n+\n+{\n+    \"optionalClaims\": {\n+        \"saml2Token\": [\n+            {\n+                \"name\": \"amr\",\n+                \"essential\": false,\n+                \"additionalProperties\": [\n+                    \"include_granular_amr\"\n+                ]\n+            }\n+        ]\n+    }\n+}\n+```\n+\n+For more information about the SAML claim, see [authnmethodreferences](single-sign-on-saml-protocol.md#authnmethodreferences).\n+\n+### Configure the AMR claim for an OIDC application\n+\n+For an OpenID Connect (OIDC) v2.0 application, add the `amr` optional claim to the token types that your application requires. The `include_granular_amr` property applies only to SAML applications and isn't required for OIDC applications. The following application manifest requests the `amr` claim in both ID and access tokens:\n+\n+```json\n+\"optionalClaims\": {\n+    \"idToken\": [\n+        {\n+            \"name\": \"amr\",\n+            \"essential\": false\n+        }\n+    ],\n+    \"accessToken\": [\n+        {\n+            \"name\": \"amr\",\n+            \"essential\": false\n+        }\n+    ]\n+}\n+```\n \n ## Limitation\n \n",
+      "baseCommitSha": "986dc50261239ecc4bf36a01397aa8da2103d4f0",
+      "commitSha": "407af7c8c9ad79b00cc185249f17b03550c1b3d1",
+      "commitMessage": "Add AMR optional claim configuration guidance",
+      "commitAuthor": "Vimala Ranganathan",
+      "commitDate": "2026-08-11 11:22:12 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/optional-claims.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims",
+      "eventId": "entra-docs:407af7c8c9ad79b00cc185249f17b03550c1b3d1:modified:docs/identity-platform/optional-claims.md",
+      "firstSeenAt": "2026-08-12T02:43:37.707Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "AMR optional claim configuration guidance expanded",
+        "summary": "The documentation now explains how to configure granular AMR values for SAML applications through the manifest or Microsoft Graph, since the admin center has no UI option for `include_granular_amr`. It also documents adding the `amr` claim to OIDC token types and clarifies that `include_granular_amr` applies only to SAML.",
+        "adminImpact": "Administrators who need granular AMR values must use the application manifest or Microsoft Graph and preserve existing optional-claim settings; OIDC applications only need the `amr` optional claim.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/monitoring-health/howto-analyze-provisioning-logs.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/monitoring-health/howto-analyze-provisioning-logs.md b/docs/identity/monitoring-health/howto-analyze-provisioning-logs.md\nindex 26e8d240e05..f3d0a2f09cf 100644\n--- a/docs/identity/monitoring-health/howto-analyze-provisioning-logs.md\n+++ b/docs/identity/monitoring-health/howto-analyze-provisioning-logs.md\n@@ -111,13 +111,13 @@ Here are some tips and considerations for analyzing the provisioning logs:\n Microsoft MCP Server for Enterprise lets you use natural-language prompts to analyze provisioning logs in an MCP-enabled AI client. The server translates a prompt into a read-only Microsoft Graph request, runs the request with your delegated permissions, and summarizes the response.\n \n > [!IMPORTANT]\n-> Microsoft MCP Server for Enterprise is in preview. It's currently available only in the global service and supports read-only operations. Review [Overview of Microsoft MCP Server for Enterprise](/graph/mcp-server/overview) for current availability and limitations.\n+> Microsoft MCP Server for Enterprise is in preview. It's currently available only in the global service and supports read-only operations. Review [Overview of Microsoft MCP Server for Enterprise](https://github.com/mcp/microsoft/EnterpriseMCP) for current availability and limitations.\n \n ### Prerequisites\n \n In addition to the prerequisites for this article:\n \n-- An administrator must [provision Microsoft MCP Server for Enterprise and configure an MCP client](/graph/mcp-server/get-started).\n+- An administrator must [provision Microsoft MCP Server for Enterprise and configure an MCP client](https://github.com/mcp/microsoft/EnterpriseMCP).\n - The MCP client must be granted the `MCP.ProvisioningLog.Read.All` delegated permission.\n - You must sign in to the MCP client with a work or school account that has a supported Microsoft Entra role. Reports Reader is the least privileged supported role.\n \n",
+      "baseCommitSha": "986dc50261239ecc4bf36a01397aa8da2103d4f0",
+      "commitSha": "88f4352ee8e470cf6b733c2b55fb8792377f3db1",
+      "commitMessage": "Update howto-analyze-provisioning-logs.md",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-11 14:08:12 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/monitoring-health/howto-analyze-provisioning-logs.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-analyze-provisioning-logs",
+      "eventId": "entra-docs:88f4352ee8e470cf6b733c2b55fb8792377f3db1:modified:docs/identity/monitoring-health/howto-analyze-provisioning-logs.md",
+      "firstSeenAt": "2026-08-12T02:43:37.725Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "MCP Server links updated in provisioning logs guidance",
+        "summary": "The article’s Microsoft MCP Server for Enterprise overview and setup links changed from Microsoft Learn paths to the EnterpriseMCP GitHub repository. The article continues to describe the service as preview, global-service-only, and read-only.",
+        "adminImpact": "Administrators should use the updated GitHub links for current MCP Server availability, limitations, provisioning, and client configuration guidance.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md b/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\nindex 4e1b223224f..26323e76216 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\n@@ -218,7 +218,7 @@ To configure Staged Rollout, follow these steps:\n \n 1. **Microsoft Entra ID Protection remediation events.** Certain account recovery and [Microsoft Entra ID Protection remediation actions](~/id-protection/howto-identity-protection-remediate-unblock.md#how-risk-remediation-works), including self-service password reset (SSPR), risk remediation, and risk dismissal, can reset the user's Staged Rollout state. As a result, the user might be redirected to the federated identity provider on their next sign-in. The user must complete one additional interactive sign-in using their existing federated authentication method. After this sign-in, Microsoft Entra reestablishes managed authentication for subsequent sign-ins.\n \n-### Workaround for newly added Staged Rollout users\n+### Workaround to avoid one additional federated sign-in\n \n When a user is newly added to Staged Rollout, they might be required to perform one additional authentication through the federated identity provider before Staged Rollout takes effect. You can avoid this behavior by using a Temporary Access Pass (TAP) during the user's initial sign-in experience.\n \n",
+      "baseCommitSha": "35f9c928b3c6d3bdb9568435660dfa085d894333",
+      "commitSha": "ff67fff774ba22b517929efa66ef68810e84535e",
+      "commitMessage": "Update Staged Rollout workaround heading",
+      "commitAuthor": "Vimala Ranganathan",
+      "commitDate": "2026-08-11 17:12:45 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-staged-rollout",
+      "eventId": "entra-docs:ff67fff774ba22b517929efa66ef68810e84535e:modified:docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "firstSeenAt": "2026-08-12T13:45:26.334Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Staged Rollout workaround heading clarified",
+        "summary": "The heading changed from “Workaround for newly added Staged Rollout users” to “Workaround to avoid one additional federated sign-in.” No procedural content changed in the supplied diff.",
+        "adminImpact": "Administrators should note the clarified description of the workaround’s purpose; no new action is indicated.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "status": "modified",
+      "additions": 7,
+      "deletions": 5,
+      "changes": 12,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md b/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\nindex a32fafd850a..4e1b223224f 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md\n@@ -2,7 +2,7 @@\n title: 'Microsoft Entra Connect: Cloud authentication via Staged Rollout'\n description: This article explains how to migrate from federated authentication, to cloud authentication, by using a Staged Rollout.\n ms.topic: how-to\n-ms.date: 07/22/2026\n+ms.date: 08/11/2026\n ai-usage: ai-assisted\n ms.subservice: hybrid-connect\n ms.custom: sfi-image-nochange\n@@ -208,13 +208,15 @@ To configure Staged Rollout, follow these steps:\n    >Editing a group (adding or removing users), it can take up to 24 hours for changes to take effect.\n    >Seamless SSO will apply only if users are in the Seamless SSO group and also in either a PTA or PHS group.\n \n-## User Authentication Behavior During Staged Rollout Transitions\n+## User authentication behavior during Staged Rollout transitions\n \n-When a user is added to a Staged Rollout (SR) group or when a group they belong to is added to SR, their authentication method will transition from federated to managed. This change takes effect after the user completes one more interactive sign-in using their existing federated login. After this sign-in, Microsoft Entra applies the managed authentication experience for subsequent logins.\n+### Scenarios that require an additional federated or managed sign-in\n \n-Similarly, when a user is removed from the SR group or when their group is removed from SR, they will continue to use managed authentication until they complete one more interactive sign-in. After that, federation is re-applied and future logins will redirect to the federated identity provider.\n+1. **User added to Staged Rollout.** When a user is added to a Staged Rollout group, or when a group they belong to is enabled for Staged Rollout, the authentication experience doesn't switch from federated to managed immediately. The user must complete one additional interactive sign-in using their existing federated authentication method. After this sign-in, Microsoft Entra updates the user's state and applies managed authentication for subsequent sign-ins.\n \n-This behavior ensures a seamless transition between authentication methods while maintaining user access continuity and security.\n+1. **User removed from Staged Rollout.** When a user is removed from a Staged Rollout group, or when their group is removed from Staged Rollout, the user continues to use managed authentication. The user must complete one additional interactive sign-in through Microsoft Entra. After this sign-in, Microsoft Entra switches the user back to federated authentication, and subsequent sign-ins redirect to the federated identity provider.\n+\n+1. **Microsoft Entra ID Protection remediation events.** Certain account recovery and [Microsoft Entra ID Protection remediation actions](~/id-protection/howto-identity-protection-remediate-unblock.md#how-risk-remediation-works), including self-service password reset (SSPR), risk remediation, and risk dismissal, can reset the user's Staged Rollout state. As a result, the user might be redirected to the federated identity provider on their next sign-in. The user must complete one additional interactive sign-in using their existing federated authentication method. After this sign-in, Microsoft Entra reestablishes managed authentication for subsequent sign-ins.\n \n ### Workaround for newly added Staged Rollout users\n \n",
+      "baseCommitSha": "5a4470bf64070f6f9ce6cf84d01deb16cbd224eb",
+      "commitSha": "35f9c928b3c6d3bdb9568435660dfa085d894333",
+      "commitMessage": "Clarify Staged Rollout authentication transitions",
+      "commitAuthor": "Vimala Ranganathan",
+      "commitDate": "2026-08-11 17:07:55 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-staged-rollout",
+      "eventId": "entra-docs:35f9c928b3c6d3bdb9568435660dfa085d894333:modified:docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+      "firstSeenAt": "2026-08-12T13:45:26.344Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Staged Rollout transition guidance clarified",
+        "summary": "The documentation, dated August 11, 2026, replaces general transition text with scenarios describing additional interactive sign-ins when users are added to or removed from Staged Rollout. It also covers certain Microsoft Entra ID Protection remediation events, including SSPR and risk remediation.",
+        "adminImpact": "Administrators should account for an additional federated or Microsoft Entra sign-in when troubleshooting authentication changes during Staged Rollout transitions.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/how-to-account-discovery.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/app-provisioning/how-to-account-discovery.md b/docs/identity/app-provisioning/how-to-account-discovery.md\nindex 7ee16e00120..dd28c90ead0 100644\n--- a/docs/identity/app-provisioning/how-to-account-discovery.md\n+++ b/docs/identity/app-provisioning/how-to-account-discovery.md\n@@ -201,7 +201,7 @@ For API details, see the following resources:\n \n ## Investigate account discovery with the Microsoft MCP Server for Enterprise (preview)\n \n-You can use the [Microsoft MCP Server for Enterprise](/graph/mcp-server/overview) to investigate account discovery reports by asking questions in natural language. The MCP server translates the question into a read-only Microsoft Graph request, enforces the signed-in user's privileges and the permissions granted to the MCP client, and returns a natural-language summary of the results.\n+You can use the [Microsoft MCP Server for Enterprise](https://github.com/mcp/microsoft/EnterpriseMCP) to investigate account discovery reports by asking questions in natural language. The MCP server translates the question into a read-only Microsoft Graph request, enforces the signed-in user's privileges and the permissions granted to the MCP client, and returns a natural-language summary of the results.\n \n This option is useful for administrators who want to explore account discovery results without constructing Microsoft Graph requests manually. The MCP client also displays the underlying request so that you can review and audit the operation.\n \n@@ -209,7 +209,7 @@ This option is useful for administrators who want to explore account discovery r\n \n Before using the MCP server with account discovery:\n \n-- [Provision Microsoft MCP Server for Enterprise and connect an MCP client](/graph/mcp-server/get-started).\n+- [Provision Microsoft MCP Server for Enterprise and connect an MCP client](https://github.com/mcp/microsoft/EnterpriseMCP).\n - Grant the MCP client the `MCP.ProvisioningLog.Read.All` delegated permission.\n - Sign in with a work or school account that has a supported Microsoft Entra role. Supported roles include Application Administrator, Cloud Application Administrator, Hybrid Identity Administrator, Global Reader, Reports Reader, Security Administrator, Security Operator, and Security Reader.\n - Use the global Microsoft cloud. Microsoft MCP Server for Enterprise and the identity correlation APIs aren't currently available in sovereign clouds.\n",
+      "baseCommitSha": "a1ca9fe1a68bb3df47f45c668ad50286e4737c67",
+      "commitSha": "56e40295dff32bea386ae994583dfcd2dd8a8f15",
+      "commitMessage": "Update MCP Server link to GitHub repository (#2068)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-08-12 12:11:31 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/how-to-account-discovery.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/how-to-account-discovery",
+      "eventId": "entra-docs:56e40295dff32bea386ae994583dfcd2dd8a8f15:modified:docs/identity/app-provisioning/how-to-account-discovery.md",
+      "firstSeenAt": "2026-08-12T17:12:15.420Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "MCP Server links updated to GitHub",
+        "summary": "The account discovery documentation now links to the Microsoft MCP Server for Enterprise GitHub repository instead of Microsoft Learn pages for investigating reports and provisioning an MCP client.",
+        "adminImpact": "Administrators using these instructions should follow the updated GitHub links.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/puzzel-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 30,
+      "deletions": 4,
+      "changes": 34,
+      "patch": "diff --git a/docs/identity/saas-apps/puzzel-provisioning-tutorial.md b/docs/identity/saas-apps/puzzel-provisioning-tutorial.md\nindex 8ca853c94ae..beb32030c85 100644\n--- a/docs/identity/saas-apps/puzzel-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/puzzel-provisioning-tutorial.md\n@@ -2,7 +2,7 @@\n title: Configure Puzzel for automatic user provisioning with Microsoft Entra ID\n description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Puzzel.\n ms.topic: how-to\n-ms.date: 03/20/2026\n+ms.date: 08/10/2026\n \n # Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Puzzel so that I can streamline the user management process and ensure that users have the appropriate access to Puzzel.\n --- \n@@ -18,6 +18,7 @@ This article describes the steps you need to perform in both Puzzel and Microsof\n > * Remove users in Puzzel when they don't require access anymore.\n > * Keep user attributes synchronized between Microsoft Entra ID and Puzzel.\n > * [Single sign-on](~/identity/enterprise-apps/add-application-portal-setup-oidc-sso.md) to Puzzel (recommended).\n+> * OAuth2 Client Credentials Grant authentication is supported.\n \n ## Prerequisites\n \n@@ -46,7 +47,7 @@ This section guides you through the steps to configure the Microsoft Entra provi\n \n <a name='to-configure-automatic-user-provisioning-for-Puzzel-in-azure-ad'></a>\n \n-### To configure automatic user provisioning for Puzzel in Microsoft Entra ID:\n+### Configure automatic user provisioning for Puzzel in Microsoft Entra ID\n \n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).\n 1. Browse to **Entra ID** > **Enterprise apps**\n@@ -65,9 +66,34 @@ This section guides you through the steps to configure the Microsoft Entra provi\n \n \t![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)\n \n-1. In the **Tenant URL** field, input your Puzzel Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Puzzel. If the connection fails, ensure your Puzzel account has the required admin permissions and try again.\n+1. Before you configure provisioning in Microsoft Entra ID, create an OIDC client in the Puzzel portal and generate a client credentials. Microsoft Entra ID uses these credentials when you set up the connection in the Provisioning tab.\n+To acquire the client credentials:\n+   1. Sign in to the `https://app.puzzel.com/settings`. Locate **OIDC Clients** and select **Configure**.\n \n-   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)\n+      ![Screenshot of showing OIDC Clients.](./media/puzzel-provisioning-tutorial/configure.png)\n+\n+   2. On the **OIDC Client Configuration** page, select **+ Add** in the upper-right corner.\n+   3. Configure the new client as follows:\n+      1. In **Client Name**, enter a descriptive name (for example, `Microsoft Entra provisioning`).\n+      1. For the grant type, select **Client Credentials**, then select **Save**.\n+      1. Open the **Lifetimes** tab and set both the **Access Token Lifetime** and the **Refresh Token Lifetime** to `3600`. Select **Save**.\n+\n+         ![Screenshot of showing Lifetimes tab.](./media/puzzel-provisioning-tutorial/lifetime.png)\n+\n+   4. Generate a shared secret for the client:\n+      1. On the **OIDC Client Configuration** page, select the configured client name, then select the first icon **(Secrets)** in its row.\n+\n+         ![Screenshot of showing OIDC Client Configuration page.](./media/puzzel-provisioning-tutorial/secret.png)\n+\n+      1. Select **Add > Shared Secret**.\n+\n+         ![Screenshot of showing the shared secret.](./media/puzzel-provisioning-tutorial/shared-secret.png)\n+\n+      1. Select **Generate Secret**, copy the generated secret value, and store it in a secure location. Select **Save**.\n+\n+1. In Authorization Method, select **OAuth2 Client Credentials Grant** as the **Authentication Method**. In the **Tenant URL** field, input your Puzzel **Tenant URL** and enter the **Client ID**, **Client Secret** and **Token Endpoint** retrieved from Puzzel portal.\n+\n+      ![Screenshot of OAuth2 Client Credentials Grant.](./media/puzzel-provisioning-tutorial/test-connection-new.png)\n \n 1. Select **Create** to create your configuration.\n \n",
+      "baseCommitSha": "c95c602db3b940e783e221ee1690cfa811a634fb",
+      "commitSha": "5d05d8bcca32851cb8f2ee05e797e17f7e36d3d2",
+      "commitMessage": "Updating the Puzzel app document (#14058)",
+      "commitAuthor": "Hamsika45",
+      "commitDate": "2026-08-12 21:19:12 +0530",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/puzzel-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/puzzel-provisioning-tutorial",
+      "eventId": "entra-docs:5d05d8bcca32851cb8f2ee05e797e17f7e36d3d2:modified:docs/identity/saas-apps/puzzel-provisioning-tutorial.md",
+      "firstSeenAt": "2026-08-12T21:03:13.564Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Puzzel provisioning setup now documents OAuth2 client credentials",
+        "summary": "The Puzzel provisioning article now documents OAuth2 Client Credentials Grant authentication. It adds steps to create an OIDC client, set token lifetimes to 3600, generate a shared secret, and enter the client ID, secret, and token endpoint.",
+        "adminImpact": "Administrators configuring Puzzel provisioning should prepare these OIDC credentials and select the OAuth2 Client Credentials Grant authentication method.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "patch": "diff --git a/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md b/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\nindex 9c584725afb..ceb1e055678 100644\n--- a/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\n@@ -29,6 +29,7 @@ This article describes the steps you need to perform in both Zscaler User Provis\n > * Keep user attributes synchronized between Microsoft Entra ID and Zscaler Provisioning\n > * Provision groups and group memberships in Zscaler.\n > * [Single sign-on](~/identity/enterprise-apps/add-application-portal-setup-oidc-sso.md) to Zscaler (recommended).\n+> * Client Credentials Authentication supported.\n \n ## Prerequisites\n \n",
+      "baseCommitSha": "068f0d0c0ac2f9e5118d01a4bb2d483b663c8cad",
+      "commitSha": "859cff093dde9728fff4aed25dbad60f87f29150",
+      "commitMessage": "Update zscaler-zidentity-provisioning-tutorial.md",
+      "commitAuthor": "Hamsika45",
+      "commitDate": "2026-08-10 16:35:09 +0530",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/zscaler-zidentity-provisioning-tutorial",
+      "eventId": "entra-docs:859cff093dde9728fff4aed25dbad60f87f29150:modified:docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "firstSeenAt": "2026-08-12T21:03:13.588Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Zscaler provisioning documentation adds client credentials support",
+        "summary": "The tutorial now states that Client Credentials Authentication is supported.",
+        "adminImpact": "Administrators can consider this authentication method when configuring Zscaler provisioning. No required action is specified.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 29,
+      "deletions": 3,
+      "changes": 32,
+      "patch": "diff --git a/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md b/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\nindex 48e11053346..9c584725afb 100644\n--- a/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md\n@@ -102,9 +102,9 @@ This section guides you through the steps to configure the Microsoft Entra provi\n \n     ![Screenshot of the New configuration option on the Provisioning page.](common/application-provisioning.png)\n \n-1. In the **Tenant URL** field, enter your Zscaler Tenant URL and Secret Token. Select Test Connection to ensure Microsoft Entra ID can connect to Zscaler. If the connection fails, ensure your Zscaler account has Admin permissions and try again.\n-    \n-    ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)\n+1. 1. In the **Tenant URL** field, input your Zscaler **Tenant URL, Client identifier, Client secret** and **OAuth token endpoint**. Select **Test connection** to ensure Microsoft Entra ID can connect to Zscaler. If the connection fails, ensure your Zscaler account has the required admin permissions and try again.\n+ \n+   ![Screenshot of Provisioning test connection.](common/provisioning-test-button.png)\n \n 1. Select **Create** to create your configuration.  \n \n@@ -122,6 +122,32 @@ This section guides you through the steps to configure the Microsoft Entra provi\n     |---|---|---|---|\n     |displayName|String|&check;|&check;\n     |primaryEmail|String||&check;\n+    |active|Boolean|\n+    |title|String|\n+    |emails[type eq \"work\"].value|String|\n+    |preferredLanguage|String|\n+    |userName|String|\n+    |name.givenName|String|\n+    |name.familyName|String|\n+    |name.formatted|String|\n+    |addresses[type eq \"work\"].formatted|String|\n+    |addresses[type eq \"work\"].streetAddress|String|\n+    |addresses[type eq \"work\"].locality|String|\n+    |addresses[type eq \"work\"].region|String|\n+    |addresses[type eq \"work\"].postalCode|String|\n+    |addresses[type eq \"work\"].country|String|\n+    |phoneNumbers[type eq \"work\"].value|String|\n+    |phoneNumbers[type eq \"mobile\"].value|String|\n+    |externalId|String|\n+    |nickName|String|\n+    |userType|String|\n+    |timezone|String|\n+    |emails[type eq \"home\"].value|String|\n+    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:costCenter|String|\n+    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:organization|String|\n+    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:division|String|\n+    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department|String|\n+    |urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager|Reference|\n     \n 1. Select **groups**.\n \n",
+      "baseCommitSha": "86d21df1b995258d534d6a3a1bd984ac6f2f5aa0",
+      "commitSha": "068f0d0c0ac2f9e5118d01a4bb2d483b663c8cad",
+      "commitMessage": "Update zscaler-zidentity-provisioning-tutorial.md",
+      "commitAuthor": "Hamsika45",
+      "commitDate": "2026-08-10 16:30:23 +0530",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/zscaler-zidentity-provisioning-tutorial",
+      "eventId": "entra-docs:068f0d0c0ac2f9e5118d01a4bb2d483b663c8cad:modified:docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+      "firstSeenAt": "2026-08-12T21:03:13.615Z",
+      "englishSummary": {
+        "category": "Documentation change",
+        "headline": "Zscaler provisioning setup and attribute documentation updated",
+        "summary": "The tutorial now documents entering a Tenant URL, Client identifier, Client secret, and OAuth token endpoint, and includes a list of SCIM user attributes and data types.",
+        "adminImpact": "Administrators configuring Zscaler provisioning should use the updated connection fields and review the added attribute mappings when testing the connection and configuring provisioning.",
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [],
+  "messageCenterItems": [
+    {
+      "id": "MC1453678",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-08-12",
+      "title": "Dynamics 365 Commerce – On-behalf-of support now available in Microsoft Entra External ID",
+      "summary": "We are announcing the ability to enable on-behalf-of ordering for Microsoft Entra External ID (EEID) in Dynamics 365 Commerce.  This feature will reach general availability on September 11, 2026 How does this affect me?",
+      "product": {
+        "slug": "external-id",
+        "name": "Microsoft Entra External ID",
+        "short": "External ID",
+        "icon": "external-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/external-id/"
+      },
+      "topic": {
+        "slug": "general",
+        "name": "General",
+        "icon": "/assets/topics/general.svg"
+      },
+      "changeType": "Message",
+      "url": "/message-center/MC1453678/",
+      "originalUrl": "https://mc.merill.net/message/MC1453678",
+      "body": "We are announcing the ability to enable on-behalf-of ordering for Microsoft Entra External ID (EEID) in Dynamics 365 Commerce. This feature will reach general availability on September 11, 2026<br><br><b>How does this affect me?</b><br>On-behalf-of (OBO) ordering with Microsoft Entra External ID (EEID) is a foundational B2B commerce capability that allows customer service representatives, distributors, and sales agents to place orders on behalf of customers, a common requirement in complex B2B purchasing scenarios. It also enables new B2B customers to migrate to EEID without losing critical, sales-assisted ordering capabilities while preserving support for distributor-led, contact center, and agent-assisted ordering scenarios.<br><br><b>What action do I need to take?</b><br>This message is for awareness, and no action is required.",
+      "category": "stayInformed",
+      "services": [
+        "Dynamics 365 Apps"
+      ],
+      "tags": [
+        "New feature"
+      ],
+      "startDate": "2026-08-12T17:24:31Z",
+      "endDate": "2026-09-12T17:24:31Z",
+      "lastModifiedDateTime": "2026-08-12T17:25:45.01Z",
+      "version": "2026-08-12T17:25:45.01Z",
+      "eventId": "message-center:MC1453678:2026-08-12T17:25:45.01Z",
+      "firstSeenAt": "2026-08-12T21:03:22.601Z"
+    }
+  ],
+  "summary": {
+    "totalCommits": 9,
+    "totalFiles": 9,
+    "authors": [
+      "ArvindHarinder1",
+      "Hamsika45",
+      "Michael Aldridge",
+      "Vimala Ranganathan"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 1 new, 8 updated, and 0 removed Microsoft Entra documentation files across 6 documentation areas.",
+    "groups": [
+      {
+        "category": "New documentation",
+        "title": "global-secure-access",
+        "summary": "A new concept article documents the V2 web filtering model in Microsoft Entra Internet Access, including policies, rules, destination matching, and coexistence with V1 web content filtering.",
+        "sourceFiles": [
+          "docs/global-secure-access/concept-web-filtering.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity-platform",
+        "summary": "The documentation now explains how to configure granular AMR values for SAML applications through the manifest or Microsoft Graph, since the admin center has no UI option for `include_granular_amr`. It also documents adding the `amr` claim to OIDC token types and clarifies that `include_granular_amr` applies only to SAML.",
+        "sourceFiles": [
+          "docs/identity-platform/optional-claims.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/monitoring-health",
+        "summary": "The article’s Microsoft MCP Server for Enterprise overview and setup links changed from Microsoft Learn paths to the EnterpriseMCP GitHub repository. The article continues to describe the service as preview, global-service-only, and read-only.",
+        "sourceFiles": [
+          "docs/identity/monitoring-health/howto-analyze-provisioning-logs.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/hybrid",
+        "summary": "The heading changed from “Workaround for newly added Staged Rollout users” to “Workaround to avoid one additional federated sign-in.” No procedural content changed in the supplied diff. The documentation, dated August 11, 2026, replaces general transition text with scenarios describing additional interactive sign-ins when users are added to or removed from Staged Rollout. It also covers certain Microsoft Entra ID Protection remediation events, including SSPR and risk remediation.",
+        "sourceFiles": [
+          "docs/identity/hybrid/connect/how-to-connect-staged-rollout.md",
+          "docs/identity/hybrid/connect/how-to-connect-staged-rollout.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/app-provisioning",
+        "summary": "The account discovery documentation now links to the Microsoft MCP Server for Enterprise GitHub repository instead of Microsoft Learn pages for investigating reports and provisioning an MCP client.",
+        "sourceFiles": [
+          "docs/identity/app-provisioning/how-to-account-discovery.md"
+        ]
+      },
+      {
+        "category": "Documentation change",
+        "title": "identity/saas-apps",
+        "summary": "The Puzzel provisioning article now documents OAuth2 Client Credentials Grant authentication. It adds steps to create an OIDC client, set token lifetimes to 3600, generate a shared secret, and enter the client ID, secret, and token endpoint. The tutorial now states that Client Credentials Authentication is supported. The tutorial now documents entering a Tenant URL, Client identifier, Client secret, and OAuth token endpoint, and includes a list of SCIM user attributes and data types.",
+        "sourceFiles": [
+          "docs/identity/saas-apps/puzzel-provisioning-tutorial.md",
+          "docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md",
+          "docs/identity/saas-apps/zscaler-zidentity-provisioning-tutorial.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "New documentation",
+        "headline": "global-secure-access",
+        "detail": "A new concept article documents the V2 web filtering model in Microsoft Entra Internet Access, including policies, rules, destination matching, and coexistence with V1 web content filtering."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity-platform",
+        "detail": "The documentation now explains how to configure granular AMR values for SAML applications through the manifest or Microsoft Graph, since the admin center has no UI option for `include_granular_amr`. It also documents adding the `amr` claim to OIDC token types and clarifies that `include_granular_amr` applies only to SAML."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/monitoring-health",
+        "detail": "The article’s Microsoft MCP Server for Enterprise overview and setup links changed from Microsoft Learn paths to the EnterpriseMCP GitHub repository. The article continues to describe the service as preview, global-service-only, and read-only."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/hybrid",
+        "detail": "The heading changed from “Workaround for newly added Staged Rollout users” to “Workaround to avoid one additional federated sign-in.” No procedural content changed in the supplied diff. The documentation, dated August 11, 2026, replaces general transition text with scenarios describing additional interactive sign-ins when users are added to or removed from Staged Rollout. It also covers certain Microsoft Entra ID Protection remediation events, including SSPR and risk remediation."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/app-provisioning",
+        "detail": "The account discovery documentation now links to the Microsoft MCP Server for Enterprise GitHub repository instead of Microsoft Learn pages for investigating reports and provisioning an MCP client."
+      },
+      {
+        "category": "Documentation change",
+        "headline": "identity/saas-apps",
+        "detail": "The Puzzel provisioning article now documents OAuth2 Client Credentials Grant authentication. It adds steps to create an OIDC client, set token lifetimes to 3600, generate a shared secret, and enter the client ID, secret, and token endpoint. The tutorial now states that Client Credentials Authentication is supported. The tutorial now documents entering a Tenant URL, Client identifier, Client secret, and OAuth token endpoint, and includes a list of SCIM user attributes and data types."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
