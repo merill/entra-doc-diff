@@ -417,22 +417,286 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/identity-platform/single-sign-on-saml-protocol.md",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 3,
+      "changes": 8,
+      "patch": "diff --git a/docs/identity-platform/single-sign-on-saml-protocol.md b/docs/identity-platform/single-sign-on-saml-protocol.md\nindex 3a6517e5da3..79111db7825 100644\n--- a/docs/identity-platform/single-sign-on-saml-protocol.md\n+++ b/docs/identity-platform/single-sign-on-saml-protocol.md\n@@ -331,7 +331,7 @@ The `AuthnContextClassRef` value reflects the method the user used to authentica\n | Certificate-based authentication (phishing-resistant MFA) | `SmartcardPKI` when used as MFA; `X509` for single-factor CBA | Certificate-based authentication (CBA). |\n | Temporary Access Pass (TAP) | `Unspecified` | A Temporary Access Pass. |\n | Windows Integrated Authentication (Kerberos) | `Kerberos` | Windows Integrated Authentication. |\n-| Federated IdP (pass-through) | Existing rules apply | The value passes through from the federated identity provider. |\n+| Device based X509 authentication | `X509` | A certificate on the device proves the device's identity |\n \n #### authnmethodreferences\n \n@@ -368,10 +368,12 @@ The following table lists the `authnmethodsreferences` values that Microsoft Ent\n | Certificate-based authentication (phishing-resistant MFA) | `x509`, plus `multipleauthn` (default for multifactor CBA, or when MFA is completed with another factor for single-factor CBA) | Certificate-based authentication. |\n | Temporary Access Pass (TAP) | `otp`, `multipleauthn` | A Temporary Access Pass. |\n | Windows Integrated Authentication (Kerberos) | `wia` | Windows Integrated Authentication. |\n-| Federated IdP (pass-through) | Existing rules apply | The value passes through from the federated identity provider. |\n+| Device based X509 authentication | `x509` | A certificate on the device proves the device's identity |\n+\n+Microsoft includes `x509` in the `amr` claim for both single-factor Certificate-Based Authentication (CBA) and device-based X.509 authentication. However, the presence of x509 alone does not qualify as phishing-resistant MFA (PRMFA). To meet PRMFA requirements, the user must also complete an additional MFA factor, which will be reflected by other authentication method indicators in the authentication context.\n \n > [!NOTE]\n > The `amr` claim is sent by default for Salesforce applications, so no configuration change is required for those apps. For all other SAML applications, the application administrator must add the optional `amr` claim with the `include_granular_amr` additional property to the app registration to request AMR claims. The `multipleauthn` and `mfa` values are emitted only when the user has completed MFA.\n \n > [!NOTE]\n-> Microsoft Entra ID is rolling out more granular AMR values that replace `otp` for both SAML and OIDC v2.0 tokens: Microsoft Authenticator TOTP sends `totp`, hardware OATH token sends `hotp`, SMS sends `sms`, phone call sends `tel`, email OTP sends `emailotp`, and Temporary Access Pass sends `tap`.\n\\ No newline at end of file\n+> Microsoft Entra ID is rolling out more granular AMR values that replace `otp` for both SAML and OIDC v2.0 tokens: Microsoft Authenticator TOTP sends `totp`, hardware OATH token sends `hotp`, SMS sends `sms`, phone call sends `tel`, email OTP sends `emailotp`, and Temporary Access Pass sends `tap`.\n",
+      "baseCommitSha": "ed0670251432942f1fc5098af5d737f64e81ad5f",
+      "commitSha": "ac89d0c3b0d98d5e06367f4b92e6ed52092388bd",
+      "commitMessage": "Update single-sign-on-saml-protocol.md",
+      "commitAuthor": "vimrang",
+      "commitDate": "2026-08-20 09:41:16 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/single-sign-on-saml-protocol.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/single-sign-on-saml-protocol",
+      "eventId": "entra-docs:ac89d0c3b0d98d5e06367f4b92e6ed52092388bd:modified:docs/identity-platform/single-sign-on-saml-protocol.md",
+      "firstSeenAt": "2026-08-20T20:45:49.699Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "SAML documentation adds X.509 AMR guidance",
+        "summary": "The documentation now identifies device-based X.509 authentication with the `x509` AMR value and explains that `x509` alone does not meet phishing-resistant MFA requirements. An additional authentication factor is required.",
+        "adminImpact": "Administrators evaluating SAML `amr` claims should account for the `x509` value and its MFA limitation.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity-platform/optional-claims-reference.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 2,
+      "changes": 5,
+      "patch": "diff --git a/docs/identity-platform/optional-claims-reference.md b/docs/identity-platform/optional-claims-reference.md\nindex 75a0c4dd38f..52df86b9cc8 100644\n--- a/docs/identity-platform/optional-claims-reference.md\n+++ b/docs/identity-platform/optional-claims-reference.md\n@@ -142,11 +142,12 @@ For OIDC, see the following table, which lists the `authnmethodsreferences` valu\n | Passkey (device-bound) (PRMFA) | `fido`, `mfa` |\n | Passkey (synced) | `fido`, `mfa` |\n | Windows Hello for Business (PRMFA) | `hwk`, `mfa`, `ngcmfa` |\n-| Certificate-based authentication (PRMFA) | `hwk` or `x509`, `mfa`, `rsa` |\n+| Certificate-based authentication (PRMFA) | `hwk` (Multi-factor CBA) or `x509` (Single factor CBA), `mfa`, `rsa` |\n | Temporary Access Pass (TAP) | `otp`, `mfa` |\n | Windows integrated authentication (Kerberos) | `wia` |\n+| Device based X509 authentication | `x509` |\n \n-Microsoft Entra ID forwards the `amr` values sent from an external MFA provider along with the `amr` values for the authentication methods performed in Microsoft Entra ID. For more information, see [Supported AMR claims](~/identity/authentication/concept-authentication-external-method-provider.md#supported-amr-claims).\n+Microsoft includes `x509` in the `amr` claim for both single-factor Certificate-Based Authentication (CBA) and device-based X.509 authentication. However, the presence of x509 alone does not qualify as phishing-resistant MFA (PRMFA). To meet PRMFA requirements, the user must also complete an additional MFA factor, which will be reflected by other authentication method indicators in the authentication context. Microsoft Entra ID forwards the `amr` values sent from an external MFA provider along with the `amr` values for the authentication methods performed in Microsoft Entra ID. For more information, see [Supported AMR claims](~/identity/authentication/concept-authentication-external-method-provider.md#supported-amr-claims).\n \n ## See also\n \n",
+      "baseCommitSha": "ed0670251432942f1fc5098af5d737f64e81ad5f",
+      "commitSha": "9bbbe4eed65b039685e60acca2cb02eff1193a2f",
+      "commitMessage": "Update optional claims reference for authentication methods",
+      "commitAuthor": "vimrang",
+      "commitDate": "2026-08-20 09:28:44 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/optional-claims-reference.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/optional-claims-reference",
+      "eventId": "entra-docs:9bbbe4eed65b039685e60acca2cb02eff1193a2f:modified:docs/identity-platform/optional-claims-reference.md",
+      "firstSeenAt": "2026-08-20T20:45:49.710Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Optional claims reference clarifies X.509 authentication values",
+        "summary": "The reference now distinguishes `hwk` for multifactor CBA from `x509` for single-factor CBA, adds device-based X.509 authentication, and explains that `x509` alone does not indicate phishing-resistant MFA.",
+        "adminImpact": "Review any interpretation of the `amr` claim and require an additional factor when verifying phishing-resistant MFA.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/fundamentals/how-to-customize-branding-themes-apps.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/fundamentals/how-to-customize-branding-themes-apps.md b/docs/fundamentals/how-to-customize-branding-themes-apps.md\nindex ad24f21e5d0..a37c41ceaab 100644\n--- a/docs/fundamentals/how-to-customize-branding-themes-apps.md\n+++ b/docs/fundamentals/how-to-customize-branding-themes-apps.md\n@@ -1,7 +1,7 @@\n ---\n title: Customize the sign-in experience for your application with branding themes\n description: Learn how to create branding themes and apply them to the sign-in experience for your application in Microsoft Entra ID.\n-ms.date: 07/21/2026\n+ms.date: 08/18/2026\n ms.reviewer:\n ms.topic: how-to\n ms.custom: msecd-doc-authoring-1015\n@@ -115,7 +115,7 @@ Here are some of the limits and constraints for branding themes.\n    - **Custom CSS** – Upload your own CSS file to replace default Microsoft styling with your own styling for: color, font, text size, position of elements, and displays for different devices and screen sizes. For more information, see [CSS template reference guide](reference-company-branding-css-template.md).\n \n      > [!IMPORTANT]\n-     > As part of the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative), Microsoft Entra ID is retiring support for custom CSS *positioning properties* in company branding. After July 21, 2026, tenants that don't already use these properties can't configure them. Later, the properties will be deprecated globally and stop functioning. Eventually, custom CSS will be retired entirely. For the full list of deprecated properties and steps to update your CSS, see [CSS template reference guide](reference-company-branding-css-template.md#deprecation-of-custom-css-positioning-properties). For more information, see the blog post [Microsoft Entra ID enhances security of branded sign-ins](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/microsoft-entra-id-enhances-security-of-branded-sign-ins/4537471).\n+     > To align with the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative) and its focus on identity security and phishing resistance, Microsoft Entra ID is retiring support for custom CSS *layout and positioning properties* in company branding. After July 21, 2026, tenants created before January 6, 2026, that don't already use custom CSS can't configure custom CSS. Later, the properties will be deprecated globally and stop functioning. Eventually, custom CSS will be retired entirely. For the full list of deprecated properties and steps to update your CSS, see [CSS template reference guide](reference-company-branding-css-template.md#deprecation-of-custom-css-positioning-properties). For more information, see the blog post [Microsoft Entra ID enhances security of branded sign-ins](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/microsoft-entra-id-enhances-security-of-branded-sign-ins/4537471).\n \n     :::image type=\"content\" source=\"./media/how-to-customize-branding-themes-apps/styling-tab.png\" alt-text=\"Screenshot of the Create a theme page and the Styling tab settings.\" lightbox=\"./media/how-to-customize-branding-themes-apps/styling-tab.png\":::\n \n",
+      "baseCommitSha": "14a54db8facaa694bcc0ebc696f0ddbb1a15d194",
+      "commitSha": "87ec1f8424bccbc5f59f8e8a13737d4cb5417939",
+      "commitMessage": "[8/20] Updates per email request (#14071)",
+      "commitAuthor": "Chris Davis",
+      "commitDate": "2026-08-20 09:22:58 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-customize-branding-themes-apps.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/fundamentals/how-to-customize-branding-themes-apps",
+      "eventId": "entra-docs:87ec1f8424bccbc5f59f8e8a13737d4cb5417939:modified:docs/fundamentals/how-to-customize-branding-themes-apps.md",
+      "firstSeenAt": "2026-08-20T20:45:49.726Z",
+      "englishSummary": {
+        "category": "Retirement",
+        "headline": "Company branding guidance expands affected CSS properties",
+        "summary": "The documentation now covers custom CSS layout and positioning properties, and updates its publication date to August 18, 2026. It describes support for these properties as being retired under the Secure Future Initiative.",
+        "adminImpact": "Review company-branding CSS that uses layout or positioning properties and update it before support ends.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/fundamentals/how-to-customize-branding.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/fundamentals/how-to-customize-branding.md b/docs/fundamentals/how-to-customize-branding.md\nindex d6a1987844f..95e51f00002 100644\n--- a/docs/fundamentals/how-to-customize-branding.md\n+++ b/docs/fundamentals/how-to-customize-branding.md\n@@ -3,7 +3,7 @@ title: Add company branding to your organization's sign-in page\n description: Instructions about how to add your organization's custom branding to the Microsoft Entra sign-in experience.\n manager: pmwongera\n ms.topic: how-to\n-ms.date: 07/21/2026\n+ms.date: 08/18/2026\n ms.reviewer: mkokkalera\n ms.custom: sfi-image-nochange, msecd-doc-authoring-1015\n ai-usage: ai-assisted\n@@ -103,9 +103,9 @@ The sign-in experience process is grouped into sections. At the end of each sect\n     - View the [CSS template reference guide](reference-company-branding-css-template.md).\n \n     > [!IMPORTANT]\n-    > Tenants created after January 5, 2026, won't have custom CSS available for company branding in Microsoft Entra ID. Tenants created before January 5, 2026, can continue to use custom CSS.\n+    > Tenants created after January 5, 2026, don't have custom CSS available for company branding in Microsoft Entra ID. After July 21, 2026, tenants created before January 6, 2026, that don't already use custom CSS can't configure custom CSS.\n     >\n-    > As part of the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative), Microsoft Entra ID is retiring support for custom CSS *positioning properties* (such as `position`, `margin`, `transform`, and `overflow`). After July 21, 2026, tenants that don't already use these properties can't configure them. Later, the properties will be deprecated globally and stop functioning. Eventually, custom CSS will be retired entirely. If your custom CSS uses these properties, remove them from your configuration. For the full list of deprecated properties and steps to update your CSS, see [CSS template reference guide](reference-company-branding-css-template.md#deprecation-of-custom-css-positioning-properties). For more information, see the blog post [Microsoft Entra ID enhances security of branded sign-ins](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/microsoft-entra-id-enhances-security-of-branded-sign-ins/4537471).\n+    > To align with the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative) and its focus on identity security and phishing resistance, Microsoft Entra ID is retiring support for custom CSS *layout and positioning properties* (such as `position`, `margin`, `transform`, and `overflow`). Later, the properties will be deprecated globally and stop functioning. Eventually, custom CSS will be retired entirely. If your custom CSS uses these properties, remove them from your configuration. For the full list of deprecated properties and steps to update your CSS, see [CSS template reference guide](reference-company-branding-css-template.md#deprecation-of-custom-css-positioning-properties). For more information, see the blog post [Microsoft Entra ID enhances security of branded sign-ins](https://techcommunity.microsoft.com/blog/microsoft-entra-blog/microsoft-entra-id-enhances-security-of-branded-sign-ins/4537471).\n \n ### Header\n \n",
+      "baseCommitSha": "14a54db8facaa694bcc0ebc696f0ddbb1a15d194",
+      "commitSha": "87ec1f8424bccbc5f59f8e8a13737d4cb5417939",
+      "commitMessage": "[8/20] Updates per email request (#14071)",
+      "commitAuthor": "Chris Davis",
+      "commitDate": "2026-08-20 09:22:58 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/how-to-customize-branding.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/fundamentals/how-to-customize-branding",
+      "eventId": "entra-docs:87ec1f8424bccbc5f59f8e8a13737d4cb5417939:modified:docs/fundamentals/how-to-customize-branding.md",
+      "firstSeenAt": "2026-08-20T20:45:49.731Z",
+      "englishSummary": {
+        "category": "Retirement",
+        "headline": "Custom CSS branding support is being retired",
+        "summary": "The documentation now states that tenants created after January 5, 2026, cannot use custom CSS. After July 21, 2026, older tenants not already using it cannot configure it, and support for custom CSS layout and positioning properties is being retired.",
+        "adminImpact": "Review custom CSS branding configurations and plans before July 21, 2026.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/fundamentals/reference-company-branding-css-template.md",
+      "status": "modified",
+      "additions": 53,
+      "deletions": 10,
+      "changes": 63,
+      "patch": "diff --git a/docs/fundamentals/reference-company-branding-css-template.md b/docs/fundamentals/reference-company-branding-css-template.md\nindex 39ed4bf17bb..da2deded71a 100644\n--- a/docs/fundamentals/reference-company-branding-css-template.md\n+++ b/docs/fundamentals/reference-company-branding-css-template.md\n@@ -3,7 +3,7 @@ title: CSS reference guide for customizing company branding\n description: Reference guide for the CSS template selectors for customizing Microsoft Entra sign-in page company branding.\n manager: pmwongera\n ms.topic: reference\n-ms.date: 07/21/2026\n+ms.date: 08/18/2026\n ms.reviewer: almars\n ms.custom: sfi-image-nochange, msecd-doc-authoring-1015\n ai-usage: ai-assisted\n@@ -15,13 +15,15 @@ ai-usage: ai-assisted\n Configuring your company branding for the user sign-in process provides a seamless experience in your applications that use Microsoft Entra ID as the identity and access management service. Use this CSS reference guide if you're using the [CSS template](https://download.microsoft.com/download/7/2/7/727f287a-125d-4368-a673-a785907ac5ab/custom-styles-template-013023.css) as part of the [customize company branding](reference-company-branding-css-template.md) process.\n \n > [!IMPORTANT]\n-> Tenants created after January 5, 2026 don't have custom CSS available for company branding in Microsoft Entra ID. Tenants created before January 5, 2026, can continue to use custom CSS.\n+> Tenants created after January 5, 2026, don't have custom CSS available for company branding in Microsoft Entra ID. After July 21, 2026, tenants created before January 6, 2026, that don't already use custom CSS can't configure custom CSS.\n >\n > Microsoft Entra External ID tenants aren't affected.\n \n-## Deprecation of custom CSS positioning properties\n+<a name='deprecation-of-custom-css-positioning-properties'></a>\n \n-As part of the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative), Microsoft Entra ID is retiring support for custom CSS *positioning properties* in company branding. These properties control where elements appear on the sign-in page and how they're layered, sized, and displayed. For example, they can move, overlap, resize, or hide page content. Retiring them keeps sign-in page layouts consistent and predictable across Microsoft Entra ID.\n+## Deprecation of custom CSS layout and positioning properties\n+\n+To align with the [Microsoft Secure Future Initiative](https://www.microsoft.com/trust-center/security/secure-future-initiative) and its focus on identity security and phishing resistance, Microsoft Entra ID is retiring support for custom CSS *layout and positioning properties* in company branding. These properties control where elements appear on the sign-in page and how they're layered, sized, and displayed. For example, they can move, overlap, resize, or hide page content. Retiring them keeps sign-in page layouts consistent and predictable in Microsoft Entra ID.\n \n This change is the first step toward retiring the custom CSS feature entirely. Microsoft plans to provide advance notice, recommended migration paths, and future advanced customization options before that retirement.\n \n@@ -29,13 +31,13 @@ For more information, see the blog post [Microsoft Entra ID enhances security of\n \n ### Timeline\n \n-- **After July 21, 2026**: Tenants that don't already use the affected positioning properties can't configure them.\n-- **Later**: The affected positioning properties will be deprecated globally. After deprecation, these properties are blocked and no longer function.\n+- **After July 21, 2026**: Tenants created before January 6, 2026, that don't already use custom CSS can't configure custom CSS.\n+- **Later**: The affected layout and positioning properties will be deprecated globally. After deprecation, these properties are blocked and no longer function.\n - **Eventually**: Custom CSS will be fully retired. Microsoft will share more guidance, including recommended migration paths, before retirement.\n \n ### Who's affected\n \n-This change affects organizations whose Microsoft Entra ID tenant uses any of the deprecated positioning properties in their custom CSS. Microsoft Entra External ID tenants aren't affected. Tenants that don't already use these properties aren't affected, because they can't configure the properties after July 21, 2026.\n+This change affects organizations whose Microsoft Entra ID tenant uses any of the deprecated layout and positioning properties in their custom CSS. Microsoft Entra External ID tenants aren't affected. After July 21, 2026, tenants created before January 6, 2026, that don't already use custom CSS can't configure custom CSS.\n \n Microsoft notifies affected customers directly in advance.\n \n@@ -46,17 +48,58 @@ If your custom CSS uses any of the following properties, remove them from your c\n - `position` (including `top`, `right`, `bottom`, `left`, and `z-index`)\n - `margin` (including `margin-top`, `margin-bottom`, `margin-left`, and `margin-right`)\n - `transform`\n-- `translate`\n - `opacity`\n - `overflow`\n - `filter`\n - `pointer-events`\n - `clip-path`\n - `mix-blend-mode`\n+- `translate`\n+- `-webkit-transform`\n+- `-moz-transform`\n+- `-ms-transform`\n+- `-o-transform`\n+- `scale`\n+- `rotate`\n+- `perspective`\n+- `display`\n+- `visibility`\n+- `inset`\n+- `zoom`\n+- `offset`\n+- `offset-path`\n+- `offset-distance`\n+- `margin-block`\n+- `margin-block-start`\n+- `margin-block-end`\n+- `margin-inline`\n+- `margin-inline-start`\n+- `margin-inline-end`\n+- `order`\n+- `grid-area`\n+- `grid-column`\n+- `grid-column-start`\n+- `grid-column-end`\n+- `grid-row`\n+- `grid-row-start`\n+- `grid-row-end`\n+- `isolation`\n+- `overflow-x`\n+- `overflow-y`\n+- `overflow-block`\n+- `overflow-inline`\n+- `content-visibility`\n+- `clip`\n+- `mask`\n+- `mask-image`\n+- `-webkit-mask`\n+- `-webkit-mask-image`\n \n ### Check and update your custom CSS\n \n-To check whether your custom CSS uses any deprecated properties, use Microsoft Graph to export your current company branding configuration, and then check it with the tenant branding inspector tool. You need a Global Administrator or Branding Administrator account.\n+To inspect your current CSS file, on the **Custom branding** page in the Microsoft Entra admin center at <https://entra.microsoft.com>, select **Edit**. On the **Layout** tab, under **Custom CSS**, select **Download**. Review the downloaded file for the properties listed in [Deprecated properties](#deprecated-properties).\n+\n+To check all company branding localizations, use Microsoft Graph to export your current company branding configuration, and then check it with the tenant branding inspector tool. You need a Global Administrator or Branding Administrator account.\n \n 1. Go to [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer), and then sign in to your tenant.\n 1. If you don't already know your tenant ID, send a `GET` request to the following URL, and then copy the `id` value from the response:\n@@ -75,7 +118,7 @@ To check whether your custom CSS uses any deprecated properties, use Microsoft G\n 1. Go to the [tenant branding inspector tool](https://entra-branding-tools.github.io/tenant-branding-inspector/).\n 1. Paste the copied response, or upload the exported JSON file, into the tool. The tool lists each locale and the deprecated properties that it uses.\n \n-To remove the deprecated properties, edit your CSS file, upload it on the **Company Branding** page in the [Microsoft Entra admin center](https://entra.microsoft.com), and then save your changes. To validate the visual impact before you update production, apply the changes in a test tenant first.\n+To remove the deprecated properties, edit the downloaded CSS file, upload it to the **Company Branding** page in the [Microsoft Entra admin center](https://entra.microsoft.com), and then save your changes. To validate the visual impact before you update production, apply the changes in a test tenant first.\n \n ## HTML selectors\n \n",
+      "baseCommitSha": "14a54db8facaa694bcc0ebc696f0ddbb1a15d194",
+      "commitSha": "87ec1f8424bccbc5f59f8e8a13737d4cb5417939",
+      "commitMessage": "[8/20] Updates per email request (#14071)",
+      "commitAuthor": "Chris Davis",
+      "commitDate": "2026-08-20 09:22:58 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/reference-company-branding-css-template.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/fundamentals/reference-company-branding-css-template",
+      "eventId": "entra-docs:87ec1f8424bccbc5f59f8e8a13737d4cb5417939:modified:docs/fundamentals/reference-company-branding-css-template.md",
+      "firstSeenAt": "2026-08-20T20:45:49.736Z",
+      "englishSummary": {
+        "category": "Retirement",
+        "headline": "Company branding CSS restrictions and affected properties updated",
+        "summary": "The documentation now states that, after July 21, 2026, eligible tenants without existing custom CSS cannot configure it. It also expands the list of layout and positioning properties that will eventually be blocked and updates the inspection steps.",
+        "adminImpact": "Review custom CSS by downloading it from the Microsoft Entra admin center, or inspect all localizations with Microsoft Graph. Remove affected properties and test the changes before the properties are blocked.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md b/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\nindex f6c4a78e6b3..72ef6793307 100644\n--- a/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\n+++ b/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\n@@ -288,7 +288,7 @@ The result of the preceding scenarios is an IdentityDataValidationFailed or Data\n \n #### Fix the IdentityDataValidationFailed and DataValidationFailed errors\n \n-Ensure that the **userPrincipalName** attribute has supported characters and the required format. If the **DataValidationFailed** error occurs during a hard match operation, use one of the **Hard match scenarios and recovery paths** described in [Configure Microsoft Entra Connect for an existing tenant](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant#hard-match-scenarios-and-recovery-paths)\n+Ensure that the **userPrincipalName** attribute has supported characters and the required format. If the **DataValidationFailed** error occurs during a hard match operation, use one of the **Hard match scenarios and recovery paths** described in [Configure Microsoft Entra Connect for an existing tenant](https://learn.microsoft.com/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant#hard-match-scenarios-and-recovery-paths)\n \n \n #### Related article\n",
+      "baseCommitSha": "4236eb65bb5334fe9ab50186c499ee41727d74e3",
+      "commitSha": "add71e45db017dcc992a1a44903c7a4f5a242f2c",
+      "commitMessage": "Update dataValidationFailed error details",
+      "commitAuthor": "Tariq Jaber",
+      "commitDate": "2026-08-20 18:37:52 +0300",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-sync-errors",
+      "eventId": "entra-docs:add71e45db017dcc992a1a44903c7a4f5a242f2c:modified:docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "firstSeenAt": "2026-08-20T20:45:49.752Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated DataValidationFailed troubleshooting guidance",
+        "summary": "The troubleshooting documentation now directs administrators to the Hard match scenarios and recovery paths when DataValidationFailed occurs during a hard match operation, while retaining guidance to validate userPrincipalName characters and format.",
+        "adminImpact": "Administrators have clearer recovery guidance for this synchronization error.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/conditional-access/deployment-guide-token-protection-apple.md b/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\nindex 0b310125e6d..977f0a4b795 100644\n--- a/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\n+++ b/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\n@@ -91,7 +91,7 @@ Complete the following steps for *each* platform you're deploying to. These step\n 1. Install the Microsoft Company Portal or deploy it via your MDM solution. Company Portal serves as the authentication broker for Microsoft Entra sign-ins.\n 1. Enable hardware-backed registration using one of the following options:\n    - Option A: Enable the [Microsoft Enterprise SSO plug-in for Apple Devices](../../identity-platform/apple-sso-plugin.md).\n-   - Option B: Configure **Platform SSO for macOS**. Platform SSO uses hardware-backed storage by default. For setup instructions, see [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/intune-service/configuration/platform-sso-macos).\n+   - Option B: Configure **Platform SSO for macOS**. For setup instructions, see [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/intune-service/configuration/platform-sso-macos).\n \n ---\n \n@@ -337,4 +337,4 @@ Users on devices that were registered to Microsoft Entra ID before Token Protect\n \n When the Token Protection policy is enabled, users who aren't using a supported application will see the following screen after authenticating:\n \n-:::image type=\"content\" source=\"media/deployment-guide-token-protection-apple/token-protection-required-error-message.png\" alt-text=\"Screenshot of the error message when a token protection policy blocks access.\":::\n\\ No newline at end of file\n+:::image type=\"content\" source=\"media/deployment-guide-token-protection-apple/token-protection-required-error-message.png\" alt-text=\"Screenshot of the error message when a token protection policy blocks access.\":::\n",
+      "baseCommitSha": "c13a0417503d82113f700cdc2337751ea801dd83",
+      "commitSha": "fbfb7815a510fc56f21d5ffa4dced1de1a2d7193",
+      "commitMessage": "Update Platform SSO configuration instructions",
+      "commitAuthor": "anfield27",
+      "commitDate": "2026-08-18 14:37:01 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/deployment-guide-token-protection-apple",
+      "eventId": "entra-docs:fbfb7815a510fc56f21d5ffa4dced1de1a2d7193:modified:docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "firstSeenAt": "2026-08-20T20:45:49.762Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Platform SSO storage wording removed",
+        "summary": "The deployment guide no longer states that Platform SSO for macOS uses hardware-backed storage by default. The Intune setup link remains unchanged.",
+        "adminImpact": "Administrators should use the linked Intune instructions for Platform SSO configuration details.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 4,
+      "changes": 10,
+      "patch": "diff --git a/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md b/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\nindex ab42c75426b..f6c4a78e6b3 100644\n--- a/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\n+++ b/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md\n@@ -272,7 +272,7 @@ The most common reason for the AttributeValueMustBeUnique error is that two obje\n \n This section discusses data validation failures.\n \n-### IdentityDataValidationFailed\n+### IdentityDataValidationFailed or DataValidationFailed\n \n #### Description\n \n@@ -282,12 +282,14 @@ Microsoft Entra ID enforces various restrictions on the data itself before allow\n \n - The **userPrincipalName** attribute value has invalid or unsupported characters.\n - The **userPrincipalName** attribute doesn't follow the required format.\n+- The **onPremisesObjectIdentifier** attribute changed as a result of the hard match operation.\n \n-The result of the preceding scenarios is an IdentityDataValidationFailed error.\n+The result of the preceding scenarios is an IdentityDataValidationFailed or DataValidationFailed error.\n \n-#### Fix the IdentityDataValidationFailed error\n+#### Fix the IdentityDataValidationFailed and DataValidationFailed errors\n+\n+Ensure that the **userPrincipalName** attribute has supported characters and the required format. If the **DataValidationFailed** error occurs during a hard match operation, use one of the **Hard match scenarios and recovery paths** described in [Configure Microsoft Entra Connect for an existing tenant](https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-existing-tenant#hard-match-scenarios-and-recovery-paths)\n \n-Ensure that the **userPrincipalName** attribute has supported characters and the required format.\n \n #### Related article\n \n",
+      "baseCommitSha": "fa76e1ff5fa5342053e4202d020780496b303a0e",
+      "commitSha": "4236eb65bb5334fe9ab50186c499ee41727d74e3",
+      "commitMessage": "Update Sync Errors related to Hard Match security hardening",
+      "commitAuthor": "Tariq Jaber",
+      "commitDate": "2026-08-17 17:31:58 +0300",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/tshoot-connect-sync-errors",
+      "eventId": "entra-docs:4236eb65bb5334fe9ab50186c499ee41727d74e3:modified:docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+      "firstSeenAt": "2026-08-20T20:45:49.772Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Hard match sync error guidance expanded",
+        "summary": "The troubleshooting guide now covers DataValidationFailed alongside IdentityDataValidationFailed, including cases where onPremisesObjectIdentifier changes during hard match operations. It also adds guidance for checking userPrincipalName formatting and using the documented hard match recovery paths.",
+        "adminImpact": "Administrators troubleshooting these errors can use the updated error names and recovery guidance.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/concept-token-protection.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/identity/conditional-access/concept-token-protection.md b/docs/identity/conditional-access/concept-token-protection.md\nindex 22922e7fa5c..8b89850f016 100644\n--- a/docs/identity/conditional-access/concept-token-protection.md\n+++ b/docs/identity/conditional-access/concept-token-protection.md\n@@ -4,7 +4,7 @@ description: Protect your resources with token protection in Conditional Access\n ms.service: entra-id\n ms.subservice: conditional-access\n ms.topic: concept-article\n-ms.date: 08/10/2026\n+ms.date: 08/14/2026\n ms.reviewer: sgrandhi\n ms.custom:\n   - sfi-image-nochange\n@@ -29,8 +29,8 @@ When a user registers a supported device with Microsoft Entra, a PRT is issued a\n | Platform | Native applications | Browser-based applications |\n |----------|---------------------|----------------------------|\n | Windows | Generally Available | Preview for supported web apps that access Azure Resource Manager |\n-| iOS / iPadOS | Preview | Not supported |\n-| macOS | Preview | Preview for supported web apps that access Azure Resource Manager |\n+| iOS / iPadOS | Generally Available | Not supported |\n+| macOS | Generally Available | Preview for supported web apps that access Azure Resource Manager |\n \n > [!NOTE]\n > Browser-based application support is currently limited to selected web apps, browsers, and device configurations that access Azure Resource Manager. For requirements and the list of supported applications, see [Token Protection deployment guide - Web apps](deployment-guide-token-protection-web-apps.md).\n",
+      "baseCommitSha": "aa90d954e60f4633f16a7fcce8cdd44446e60fa5",
+      "commitSha": "c13a0417503d82113f700cdc2337751ea801dd83",
+      "commitMessage": "Update Apple token protection guidance for GA",
+      "commitAuthor": "Sindhoor Grandhi",
+      "commitDate": "2026-08-14 12:03:35 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-token-protection.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection",
+      "eventId": "entra-docs:c13a0417503d82113f700cdc2337751ea801dd83:modified:docs/identity/conditional-access/concept-token-protection.md",
+      "firstSeenAt": "2026-08-20T20:45:49.782Z",
+      "englishSummary": {
+        "category": "Generally available",
+        "headline": "Apple token protection status updated to generally available",
+        "summary": "The documentation now lists token protection for iOS/iPadOS and macOS as generally available. Supported web apps accessing Azure Resource Manager on macOS remain in preview.",
+        "adminImpact": "Administrators can use the updated support status when planning token protection deployments; no required configuration change is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "status": "modified",
+      "additions": 8,
+      "deletions": 16,
+      "changes": 24,
+      "patch": "diff --git a/docs/identity/conditional-access/deployment-guide-token-protection-apple.md b/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\nindex dde514373df..0b310125e6d 100644\n--- a/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\n+++ b/docs/identity/conditional-access/deployment-guide-token-protection-apple.md\n@@ -1,16 +1,16 @@\n ---\n-title: Token Protection Deployment Guide - Apple Platforms (Preview)\n+title: Token Protection Deployment Guide - Apple Platforms\n description: Deploy Token Protection with Microsoft Entra Conditional Access for macOS, iOS, and iPadOS\n ms.service: entra-id\n ms.subservice: conditional-access\n ms.topic: how-to\n-ms.date: 03/24/2026\n+ms.date: 08/14/2026\n ms.reviewer: sgrandhi\n ---\n-# Token Protection Deployment Guide - Apple Platforms (Preview)\n+# Token Protection Deployment Guide - Apple Platforms\n ## Overview\n \n-This guide covers the steps required to deploy and enforce Token Protection for sign-in session tokens on Apple platforms (iOS, iPadOS, and macOS). Token Protection on Apple platforms is currently in Preview.\n+This guide covers the steps required to deploy and enforce Token Protection for sign-in session tokens on Apple platforms (iOS, iPadOS, and macOS).\n \n Before using this deployment guide, review [Token Protection in Microsoft Entra Conditional Access](concept-token-protection.md) for an overview of the feature and supported platforms.\n \n@@ -33,9 +33,10 @@ Token Protection can be applied to the following applications.\n |---|---|---|\n | Intune Company Portal | ✅ | ✅ |\n | Microsoft Authenticator | ✅ |  |\n-| Microsoft Edge (support for sign-in to Edge profile only)* | ✅ | ✅ |\n+| Microsoft Edge (support for sign-in to Edge profile only) | ✅ | ✅ |\n | Microsoft Loop | ✅ |   |\n | Microsoft OneNote | ✅ | ✅ |\n+| Microsoft Scout |  | ✅ |\n | Microsoft SharePoint | ✅ |  |\n | Microsoft Teams | ✅ | ✅ |\n | Microsoft To Do | ✅ | ✅ |\n@@ -44,8 +45,6 @@ Token Protection can be applied to the following applications.\n | Visual Studio Code |  | ✅ |\n | Word, Excel, PowerPoint | ✅ | ✅ |\n \n-*Token Protection currently supports native applications only. Browser-based applications are not supported.\n-\n ### Supported Resources\n \n Token Protection on Apple platforms can be used to protect the following resources:\n@@ -86,20 +85,13 @@ Complete the following steps for *each* platform you're deploying to. These step\n \n 1. Install Microsoft Authenticator from the Apple App Store, or deploy it via your MDM solution. Authenticator serves as the authentication broker for Microsoft Entra sign-ins.\n 1. Enable hardware-backed registration using the [Microsoft Enterprise SSO plug-in for Apple Devices](../../identity-platform/apple-sso-plugin.md).\n-1. Set the `use_most_secure_storage` flag.\n-   - The flag applies only to new device registrations made after the flag is configured.\n-   - For Intune-enrolled devices, the flag also applies to registrations made through the Intune Company Portal app, even before the device becomes MDM-managed.\n-   - For all other registrations, the flag takes effect only after the device is MDM-managed and the Microsoft Enterprise SSO plug-in profile is active.\n \n ### [macOS](#tab/macos)\n \n 1. Install the Microsoft Company Portal or deploy it via your MDM solution. Company Portal serves as the authentication broker for Microsoft Entra sign-ins.\n 1. Enable hardware-backed registration using one of the following options:\n-   - Option A: Enable the **Microsoft Enterprise SSO plug-in** with the `use_most_secure_storage` flag.\n-      - The flag applies only to new device registrations made after the flag is configured.\n-      - For Intune-enrolled devices, the flag also applies to registrations made through the Intune Company Portal app, even before the device becomes MDM-managed.\n-      - For all other registrations, the flag takes effect only after the device is MDM-managed and the Microsoft Enterprise SSO plug-in profile is active.\n-   - Option B: Configure **Platform SSO for macOS**. Platform SSO uses hardware-backed storage by default and requires no extra flag configuration. For setup instructions, see [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/intune-service/configuration/platform-sso-macos).\n+   - Option A: Enable the [Microsoft Enterprise SSO plug-in for Apple Devices](../../identity-platform/apple-sso-plugin.md).\n+   - Option B: Configure **Platform SSO for macOS**. Platform SSO uses hardware-backed storage by default. For setup instructions, see [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/intune-service/configuration/platform-sso-macos).\n \n ---\n \n",
+      "baseCommitSha": "aa90d954e60f4633f16a7fcce8cdd44446e60fa5",
+      "commitSha": "c13a0417503d82113f700cdc2337751ea801dd83",
+      "commitMessage": "Update Apple token protection guidance for GA",
+      "commitAuthor": "Sindhoor Grandhi",
+      "commitDate": "2026-08-14 12:03:35 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/deployment-guide-token-protection-apple",
+      "eventId": "entra-docs:c13a0417503d82113f700cdc2337751ea801dd83:modified:docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+      "firstSeenAt": "2026-08-20T20:45:49.787Z",
+      "englishSummary": {
+        "category": "Generally available",
+        "headline": "Apple token protection guidance updated",
+        "summary": "The guide removes the Preview designation, adds Microsoft Scout to the support matrix, and replaces detailed storage-flag instructions with updated Apple SSO plugin and Platform SSO guidance.",
+        "adminImpact": "Review the updated deployment steps and supported-client information when deploying Token Protection on Apple platforms.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
   "messageCenterItems": [],
   "summary": {
-    "totalCommits": 7,
-    "totalFiles": 16,
+    "totalCommits": 14,
+    "totalFiles": 26,
     "authors": [
       "Chetan Desai",
+      "Chris Davis",
       "Kristina Smith",
+      "Sindhoor Grandhi",
+      "Tariq Jaber",
+      "anfield27",
       "shelleyatmicrosoft",
       "vimrang"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 2 new, 14 updated, and 0 removed Microsoft Entra documentation files across 4 documentation areas.",
+    "overview": "Today's report includes 2 new, 24 updated, and 0 removed Microsoft Entra documentation files across 8 documentation areas.",
     "groups": [
       {
         "category": "New feature",
@@ -477,6 +741,44 @@
         "sourceFiles": [
           "docs/includes/lifecycle-workflows-tasks-table.md"
         ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity-platform",
+        "summary": "The documentation now identifies device-based X.509 authentication with the `x509` AMR value and explains that `x509` alone does not meet phishing-resistant MFA requirements. An additional authentication factor is required. The reference now distinguishes `hwk` for multifactor CBA from `x509` for single-factor CBA, adds device-based X.509 authentication, and explains that `x509` alone does not indicate phishing-resistant MFA.",
+        "sourceFiles": [
+          "docs/identity-platform/single-sign-on-saml-protocol.md",
+          "docs/identity-platform/optional-claims-reference.md"
+        ]
+      },
+      {
+        "category": "Retirement",
+        "title": "fundamentals",
+        "summary": "The documentation now covers custom CSS layout and positioning properties, and updates its publication date to August 18, 2026. It describes support for these properties as being retired under the Secure Future Initiative. The documentation now states that tenants created after January 5, 2026, cannot use custom CSS. After July 21, 2026, older tenants not already using it cannot configure it, and support for custom CSS layout and positioning properties is being retired. The documentation now states that, after July 21, 2026, eligible tenants without existing custom CSS cannot configure it. It also expands the list of layout and positioning properties that will eventually be blocked and updat",
+        "sourceFiles": [
+          "docs/fundamentals/how-to-customize-branding-themes-apps.md",
+          "docs/fundamentals/how-to-customize-branding.md",
+          "docs/fundamentals/reference-company-branding-css-template.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/hybrid",
+        "summary": "The troubleshooting documentation now directs administrators to the Hard match scenarios and recovery paths when DataValidationFailed occurs during a hard match operation, while retaining guidance to validate userPrincipalName characters and format. The troubleshooting guide now covers DataValidationFailed alongside IdentityDataValidationFailed, including cases where onPremisesObjectIdentifier changes during hard match operations. It also adds guidance for checking userPrincipalName formatting and using the documented hard match recovery paths.",
+        "sourceFiles": [
+          "docs/identity/hybrid/connect/tshoot-connect-sync-errors.md",
+          "docs/identity/hybrid/connect/tshoot-connect-sync-errors.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/conditional-access",
+        "summary": "The deployment guide no longer states that Platform SSO for macOS uses hardware-backed storage by default. The Intune setup link remains unchanged. The documentation now lists token protection for iOS/iPadOS and macOS as generally available. Supported web apps accessing Azure Resource Manager on macOS remain in preview. The guide removes the Preview designation, adds Microsoft Scout to the support matrix, and replaces detailed storage-flag instructions with updated Apple SSO plugin and Platform SSO guidance.",
+        "sourceFiles": [
+          "docs/identity/conditional-access/deployment-guide-token-protection-apple.md",
+          "docs/identity/conditional-access/concept-token-protection.md",
+          "docs/identity/conditional-access/deployment-guide-token-protection-apple.md"
+        ]
       }
     ],
     "highlights": [
@@ -499,6 +801,26 @@
         "category": "Doc update",
         "headline": "includes",
         "detail": "The lifecycle workflows task table now lists “Remove all access package assignments for user” for both Leaver and Mover workflow templates."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity-platform",
+        "detail": "The documentation now identifies device-based X.509 authentication with the `x509` AMR value and explains that `x509` alone does not meet phishing-resistant MFA requirements. An additional authentication factor is required. The reference now distinguishes `hwk` for multifactor CBA from `x509` for single-factor CBA, adds device-based X.509 authentication, and explains that `x509` alone does not indicate phishing-resistant MFA."
+      },
+      {
+        "category": "Retirement",
+        "headline": "fundamentals",
+        "detail": "The documentation now covers custom CSS layout and positioning properties, and updates its publication date to August 18, 2026. It describes support for these properties as being retired under the Secure Future Initiative. The documentation now states that tenants created after January 5, 2026, cannot use custom CSS. After July 21, 2026, older tenants not already using it cannot configure it, and support for custom CSS layout and positioning properties is being retired. The documentation now states that, after July 21, 2026, eligible tenants without existing custom CSS cannot configure it. It also expands the list of layout and positioning properties that will eventually be blocked and updat"
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/hybrid",
+        "detail": "The troubleshooting documentation now directs administrators to the Hard match scenarios and recovery paths when DataValidationFailed occurs during a hard match operation, while retaining guidance to validate userPrincipalName characters and format. The troubleshooting guide now covers DataValidationFailed alongside IdentityDataValidationFailed, including cases where onPremisesObjectIdentifier changes during hard match operations. It also adds guidance for checking userPrincipalName formatting and using the documented hard match recovery paths."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/conditional-access",
+        "detail": "The deployment guide no longer states that Platform SSO for macOS uses hardware-backed storage by default. The Intune setup link remains unchanged. The documentation now lists token protection for iOS/iPadOS and macOS as generally available. Supported web apps accessing Azure Resource Manager on macOS remain in preview. The guide removes the Preview designation, adds Microsoft Scout to the support matrix, and replaces detailed storage-flag instructions with updated Apple SSO plugin and Platform SSO guidance."
       }
     ],
     "generatedBy": "fallback"
