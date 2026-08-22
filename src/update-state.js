@@ -2,7 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const STATE_VERSION = 1;
-const REFRESH_HOURS_UTC = [0, 4, 8, 12, 16, 20];
+const REFRESH_HOURS_UTC = [2, 8, 14, 20];
 
 function createMonitorState(value = {}) {
   return {

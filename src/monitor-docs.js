@@ -1808,7 +1808,7 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
   }
 
   async run() {
-    console.log('🚀 Starting four-hour Microsoft Entra update monitor...');
+    console.log('🚀 Starting six-hour Microsoft Entra update monitor...');
     try {
       await this.setupRepository();
       const state = await loadMonitorState(this.statePath);

@@ -711,12 +711,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal(footerLinks.length > 0, true);
   assert.equal(footerLinks.every(link => /target="_blank"/.test(link) && /rel="noopener noreferrer"/.test(link)), true);
   assert.match(indexHtml, /Last refreshed <time data-refresh-last>checking…<\/time>/);
-  assert.match(indexHtml, /Next refresh <span class="refresh-relative" data-refresh-next>within four hours<\/span>/);
+  assert.match(indexHtml, /Next refresh <span class="refresh-relative" data-refresh-next>within six hours<\/span>/);
   assert.match(await fs.readFile(path.join(websiteDir, 'assets', 'site.js'), 'utf8'), /fetch\('\/refresh-status\.json',\{cache:'no-store'\}\)/);
-  assert.match(siteJs, /function nextFourHourRefresh/);
+  assert.match(siteJs, /function nextRefreshSlot/);
   assert.doesNotMatch(indexHtml, /Next refresh <time|UTC|GMT/);
   const refreshStatus = JSON.parse(await fs.readFile(path.join(websiteDir, 'refresh-status.json'), 'utf8'));
-  assert.equal(refreshStatus.nextScheduledAt, '2026-08-04T12:15:00.000Z');
+  assert.equal(refreshStatus.nextScheduledAt, '2026-08-04T14:15:00.000Z');
   assert.match(siteJs, /Intl\.DateTimeFormat/);
   assert.doesNotMatch(siteJs, /timeZoneName/);
   assert.match(siteJs, /data-local-day/);

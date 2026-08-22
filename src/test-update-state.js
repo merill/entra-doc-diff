@@ -18,10 +18,10 @@ function analysis(files = []) {
   };
 }
 
-test('four-hour schedule advances through every UTC slot and midnight', () => {
-  assert.equal(nextScheduledRefresh('2026-08-06T00:15:00.000Z'), '2026-08-06T04:15:00.000Z');
+test('six-hour schedule advances through every UTC slot and midnight', () => {
+  assert.equal(nextScheduledRefresh('2026-08-06T00:15:00.000Z'), '2026-08-06T02:15:00.000Z');
   assert.equal(nextScheduledRefresh('2026-08-06T08:14:59.000Z'), '2026-08-06T08:15:00.000Z');
-  assert.equal(nextScheduledRefresh('2026-08-06T20:15:00.000Z'), '2026-08-07T00:15:00.000Z');
+  assert.equal(nextScheduledRefresh('2026-08-06T20:15:00.000Z'), '2026-08-07T02:15:00.000Z');
 });
 
 test('daily merge preserves separate commits to one file and suppresses exact events', () => {

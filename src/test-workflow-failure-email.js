@@ -73,12 +73,16 @@ test('failure message identifies the subscriber email component', () => {
   assert.match(message.body.content, /<th[^>]*>Component<\/th><td[^>]*>subscriber email<\/td>/);
 });
 
-test('workflow runs the alert step only after a failure', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
-  assert.match(workflow, /notify-failure:\n\s+name: Email Merill when the refresh fails\n\s+needs: monitor-docs\n\s+if: always\(\) && needs\.monitor-docs\.result == 'failure'/);
-  assert.match(workflow, /FAILURE_RECIPIENT_EMAIL: "merill@merill\.net"/);
-  assert.match(workflow, /FAILURE_COMPONENT: "site refresh"/);
-  assert.match(workflow, /node scripts\/send-workflow-failure-email\.js/);
+test('workflows no longer email on failure', () => {
+  // The Graph failure alerts were retired; Healthchecks.io reports pipeline
+  // health instead. The message builder above stays covered so the script can
+  // be rewired without rewriting it, but no workflow may call it.
+  for (const name of ['daily-docs-monitor.yml', 'daily-kit-broadcast.yml']) {
+    const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', name), 'utf8');
+    assert.doesNotMatch(workflow, /notify-failure:/);
+    assert.doesNotMatch(workflow, /send-workflow-failure-email\.js/);
+    assert.doesNotMatch(workflow, /FAILURE_RECIPIENT_EMAIL/);
+  }
 });
 
 test('daily monitor does not send the retired Graph digest', () => {

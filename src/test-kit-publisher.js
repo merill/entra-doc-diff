@@ -516,8 +516,6 @@ test('Kit workflow exposes and passes through the manual draft-mode toggle', asy
   assert.match(workflow, /KIT_DRAFT_MODE: \$\{\{ inputs\.draft_mode \}\}/);
   assert.match(workflow, /node scripts\/publish-kit-broadcast\.js --auto/);
   assert.match(workflow, /KIT_SEND_VERIFICATION_GRACE_MINUTES: "30"/);
-  assert.match(workflow, /needs\.publish\.result == 'failure'/);
-  assert.match(workflow, /FAILURE_COMPONENT: "subscriber email"/);
   assert.match(workflow, /Signal manual production start[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*\/start/);
   assert.match(workflow, /report-health:[\s\S]*needs: publish[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*PING_URL="\$PING_URL\/fail"/);
 });
