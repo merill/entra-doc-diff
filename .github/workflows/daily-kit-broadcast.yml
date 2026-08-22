@@ -109,26 +109,6 @@ jobs:
           node scripts/publish-kit-broadcast.js --date "$REPORT_DATE"
         fi
 
-  notify-failure:
-    name: Email Merill when the subscriber email fails
-    needs: publish
-    if: always() && needs.publish.result == 'failure'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout notification script
-      uses: actions/checkout@v4
-
-    - name: Send failure email
-      continue-on-error: true
-      env:
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
-        FAILURE_RECIPIENT_EMAIL: "merill@merill.net"
-        FAILURE_COMPONENT: "subscriber email"
-      run: node scripts/send-workflow-failure-email.js
-
   report-health:
     name: Report manual production health
     needs: publish
