@@ -50,12 +50,12 @@ npm test
 ```
 
 ## Step 5: Enable the Workflow
-The GitHub Action refreshes every four hours. Every scheduled run reconciles Kit: runs before 08:15 UTC verify recent delivery, while the 08:15 and later runs safely create or deduplicate the current UTC day's subscriber summary. You can also:
+The GitHub Action refreshes every six hours. Every scheduled run reconciles Kit: runs before 08:15 UTC verify recent delivery, while the 08:15 and later runs safely create or deduplicate the current UTC day's subscriber summary. You can also:
 - Go to Actions tab → "Daily Entra Docs Monitor" → "Run workflow" to test manually
 - Check the logs to ensure everything is working
 - Check Kit for the scheduled subscriber broadcast
 
-Configure the Healthchecks.io check with cron `15 0,4,8,12,16,20 * * *`, timezone `UTC`, and a two-hour grace period. Enable an email notification before relying on it for outage detection. Scheduled runs and non-draft manual Kit runs report health; draft smoke tests do not.
+Configure the Healthchecks.io check with cron `15 2,8,14,20 * * *`, timezone `UTC`, and a four-hour grace period. Enable an email notification before relying on it for outage detection. Scheduled runs and non-draft manual Kit runs report health; draft smoke tests do not.
 
 ## ⚡ Quick Tips
 - The first run might take a few minutes to set up
