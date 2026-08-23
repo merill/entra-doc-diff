@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { getConfig } = require('../src/config');
 
 const root = path.resolve(process.env.WEBSITE_DIR || 'website');
 const args = process.argv.slice(2);
@@ -30,4 +31,4 @@ http.createServer((request, response) => {
       response.end(data);
     });
   });
-}).listen(port, host, () => console.log(`Entra.News Daily preview: http://${host}:${port}/`));
+}).listen(port, host, () => console.log(`${getConfig().site.name} preview: http://${host}:${port}/`));

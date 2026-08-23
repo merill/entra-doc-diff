@@ -631,7 +631,7 @@ class StaticSiteGenerator {
     this.websiteDir = path.resolve(options.websiteDir || 'website');
     this.mcDataPath = path.resolve(options.mcDataPath || process.env.MC_DATA_PATH || path.join(process.cwd(), '../mc/@data'));
     this.siteAssetDir = path.resolve(options.siteAssetDir || path.join(process.cwd(), 'assets/site'));
-    this.docsRepoPath = path.resolve(options.docsRepoPath || process.env.DOCS_REPO_PATH || process.env.ENTRA_DOCS_REPO_PATH || process.env.LOCAL_REPO_PATH || path.join(process.cwd(), config.build.docsCloneDir));
+    this.docsRepoPath = path.resolve(options.docsRepoPath || process.env.DOCS_REPO_PATH || process.env.LOCAL_REPO_PATH || path.join(process.cwd(), config.build.docsCloneDir));
     this.detailDays = Number(options.detailDays || process.env.STATIC_SITE_DETAIL_DAYS || config.build.detailDays);
     const userJotProjectId = String(options.userJotProjectId ?? process.env.USERJOT_PROJECT_ID ?? '').trim();
     this.userJotProjectId = /^[a-z0-9_-]{6,100}$/i.test(userJotProjectId) ? userJotProjectId : '';

@@ -57,10 +57,6 @@ class HistoricalDataGenerator extends DocsMonitor {
         }
       }
       
-      // Generate final index page with all historical data
-      console.log('📄 Generating comprehensive index page...');
-      await this.generateIndexPage();
-      
       console.log(`✅ Historical data generation complete! Processed ${processedCount} days.`);
       console.log(`🌐 Website files available in: ${path.resolve('website')}`);
       
