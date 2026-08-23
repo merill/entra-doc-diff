@@ -34,7 +34,26 @@ function normalizeEntries(entries, field, extra = () => {}) {
     seen.add(slug);
     requireString(entry.name, `${where}.name`);
     extra(entry, where);
-    return { ...entry, slug };
+    return { ...entry, slug, icon: normalizeIcon(entry.icon, slug, `${where}.icon`) };
+  });
+}
+
+// The icon a product or topic renders with. `file` is the only field the pages
+// read; `sourceName`, `sourcePath` and `match` record which upstream icon it was
+// taken from, so the set can be resynced without guessing. Shorthand: a bare
+// string is the filename, and an omitted `file` is the slug, which is what every
+// icon follows apart from the few that deliberately share one drawing.
+function normalizeIcon(raw, slug, field) {
+  if (raw !== undefined && raw !== null && typeof raw !== 'string' && typeof raw !== 'object') {
+    fail(`${field} must be a string or an object`);
+  }
+  const icon = typeof raw === 'string' ? { file: raw } : (raw || {});
+  const optional = (value, name) => (value === undefined ? null : requireString(value, `${field}.${name}`));
+  return Object.freeze({
+    file: icon.file === undefined ? `${slug}.svg` : requireString(icon.file, `${field}.file`),
+    sourceName: optional(icon.sourceName, 'sourceName'),
+    sourcePath: optional(icon.sourcePath, 'sourcePath'),
+    match: optional(icon.match, 'match')
   });
 }
 
@@ -186,11 +205,8 @@ function normalize(raw) {
   };
   if (site.url.endsWith('/')) fail('site.url must not end with a slash');
 
-  // `icon` is optional: a product may name its SVG explicitly, or leave it to be
-  // derived from the slug by the icon manifest.
   const products = normalizeEntries(taxonomy.products, 'taxonomy.products', (entry, where) => {
     requireString(entry.short, `${where}.short`);
-    if (entry.icon !== undefined) requireString(entry.icon, `${where}.icon`);
   });
   const topics = normalizeEntries(taxonomy.topics, 'taxonomy.topics');
 
@@ -244,6 +260,10 @@ function normalize(raw) {
       topics,
       defaultProduct,
       defaultTopic,
+      iconSource: {
+        repository: requireString((taxonomy.iconSource || {}).repository, 'taxonomy.iconSource.repository'),
+        revision: requireString((taxonomy.iconSource || {}).revision, 'taxonomy.iconSource.revision')
+      },
       stopwords: new Set(requireString(taxonomy.stopwords, 'taxonomy.stopwords').split(/\s+/)),
       searchAliases: { ...(taxonomy.searchAliases || {}) }
     },

@@ -5,7 +5,6 @@ const { marked } = require('marked');
 const { parse } = require('node-html-parser');
 const htmlDiff = require('node-htmldiff');
 const simpleGit = require('simple-git');
-const { topicIconPath } = require('./topic-icons');
 const { nextScheduledRefresh, readJson, writeJsonAtomic } = require('./update-state');
 const { getConfig, runRules } = require('./config');
 
@@ -19,9 +18,9 @@ function dateAtRefresh(date) {
   return `${date}T${String(REFRESH_SCHEDULE_UTC.hour).padStart(2, '0')}:${String(REFRESH_SCHEDULE_UTC.minute).padStart(2, '0')}:00Z`;
 }
 
-const PRODUCTS = config.taxonomy.products;
+const PRODUCTS = config.taxonomy.products.map(product => ({ ...product, icon: product.icon.file }));
 
-const TOPICS = config.taxonomy.topics.map(topic => ({ ...topic, icon: topicIconPath(topic.slug) }));
+const TOPICS = config.taxonomy.topics.map(topic => ({ ...topic, icon: `/assets/topics/${topic.icon.file}` }));
 
 const STOPWORDS = config.taxonomy.stopwords;
 
@@ -1255,6 +1254,11 @@ class StaticSiteGenerator {
     await fs.mkdir(path.join(this.websiteDir,'assets','ui'),{recursive:true});
     for (const asset of ['rss.svg','maester.png','book-bookmark.svg','calendar-date.svg','calendar-planning.svg','calendar-days.svg','square-layout-grid-2.svg','compare-items.svg','magnifier.svg','chevron-down.svg','chevron-right.svg','microsoft.svg','github.svg','chart-history.svg',...config.brand.uiAssets]) {
       await fs.copyFile(path.join(this.siteAssetDir,'ui',asset),path.join(this.websiteDir,'assets','ui',asset));
+    }
+    await fs.rm(path.join(this.websiteDir,'assets','products'),{recursive:true,force:true});
+    await fs.mkdir(path.join(this.websiteDir,'assets','products'),{recursive:true});
+    for (const asset of (await fs.readdir(path.join(this.siteAssetDir,'products'))).filter(file => file.endsWith('.svg'))) {
+      await fs.copyFile(path.join(this.siteAssetDir,'products',asset),path.join(this.websiteDir,'assets','products',asset));
     }
     await fs.rm(path.join(this.websiteDir,'assets','topics'),{recursive:true,force:true});
     await fs.mkdir(path.join(this.websiteDir,'assets','topics'),{recursive:true});
