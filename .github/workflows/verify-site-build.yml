@@ -1,0 +1,75 @@
+name: Verify site build
+
+# Rebuilds the committed site from the same inputs that produced it and fails if
+# the result differs. Pinning SITE_GENERATED_AT removes the only nondeterminism,
+# so an empty diff is a real proof that a change is behaviour-preserving.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-site-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Clone Entra Docs repository
+        run: git clone --filter=blob:limit=100k --single-branch https://github.com/MicrosoftDocs/entra-docs.git entra-docs
+
+      - name: Clone Message Center repository
+        run: git clone --depth 1 https://github.com/merill/mc.git mc
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild the site at the committed generation time
+        env:
+          MC_DATA_PATH: './mc/@data'
+          KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
+          KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
+          USERJOT_PROJECT_ID: ${{ vars.USERJOT_PROJECT_ID }}
+        run: |
+          # refresh-status.json is written by the monitor, so it records the exact
+          # timestamp that produced the committed HTML.
+          SITE_GENERATED_AT="$(node -p "require('./website/refresh-status.json').lastCheckedAt")"
+          echo "Rebuilding as of $SITE_GENERATED_AT"
+          SITE_GENERATED_AT="$SITE_GENERATED_AT" npm run build:site
+
+      - name: Capture the difference
+        if: always()
+        run: git diff -- website/ > site.diff || true
+
+      - name: Upload the difference
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-diff
+          path: site.diff
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Fail when the rebuild does not reproduce the committed site
+        run: |
+          if ! git diff --quiet -- website/; then
+            echo "::error::Rebuilding produced a different site. Download the site-diff artifact to review it."
+            git diff --stat -- website/
+            exit 1
+          fi
+          echo "The rebuild reproduced the committed site exactly."

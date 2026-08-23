@@ -241,7 +241,7 @@ async function buildSearchIndex(options = {}) {
     await pagefind.close();
   }
   const manifest = {
-    generatedAt: new Date().toISOString(),
+    generatedAt: process.env.SITE_GENERATED_AT || new Date().toISOString(),
     records: records.length,
     updates: docs + messageCenter,
     updateGroups,
