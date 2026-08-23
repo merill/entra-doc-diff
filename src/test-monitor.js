@@ -57,6 +57,24 @@ test('the monitor has no Microsoft Graph email-sending capability', async () => 
   assert.doesNotMatch(lockfile, graphEmailPattern);
 });
 
+test('only Learn articles are tracked, not fragments or assets', () => {
+  const monitor = new EntraDocsMonitor();
+  assert.equal(monitor.isTrackedDocPath('docs/identity/example.md'), true);
+  // Fragments, breadcrumbs and media have no page of their own on Learn, so
+  // tracking them produced changes with no reachable URL.
+  assert.equal(monitor.isTrackedDocPath('docs/identity/includes/snippet.md'), false);
+  assert.equal(monitor.isTrackedDocPath('docs/identity/media/diagram.md'), false);
+  assert.equal(monitor.isTrackedDocPath('docs/breadcrumb/toc.md'), false);
+  assert.equal(monitor.isTrackedDocPath('docs/identity/example.png'), false);
+  assert.equal(monitor.isTrackedDocPath('README.md'), false);
+
+  // The public URL and the tracking predicate must agree; they previously did
+  // not, so some tracked changes carried a null URL.
+  assert.equal(monitor.generatePublicDocsUrl('docs/identity/example.md'),
+    'https://learn.microsoft.com/en-us/entra/identity/example');
+  assert.equal(monitor.generatePublicDocsUrl('docs/identity/includes/snippet.md'), null);
+});
+
 test('commit parsing and analysis retain the first parent for exact documentation diffs', async () => {
   const monitor = new EntraDocsMonitor();
   const base = 'a'.repeat(40);

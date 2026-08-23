@@ -64,20 +64,18 @@ class EntraDocsMonitor {
     }
   }
 
+  // Articles under docs/, excluding the fragments and assets that have no page
+  // of their own on Microsoft Learn.
+  isTrackedDocPath(filename) {
+    if (!filename.endsWith('.md')) return false;
+    if (!/^docs\//.test(filename)) return false;
+    return !/(^|\/)(includes?|breadcrumb|media)(\/|$)/i.test(filename);
+  }
+
   // Generate public documentation URL for docs files
   generatePublicDocsUrl(filename) {
-    // Check if the file is in the docs folder and is a markdown file
-    if (filename.startsWith('docs/') && filename.endsWith('.md')) {
-      // Remove 'docs/' prefix and '.md' extension
-      const pathWithoutDocsPrefix = filename.substring(5); // Remove 'docs/'
-      const pathWithoutExtension = pathWithoutDocsPrefix.replace(/\.md$/, '');
-      
-      // Convert to learn.microsoft.com URL
-      return `https://learn.microsoft.com/en-us/entra/${pathWithoutExtension}`;
-    }
-    
-    // Return null for non-docs files
-    return null;
+    if (!this.isTrackedDocPath(filename)) return null;
+    return `https://learn.microsoft.com/en-us/entra/${filename.replace(/^docs\//, '').replace(/\.md$/, '')}`;
   }
 
   async setupRepository() {
@@ -215,8 +213,8 @@ class EntraDocsMonitor {
       if (inFileSection && line.match(/^[AMD]\s+/)) {
         const [status, filename] = line.split('\t');
         
-        // Only include markdown files in docs directory
-        if (filename.endsWith('.md') && filename.includes('docs/')) {
+        // Only include markdown files that map to a real Learn article
+        if (this.isTrackedDocPath(filename)) {
           files.push({
             filename: filename,
             status: this.mapGitStatus(status),

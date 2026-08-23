@@ -138,8 +138,12 @@ class PeriodSummaryGenerator {
 
   async loadItems() {
     const site = new StaticSiteGenerator({ websiteDir: this.websiteDir, mcDataPath: this.mcDataPath });
-    const docs = site.normalizeDocItems(await site.loadReports());
-    const mc = await site.loadMessageCenterItems();
+    const reports = await site.loadReports();
+    const docs = site.normalizeDocItems(reports);
+    // Message Center items predating the archive have no surrounding context in
+    // the briefs, so they read as unexplained noise.
+    const archiveStart = reports[0]?.date || '';
+    const mc = (await site.loadMessageCenterItems()).filter(item => !archiveStart || item.date >= archiveStart);
     return [...docs, ...mc].sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
   }
 
