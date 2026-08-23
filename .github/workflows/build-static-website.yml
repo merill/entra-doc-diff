@@ -48,6 +48,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Pin the site generation time to the last refresh
+        # Without this the site drifts from refresh-status.json: a rebuild triggered
+        # by a push stamps itself with the build time, inventing a day page for
+        # "today" that the data does not cover. Pinning keeps the generated site a
+        # pure function of its inputs, which is what makes it verifiable.
+        run: echo "SITE_GENERATED_AT=$(node -p "require('./website/refresh-status.json').lastCheckedAt")" >> "$GITHUB_ENV"
+
       - name: Build generated website
         env:
           MC_DATA_PATH: './mc/@data'
