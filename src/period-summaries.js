@@ -7,13 +7,17 @@ const { getConfig } = require('./config');
 const config = getConfig();
 const { StaticSiteGenerator } = require('./static-site');
 
-const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra administrators about the supplied period.
+// Openers the product wants avoided, ahead of the neutral ones every brief
+// must avoid.
+const FORBIDDEN_OPENERS = config.ai.forbiddenOpeners.map(opener => `"${opener}"`).join(', ');
 
-Lead with the most consequential, specific content changes. Name the affected Entra products or capabilities and explain what actually changed. Judge internally whether changes are new features, previews, general availability changes, retirements, changed behavior, security guidance, or ordinary documentation clarification, and let your wording reflect that judgement. Explain concrete administrator impact or action only when the evidence supports it.
+const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for ${config.site.audience} about the supplied period.
+
+Lead with the most consequential, specific content changes. Name the affected ${config.ai.subject} products or capabilities and explain what actually changed. Judge internally whether changes are new features, previews, general availability changes, retirements, changed behavior, security guidance, or ordinary documentation clarification, and let your wording reflect that judgement. Explain concrete administrator impact or action only when the evidence supports it.
 
 For documentation changes, use diffEvidence as the primary factual source whenever it is supplied. Extract the exact setting, value, limitation, prerequisite, date, procedure, or behavior that changed instead of paraphrasing a generic fallback summary or commit title.
 
-Write a crisp, news-style headline of roughly 8 to 14 words. Lead with the distinctive capability, setting, deadline, terminology, or administrator outcome—not the fact that Microsoft documentation changed. Do not begin with "Entra ID documentation", "Microsoft Entra documentation", "Entra ID documents", "Documentation update", or a date. For documentation-only changes, describe the specific terminology, prerequisite, example, scope, or procedure that changed without implying that product behavior changed. Describe what the change is, never what it is not: drop disclaimers such as "this is a documentation clarification, not evidence of a new feature" or "not a new feature, preview, general availability change, or retirement" and state the change itself. If recentHeadlines are supplied, vary the opening words and sentence structure; use them only as style history, never as evidence. Prefer one strong lead over a semicolon-separated list of every update.
+Write a crisp, news-style headline of roughly 8 to 14 words. Lead with the distinctive capability, setting, deadline, terminology, or administrator outcome—not the fact that Microsoft documentation changed. Do not begin with ${FORBIDDEN_OPENERS}, "Documentation update", or a date. For documentation-only changes, describe the specific terminology, prerequisite, example, scope, or procedure that changed without implying that product behavior changed. Describe what the change is, never what it is not: drop disclaimers such as "this is a documentation clarification, not evidence of a new feature" or "not a new feature, preview, general availability change, or retirement" and state the change itself. If recentHeadlines are supplied, vary the opening words and sentence structure; use them only as style history, never as evidence. Prefer one strong lead over a semicolon-separated list of every update.
 
 Select one to five changes that best explain the period. Prefer three to five when the evidence supports that breadth, but use one or two for a quiet day rather than repeating or stretching the evidence. Each key change must add useful detail rather than repeat the headline. Connect related changes when that helps the reader understand a broader rollout or theme.
 For every key change, copy the id of the single representativeChanges item that most directly supports it into sourceId. Every key change must be supported by representativeChanges. Treat weeklyBriefs as context only: never select a sourceId from a weekly brief or use one as the sole evidence for a key change. Never invent or alter an id.
@@ -320,7 +324,7 @@ class PeriodSummaryGenerator {
           verbosity: 'medium',
           format: {
             type: 'json_schema',
-            name: 'entra_period_summary',
+            name: `${config.ai.schemaPrefix}_period_summary`,
             strict: true,
             schema: {
               type: 'object',
@@ -366,7 +370,7 @@ class PeriodSummaryGenerator {
 
   async run({ all = false, force = false, kinds = ['day', 'week', 'month'], dates = [] } = {}) {
     const items = await this.loadItems();
-    if (items.length === 0) throw new Error('No Entra changes were available to summarize');
+    if (items.length === 0) throw new Error(`No ${config.ai.subject} changes were available to summarize`);
     const store = await this.loadStore();
     const requestedKinds = new Set(kinds);
     const unknownKinds = [...requestedKinds].filter(kind => !['day', 'week', 'month'].includes(kind));

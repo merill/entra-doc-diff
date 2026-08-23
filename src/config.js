@@ -52,6 +52,119 @@ function normalizeRules(rules, field, knownSlugs) {
   });
 }
 
+function normalizeStrings(values, field) {
+  if (!Array.isArray(values) || !values.length) fail(`${field} must be a non-empty array`);
+  return values.map((value, index) => requireString(value, `${field}[${index}]`));
+}
+
+// An ordered list of path routes. The first `match` that hits wins and its
+// captured groups are substituted into that route's template; `field` names the
+// template property so a list can read as `path` for a URL and `name` for a
+// heading without the code caring which.
+function normalizeRoutes(routes, field, where) {
+  if (!Array.isArray(routes) || !routes.length) fail(`${where} must be a non-empty array`);
+  return routes.map((route, index) => ({
+    match: requireRegExp(route.match, `${where}[${index}].match`),
+    template: requireString(route[field], `${where}[${index}].${field}`)
+  }));
+}
+
+// How a path in the documentation repository maps to a public Microsoft Learn
+// URL and to the heading a report groups it under. `areas.stripPrefix` is
+// optional: a repository whose paths are already Learn paths omits it.
+function normalizeDocs(docs) {
+  const raw = docs || {};
+  const areas = raw.areas || {};
+  if (areas.stripPrefix !== undefined && areas.stripPrefix !== null) {
+    requireRegExp(areas.stripPrefix, 'docs.areas.stripPrefix');
+  }
+  return {
+    trackedPaths: requireRegExp(raw.trackedPaths, 'docs.trackedPaths'),
+    learnRoutes: normalizeRoutes(raw.learnRoutes, 'path', 'docs.learnRoutes'),
+    areas: {
+      stripPrefix: areas.stripPrefix || null,
+      rules: normalizeRoutes(areas.rules, 'name', 'docs.areas.rules'),
+      fallback: requireString(areas.fallback, 'docs.areas.fallback')
+    }
+  };
+}
+
+function normalizeLinkList(entries, field) {
+  if (!Array.isArray(entries)) fail(`${field} must be an array`);
+  return entries.map((entry, index) => ({
+    ...entry,
+    url: requireString(entry.url, `${field}[${index}].url`),
+    label: requireString(entry.label, `${field}[${index}].label`)
+  }));
+}
+
+// Page prose. Everything the generator writes into a page that names the
+// product belongs here, so the markup in src/ stays product-neutral. Sections
+// one product runs and another does not are modelled as lists that the second
+// product leaves empty, never as flags.
+function normalizeCopy(raw) {
+  const copy = raw || {};
+  const landing = copy.landing || {};
+  const directory = copy.directory || {};
+  const search = copy.search || {};
+  const compare = copy.compare || {};
+  const dailyEmail = copy.dailyEmail || {};
+  const detail = copy.detail || {};
+  const footer = copy.footer || {};
+  const about = copy.about || {};
+  if (!Array.isArray(about.extraSections)) fail('copy.about.extraSections must be an array');
+  return {
+    rssFeedLabel: requireString(copy.rssFeedLabel, 'copy.rssFeedLabel'),
+    landing: {
+      heading: requireString(landing.heading, 'copy.landing.heading'),
+      blurb: requireString(landing.blurb, 'copy.landing.blurb')
+    },
+    directory: {
+      productsLede: requireString(directory.productsLede, 'copy.directory.productsLede'),
+      topicsLede: requireString(directory.topicsLede, 'copy.directory.topicsLede')
+    },
+    search: {
+      inputLabel: requireString(search.inputLabel, 'copy.search.inputLabel'),
+      placeholder: requireString(search.placeholder, 'copy.search.placeholder')
+    },
+    compare: {
+      pageTitle: requireString(compare.pageTitle, 'copy.compare.pageTitle'),
+      lede: requireString(compare.lede, 'copy.compare.lede'),
+      placeholderUrl: requireString(compare.placeholderUrl, 'copy.compare.placeholderUrl'),
+      mapping: requireString(compare.mapping, 'copy.compare.mapping')
+    },
+    dailyEmail: {
+      eyebrow: requireString(dailyEmail.eyebrow, 'copy.dailyEmail.eyebrow'),
+      intro: requireString(dailyEmail.intro, 'copy.dailyEmail.intro')
+    },
+    detail: {
+      adminHeading: requireString(detail.adminHeading, 'copy.detail.adminHeading'),
+      summaryLabel: requireString(detail.summaryLabel, 'copy.detail.summaryLabel'),
+      summaryDisclosure: requireString(detail.summaryDisclosure, 'copy.detail.summaryDisclosure')
+    },
+    footer: {
+      featureBlurb: requireString(footer.featureBlurb, 'copy.footer.featureBlurb'),
+      tagline: requireString(footer.tagline, 'copy.footer.tagline')
+    },
+    about: {
+      heading: requireString(about.heading, 'copy.about.heading'),
+      lede: requireString(about.lede, 'copy.about.lede'),
+      whyItExists: normalizeStrings(about.whyItExists, 'copy.about.whyItExists'),
+      howItWorks: normalizeStrings(about.howItWorks, 'copy.about.howItWorks'),
+      emailEyebrow: requireString(about.emailEyebrow, 'copy.about.emailEyebrow'),
+      emailBody: requireString(about.emailBody, 'copy.about.emailBody'),
+      extraSections: about.extraSections.map((section, index) => ({
+        id: requireString(section.id, `copy.about.extraSections[${index}].id`),
+        heading: requireString(section.heading, `copy.about.extraSections[${index}].heading`),
+        html: requireString(section.html, `copy.about.extraSections[${index}].html`)
+      })),
+      community: normalizeStrings(about.community, 'copy.about.community'),
+      quote: requireString(about.quote, 'copy.about.quote'),
+      bio: requireString(about.bio, 'copy.about.bio')
+    }
+  };
+}
+
 function normalize(raw) {
   if (!raw || typeof raw !== 'object') fail('must export an object');
 
@@ -98,6 +211,8 @@ function normalize(raw) {
       tokenStorageKey: requireString(brand.tokenStorageKey, 'brand.tokenStorageKey'),
       emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow'),
       logo: requireString(brand.logo, 'brand.logo'),
+      aboutIcon: requireString(brand.aboutIcon, 'brand.aboutIcon'),
+      uiAssets: normalizeStrings(brand.uiAssets, 'brand.uiAssets'),
       extraCss: String(brand.extraCss || '')
     },
     build: {
@@ -105,15 +220,22 @@ function normalize(raw) {
       detailDays: Number((raw.build || {}).detailDays) || fail('build.detailDays must be a number')
     },
     links: {
-      related: [...(((raw.links || {}).related) || [])]
+      related: [...(((raw.links || {}).related) || [])],
+      footer: normalizeLinkList((raw.links || {}).footer, 'links.footer'),
+      stayCurrent: normalizeLinkList((raw.links || {}).stayCurrent, 'links.stayCurrent'),
+      followProject: normalizeLinkList((raw.links || {}).followProject, 'links.followProject')
     },
+    copy: normalizeCopy(raw.copy),
     discord: {
       botName: requireString((raw.discord || {}).botName, 'discord.botName')
     },
     ai: {
       schemaPrefix: requireString((raw.ai || {}).schemaPrefix, 'ai.schemaPrefix'),
+      subject: requireString((raw.ai || {}).subject, 'ai.subject'),
+      forbiddenOpeners: normalizeStrings((raw.ai || {}).forbiddenOpeners, 'ai.forbiddenOpeners'),
       impactBoost: requireRegExp((raw.ai || {}).impactBoost, 'ai.impactBoost')
     },
+    docs: normalizeDocs(raw.docs),
     analytics: {
       piqoSite: String(analytics.piqoSite || '').trim()
     },
@@ -150,6 +272,18 @@ function runRules(rules, entries, defaultSlug, filename, title, body) {
   return entries.find(entry => entry.slug === (hit ? hit.slug : defaultSlug));
 }
 
+// First match wins. `$1`, `$2`, ... in the winning route's template are replaced
+// by that match's captured groups; an unmatched subject yields null so the
+// caller can supply its own fallback.
+function runRoute(routes, subject) {
+  const text = String(subject ?? '');
+  for (const route of routes) {
+    const hit = text.match(route.match);
+    if (hit) return route.template.replace(/\$(\d)/g, (token, index) => hit[Number(index)] ?? token);
+  }
+  return null;
+}
+
 let current = null;
 
 function setConfig(raw) {
@@ -179,4 +313,4 @@ function resetConfig() {
   current = null;
 }
 
-module.exports = { getConfig, setConfig, resetConfig, normalize, runRules };
+module.exports = { getConfig, setConfig, resetConfig, normalize, runRules, runRoute };

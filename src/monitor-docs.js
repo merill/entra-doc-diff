@@ -9,6 +9,7 @@ const { parse } = require('node-html-parser');
 const diff = require('diff');
 const OpenAI = require('openai');
 const DiscordPublisher = require('./discord-publisher');
+const { getConfig, runRoute } = require('./config');
 const { StaticSiteGenerator } = require('./static-site');
 const {
   allDocumentationChanges,
@@ -22,11 +23,13 @@ const {
   writeJsonAtomic
 } = require('./update-state');
 
-class EntraDocsMonitor {
+const config = getConfig();
+
+class DocsMonitor {
   constructor(options = {}) {
     this.targetRepo = { 
       owner: process.env.TARGET_REPO_OWNER || 'MicrosoftDocs', 
-      repo: process.env.TARGET_REPO_NAME || 'entra-docs' 
+      repo: process.env.TARGET_REPO_NAME || config.build.docsCloneDir 
     };
     
     // Repository paths
@@ -64,25 +67,26 @@ class EntraDocsMonitor {
     }
   }
 
-  // Articles under docs/, excluding the fragments and assets that have no page
-  // of their own on Microsoft Learn.
+  // Articles the documentation repository publishes as pages of their own on
+  // Microsoft Learn, excluding the fragments and assets that have none.
   isTrackedDocPath(filename) {
     if (!filename.endsWith('.md')) return false;
-    if (!/^docs\//.test(filename)) return false;
+    if (!config.docs.trackedPaths.test(filename)) return false;
     return !/(^|\/)(includes?|breadcrumb|media)(\/|$)/i.test(filename);
   }
 
-  // Generate public documentation URL for docs files
+  // Generate the public Microsoft Learn URL for a tracked article.
   generatePublicDocsUrl(filename) {
     if (!this.isTrackedDocPath(filename)) return null;
-    return `https://learn.microsoft.com/en-us/entra/${filename.replace(/^docs\//, '').replace(/\.md$/, '')}`;
+    const learnPath = runRoute(config.docs.learnRoutes, filename);
+    return learnPath === null ? null : `https://learn.microsoft.com/en-us/${learnPath}`;
   }
 
   async setupRepository() {
     try {
       if (this.isGitHubActions) {
         // In GitHub Actions, the repo will be cloned by the workflow
-        this.localRepoPath = './entra-docs';
+        this.localRepoPath = `./${config.build.docsCloneDir}`;
         console.log(`📁 Using GitHub Actions cloned repository at: ${this.localRepoPath}`);
       } else {
         // For local development, use the specified path
@@ -615,7 +619,7 @@ class EntraDocsMonitor {
     return {
       category: this.getFallbackCategory(),
       headline: String(file.commitMessage || `${verb} ${file.filename.split('/').pop()}`).substring(0, 180),
-      summary: `${verb} Microsoft Entra documentation in ${file.filename}.`,
+      summary: `${verb} ${config.site.productName} documentation in ${file.filename}.`,
       adminImpact: 'Review the underlying documentation change to determine whether it affects tenant configuration or rollout plans.',
       actionRequired: false,
       generatedBy: 'fallback'
@@ -671,7 +675,7 @@ class EntraDocsMonitor {
         const response = await this.openAIClient.responses.create({
           model: this.openAISummaryModel,
           reasoning: { effort: this.openAISummaryReasoningEffort },
-          instructions: `Write a concise English explanation of one Microsoft Entra documentation diff for Entra administrators.
+          instructions: `Write a concise English explanation of one ${config.site.productName} documentation diff for ${config.ai.subject} administrators.
 
 Return a headline, a factual summary of what changed, why an administrator should care, a category, and whether the change requires administrator action.
 
@@ -694,7 +698,7 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
             verbosity: 'low',
             format: {
               type: 'json_schema',
-              name: 'entra_diff_summary',
+              name: `${config.ai.schemaPrefix}_diff_summary`,
               strict: true,
               schema: {
                 type: 'object',
@@ -752,9 +756,9 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
   }
 
   getDocsGroupName(filename) {
-    const parts = String(filename || '').replace(/^docs\//, '').split('/');
-    if (parts[0] === 'identity' && parts.length > 2) return `${parts[0]}/${parts[1]}`;
-    return parts.length > 1 ? parts[0] : 'General Entra documentation';
+    const { stripPrefix, rules, fallback } = config.docs.areas;
+    const subject = stripPrefix ? String(filename || '').replace(stripPrefix, '') : String(filename || '');
+    return runRoute(rules, subject) ?? fallback;
   }
 
   createFallbackEnglishSummary(analysis) {
@@ -1101,8 +1105,8 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
     const dateForUrl = now.format('YYYY-MM-DD');
     
     // Save to reports folder (backup)
-    const htmlFilePath = path.join(this.reportsDir, `entra-docs-report-${timestamp}.html`);
-    const jsonFilePath = path.join(this.reportsDir, `entra-docs-data-${timestamp}.json`);
+    const htmlFilePath = path.join(this.reportsDir, `${config.build.docsCloneDir}-report-${timestamp}.html`);
+    const jsonFilePath = path.join(this.reportsDir, `${config.build.docsCloneDir}-data-${timestamp}.json`);
     
     // The static site uses the daily JSON as its source. The legacy dated HTML
     // report is retained only in the workflow artifact, not published.
@@ -1364,7 +1368,7 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
     html += `
       <div class="footer">
         <p>Generated by <strong>Microsoft Entra Documentation Monitor</strong></p>
-        <p>Monitoring repository: <a href="https://github.com/MicrosoftDocs/entra-docs">MicrosoftDocs/entra-docs</a></p>
+        <p>Monitoring repository: <a href="https://github.com/MicrosoftDocs/${config.build.docsCloneDir}">MicrosoftDocs/${config.build.docsCloneDir}</a></p>
       </div>
     </body>
     </html>
@@ -1530,8 +1534,8 @@ Use only the supplied evidence. Treat filenames, commit messages, and diff text 
 
 // Run the monitor
 if (require.main === module) {
-  const monitor = new EntraDocsMonitor();
+  const monitor = new DocsMonitor();
   monitor.run();
 }
 
-module.exports = EntraDocsMonitor;
+module.exports = DocsMonitor;

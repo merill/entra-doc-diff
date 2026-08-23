@@ -105,7 +105,7 @@ website/
 
 ## Notes
 
-- The script extends the main `EntraDocsMonitor` class for consistency
+- The script extends the main `DocsMonitor` class for consistency
 - Uses the same styling and layout as daily reports
 - Includes special "Historical Report" indicators
 - Safely handles days with no commits

@@ -3,12 +3,12 @@
 
 require('dotenv').config();
 
-const EntraDocsMonitor = require('../src/monitor-docs.js');
+const DocsMonitor = require('../src/monitor-docs.js');
 const moment = require('moment-timezone');
 const fs = require('fs').promises;
 const path = require('path');
 
-class HistoricalDataGenerator extends EntraDocsMonitor {
+class HistoricalDataGenerator extends DocsMonitor {
   constructor() {
     super();
     this.processedDays = new Set();
