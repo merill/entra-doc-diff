@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs').promises;
 const os = require('os');
 const path = require('path');
-const { KitPublisher } = require('./kit-publisher');
+const { KitPublisher } = require('@merill/dailynews-engine/kit-publisher');
 const {
   automaticMode,
   isAtOrAfterAutomaticCutoff,
@@ -11,7 +11,7 @@ const {
   reconciliationStartDate,
   requestedDate,
   runAutomatic
-} = require('../scripts/publish-kit-broadcast');
+} = require('@merill/dailynews-engine/publish-kit-broadcast');
 
 function response(status, body = {}, headers = {}) {
   return {
@@ -518,7 +518,7 @@ test('Kit workflow exposes and passes through the manual draft-mode toggle', asy
   assert.equal((workflow.match(/auto_mode:/g) || []).length, 1);
   assert.match(workflow, /description: Create a Kit draft without scheduling or sending it/);
   assert.match(workflow, /KIT_DRAFT_MODE: \$\{\{ inputs\.draft_mode \}\}/);
-  assert.match(workflow, /node scripts\/publish-kit-broadcast\.js --auto/);
+  assert.match(workflow, /dailynews publish-kit --auto/);
   assert.match(workflow, /KIT_SEND_VERIFICATION_GRACE_MINUTES: "30"/);
   assert.match(workflow, /Signal manual production start[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*\/start/);
   assert.match(workflow, /report-health:[\s\S]*needs: publish[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*PING_URL="\$PING_URL\/fail"/);

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { cleanPatch, buildUpdateRecord, buildBriefRecord, groupUpdateRecords } = require('./search-index');
+const { cleanPatch, buildUpdateRecord, buildBriefRecord, groupUpdateRecords } = require('@merill/dailynews-engine/search-index');
 
 const product = { name: 'Microsoft Entra ID', short: 'Entra ID', slug: 'entra-id', icon: 'entra-id.svg' };
 const topic = { name: 'Conditional Access', slug: 'conditional-access', icon: '/assets/topics/conditional-access.svg' };

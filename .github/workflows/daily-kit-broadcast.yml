@@ -58,14 +58,11 @@ jobs:
       with:
         ref: ${{ github.event.repository.default_branch }}
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
+    - name: Set up the dailynews engine
+      # Resolves without a token: this repository and the engine are both
+      # private, and the engine allows repositories owned by the same user to
+      # use its actions, so GitHub checks it out with this workflow's token.
+      uses: merill/dailynews-engine/.github/actions/setup@v1.0.2
 
     - name: Select today's report
       id: report
@@ -106,9 +103,9 @@ jobs:
         REPORT_DATE: ${{ steps.report.outputs.date }}
       run: |
         if [ "$AUTO_MODE" = "true" ]; then
-          node scripts/publish-kit-broadcast.js --auto
+          dailynews publish-kit --auto
         else
-          node scripts/publish-kit-broadcast.js --date "$REPORT_DATE"
+          dailynews publish-kit --date "$REPORT_DATE"
         fi
 
   report-health:

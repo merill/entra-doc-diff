@@ -63,14 +63,11 @@ jobs:
     - name: Clone Message Center repository
       run: git clone --depth 1 https://github.com/merill/mc.git mc
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
+    - name: Set up the dailynews engine
+      # Resolves without a token: this repository and the engine are both
+      # private, and the engine allows repositories owned by the same user to
+      # use its actions, so GitHub checks it out with this workflow's token.
+      uses: merill/dailynews-engine/.github/actions/setup@v1.0.2
       
     - name: Run docs and Message Center monitor
       if: inputs.backfill_dates == ''
@@ -88,7 +85,7 @@ jobs:
         KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
         USERJOT_PROJECT_ID: ${{ vars.USERJOT_PROJECT_ID }}
         GITHUB_ACTIONS: "true"
-      run: node src/monitor-docs.js
+      run: dailynews monitor
 
     - name: Regenerate recovered per-change summaries
       if: inputs.backfill_dates != ''
@@ -98,7 +95,7 @@ jobs:
         OPENAI_SUMMARY_REASONING_EFFORT: "xhigh"
         OPENAI_SUMMARY_CONCURRENCY: "3"
         BACKFILL_DATES: ${{ inputs.backfill_dates }}
-      run: node scripts/regenerate-diff-summaries.js --dates="$BACKFILL_DATES"
+      run: dailynews regenerate-diffs --dates="$BACKFILL_DATES"
 
     - name: Generate daily, weekly, and monthly editorial briefs
       if: steps.monitor.outputs.content_changed == 'true' || inputs.backfill_period_summaries == true || inputs.regenerate_current_period_summaries == true || inputs.backfill_dates != ''
@@ -114,13 +111,13 @@ jobs:
         BACKFILL_PERIODS: ${{ inputs.backfill_period_summaries }}
       run: |
         if [ -n "$BACKFILL_DATES" ]; then
-          node scripts/generate-period-summaries.js --dates="$BACKFILL_DATES" --force
+          dailynews summaries --dates="$BACKFILL_DATES" --force
         elif [ "$REGENERATE_CURRENT" = "true" ]; then
-          node scripts/generate-period-summaries.js --current --force --ignore-budget
+          dailynews summaries --current --force --ignore-budget
         elif [ "$BACKFILL_PERIODS" = "true" ]; then
-          node scripts/generate-period-summaries.js --all
+          dailynews summaries --all
         else
-          node scripts/generate-period-summaries.js --current --force
+          dailynews summaries --current --force
         fi
 
     - name: Pin the site generation time to the last refresh
@@ -136,7 +133,7 @@ jobs:
         KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
         KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
         USERJOT_PROJECT_ID: ${{ vars.USERJOT_PROJECT_ID }}
-      run: npm run build:site
+      run: dailynews build-site && dailynews search-index
 
     - name: Configure Git
       run: |

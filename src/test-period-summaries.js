@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs').promises;
 const os = require('os');
 const path = require('path');
-const { PeriodSummaryGenerator, PERIOD_SUMMARY_PROMPT, selectPeriodEvidence } = require('./period-summaries');
+const { PeriodSummaryGenerator, PERIOD_SUMMARY_PROMPT, selectPeriodEvidence } = require('@merill/dailynews-engine/period-summaries');
 
 test('period prompt requires specific content changes instead of count-only prose', () => {
   assert.match(PERIOD_SUMMARY_PROMPT, /most consequential, specific content changes/i);
