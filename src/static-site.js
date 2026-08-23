@@ -24,6 +24,15 @@ const TOPICS = config.taxonomy.topics.map(topic => ({ ...topic, icon: `/assets/t
 
 const STOPWORDS = config.taxonomy.stopwords;
 
+// The browser bundles ship inside the packages that also serve as build-time
+// dependencies. Resolving them through the package's own package.json anchors
+// them to this module's dependency graph rather than to the working directory —
+// which is what lets the generator run from anywhere. marked restricts its
+// `exports` map, so the file itself cannot be require.resolve()d directly.
+function vendorFile(pkg, file) {
+  return path.join(path.dirname(require.resolve(`${pkg}/package.json`)), file);
+}
+
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
 }
@@ -1271,11 +1280,11 @@ class StaticSiteGenerator {
     await fs.copyFile(path.join(this.siteAssetDir,'learn-diff.js'),path.join(this.websiteDir,'assets','learn-diff.js'));
     await fs.copyFile(path.join(this.siteAssetDir,'diff-config.js'),path.join(this.websiteDir,'assets','diff-config.js'));
     await fs.mkdir(path.join(this.websiteDir,'assets','vendor'),{recursive:true});
-    for (const [source, target] of [
-      ['node_modules/marked/lib/marked.umd.js', 'marked.js'],
-      ['node_modules/diff/dist/diff.min.js', 'diff.min.js'],
-      ['node_modules/node-htmldiff/js/htmldiff.js', 'htmldiff.js']
-    ]) await fs.copyFile(path.resolve(source), path.join(this.websiteDir,'assets','vendor',target));
+    for (const [pkg, file, target] of [
+      ['marked', 'lib/marked.umd.js', 'marked.js'],
+      ['diff', 'dist/diff.min.js', 'diff.min.js'],
+      ['node-htmldiff', 'js/htmldiff.js', 'htmldiff.js']
+    ]) await fs.copyFile(vendorFile(pkg, file), path.join(this.websiteDir,'assets','vendor',target));
     await this.write('assets/site.css',`${CSS}\n${SEARCH_CSS}\n${SEARCH_LOADING_CSS}`);
     await this.write('assets/site.js',JS);
     await this.write('assets/search.js',SEARCH_JS);
