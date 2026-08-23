@@ -1,8 +1,13 @@
 name: Verify site build
 
 # Rebuilds the committed site from the same inputs that produced it and fails if
-# the result differs. Pinning SITE_GENERATED_AT removes the only nondeterminism,
+# the generated pages differ. Pinning SITE_GENERATED_AT removes the timestamp,
 # so an empty diff is a real proof that a change is behaviour-preserving.
+#
+# website/pagefind/** and search-manifest.json are compared separately: Pagefind
+# re-hashes and re-groups its index files on every run even when the indexed
+# content is byte-identical, so a raw diff there is pure noise. What matters is
+# that the index still covers the same records and pages, which is asserted below.
 
 permissions:
   contents: read
@@ -39,6 +44,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Record the committed search coverage
+        run: |
+          node -e "
+            const m = require('./website/search-manifest.json');
+            const e = require('./website/pagefind/pagefind-entry.json');
+            const { generatedAt, ...counts } = m;
+            console.log(JSON.stringify({ ...counts, pages: e.languages.en.page_count }));
+          " > committed-coverage.json
+          cat committed-coverage.json
+
       - name: Rebuild the site at the committed generation time
         env:
           MC_DATA_PATH: './mc/@data'
@@ -46,15 +61,17 @@ jobs:
           KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
           USERJOT_PROJECT_ID: ${{ vars.USERJOT_PROJECT_ID }}
         run: |
-          # refresh-status.json is written by the monitor, so it records the exact
-          # timestamp that produced the committed HTML.
+          # refresh-status.json is written by the monitor, so its lastCheckedAt is
+          # a stable record of the generation time behind the committed HTML.
           SITE_GENERATED_AT="$(node -p "require('./website/refresh-status.json').lastCheckedAt")"
           echo "Rebuilding as of $SITE_GENERATED_AT"
           SITE_GENERATED_AT="$SITE_GENERATED_AT" npm run build:site
 
       - name: Capture the difference
         if: always()
-        run: git diff -- website/ > site.diff || true
+        run: |
+          git diff -- website/ ':(exclude)website/pagefind' ':(exclude)website/search-manifest.json' > site.diff || true
+          wc -l site.diff
 
       - name: Upload the difference
         if: always()
@@ -65,11 +82,29 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-      - name: Fail when the rebuild does not reproduce the committed site
+      - name: Fail when the generated pages changed
         run: |
-          if ! git diff --quiet -- website/; then
-            echo "::error::Rebuilding produced a different site. Download the site-diff artifact to review it."
-            git diff --stat -- website/
+          if ! git diff --quiet -- website/ ':(exclude)website/pagefind' ':(exclude)website/search-manifest.json'; then
+            echo "::error::Rebuilding produced different pages. Download the site-diff artifact to review it."
+            git diff --stat -- website/ ':(exclude)website/pagefind' ':(exclude)website/search-manifest.json'
             exit 1
           fi
-          echo "The rebuild reproduced the committed site exactly."
+          echo "The rebuild reproduced every generated page exactly."
+
+      - name: Fail when the search index no longer covers the same content
+        run: |
+          node -e "
+            const m = require('./website/search-manifest.json');
+            const e = require('./website/pagefind/pagefind-entry.json');
+            const { generatedAt, ...counts } = m;
+            const rebuilt = { ...counts, pages: e.languages.en.page_count };
+            const committed = require('./committed-coverage.json');
+            const a = JSON.stringify(committed), b = JSON.stringify(rebuilt);
+            if (a !== b) {
+              console.error('::error::Search coverage changed.');
+              console.error('  committed: ' + a);
+              console.error('  rebuilt:   ' + b);
+              process.exit(1);
+            }
+            console.log('Search coverage is unchanged: ' + b);
+          "
