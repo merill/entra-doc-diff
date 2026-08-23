@@ -100,6 +100,7 @@ class PeriodSummaryGenerator {
     this.maxOutputTokens = Number(options.maxOutputTokens || process.env.OPENAI_PERIOD_SUMMARY_MAX_OUTPUT_TOKENS || 12000);
     this.budgetUsd = Number(options.budgetUsd || process.env.OPENAI_PERIOD_SUMMARY_BUDGET_USD || 1.25);
     this.dailyBudgetUsd = Number(options.dailyBudgetUsd || process.env.OPENAI_PERIOD_SUMMARY_DAILY_BUDGET_USD || 0.25);
+    this.ignoreBudget = options.ignoreBudget === true;
     this.inputPricePerMillion = Number(options.inputPricePerMillion || 0.20);
     this.outputPricePerMillion = Number(options.outputPricePerMillion || 1.20);
     this.transientRetries = Number(options.transientRetries ?? process.env.OPENAI_PERIOD_SUMMARY_TRANSIENT_RETRIES ?? 3);
@@ -293,9 +294,9 @@ class PeriodSummaryGenerator {
 
   async generateOne(kind, key, items, store) {
     if (!this.client) throw new Error('No OpenAI API key is available. Run the CLI in an interactive terminal and enter the key when prompted.');
-    if (this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached for this run; completed periods were saved and the backfill can be resumed`);
+    if (!this.ignoreBudget && this.runCostUsd >= this.budgetUsd) throw new Error(`Period-summary budget of $${this.budgetUsd.toFixed(2)} has been reached for this run; completed periods were saved and the backfill can be resumed`);
     const dailySpend = Number(this.baseDailyUsage.costUsd || 0) + this.runCostUsd;
-    if (dailySpend >= this.dailyBudgetUsd) throw new Error(`UTC-day period-summary budget of $${this.dailyBudgetUsd.toFixed(2)} has been reached; no additional requests will be started today (one in-flight request may cause a small final overshoot)`);
+    if (!this.ignoreBudget && dailySpend >= this.dailyBudgetUsd) throw new Error(`UTC-day period-summary budget of $${this.dailyBudgetUsd.toFixed(2)} has been reached; no additional requests will be started today (one in-flight request may cause a small final overshoot)`);
     const evidence = this.buildEvidence(kind, key, items, store);
     this.logger.log(`🧠 Writing ${kind} brief for ${key} with ${this.model} (${this.reasoningEffort} reasoning, ${items.length} updates)...`);
     const tokenLimits = [...new Set([this.maxOutputTokens, Math.max(this.maxOutputTokens * 2, 25000)])];

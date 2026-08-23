@@ -747,3 +747,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   await assert.rejects(fs.stat(path.join(websiteDir, '2026-07-31.html')), { code: 'ENOENT' });
   assert.equal((await fs.readFile(path.join(websiteDir, 'CNAME'), 'utf8')).trim(), 'daily.entra.news');
 });
+
+test('the workflow builds the site unconditionally and forwards the UserJot variable', async () => {
+  const workflow = await fs.readFile(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
+  assert.equal((workflow.match(/USERJOT_PROJECT_ID: \$\{\{ vars\.USERJOT_PROJECT_ID \}\}/g) || []).length, 2);
+  // The site must rebuild even when no briefs were generated, so a rendering
+  // change reaches the site on the next run rather than the next brief.
+  assert.match(workflow, /- name: Build the static site through the latest refresh date\n\s+env:[\s\S]*?run: npm run build:site/);
+  assert.doesNotMatch(workflow, /- name: Build the static site through the latest refresh date\n\s+if:/);
+});

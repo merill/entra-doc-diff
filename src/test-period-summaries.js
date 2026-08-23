@@ -432,3 +432,10 @@ test('connection timeouts are retried without discarding the period', async () =
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /timed out/);
 });
+
+test('manual workflow exposes the current-period budget override only on its explicit branch', async () => {
+  const workflow = await fs.readFile(path.join(__dirname, '..', '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8');
+  assert.match(workflow, /regenerate_current_period_summaries:\n\s+description: Force current day, week, and month briefs without budget limits/);
+  assert.match(workflow, /inputs\.regenerate_current_period_summaries == true/);
+  assert.match(workflow, /--current --force --ignore-budget/);
+});

@@ -42,10 +42,14 @@ async function main() {
   ].filter(([flag]) => args.has(flag)).map(([, kind]) => kind);
   const apiKey = process.env.OPENAI_API_KEY || await readHidden('OpenAI API key (input hidden): ');
   if (!apiKey) throw new Error('An OpenAI API key is required');
+  if (args.has('--ignore-budget')) {
+    console.warn('⚠️ Period-summary budget limits are disabled for this explicit regeneration run.');
+  }
   const generator = new PeriodSummaryGenerator({
     websiteDir: path.resolve(process.env.WEBSITE_DIR || 'website'),
     mcDataPath: process.env.MC_DATA_PATH,
-    apiKey
+    apiKey,
+    ignoreBudget: args.has('--ignore-budget')
   });
   const datesArgument = rawArgs.find(argument => argument.startsWith('--dates='));
   const dates = datesArgument
