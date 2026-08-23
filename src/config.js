@@ -96,7 +96,16 @@ function normalize(raw) {
       ogAlt: requireString(brand.ogAlt, 'brand.ogAlt'),
       themeStorageKey: requireString(brand.themeStorageKey, 'brand.themeStorageKey'),
       tokenStorageKey: requireString(brand.tokenStorageKey, 'brand.tokenStorageKey'),
-      emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow')
+      emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow'),
+      logo: requireString(brand.logo, 'brand.logo'),
+      extraCss: String(brand.extraCss || '')
+    },
+    build: {
+      docsCloneDir: requireString((raw.build || {}).docsCloneDir, 'build.docsCloneDir'),
+      detailDays: Number((raw.build || {}).detailDays) || fail('build.detailDays must be a number')
+    },
+    links: {
+      related: [...(((raw.links || {}).related) || [])]
     },
     discord: {
       botName: requireString((raw.discord || {}).botName, 'discord.botName')

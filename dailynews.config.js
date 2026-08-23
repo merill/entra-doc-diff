@@ -19,6 +19,8 @@ module.exports = {
     wordmark: 'Daily.Entra.News',
     ogAlt: 'Entra.News Daily — Microsoft Entra change intelligence',
     themeStorageKey: 'entra-news-theme',
+    logo: 'entra-news-logo.png',
+    extraCss: ":root[data-theme=\"dark\"] .diff-link img{filter:invert(1) hue-rotate(180deg)}",
     emailEyebrow: 'Entra.News Daily',
     tokenStorageKey: 'entra-news-github-token'
   },
@@ -32,6 +34,31 @@ module.exports = {
   ai: {
     schemaPrefix: 'entra',
     impactBoost: /passkey|conditional access|federated credential|tenant governance|authentication|agentic/
+  },
+
+  // How the generator reaches the documentation clone, and how far back it
+  // renders a page per change rather than linking to the full-page diff.
+  build: {
+    docsCloneDir: 'entra-docs',
+    detailDays: 45
+  },
+
+  links: {
+    // Utility icons in the header. Each icon must exist in assets/site/ui.
+    related: [
+      {
+            "icon": "newspaper.svg",
+            "url": "https://entra.news",
+            "title": "Subscribe to Entra.News",
+            "label": "Subscribe to the Entra.News newsletter"
+      },
+      {
+            "icon": "microphone.svg",
+            "url": "https://entra.chat",
+            "title": "Listen to Entra.Chat",
+            "label": "Listen to the Entra.Chat podcast"
+      }
+]
   },
 
   analytics: {
