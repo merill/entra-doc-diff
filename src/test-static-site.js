@@ -42,6 +42,25 @@ test('MicrosoftX diff URLs preserve Learn state and exact revisions', () => {
   assert.equal(result.hash, '#step-1');
 });
 
+test('historical documentation links prefer the full-page diff and fall back to the day anchor', () => {
+  const generator = new StaticSiteGenerator({ websiteDir: path.join(os.tmpdir(), 'unused-entra-site') });
+
+  // Items older than the detail window get no page of their own, so the link has
+  // to go somewhere useful rather than into a day page anchor.
+  assert.equal(generator.historicalDocUrl({
+    date: '2026-01-15',
+    id: 'abc123',
+    publicUrl: 'https://learn.microsoft.com/en-us/entra/identity/example',
+    commitSha: 'b'.repeat(40)
+  }), 'https://mx.merill.net/en-us/entra/identity/example?_mx_head=' + 'b'.repeat(40));
+
+  // Without a Learn URL there is nothing to diff, so the day anchor still applies.
+  assert.equal(generator.historicalDocUrl({ date: '2026-01-15', id: 'abc123' }),
+    '/day/2026-01-15/#abc123');
+  assert.equal(generator.historicalDocUrl({ date: '2026-01-15', id: 'abc123', publicUrl: 'https://example.com/x' }),
+    '/day/2026-01-15/#abc123');
+});
+
 test('topic icon logic prioritizes Conditional Access titles and authentication references', () => {
   assert.equal(classifyTopic('docs/identity/security.md', 'Conditional Access authentication strength', 'Authentication controls and sign-in requirements.').slug, 'conditional-access');
   assert.equal(classifyTopic('docs/architecture/overview.md', 'Identity architecture', 'This authentication reference explains passwordless sign-in.').slug, 'authentication');

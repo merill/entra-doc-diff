@@ -1274,6 +1274,10 @@ class StaticSiteGenerator {
     return target.href;
   }
 
+  historicalDocUrl(item) {
+    return this.microsoftXDiffUrl(item) || `/day/${item.date}/#${item.id}`;
+  }
+
   renderDocDetail(item, allItems) {
     const fullPageUrl = this.microsoftXDiffUrl(item);
     const sourceActions = item.publicUrl ? `<div class="doc-source-actions">${fullPageUrl?`<a class="learn-link diff-link doc-action-link" href="${escapeHtml(fullPageUrl)}" target="_blank" rel="noopener noreferrer"><span class="diff-link-icon" aria-hidden="true"></span>View full page diff</a>`:''}<a class="learn-link doc-action-link" href="${escapeHtml(item.publicUrl)}" target="_blank" rel="noopener noreferrer"><img src="/assets/ui/microsoft.svg" alt="">View on Microsoft Learn</a></div>` : '';
@@ -1336,7 +1340,7 @@ class StaticSiteGenerator {
     const latestDate=items[0]?.date||moment().format('YYYY-MM-DD');
     const latestWeek=mondayOf(latestDate), latestMonth=latestDate.slice(0,7);
     const recentCutoff=moment(latestDate).subtract(this.detailDays,'days');
-    docs.filter(item=>moment(item.date).isBefore(recentCutoff)).forEach(item => { item.url = `/day/${item.date}/#${item.id}`; });
+    docs.filter(item=>moment(item.date).isBefore(recentCutoff)).forEach(item => { item.url = this.historicalDocUrl(item); });
     this.relatedByProduct = new Map(PRODUCTS.map(product => [product.slug, items.filter(item => item.product.slug === product.slug)]));
     this.relatedByTopic = new Map(TOPICS.map(topic => [topic.slug, items.filter(item => item.topic.slug === topic.slug)]));
     await this.write('index.html',this.renderDay(items,latestDate,{landing:true}));

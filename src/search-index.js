@@ -202,7 +202,7 @@ async function loadSearchRecords(options = {}) {
   const latestDate = items[0]?.date || moment().format('YYYY-MM-DD');
   const recentCutoff = moment(latestDate).subtract(generator.detailDays, 'days');
   docs.filter(item => moment(item.date).isBefore(recentCutoff)).forEach(item => {
-    item.url = `/day/${item.date}/#${item.id}`;
+    item.url = generator.historicalDocUrl(item);
   });
   const updateRecords = items.map(buildUpdateRecord);
   const records = groupUpdateRecords(updateRecords);
