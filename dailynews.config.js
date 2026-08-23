@@ -24,7 +24,7 @@ module.exports = {
     aboutIcon: '/assets/products/entra-family.svg',
     // UI assets copied on top of the set the generator always copies.
     uiAssets: ['newspaper.svg', 'microphone.svg', 'entra-news-logo.png'],
-    extraCss: ":root[data-theme=\"dark\"] .diff-link img{filter:invert(1) hue-rotate(180deg)}",
+    extraCss: "",
     emailEyebrow: 'Entra.News Daily',
     tokenStorageKey: 'entra-news-github-token'
   },
