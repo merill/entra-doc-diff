@@ -347,6 +347,7 @@ test('static generator writes indexable archive and detail pages', async () => {
     websiteDir,
     mcDataPath,
     detailDays: 60,
+    userJotProjectId: 'entra-test-project',
     generatedAt: '2026-08-04T09:00:00Z',
     kitDailyFormUid: 'daily-form-123',
     kitDailyFormEmbedSrc: 'https://daily-entra-news.kit.com/daily-form-123/index.js'
@@ -356,6 +357,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   const indexHtml = await fs.readFile(path.join(websiteDir, 'index.html'), 'utf8');
   const dayIndexHtml = await fs.readFile(path.join(websiteDir, 'day', 'index.html'), 'utf8');
   const dayHtml = await fs.readFile(path.join(websiteDir, 'day', '2026-08-01', 'index.html'), 'utf8');
+  const emptyDayHtml = await fs.readFile(path.join(websiteDir, 'day', '2026-08-02', 'index.html'), 'utf8');
   const weekIndexHtml = await fs.readFile(path.join(websiteDir, 'week', 'index.html'), 'utf8');
   const monthHtml = await fs.readFile(path.join(websiteDir, 'month', '2026-08', 'index.html'), 'utf8');
   const docDetailHtml = await fs.readFile(path.join(websiteDir, 'changes', '2026-08-01', 'create-a-configuration-monitor-01', 'index.html'), 'utf8');
@@ -385,7 +387,7 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /name="twitter:card" content="summary_large_image"/);
   for (const html of [indexHtml, dayHtml, weekIndexHtml, monthHtml, docDetailHtml, messageDetailHtml, aboutHtml]) {
     assert.match(html, /https:\/\/cdn\.userjot\.com\/sdk\/v2\/uj\.js/);
-    assert.match(html, /window\.uj\.init\('cmsf6dr5931kz0ipdm14g1qbt',\{widget:true,theme:'auto',position:'right'\}\)/);
+    assert.match(html, /window\.uj\.init\('entra-test-project',\{widget:true,theme:'auto',position:'right'\}\)/);
     assert.doesNotMatch(html, /uj\.identify/);
   }
   assert.equal((indexHtml.match(/cdn\.userjot\.com\/sdk\/v2\/uj\.js/g) || []).length, 1);
@@ -453,7 +455,12 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.match(indexHtml, /class="mini-calendar"/);
   assert.match(indexHtml, /aria-label="August 2026 change calendar"/);
   assert.match(indexHtml, /aria-label="1 August 2026, 2 changes"/);
-  assert.match(indexHtml, /aria-label="2 August 2026, no changes; showing 1 August"/);
+  assert.match(indexHtml, /href="\/day\/2026-08-02\/" aria-label="2 August 2026, no changes"/);
+  // A quiet day inside the archive gets its own page instead of bouncing the
+  // reader to the nearest day with content.
+  assert.match(emptyDayHtml, /<h2 class="section-title">0 updates<\/h2>/);
+  assert.match(emptyDayHtml, /<h2>No tracked updates<\/h2>/);
+  assert.match(emptyDayHtml, /href="\/day\/2026-08-01\/">← Previous day<\/a>/);
   assert.match(indexHtml, /class="mini-update-dot"/);
   assert.match(siteCss, /\.mini-day\.selected\{[^}]*border-radius:6px/);
   assert.doesNotMatch(indexHtml, /class="mini-count"/);
@@ -554,7 +561,6 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.doesNotMatch(monthHtml, /<h2 class="rail-heading">By topic<\/h2>/);
   assert.match(monthHtml, /class="period-nav-previous" href="\/month\/2026-07\/">← Previous month<\/a>/);
   assert.match(monthHtml, /<span class="period-nav-next"><\/span>/);
-  assert.equal(generator.resolveDayDate([{ date: '2026-08-01' }], '2026-08-04'), '2026-08-01');
   const calendarHtml = generator.miniMonthCalendar([
     { date: '2026-07-31' },
     { date: '2026-08-01' },
@@ -765,6 +771,23 @@ test('static generator writes indexable archive and detail pages', async () => {
   assert.equal((await fs.stat(path.join(websiteDir, 'assets', 'vendor', 'htmldiff.js'))).size > 0, true);
   await assert.rejects(fs.stat(path.join(websiteDir, '2026-07-31.html')), { code: 'ENOENT' });
   assert.equal((await fs.readFile(path.join(websiteDir, 'CNAME'), 'utf8')).trim(), 'daily.entra.news');
+});
+
+test('UserJot is configured from a validated project ID and omitted safely otherwise', () => {
+  const missing = new StaticSiteGenerator();
+  const missingHtml = `${missing.head('Test', 'Test', '/test/')}${missing.footer()}`;
+  assert.doesNotMatch(missingHtml, /cdn\.userjot\.com|data-userjot-feedback|window\.uj\.init/);
+
+  // A malformed id must not reach the page as script content.
+  const invalid = new StaticSiteGenerator({ userJotProjectId: "bad'id" });
+  const invalidHtml = `${invalid.head('Test', 'Test', '/test/')}${invalid.footer()}`;
+  assert.doesNotMatch(invalidHtml, /cdn\.userjot\.com|data-userjot-feedback|window\.uj\.init/);
+
+  const configured = new StaticSiteGenerator({ userJotProjectId: 'entra-project-123' });
+  const configuredHtml = `${configured.head('Test', 'Test', '/test/')}${configured.footer()}`;
+  assert.match(configuredHtml, /https:\/\/cdn\.userjot\.com\/sdk\/v2\/uj\.js/);
+  assert.match(configuredHtml, /window\.uj\.init\('entra-project-123',\{widget:true,theme:'auto',position:'right'\}\)/);
+  assert.match(configuredHtml, /data-userjot-feedback/);
 });
 
 test('the workflow builds the site unconditionally and forwards the UserJot variable', async () => {

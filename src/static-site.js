@@ -15,8 +15,6 @@ const SITE = {
   description: 'A readable record of what changed across Microsoft Entra documentation and Message Center.'
 };
 
-const USERJOT_PROJECT_ID = 'cmsf6dr5931kz0ipdm14g1qbt';
-
 const REFRESH_SCHEDULE_UTC = { hour: 8, minute: 15 };
 
 function dateAtRefresh(date) {
@@ -706,6 +704,8 @@ class StaticSiteGenerator {
     this.siteAssetDir = path.resolve(options.siteAssetDir || path.join(process.cwd(), 'assets/site'));
     this.docsRepoPath = path.resolve(options.docsRepoPath || process.env.ENTRA_DOCS_REPO_PATH || process.env.LOCAL_REPO_PATH || path.join(process.cwd(), 'entra-docs'));
     this.detailDays = Number(options.detailDays || process.env.STATIC_SITE_DETAIL_DAYS || 45);
+    const userJotProjectId = String(options.userJotProjectId ?? process.env.USERJOT_PROJECT_ID ?? '').trim();
+    this.userJotProjectId = /^[a-z0-9_-]{6,100}$/i.test(userJotProjectId) ? userJotProjectId : '';
     const kitFormUid = String(options.kitDailyFormUid || process.env.KIT_DAILY_FORM_UID || '').trim();
     const kitFormEmbedSrc = String(options.kitDailyFormEmbedSrc || process.env.KIT_DAILY_FORM_EMBED_SRC || '').trim();
     let kitFormUrl;
@@ -720,6 +720,10 @@ class StaticSiteGenerator {
     this.generatedAt = (generatedAt.isValid() ? generatedAt : moment.utc()).toISOString();
     this.generatedUrls = new Set(['/']);
     this.periodSummaries = { days: {}, weeks: {}, months: {} };
+    // Bounds of the tracked archive, computed in build(). Outside them a date has
+    // no page, so links to it must not be rendered as links.
+    this.archiveStart = '';
+    this.archiveEnd = '';
   }
 
   dailyEmailForm() {
@@ -901,7 +905,9 @@ class StaticSiteGenerator {
   head(title, description, canonical, active = '') {
     const safeTitle = title === SITE.name ? title : `${title} — ${SITE.name}`;
     const safeDescription = escapeHtml(truncate(description || SITE.description, 300));
-    const userJot = `<script>window.$ujq=window.$ujq||[];window.uj=window.uj||new Proxy({},{get:(_,property)=>(...args)=>window.$ujq.push([property,...args])});document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://cdn.userjot.com/sdk/v2/uj.js',type:'module',async:true}));</script><script>window.uj.init('${USERJOT_PROJECT_ID}',{widget:true,theme:'auto',position:'right'});</script>`;
+    const userJot = this.userJotProjectId
+      ? `<script>window.$ujq=window.$ujq||[];window.uj=window.uj||new Proxy({},{get:(_,property)=>(...args)=>window.$ujq.push([property,...args])});document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://cdn.userjot.com/sdk/v2/uj.js',type:'module',async:true}));</script><script>window.uj.init('${this.userJotProjectId}',{widget:true,theme:'auto',position:'right'});</script>`
+      : '';
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(safeTitle)}</title><meta name="description" content="${safeDescription}"><link rel="canonical" href="${SITE.url}${canonical}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><script>try{const saved=localStorage.getItem('entra-news-theme');document.documentElement.dataset.theme=saved==='light'||saved==='dark'?saved:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{document.documentElement.dataset.theme='light'}</script><script defer data-site="nuj3pzyz" data-domain="daily.entra.news" src="https://piqo.app/piqo.js"></script>${userJot}<link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="${SITE.name}" href="/rss.xml"><meta property="og:site_name" content="${SITE.name}"><meta property="og:title" content="${escapeHtml(safeTitle)}"><meta property="og:description" content="${safeDescription}"><meta property="og:url" content="${SITE.url}${canonical}"><meta property="og:type" content="article"><meta property="og:image" content="${SITE.url}/og-image.png"><meta property="og:image:secure_url" content="${SITE.url}/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(safeTitle)}"><meta name="twitter:description" content="${safeDescription}"><meta name="twitter:image" content="${SITE.url}/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body>${this.header(active)}${active==='compare'?this.githubTokenDrawer():''}`;
   }
 
@@ -920,7 +926,10 @@ class StaticSiteGenerator {
   }
 
   footer() {
-    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><div class="footer-feature-lockup"><img class="footer-feature-logo" src="/assets/ui/maester.png" alt=""><h2><a href="https://maester.cloud">Maester Cloud</a></h2></div><p>Everyone loves using Maester to track their Microsoft Entra and Microsoft 365 tenant security configuration. Maester Cloud turns those daily results into a continuous security record, with 5+ years of history, drift detection, and alerts when your posture changes.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time data-refresh-last>checking…</time> <span class="refresh-relative" data-refresh-last-relative>recently</span></span><span>Next refresh <span class="refresh-relative" data-refresh-next>within six hours</span></span></div></div><nav aria-label="Footer"><button class="footer-feedback-button" type="button" data-userjot-feedback>Report an issue or share feedback</button><a class="footer-rss-link" href="/rss.xml"><img src="/assets/ui/rss.svg" alt="">Daily RSS</a><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer>${this.dailyEmailDialogs()}<script src="/assets/site.js"></script></body></html>`;
+    const feedbackButton = this.userJotProjectId
+      ? '<button class="footer-feedback-button" type="button" data-userjot-feedback>Report an issue or share feedback</button>'
+      : '';
+    const footer = `<footer class="footer" id="site-footer"><div class="footer-inner"><section class="footer-feature"><div class="eyebrow">Featured project</div><div class="footer-feature-lockup"><img class="footer-feature-logo" src="/assets/ui/maester.png" alt=""><h2><a href="https://maester.cloud">Maester Cloud</a></h2></div><p>Everyone loves using Maester to track their Microsoft Entra and Microsoft 365 tenant security configuration. Maester Cloud turns those daily results into a continuous security record, with 5+ years of history, drift detection, and alerts when your posture changes.</p><a class="footer-cta" href="https://maester.cloud">Explore Maester Cloud →</a></section><section class="footer-projects"><h2 class="footer-section-title">More community projects</h2><ul class="footer-project-list"><li><a href="https://maester.dev">Maester</a></li><li><a href="https://graphpermissions.merill.net">Graph Permissions Explorer</a></li><li><a href="https://cmd.ms">cmd.ms</a></li><li><a href="https://mc.merill.net">M365 Message Center Archive</a></li><li><a href="https://getyako.com">Yako</a></li></ul></section><section class="footer-support"><h2 class="footer-section-title">Support free community tools</h2><p>Found these free tools useful? Shout me a cup of coffee—or more—on GitHub Sponsors. It helps keep the projects open, useful, and moving.</p><div class="footer-support-links"><a href="https://github.com/sponsors/merill">Sponsor Merill on GitHub →</a></div></section></div><div class="footer-bottom"><div><div>Independent change tracking for Microsoft Entra administrators.</div><div class="refresh-status"><span>Last refreshed <time data-refresh-last>checking…</time> <span class="refresh-relative" data-refresh-last-relative>recently</span></span><span>Next refresh <span class="refresh-relative" data-refresh-next>within six hours</span></span></div></div><nav aria-label="Footer">${feedbackButton}<a class="footer-rss-link" href="/rss.xml"><img src="/assets/ui/rss.svg" alt="">Daily RSS</a><a href="/about/">About</a><a href="https://merill.net">merill.net</a><a href="https://entra.news">Entra.News weekly</a><a href="https://entra.chat">Entra.Chat podcast</a></nav></div></footer>${this.dailyEmailDialogs()}<script src="/assets/site.js"></script></body></html>`;
     return footer.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
   }
 
@@ -964,13 +973,6 @@ class StaticSiteGenerator {
     }).join('')}</section>`;
   }
 
-  resolveDayDate(items, requestedDate) {
-    const dates = [...new Set(items.map(item => item.date).filter(Boolean))].sort();
-    if (!dates.length) return requestedDate;
-    if (dates.includes(requestedDate)) return requestedDate;
-    return dates.filter(date => date <= requestedDate).at(-1) || dates[0];
-  }
-
   miniMonthCalendar(items, selectedDate) {
     const first = moment(`${selectedDate.slice(0,7)}-01`);
     const start = first.clone().startOf('isoWeek');
@@ -993,9 +995,10 @@ class StaticSiteGenerator {
       const dot = count ? '<span class="mini-update-dot" aria-hidden="true"></span>' : '';
       if (outside && !count) return `<span class="mini-day outside" aria-label="${day.format('D MMMM YYYY')}, outside current month"><span class="mini-day-number">${day.date()}</span></span>`;
       if (outside) return `<a class="mini-day outside has-updates" href="/day/${date}/" aria-label="${day.format('D MMMM YYYY')}, ${count} change${count === 1 ? '' : 's'}, outside current month" title="${count} change${count === 1 ? '' : 's'}"><span class="mini-day-number">${day.date()}</span>${dot}</a>`;
-      const destination = this.resolveDayDate(items, date);
-      const countLabel = count ? `${count} change${count === 1 ? '' : 's'}` : `no changes; showing ${moment(destination).format('D MMMM')}`;
-      return `<a class="mini-day${date === selectedDate ? ' selected' : ''}${count ? ' has-updates' : ''}" href="/day/${destination}/" aria-label="${day.format('D MMMM YYYY')}, ${countLabel}" title="${countLabel}"><span class="mini-day-number">${day.date()}</span>${dot}</a>`;
+      const inArchive = (!this.archiveStart || date >= this.archiveStart) && (!this.archiveEnd || date <= this.archiveEnd);
+      const countLabel = count ? `${count} change${count === 1 ? '' : 's'}` : 'no changes';
+      if (!inArchive) return `<span class="mini-day${date === selectedDate ? ' selected' : ''}" aria-label="${day.format('D MMMM YYYY')}, outside archive"><span class="mini-day-number">${day.date()}</span></span>`;
+      return `<a class="mini-day${date === selectedDate ? ' selected' : ''}${count ? ' has-updates' : ''}" href="/day/${date}/" aria-label="${day.format('D MMMM YYYY')}, ${countLabel}" title="${countLabel}"><span class="mini-day-number">${day.date()}</span>${dot}</a>`;
     }).join('');
     return `<section class="mini-calendar" aria-label="${first.format('MMMM YYYY')} change calendar"><div class="mini-calendar-header">${monthControl('Previous', previousMonth, previousDate)}<h2 class="rail-heading mini-calendar-title">${first.format('MMMM YYYY')}</h2>${monthControl('Next', nextMonth, nextDate)}</div><div class="mini-calendar-grid"><span class="mini-weekday">M</span><span class="mini-weekday">T</span><span class="mini-weekday">W</span><span class="mini-weekday">T</span><span class="mini-weekday">F</span><span class="mini-weekday">S</span><span class="mini-weekday">S</span>${cells}</div><a class="mini-month-link" href="/month/${selectedDate.slice(0,7)}/">Open month view</a></section>`;
   }
@@ -1161,14 +1164,16 @@ class StaticSiteGenerator {
   }
 
   renderDay(items, date, { landing = false } = {}) {
-    const resolvedDate = this.resolveDayDate(items, date);
+    const resolvedDate = date;
     const dayItems = items.filter(item => item.date === resolvedDate);
     const storedOverview = dayItems.find(item => item.dailyOverview)?.dailyOverview || '';
     const messageCenterItems = dayItems.filter(item => item.source === 'mc').sort((a,b)=>impactScore(b)-impactScore(a));
     const fallbackOverview = dayItems.length ? `${dayItems.length} changes were tracked across ${new Set(dayItems.map(item => item.product.slug)).size} Microsoft Entra products. The leading updates include ${[...dayItems].sort((a,b)=>impactScore(b)-impactScore(a)).slice(0,3).map(item => item.title).join('; ')}.` : '';
     const messageCenterOverview = storedOverview && messageCenterItems.length ? `${messageCenterItems.length} Message Center announcement${messageCenterItems.length===1?' was':'s were'} also published, including ${messageCenterItems.slice(0,2).map(item=>item.title).join('; ')}.` : '';
     const dailyOverview = [storedOverview || fallbackOverview, messageCenterOverview].filter(Boolean).join(' ');
-    const availableDates = [...new Set(items.map(item=>item.date))].sort();
+    const availableDates = this.archiveStart && this.archiveEnd
+      ? Array.from({ length: moment(this.archiveEnd).diff(moment(this.archiveStart), 'days') + 1 }, (_, index) => moment(this.archiveStart).add(index, 'day').format('YYYY-MM-DD'))
+      : [...new Set(items.map(item=>item.date))].sort();
     const currentIndex = availableDates.indexOf(resolvedDate);
     const previousDate = currentIndex > 0 ? availableDates[currentIndex - 1] : '';
     const nextDate = currentIndex >= 0 && currentIndex < availableDates.length - 1 ? availableDates[currentIndex + 1] : '';
@@ -1186,7 +1191,7 @@ class StaticSiteGenerator {
     if (start.date() > 1) start.subtract(7,'days');
     const cells=[]; for(let i=0;i<42;i++) cells.push(start.clone().add(i,'days'));
     const monthItems=items.filter(item=>item.date.startsWith(month));
-    const earliestDate=items[items.length-1]?.date||first.format('YYYY-MM-DD'), latestDate=items[0]?.date||first.format('YYYY-MM-DD');
+    const earliestDate=this.archiveStart||items[items.length-1]?.date||first.format('YYYY-MM-DD'), latestDate=this.archiveEnd||items[0]?.date||first.format('YYYY-MM-DD');
     const calendar = cells.map(day=>{const date=day.format('YYYY-MM-DD');const found=items.filter(item=>item.date===date);const products=[...new Map(found.map(item=>[item.product.slug,item.product])).values()].slice(0,3);const tag=date>=earliestDate&&date<=latestDate?'a':'div';const href=tag==='a'?` href="/day/${date}/"`:'';const count=found.length?`<span class="calendar-count" aria-label="${found.length} update${found.length===1?'':'s'}" title="${found.length} update${found.length===1?'':'s'}">${found.length}</span>`:'';return `<${tag} class="calendar-day${date===monthItems[0]?.date?' selected':''}"${href}><span class="calendar-date-row"><strong>${day.date()}</strong>${count}</span><span class="day-icons">${products.map(p=>`<img src="/assets/products/${p.icon}" alt="${escapeHtml(p.short)}">`).join('')}</span></${tag}>`}).join('');
     const productCounts=PRODUCTS.map(product=>({product,count:monthItems.filter(item=>item.product.slug===product.slug).length})).filter(x=>x.count).sort((a,b)=>b.count-a.count);
     const topicCounts=TOPICS.map(topic=>({topic,count:monthItems.filter(item=>item.topic.slug===topic.slug).length})).filter(x=>x.count).sort((a,b)=>b.count-a.count);
@@ -1335,9 +1340,13 @@ class StaticSiteGenerator {
     this.periodSummaries = await this.loadPeriodSummaries();
     const reports=await this.enrichCommitParents(await this.loadReports());
     const docs=this.normalizeDocItems(reports);
-    const mc=await this.loadMessageCenterItems();
+    const generatedDate=moment.utc(this.generatedAt).format('YYYY-MM-DD');
+    const archiveStart=reports[0]?.date||'';
+    this.archiveStart = archiveStart;
+    this.archiveEnd = [reports.at(-1)?.date, generatedDate].filter(Boolean).sort().at(-1) || generatedDate;
+    const mc=(await this.loadMessageCenterItems()).filter(item=>!archiveStart||item.date>=archiveStart);
     const items=[...docs,...mc].sort((a,b)=>b.date.localeCompare(a.date)||a.title.localeCompare(b.title));
-    const latestDate=items[0]?.date||moment().format('YYYY-MM-DD');
+    const latestDate=items[0]?.date||reports.at(-1)?.date||generatedDate;
     const latestWeek=mondayOf(latestDate), latestMonth=latestDate.slice(0,7);
     const recentCutoff=moment(latestDate).subtract(this.detailDays,'days');
     docs.filter(item=>moment(item.date).isBefore(recentCutoff)).forEach(item => { item.url = this.historicalDocUrl(item); });
@@ -1353,8 +1362,8 @@ class StaticSiteGenerator {
     await this.write('compare/index.html',this.renderLearnCompare());
     await this.write('search/index.html',this.renderSearch());
     await this.write('message-center/index.html',`${this.head('Message Center','Microsoft 365 Message Center posts relevant to Microsoft Entra administrators.','/message-center/','message-center')}<div class="page-shell">${this.productRail()}<main class="content"><div class="eyebrow">Microsoft 365 roadmap signals</div><h1 class="page-title">Entra in Message Center</h1><p class="lede">Announcements where the service or title includes Microsoft Entra, presented beside related documentation changes.</p><section class="story-list">${this.itemRows(mc.slice(0,160))}</section></main>${this.periodRail(items,'month')}</div>${this.footer()}`);
-    const earliestDate=items[items.length-1]?.date||latestDate;
-    for(let day=moment(earliestDate);day.isSameOrBefore(moment(latestDate));day.add(1,'day')) {
+    const earliestDate=this.archiveStart||items[items.length-1]?.date||latestDate;
+    for(let day=moment(earliestDate);day.isSameOrBefore(moment(this.archiveEnd));day.add(1,'day')) {
       const date=day.format('YYYY-MM-DD');
       await this.write(`day/${date}/index.html`,this.renderDay(items,date));
     }
