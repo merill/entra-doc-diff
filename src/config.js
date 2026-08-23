@@ -73,9 +73,11 @@ function normalize(raw) {
   };
   if (site.url.endsWith('/')) fail('site.url must not end with a slash');
 
+  // `icon` is optional: a product may name its SVG explicitly, or leave it to be
+  // derived from the slug by the icon manifest.
   const products = normalizeEntries(taxonomy.products, 'taxonomy.products', (entry, where) => {
     requireString(entry.short, `${where}.short`);
-    requireString(entry.icon, `${where}.icon`);
+    if (entry.icon !== undefined) requireString(entry.icon, `${where}.icon`);
   });
   const topics = normalizeEntries(taxonomy.topics, 'taxonomy.topics');
 
