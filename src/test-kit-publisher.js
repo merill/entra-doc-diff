@@ -8,6 +8,7 @@ const {
   automaticMode,
   isAtOrAfterAutomaticCutoff,
   loadDailyInput,
+  reconciliationStartDate,
   requestedDate,
   runAutomatic
 } = require('../scripts/publish-kit-broadcast');
@@ -366,6 +367,9 @@ test('automatic Kit mode uses the 08:15 UTC cutoff', () => {
   assert.equal(automaticMode(['--date', '2026-08-06']), false);
   assert.equal(isAtOrAfterAutomaticCutoff('2026-08-06T08:14:59Z'), false);
   assert.equal(isAtOrAfterAutomaticCutoff('2026-08-06T08:15:00Z'), true);
+  assert.equal(reconciliationStartDate('2026-08-22'), '2026-08-22');
+  assert.equal(reconciliationStartDate(''), null);
+  assert.throws(() => reconciliationStartDate('2026-02-31'), /valid YYYY-MM-DD/);
 });
 
 test('automatic reconciliation verifies but does not publish before 08:15 UTC', async () => {
@@ -518,4 +522,42 @@ test('Kit workflow exposes and passes through the manual draft-mode toggle', asy
   assert.match(workflow, /KIT_SEND_VERIFICATION_GRACE_MINUTES: "30"/);
   assert.match(workflow, /Signal manual production start[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*\/start/);
   assert.match(workflow, /report-health:[\s\S]*needs: publish[\s\S]*github\.event_name == 'workflow_dispatch' && inputs\.draft_mode != true[\s\S]*PING_URL="\$PING_URL\/fail"/);
+});
+
+test('automatic reconciliation ignores historical reports before its production start date', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-kit-auto-bootstrap-'));
+  await writeDailyReport(root, '2026-08-06');
+  await writeDailyReport(root, '2026-08-07');
+  const methods = [];
+  const messages = [];
+  const publisher = new KitPublisher({
+    apiKey: 'test-key',
+    now: () => new Date('2026-08-07T12:15:00Z'),
+    fetch: async (_url, options) => {
+      methods.push(options.method);
+      return options.method === 'POST'
+        ? response(201, { broadcast: { id: 89 } })
+        : response(200, { broadcasts: [] });
+    }
+  });
+
+  const result = await runAutomatic({
+    now: new Date('2026-08-07T12:15:00Z'),
+    websiteDir: root,
+    publisher,
+    reconciliationStartDate: '2026-08-07',
+    logger: { log(message) { messages.push(message); } }
+  });
+
+  assert.equal(result.previous.status, 'missing');
+  assert.equal(result.current.status, 'scheduled');
+  assert.equal(result.current.broadcastId, 89);
+  assert.deepEqual(methods, ['GET', 'GET', 'GET', 'POST']);
+  assert.ok(messages.some(message => message.includes('automatic reconciliation starts on 2026-08-07')));
+});
+
+test('the Kit workflow pins the reconciliation start date', async () => {
+  const workflow = await fs.readFile(path.join(__dirname, '..', '.github', 'workflows', 'daily-kit-broadcast.yml'), 'utf8');
+  assert.match(workflow, /KIT_RECONCILIATION_START_DATE: "2026-08-22"/);
+  assert.match(workflow, /KIT_SENDER_EMAIL: \$\{\{ secrets\.KIT_SENDER_EMAIL \}\}/);
 });

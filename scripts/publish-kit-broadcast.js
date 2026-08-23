@@ -56,6 +56,15 @@ function utcDate(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function reconciliationStartDate(value = process.env.KIT_RECONCILIATION_START_DATE) {
+  const date = String(value || '').trim();
+  if (!date) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || utcDate(`${date}T00:00:00Z`) !== date) {
+    throw new Error('KIT_RECONCILIATION_START_DATE must use a valid YYYY-MM-DD date');
+  }
+  return date;
+}
+
 function previousUtcDate(value) {
   const date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
   if (Number.isNaN(date.getTime())) throw new Error(`Invalid automatic reconciliation time: ${value}`);
@@ -95,6 +104,7 @@ async function runAutomatic(options = {}) {
 
   const today = utcDate(now);
   const yesterday = previousUtcDate(now);
+  const startDate = reconciliationStartDate(options.reconciliationStartDate);
   const [todayInput, yesterdayInput] = await Promise.all([
     loadDailyInputIfAvailable({ websiteDir, date: today }),
     loadDailyInputIfAvailable({ websiteDir, date: yesterday })
@@ -108,8 +118,11 @@ async function runAutomatic(options = {}) {
       publisher,
       input: yesterdayInput,
       date: yesterday,
-      requireMarker: true
+      requireMarker: !startDate || yesterday >= startDate
     });
+    if (previousResult.status === 'missing' && startDate && yesterday < startDate) {
+      logger.log(`Ignoring missing Kit broadcast for ${yesterday}; automatic reconciliation starts on ${startDate}.`);
+    }
   } catch (error) {
     errors.push(error);
   }
@@ -187,6 +200,7 @@ module.exports = {
   loadDailyInput,
   loadDailyInputIfAvailable,
   previousUtcDate,
+  reconciliationStartDate,
   requestedDate,
   runAutomatic,
   utcDate,
