@@ -71,8 +71,10 @@ function normalizeRules(rules, field, knownSlugs) {
   });
 }
 
-function normalizeStrings(values, field) {
-  if (!Array.isArray(values) || !values.length) fail(`${field} must be a non-empty array`);
+function normalizeStrings(values, field, { allowEmpty = false } = {}) {
+  if (!Array.isArray(values) || (!allowEmpty && !values.length)) {
+    fail(`${field} must be a non-empty array`);
+  }
   return values.map((value, index) => requireString(value, `${field}[${index}]`));
 }
 
@@ -231,7 +233,7 @@ function normalize(raw) {
       emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow'),
       logo: requireString(brand.logo, 'brand.logo'),
       aboutIcon: requireString(brand.aboutIcon, 'brand.aboutIcon'),
-      uiAssets: normalizeStrings(brand.uiAssets, 'brand.uiAssets'),
+      uiAssets: normalizeStrings(brand.uiAssets, 'brand.uiAssets', { allowEmpty: true }),
       extraCss: String(brand.extraCss || '')
     },
     build: {
