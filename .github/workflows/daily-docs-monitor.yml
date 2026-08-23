@@ -51,7 +51,9 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Clone Entra Docs repository
-      run: git clone https://github.com/MicrosoftDocs/entra-docs.git entra-docs
+      # Blobs over 100k are media, which the monitor never reads. Markdown is
+      # fetched eagerly so the per-file `git show` calls stay local.
+      run: git clone --filter=blob:limit=100k --single-branch https://github.com/MicrosoftDocs/entra-docs.git entra-docs
 
     - name: Clone Message Center repository
       run: git clone --depth 1 https://github.com/merill/mc.git mc
@@ -63,7 +65,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm install
+      run: npm ci
       
     - name: Run docs and Message Center monitor
       if: inputs.backfill_dates == ''
@@ -88,7 +90,8 @@ jobs:
         OPENAI_SUMMARY_MODEL: "gpt-5.6-luna"
         OPENAI_SUMMARY_REASONING_EFFORT: "xhigh"
         OPENAI_SUMMARY_CONCURRENCY: "3"
-      run: node scripts/regenerate-diff-summaries.js --dates="${{ inputs.backfill_dates }}"
+        BACKFILL_DATES: ${{ inputs.backfill_dates }}
+      run: node scripts/regenerate-diff-summaries.js --dates="$BACKFILL_DATES"
 
     - name: Generate daily, weekly, and monthly editorial briefs
       if: steps.monitor.outputs.content_changed == 'true' || inputs.backfill_period_summaries == true || inputs.backfill_dates != ''
@@ -101,9 +104,10 @@ jobs:
         MC_DATA_PATH: "./mc/@data"
         KIT_DAILY_FORM_UID: ${{ secrets.KIT_DAILY_FORM_UID }}
         KIT_DAILY_FORM_EMBED_SRC: ${{ secrets.KIT_DAILY_FORM_EMBED_SRC }}
+        BACKFILL_DATES: ${{ inputs.backfill_dates }}
       run: |
-        if [ -n "${{ inputs.backfill_dates }}" ]; then
-          node scripts/generate-period-summaries.js --dates="${{ inputs.backfill_dates }}" --force
+        if [ -n "$BACKFILL_DATES" ]; then
+          node scripts/generate-period-summaries.js --dates="$BACKFILL_DATES" --force
         elif [ "${{ inputs.backfill_period_summaries }}" = "true" ]; then
           node scripts/generate-period-summaries.js --all
         else
