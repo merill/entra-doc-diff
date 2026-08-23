@@ -24,7 +24,7 @@ module.exports = {
     aboutIcon: '/assets/products/entra-family.svg',
     // UI assets copied on top of the set the generator always copies.
     uiAssets: ['newspaper.svg', 'microphone.svg', 'entra-news-logo.png'],
-    extraCss: ":root[data-theme=\"dark\"] .diff-link img{filter:invert(1) hue-rotate(180deg)}",
+    extraCss: "",
     emailEyebrow: 'Entra.News Daily',
     tokenStorageKey: 'entra-news-github-token'
   },
@@ -209,22 +209,29 @@ module.exports = {
     defaultProduct: 'entra-id',
 
     topics: [
-    { slug: 'architecture', name: 'Architecture' },
-    { slug: 'standards', name: 'Standards' },
-    { slug: 'identity-platform', name: 'Microsoft identity platform' },
-    { slug: 'fundamentals', name: 'Fundamentals' },
-    { slug: 'troubleshooting', name: 'Troubleshooting' },
-    { slug: 'authentication', name: 'Authentication' },
-    { slug: 'conditional-access', name: 'Conditional Access' },
-    { slug: 'security', name: 'Security' },
-    { slug: 'governance', name: 'Governance' },
-    { slug: 'provisioning', name: 'Provisioning' },
-    { slug: 'branding', name: 'Branding' },
-    { slug: 'monitoring', name: 'Monitoring' },
-    { slug: 'developer', name: 'Developer' },
-    { slug: 'general', name: 'General' }
+    { slug: 'architecture', name: 'Architecture', icon: { sourceName: 'Blueprints', sourcePath: 'management-governance/00006-icon-service-Blueprints.svg', match: 'closest' } },
+    { slug: 'standards', name: 'Standards', icon: { sourceName: 'Compliance', sourcePath: 'management-governance/00011-icon-service-Compliance.svg', match: 'closest' } },
+    { slug: 'identity-platform', name: 'Microsoft identity platform', icon: { sourceName: 'App Registrations', sourcePath: 'identity/10232-icon-service-App-Registrations.svg', match: 'closest' } },
+    { slug: 'fundamentals', name: 'Fundamentals', icon: { sourceName: 'Guide', sourcePath: 'general/10810-icon-service-Guide.svg', match: 'closest' } },
+    { slug: 'troubleshooting', name: 'Troubleshooting', icon: { sourceName: 'Diagnose and solve problems', sourcePath: 'identity/Diagnose and solve problems.svg', match: 'exact' } },
+    { slug: 'authentication', name: 'Authentication', icon: { sourceName: 'Multifactor Authentication', sourcePath: 'security/03344-icon-service-Multifactor-Authentication.svg', match: 'exact' } },
+    { slug: 'conditional-access', name: 'Conditional Access', icon: { sourceName: 'Conditional Access', sourcePath: 'security/10233-icon-service-Conditional-Access.svg', match: 'exact' } },
+    { slug: 'security', name: 'Security', icon: { sourceName: 'Security', sourcePath: 'identity/00321-icon-service-Security.svg', match: 'exact' } },
+    { slug: 'governance', name: 'Governance', icon: { sourceName: 'Identity Governance', sourcePath: 'identity/10235-icon-service-Identity-Governance.svg', match: 'exact' } },
+    { slug: 'provisioning', name: 'Provisioning', icon: { sourceName: 'Entra Connect Sync', sourcePath: 'identity/03533-icon-service-Entra-Connect-Sync.svg', match: 'closest' } },
+    { slug: 'branding', name: 'Branding', icon: { sourceName: 'Image', sourcePath: 'general/10812-icon-service-Image.svg', match: 'closest' } },
+    { slug: 'monitoring', name: 'Monitoring', icon: { sourceName: 'Monitor', sourcePath: 'monitor/00001-icon-service-Monitor.svg', match: 'exact' } },
+    { slug: 'developer', name: 'Developer', icon: { sourceName: 'Code', sourcePath: 'general/10787-icon-service-Code.svg', match: 'closest' } },
+    { slug: 'general', name: 'General', icon: { sourceName: 'Information', sourcePath: 'general/10005-icon-service-Information.svg', match: 'closest' } }
     ],
     defaultTopic: 'general',
+
+    // Where the SVGs under assets/site were taken from, pinned so the set can be
+    // resynced against the same revision it was drawn from.
+    iconSource: {
+      repository: 'https://github.com/DanielBradley1/msicons',
+      revision: '3d57443ed4445be9465ee2fee6a6ce6fd02cf90c'
+    },
 
     stopwords: 'microsoft entra documentation docs update updated updates change changes new for with from into about that this your their has have will are and the how use using overview configure configuration guide learn overview support service services preview',
 
