@@ -7,13 +7,11 @@ const htmlDiff = require('node-htmldiff');
 const simpleGit = require('simple-git');
 const { topicIconPath } = require('./topic-icons');
 const { nextScheduledRefresh, readJson, writeJsonAtomic } = require('./update-state');
+const { getConfig, runRules } = require('./config');
 
-const SITE = {
-  name: 'Entra.News Daily',
-  host: 'daily.entra.news',
-  url: 'https://daily.entra.news',
-  description: 'A readable record of what changed across Microsoft Entra documentation and Message Center.'
-};
+const config = getConfig();
+
+const SITE = config.site;
 
 const REFRESH_SCHEDULE_UTC = { hour: 8, minute: 15 };
 
@@ -21,38 +19,11 @@ function dateAtRefresh(date) {
   return `${date}T${String(REFRESH_SCHEDULE_UTC.hour).padStart(2, '0')}:${String(REFRESH_SCHEDULE_UTC.minute).padStart(2, '0')}:00Z`;
 }
 
-const PRODUCTS = [
-  { slug: 'entra-id', name: 'Microsoft Entra ID', short: 'Entra ID', icon: 'entra-id.svg', learn: 'https://learn.microsoft.com/en-us/entra/identity/' },
-  { slug: 'agent-id', name: 'Microsoft Entra Agent ID', short: 'Agent ID', icon: 'entra-family.svg', learn: 'https://learn.microsoft.com/en-us/entra/agent-id/' },
-  { slug: 'id-protection', name: 'Microsoft Entra ID Protection', short: 'ID Protection', icon: 'id-protection.svg', learn: 'https://learn.microsoft.com/en-us/entra/id-protection/' },
-  { slug: 'id-governance', name: 'Microsoft Entra ID Governance', short: 'ID Governance', icon: 'id-governance.svg', learn: 'https://learn.microsoft.com/en-us/entra/id-governance/' },
-  { slug: 'external-id', name: 'Microsoft Entra External ID', short: 'External ID', icon: 'external-id.svg', learn: 'https://learn.microsoft.com/en-us/entra/external-id/' },
-  { slug: 'internet-access', name: 'Microsoft Entra Internet Access', short: 'Internet Access', icon: 'internet-access.svg', learn: 'https://learn.microsoft.com/en-us/entra/global-secure-access/concept-internet-access' },
-  { slug: 'private-access', name: 'Microsoft Entra Private Access', short: 'Private Access', icon: 'private-access.svg', learn: 'https://learn.microsoft.com/en-us/entra/global-secure-access/concept-private-access' },
-  { slug: 'verified-id', name: 'Microsoft Entra Verified ID', short: 'Verified ID', icon: 'verified-id.svg', learn: 'https://learn.microsoft.com/en-us/entra/verified-id/' },
-  { slug: 'workload-id', name: 'Microsoft Entra Workload ID', short: 'Workload ID', icon: 'workload-id.svg', learn: 'https://learn.microsoft.com/en-us/entra/workload-id/' },
-  { slug: 'global-secure-access', name: 'Microsoft Entra Global Secure Access', short: 'Global Secure Access', icon: 'global-secure-access.svg', learn: 'https://learn.microsoft.com/en-us/entra/global-secure-access/' },
-  { slug: 'security-copilot', name: 'Security Copilot + Entra', short: 'Security Copilot', icon: 'entra-family.svg', learn: 'https://learn.microsoft.com/en-us/entra/fundamentals/copilot-security-entra' }
-];
+const PRODUCTS = config.taxonomy.products;
 
-const TOPICS = [
-  { slug: 'architecture', name: 'Architecture' },
-  { slug: 'standards', name: 'Standards' },
-  { slug: 'identity-platform', name: 'Microsoft identity platform' },
-  { slug: 'fundamentals', name: 'Fundamentals' },
-  { slug: 'troubleshooting', name: 'Troubleshooting' },
-  { slug: 'authentication', name: 'Authentication' },
-  { slug: 'conditional-access', name: 'Conditional Access' },
-  { slug: 'security', name: 'Security' },
-  { slug: 'governance', name: 'Governance' },
-  { slug: 'provisioning', name: 'Provisioning' },
-  { slug: 'branding', name: 'Branding' },
-  { slug: 'monitoring', name: 'Monitoring' },
-  { slug: 'developer', name: 'Developer' },
-  { slug: 'general', name: 'General' }
-].map(topic => ({ ...topic, icon: topicIconPath(topic.slug) }));
+const TOPICS = config.taxonomy.topics.map(topic => ({ ...topic, icon: topicIconPath(topic.slug) }));
 
-const STOPWORDS = new Set('microsoft entra documentation docs update updated updates change changes new for with from into about that this your their has have will are and the how use using overview configure configuration guide learn overview support service services preview'.split(' '));
+const STOPWORDS = config.taxonomy.stopwords;
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
@@ -196,57 +167,16 @@ function slugify(value = '') {
 }
 
 function isEntraMessage(message) {
-  const pattern = /\bEntra\b/i;
+  const pattern = config.messageCenter.servicePattern;
   return (message.Services || []).some(service => pattern.test(String(service))) || pattern.test(String(message.Title || ''));
 }
 
 function classifyProduct(filename = '', title = '', body = '') {
-  const text = `${filename} ${title} ${body}`.toLowerCase();
-  if (/microsoft entra id(?:\s*:|\b)/i.test(title) && !/(governance|protection|workload|external|verified)/i.test(title)) {
-    return PRODUCTS.find(product => product.slug === 'entra-id');
-  }
-  const rules = [
-    ['agent-id', /agent[- ]?id|agent identit/],
-    ['id-protection', /id[- /]?protection|risk[- ]?detection|risky user/],
-    ['id-governance', /id[- /]?governance|entitlement|access review|lifecycle workflow|tenant governance/],
-    ['external-id', /external[- /]?id|external identit|b2b|b2c|cross.?tenant/],
-    ['verified-id', /verified[- /]?id|verifiable credential/],
-    ['workload-id', /workload[- /]?id|workload identit|managed identit|federated credential|service principal/],
-    ['internet-access', /internet[- /]?access|internet access/],
-    ['private-access', /private[- /]?access|private access/],
-    ['global-secure-access', /global[- /]?secure[- /]?access|global secure access|\bgsa\b/],
-    ['security-copilot', /security copilot|copilot for security/],
-    ['entra-id', /docs\/identity|entra id|authentication|conditional access|enterprise app|app registration|directory|tenant|user|group|sign-in|branding|passkey|password/]
-  ];
-  const hit = rules.find(([, pattern]) => pattern.test(text));
-  return PRODUCTS.find(product => product.slug === (hit ? hit[0] : 'entra-id'));
+  return runRules(config.classify.products, PRODUCTS, config.taxonomy.defaultProduct, filename, title, body);
 }
 
 function classifyTopic(filename = '', title = '', body = '') {
-  const titleText = String(title).toLowerCase();
-  // A Conditional Access headline is definitive even when the article also
-  // discusses authentication, sign-in, or another supporting capability.
-  if (/\bconditional access\b/.test(titleText)) {
-    return TOPICS.find(topic => topic.slug === 'conditional-access');
-  }
-  const text = `${filename} ${title} ${body}`.toLowerCase();
-  const rules = [
-    ['conditional-access', /conditional access/],
-    ['authentication', /authenticat|passkey|password|fido|sms|voice|sign-in/],
-    ['architecture', /architecture|deployment plan|design pattern|reference architecture/],
-    ['branding', /branding|custom css|sign-in page/],
-    ['standards', /standard|rfc|openid|oauth|saml|scim/],
-    ['identity-platform', /identity platform|app registration|developer|msal|graph api/],
-    ['fundamentals', /fundamental|what is|overview|concept/],
-    ['troubleshooting', /troubleshoot|error|diagnos|remediat/],
-    ['governance', /governance|entitlement|access review|lifecycle|configuration monitor|snapshot/],
-    ['provisioning', /provision|scim|synchroni[sz]/],
-    ['monitoring', /monitor|log|report|audit/],
-    ['security', /security|risk|protect|credential|vulnerab/],
-    ['developer', /developer|api|sdk|code|application/]
-  ];
-  const hit = rules.find(([, pattern]) => pattern.test(text));
-  return TOPICS.find(topic => topic.slug === (hit ? hit[0] : 'general'));
+  return runRules(config.classify.topics, TOPICS, config.taxonomy.defaultTopic, filename, title, body);
 }
 
 function humanizeFilename(filename = '') {
@@ -608,8 +538,8 @@ const SEARCH_LOADING_CSS = `
 `;
 
 const JS = `
-const THEME_STORAGE_KEY='entra-news-theme';
-const GITHUB_TOKEN_STORAGE_KEY='entra-news-github-token';
+const THEME_STORAGE_KEY='${config.brand.themeStorageKey}';
+const GITHUB_TOKEN_STORAGE_KEY='${config.brand.tokenStorageKey}';
 function applyTheme(theme,persist){const value=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=value;document.documentElement.style.colorScheme=value;document.querySelectorAll('[data-theme-option]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeOption===value)));if(persist){try{localStorage.setItem(THEME_STORAGE_KEY,value)}catch{}}}
 document.querySelectorAll('[data-theme-option]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeOption,true)));
 applyTheme(document.documentElement.dataset.theme||'light',false);
@@ -671,7 +601,7 @@ const controls=[...searchRoot.querySelectorAll('[data-search-filter]')];let page
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const safeExcerpt=value=>escape(value||'').replace(/&lt;mark&gt;/g,'<mark>').replace(/&lt;\\\/mark&gt;/g,'</mark>');
 const formatDate=value=>{if(!value)return'';const date=new Date(value+'T12:00:00');return Number.isNaN(date.getTime())?value:new Intl.DateTimeFormat(undefined,{day:'numeric',month:'short',year:'numeric'}).format(date)};
-const expandedQuery=value=>{const aliases={mfa:'multifactor authentication',ca:'conditional access',gsa:'global secure access',pim:'privileged identity management',sspr:'self service password reset',fido2:'passkey authentication'};const normalized=value.trim();const alias=aliases[normalized.toLowerCase()];return alias?normalized+' '+alias:normalized};
+const expandedQuery=value=>{const aliases=${JSON.stringify(config.taxonomy.searchAliases)};const normalized=value.trim();const alias=aliases[normalized.toLowerCase()];return alias?normalized+' '+alias:normalized};
 const hasQuery=()=>Boolean(input.value.trim());
 function setUrl(){const params=new URLSearchParams();if(hasQuery())params.set('q',input.value.trim());controls.forEach(control=>{if(control.value&&control.value!==defaultControlValues[control.name])params.set(control.name,control.value)});const next=location.pathname+(params.size?'?'+params:'');history.replaceState(null,'',next)}
 function filters(){const values={};controls.forEach(control=>{if(control.dataset.searchFilter==='filter'&&control.value&&control.value!=='all')values[control.name]=[control.value]});return values}
@@ -908,7 +838,7 @@ class StaticSiteGenerator {
     const userJot = this.userJotProjectId
       ? `<script>window.$ujq=window.$ujq||[];window.uj=window.uj||new Proxy({},{get:(_,property)=>(...args)=>window.$ujq.push([property,...args])});document.head.appendChild(Object.assign(document.createElement('script'),{src:'https://cdn.userjot.com/sdk/v2/uj.js',type:'module',async:true}));</script><script>window.uj.init('${this.userJotProjectId}',{widget:true,theme:'auto',position:'right'});</script>`
       : '';
-    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(safeTitle)}</title><meta name="description" content="${safeDescription}"><link rel="canonical" href="${SITE.url}${canonical}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><script>try{const saved=localStorage.getItem('entra-news-theme');document.documentElement.dataset.theme=saved==='light'||saved==='dark'?saved:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{document.documentElement.dataset.theme='light'}</script><script defer data-site="nuj3pzyz" data-domain="daily.entra.news" src="https://piqo.app/piqo.js"></script>${userJot}<link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="${SITE.name}" href="/rss.xml"><meta property="og:site_name" content="${SITE.name}"><meta property="og:title" content="${escapeHtml(safeTitle)}"><meta property="og:description" content="${safeDescription}"><meta property="og:url" content="${SITE.url}${canonical}"><meta property="og:type" content="article"><meta property="og:image" content="${SITE.url}/og-image.png"><meta property="og:image:secure_url" content="${SITE.url}/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(safeTitle)}"><meta name="twitter:description" content="${safeDescription}"><meta name="twitter:image" content="${SITE.url}/og-image.png"><meta name="twitter:image:alt" content="Entra.News Daily — Microsoft Entra change intelligence"></head><body>${this.header(active)}${active==='compare'?this.githubTokenDrawer():''}`;
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(safeTitle)}</title><meta name="description" content="${safeDescription}"><link rel="canonical" href="${SITE.url}${canonical}"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><script>try{const saved=localStorage.getItem('${config.brand.themeStorageKey}');document.documentElement.dataset.theme=saved==='light'||saved==='dark'?saved:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch{document.documentElement.dataset.theme='light'}</script><script defer data-site="${config.analytics.piqoSite}" data-domain="${SITE.host}" src="https://piqo.app/piqo.js"></script>${userJot}<link rel="stylesheet" href="/assets/site.css"><link rel="alternate" type="application/rss+xml" title="${SITE.name}" href="/rss.xml"><meta property="og:site_name" content="${SITE.name}"><meta property="og:title" content="${escapeHtml(safeTitle)}"><meta property="og:description" content="${safeDescription}"><meta property="og:url" content="${SITE.url}${canonical}"><meta property="og:type" content="article"><meta property="og:image" content="${SITE.url}/og-image.png"><meta property="og:image:secure_url" content="${SITE.url}/og-image.png"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${config.brand.ogAlt}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(safeTitle)}"><meta name="twitter:description" content="${safeDescription}"><meta name="twitter:image" content="${SITE.url}/og-image.png"><meta name="twitter:image:alt" content="${config.brand.ogAlt}"></head><body>${this.header(active)}${active==='compare'?this.githubTokenDrawer():''}`;
   }
 
   header(active = '') {
@@ -918,7 +848,7 @@ class StaticSiteGenerator {
     const settings = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
     const githubSettings = active==='compare'?`<button class="token-drawer-trigger" type="button" data-github-token-open aria-haspopup="dialog" aria-controls="github-token-drawer" aria-expanded="false" title="GitHub API settings" aria-label="Configure GitHub API settings">${settings}</button>`:'';
     const themePicker = `<div class="theme-picker" role="group" aria-label="Color theme"><button class="theme-option" type="button" data-theme-option="light" aria-pressed="false" title="Use light theme">${sun}<span>Light</span></button><button class="theme-option" type="button" data-theme-option="dark" aria-pressed="false" title="Use dark theme">${moon}<span>Dark</span></button></div>`;
-    return `<header class="site-header"><a class="brand" href="/"><img class="brand-logo" src="/assets/ui/entra-news-logo.png" alt=""><span>Daily.Entra.News</span></a><nav class="main-nav" aria-label="Primary">${nav.map(item=>{const accessibleLabel=item.key==='compare'?'View full page diff':item.label;return `<a href="${item.url}" data-nav="${item.key}"${item.external?' target="_blank" rel="noopener noreferrer"':''}${item.key==='compare'||item.key==='search'?' class="nav-icon"':''}${active===item.key?' aria-current="page"':''} aria-label="${accessibleLabel}" title="${accessibleLabel}"><span class="nav-mobile-icon" aria-hidden="true"></span><span class="nav-label">${item.label}</span></a>`}).join('')}</nav><div class="utility"><a class="site-link" href="/about/"${active==='about'?' aria-current="page"':''}>About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="/rss.xml" title="Subscribe to the daily RSS feed" aria-label="Subscribe to the Daily Entra News RSS feed"><img src="/assets/ui/rss.svg" alt=""></a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a>${githubSettings}${themePicker}</div></header>`;
+    return `<header class="site-header"><a class="brand" href="/"><img class="brand-logo" src="/assets/ui/entra-news-logo.png" alt=""><span>${config.brand.wordmark}</span></a><nav class="main-nav" aria-label="Primary">${nav.map(item=>{const accessibleLabel=item.key==='compare'?'View full page diff':item.label;return `<a href="${item.url}" data-nav="${item.key}"${item.external?' target="_blank" rel="noopener noreferrer"':''}${item.key==='compare'||item.key==='search'?' class="nav-icon"':''}${active===item.key?' aria-current="page"':''} aria-label="${accessibleLabel}" title="${accessibleLabel}"><span class="nav-mobile-icon" aria-hidden="true"></span><span class="nav-label">${item.label}</span></a>`}).join('')}</nav><div class="utility"><a class="site-link" href="/about/"${active==='about'?' aria-current="page"':''}>About</a><a class="site-link" href="https://merill.net" target="_blank" rel="noopener noreferrer">merill.net</a><a class="icon-link" href="/rss.xml" title="Subscribe to the daily RSS feed" aria-label="Subscribe to the Daily Entra News RSS feed"><img src="/assets/ui/rss.svg" alt=""></a><a class="icon-link" href="https://entra.news" target="_blank" rel="noopener noreferrer" title="Subscribe to Entra.News" aria-label="Subscribe to the Entra.News newsletter"><img src="/assets/ui/newspaper.svg" alt=""></a><a class="icon-link" href="https://entra.chat" target="_blank" rel="noopener noreferrer" title="Listen to Entra.Chat" aria-label="Listen to the Entra.Chat podcast"><img src="/assets/ui/microphone.svg" alt=""></a>${githubSettings}${themePicker}</div></header>`;
   }
 
   githubTokenDrawer() {
