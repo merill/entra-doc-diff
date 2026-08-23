@@ -260,7 +260,7 @@ test('the generated-site workflow runs only for build inputs and cannot retrigge
   assert.doesNotMatch(workflow, /'reports\/\*\*'|'website\/\*\*'/);
   assert.match(workflow, /group: entra-docs-monitor/);
   assert.match(workflow, /MC_DATA_PATH: '\.\/mc\/@data'/);
-  assert.match(workflow, /run: npm run build:site/);
+  assert.match(workflow, /run: dailynews build-site && dailynews search-index/);
   assert.match(workflow, /git add website\//);
 });
 
@@ -804,10 +804,18 @@ test('every workflow that builds the site forwards the UserJot variable', async 
   // widget from every page. Missing it in one of the building workflows is
   // invisible until the site is compared against a rebuild.
   const dir = path.join(__dirname, '..', '.github', 'workflows');
+  // Matching on the build command means renaming it empties this loop and the
+  // guard silently passes over nothing — which is what happened when the build
+  // moved from `npm run build:site` to `dailynews build-site`. So the set of
+  // workflows it covers is asserted too.
+  const builds = /run: (npm run build:site|dailynews build-site)/;
+  const covered = [];
   for (const name of await fs.readdir(dir)) {
     const workflow = await fs.readFile(path.join(dir, name), 'utf8');
-    if (!/run: npm run build:site/.test(workflow)) continue;
+    if (!builds.test(workflow)) continue;
+    covered.push(name);
     assert.match(workflow, /USERJOT_PROJECT_ID: \$\{\{ vars\.USERJOT_PROJECT_ID \}\}/,
       `${name} builds the site but does not forward USERJOT_PROJECT_ID`);
   }
+  assert.ok(covered.length >= 2, `this guard covers only ${covered.length} workflow(s): ${covered}`);
 });

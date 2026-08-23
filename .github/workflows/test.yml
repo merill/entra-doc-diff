@@ -1,0 +1,32 @@
+name: Tests
+
+# The suite has never run in CI. It is this product's conformance check against
+# the shared engine — the golden assertions about its own rendered output, the
+# Kit marker literal, and the shape of its configuration — so it needs to gate a
+# merge rather than only ever run on a laptop.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
