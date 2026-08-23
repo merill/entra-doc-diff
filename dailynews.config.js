@@ -19,7 +19,19 @@ module.exports = {
     wordmark: 'Daily.Entra.News',
     ogAlt: 'Entra.News Daily — Microsoft Entra change intelligence',
     themeStorageKey: 'entra-news-theme',
+    emailEyebrow: 'Entra.News Daily',
     tokenStorageKey: 'entra-news-github-token'
+  },
+
+  discord: {
+    botName: 'Entra Scout'
+  },
+
+  // Prompt fragments. The instructions themselves are product-neutral and live
+  // in the code; only the subject and the openers to avoid differ.
+  ai: {
+    schemaPrefix: 'entra',
+    impactBoost: /passkey|conditional access|federated credential|tenant governance|authentication|agentic/
   },
 
   analytics: {

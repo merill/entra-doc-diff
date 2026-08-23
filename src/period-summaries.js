@@ -2,6 +2,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const moment = require('moment-timezone');
 const OpenAI = require('openai');
+const { getConfig } = require('./config');
+
+const config = getConfig();
 const { StaticSiteGenerator } = require('./static-site');
 
 const PERIOD_SUMMARY_PROMPT = `Write an editorial briefing for Microsoft Entra administrators about the supplied period.
@@ -24,7 +27,7 @@ function periodImpact(item) {
   let score = item.source === 'mc' && item.changeType === 'Major update' ? 8 : 0;
   if (/retire|deprecat|breaking|mandatory|action required|security|vulnerab|risk|deadline|migrat|opt.?out/.test(text)) score += 10;
   if (/preview|general availability|\bga\b|new feature|launch|rollout/.test(text)) score += 6;
-  if (/passkey|conditional access|federated credential|tenant governance|authentication|agentic/.test(text)) score += 3;
+  if (config.ai.impactBoost.test(text)) score += 3;
   score += Math.min(3, Number(item.additions || 0) / 30);
   return score;
 }

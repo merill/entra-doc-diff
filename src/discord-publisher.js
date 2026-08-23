@@ -1,18 +1,21 @@
 const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
+const { getConfig } = require('./config');
+
+const config = getConfig();
 
 class DiscordPublisher {
   constructor(options = {}) {
-    this.webhookUrl = options.webhookUrl || process.env.DISCORD_ENTRA_SCOUT_WEBHOOK_URL || process.env.DISCORD_ENTRA_DOCS_WEBHOOK_URL || '';
-    this.webhookName = options.webhookName || process.env.DISCORD_ENTRA_SCOUT_NAME || 'Entra Scout';
+    this.webhookUrl = options.webhookUrl || process.env.DISCORD_WEBHOOK_URL || '';
+    this.webhookName = options.webhookName || process.env.DISCORD_BOT_NAME || config.discord.botName;
     // Leave avatar_url out by default so Discord uses the image configured on
     // the webhook. A public URL can still be supplied as an explicit override.
-    this.avatarUrl = options.avatarUrl ?? process.env.DISCORD_ENTRA_SCOUT_AVATAR_URL ?? '';
+    this.avatarUrl = options.avatarUrl ?? process.env.DISCORD_AVATAR_URL ?? '';
     this.enabled = options.enabled ?? (process.env.DISCORD_ENABLED !== 'false' && Boolean(this.webhookUrl));
     this.dryRun = options.dryRun ?? (process.env.DISCORD_DRY_RUN === 'true');
     this.statePath = options.statePath || path.join('website', 'discord-state.json');
-    this.siteBaseUrl = (options.siteBaseUrl || process.env.ENTRA_DIFF_SITE_URL || 'https://daily.entra.news').replace(/\/$/, '');
+    this.siteBaseUrl = (options.siteBaseUrl || process.env.SITE_URL || config.site.url).replace(/\/$/, '');
     this.fetchImpl = options.fetchImpl || global.fetch;
     this.sleep = options.sleep || (milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)));
     this.maximumAttempts = options.maximumAttempts || 4;
@@ -31,12 +34,12 @@ class DiscordPublisher {
     try {
       url = new URL(this.webhookUrl);
     } catch {
-      throw new Error('DISCORD_ENTRA_SCOUT_WEBHOOK_URL is not a valid URL');
+      throw new Error('DISCORD_WEBHOOK_URL is not a valid URL');
     }
 
     const allowedHosts = new Set(['discord.com', 'www.discord.com', 'discordapp.com', 'www.discordapp.com']);
     if (url.protocol !== 'https:' || !allowedHosts.has(url.hostname) || !url.pathname.startsWith('/api/webhooks/')) {
-      throw new Error('DISCORD_ENTRA_SCOUT_WEBHOOK_URL must be an HTTPS Discord webhook URL');
+      throw new Error('DISCORD_WEBHOOK_URL must be an HTTPS Discord webhook URL');
     }
 
     return true;
@@ -128,8 +131,8 @@ class DiscordPublisher {
     fields.push({
       name: 'Read the full daily update',
       value: hiddenGroupCount > 0
-        ? `[View all changes on daily.entra.news](${event.url}) · ${hiddenGroupCount} additional documentation area${hiddenGroupCount === 1 ? '' : 's'}`
-        : `[View all changes on daily.entra.news](${event.url})`,
+        ? `[View all changes on ${config.site.host}](${event.url}) · ${hiddenGroupCount} additional documentation area${hiddenGroupCount === 1 ? '' : 's'}`
+        : `[View all changes on ${config.site.host}](${event.url})`,
       inline: false
     });
 
@@ -230,7 +233,7 @@ class DiscordPublisher {
     if (events.length === 0) return { published: 0, pending: 0, skipped: 0 };
 
     if (!this.enabled) {
-      console.log('ℹ️ Discord publishing is disabled or DISCORD_ENTRA_SCOUT_WEBHOOK_URL is not configured');
+      console.log('ℹ️ Discord publishing is disabled or DISCORD_WEBHOOK_URL is not configured');
       return { published: 0, pending: 0, skipped: events.length };
     }
 

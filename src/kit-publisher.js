@@ -1,4 +1,7 @@
-const SITE_URL = 'https://daily.entra.news';
+const { getConfig } = require('./config');
+
+const config = getConfig();
+const SITE_URL = config.site.url;
 const { PRODUCTS, classifyTopic } = require('./static-site');
 
 function escapeHtml(value = '') {
@@ -123,7 +126,7 @@ class KitPublisher {
       return `<div style="margin:0 0 20px;padding:0 0 18px;border-bottom:1px solid #d8d3c7">${heading}${change.detail ? `<p style="margin:5px 0 0;color:#46514e;font:14px/1.55 Arial,sans-serif">${escapeHtml(change.detail)}</p>` : ''}</div>`;
     }).join('');
 
-    const content = `<div style="max-width:680px;margin:0 auto;color:#11181d;font-family:Arial,sans-serif"><div style="margin:0 0 26px"><div style="margin:0 0 6px;color:#0d5745;font:700 11px/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase">Entra.News Daily · ${escapeHtml(label)}</div><h1 style="margin:0 0 12px;font:650 30px/1.2 Georgia,serif"><a href="${dayUrl}" style="color:#11181d;text-decoration:none">${escapeHtml(headline)}</a></h1><p style="margin:0;color:#263030;font:16px/1.6 Arial,sans-serif">${escapeHtml(overview)}</p></div>${changeHtml}<p style="margin:28px 0 0"><a href="${dayUrl}" style="display:inline-block;padding:11px 17px;background:#0d5745;color:#fff;text-decoration:none;font:700 15px/1.3 Arial,sans-serif;border-radius:4px">View all updates for ${escapeHtml(label)} →</a></p><p style="margin:26px 0 0;color:#68716f;font:12px/1.5 Arial,sans-serif">Automated change intelligence from Microsoft Learn documentation and relevant Microsoft 365 Message Center announcements. Verify important details in the linked source material.</p></div>`;
+    const content = `<div style="max-width:680px;margin:0 auto;color:#11181d;font-family:Arial,sans-serif"><div style="margin:0 0 26px"><div style="margin:0 0 6px;color:#0d5745;font:700 11px/1.3 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase">${config.brand.emailEyebrow} · ${escapeHtml(label)}</div><h1 style="margin:0 0 12px;font:650 30px/1.2 Georgia,serif"><a href="${dayUrl}" style="color:#11181d;text-decoration:none">${escapeHtml(headline)}</a></h1><p style="margin:0;color:#263030;font:16px/1.6 Arial,sans-serif">${escapeHtml(overview)}</p></div>${changeHtml}<p style="margin:28px 0 0"><a href="${dayUrl}" style="display:inline-block;padding:11px 17px;background:#0d5745;color:#fff;text-decoration:none;font:700 15px/1.3 Arial,sans-serif;border-radius:4px">View all updates for ${escapeHtml(label)} →</a></p><p style="margin:26px 0 0;color:#68716f;font:12px/1.5 Arial,sans-serif">Automated change intelligence from Microsoft Learn documentation and relevant Microsoft 365 Message Center announcements. Verify important details in the linked source material.</p></div>`;
 
     return {
       content,

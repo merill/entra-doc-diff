@@ -95,7 +95,15 @@ function normalize(raw) {
       wordmark: requireString(brand.wordmark, 'brand.wordmark'),
       ogAlt: requireString(brand.ogAlt, 'brand.ogAlt'),
       themeStorageKey: requireString(brand.themeStorageKey, 'brand.themeStorageKey'),
-      tokenStorageKey: requireString(brand.tokenStorageKey, 'brand.tokenStorageKey')
+      tokenStorageKey: requireString(brand.tokenStorageKey, 'brand.tokenStorageKey'),
+      emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow')
+    },
+    discord: {
+      botName: requireString((raw.discord || {}).botName, 'discord.botName')
+    },
+    ai: {
+      schemaPrefix: requireString((raw.ai || {}).schemaPrefix, 'ai.schemaPrefix'),
+      impactBoost: requireRegExp((raw.ai || {}).impactBoost, 'ai.impactBoost')
     },
     analytics: {
       piqoSite: String(analytics.piqoSite || '').trim()
