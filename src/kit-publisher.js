@@ -90,7 +90,7 @@ class KitPublisher {
   }
 
   marker(date, draftMode = this.draftMode) {
-    return `daily-entra-news:${date}${draftMode ? ':draft' : ''}`;
+    return `${config.identity.kitMarkerPrefix}:${date}${draftMode ? ':draft' : ''}`;
   }
 
   hasChanges(analysis = {}, summary = {}) {
@@ -104,8 +104,8 @@ class KitPublisher {
     const dayUrl = `${SITE_URL}/day/${date}/`;
     const label = dateLabel(date);
     const changes = dailyChanges(summary);
-    const headline = cleanText(summary.headline || `Microsoft Entra daily update`, 110);
-    const overview = cleanText(summary.overview || analysis.englishSummary?.overview || 'Review today\'s tracked Microsoft Entra changes.', 1400);
+    const headline = cleanText(summary.headline || `${config.site.productName} daily update`, 110);
+    const overview = cleanText(summary.overview || analysis.englishSummary?.overview || `Review today's tracked ${config.site.productName} changes.`, 1400);
     const subject = cleanText(`${headline} — ${label}`, 150);
     const previewText = cleanText(overview, 180);
     const sendAt = this.draftMode
@@ -281,7 +281,7 @@ class KitPublisher {
 
   async publishDaily({ date, analysis = {}, summary = {} }) {
     if (!this.hasChanges(analysis, summary)) {
-      this.logger.log(`No meaningful Entra updates for ${date}; skipping the Kit broadcast.`);
+      this.logger.log(`No meaningful ${config.ai.subject} updates for ${date}; skipping the Kit broadcast.`);
       return { status: 'skipped', reason: 'no-changes' };
     }
 

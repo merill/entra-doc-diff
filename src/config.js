@@ -71,8 +71,10 @@ function normalizeRules(rules, field, knownSlugs) {
   });
 }
 
-function normalizeStrings(values, field) {
-  if (!Array.isArray(values) || !values.length) fail(`${field} must be a non-empty array`);
+function normalizeStrings(values, field, { allowEmpty = false } = {}) {
+  if (!Array.isArray(values) || (!allowEmpty && !values.length)) {
+    fail(`${field} must be a non-empty array`);
+  }
   return values.map((value, index) => requireString(value, `${field}[${index}]`));
 }
 
@@ -98,6 +100,7 @@ function normalizeDocs(docs) {
     requireRegExp(areas.stripPrefix, 'docs.areas.stripPrefix');
   }
   return {
+    learnRootUrl: requireString(raw.learnRootUrl, 'docs.learnRootUrl'),
     trackedPaths: requireRegExp(raw.trackedPaths, 'docs.trackedPaths'),
     learnRoutes: normalizeRoutes(raw.learnRoutes, 'path', 'docs.learnRoutes'),
     areas: {
@@ -134,6 +137,7 @@ function normalizeCopy(raw) {
   if (!Array.isArray(about.extraSections)) fail('copy.about.extraSections must be an array');
   return {
     rssFeedLabel: requireString(copy.rssFeedLabel, 'copy.rssFeedLabel'),
+    messageCenterHeading: requireString(copy.messageCenterHeading, 'copy.messageCenterHeading'),
     landing: {
       heading: requireString(landing.heading, 'copy.landing.heading'),
       blurb: requireString(landing.blurb, 'copy.landing.blurb')
@@ -158,6 +162,7 @@ function normalizeCopy(raw) {
     },
     detail: {
       adminHeading: requireString(detail.adminHeading, 'copy.detail.adminHeading'),
+      adminImpactLabel: requireString(detail.adminImpactLabel, 'copy.detail.adminImpactLabel'),
       summaryLabel: requireString(detail.summaryLabel, 'copy.detail.summaryLabel'),
       summaryDisclosure: requireString(detail.summaryDisclosure, 'copy.detail.summaryDisclosure')
     },
@@ -228,7 +233,7 @@ function normalize(raw) {
       emailEyebrow: requireString(brand.emailEyebrow, 'brand.emailEyebrow'),
       logo: requireString(brand.logo, 'brand.logo'),
       aboutIcon: requireString(brand.aboutIcon, 'brand.aboutIcon'),
-      uiAssets: normalizeStrings(brand.uiAssets, 'brand.uiAssets'),
+      uiAssets: normalizeStrings(brand.uiAssets, 'brand.uiAssets', { allowEmpty: true }),
       extraCss: String(brand.extraCss || '')
     },
     build: {
@@ -252,6 +257,11 @@ function normalize(raw) {
       impactBoost: requireRegExp((raw.ai || {}).impactBoost, 'ai.impactBoost')
     },
     docs: normalizeDocs(raw.docs),
+    identity: {
+      docEventPrefix: requireString((raw.identity || {}).docEventPrefix, 'identity.docEventPrefix'),
+      batchEventPrefix: requireString((raw.identity || {}).batchEventPrefix, 'identity.batchEventPrefix'),
+      kitMarkerPrefix: requireString((raw.identity || {}).kitMarkerPrefix, 'identity.kitMarkerPrefix')
+    },
     analytics: {
       piqoSite: String(analytics.piqoSite || '').trim()
     },

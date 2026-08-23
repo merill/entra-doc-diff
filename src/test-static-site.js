@@ -5,7 +5,7 @@ const os = require('os');
 const path = require('path');
 const {
   StaticSiteGenerator,
-  isEntraMessage,
+  isProductMessage,
   classifyProduct,
   classifyTopic,
   extractMarkdownMetadata,
@@ -17,9 +17,9 @@ const {
 } = require('./static-site');
 
 test('Message Center filter matches standalone Entra in service or title', () => {
-  assert.equal(isEntraMessage({ Services: ['Microsoft Entra'], Title: 'A change' }), true);
-  assert.equal(isEntraMessage({ Services: ['Microsoft Purview'], Title: 'Purview integrates with Entra GSA' }), true);
-  assert.equal(isEntraMessage({ Services: ['Microsoft 365'], Title: 'Entranced by a new feature' }), false);
+  assert.equal(isProductMessage({ Services: ['Microsoft Entra'], Title: 'A change' }), true);
+  assert.equal(isProductMessage({ Services: ['Microsoft Purview'], Title: 'Purview integrates with Entra GSA' }), true);
+  assert.equal(isProductMessage({ Services: ['Microsoft 365'], Title: 'Entranced by a new feature' }), false);
 });
 
 test('product classification recognizes governance and workload identity', () => {

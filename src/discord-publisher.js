@@ -46,7 +46,7 @@ class DiscordPublisher {
   }
 
   getDiffEventId(file) {
-    return `entra-docs:${file.commitSha || 'unknown'}:${file.status || 'modified'}:${file.filename}`;
+    return `${config.identity.docEventPrefix}:${file.commitSha || 'unknown'}:${file.status || 'modified'}:${file.filename}`;
   }
 
   getDiffAnchor(file) {
@@ -77,9 +77,9 @@ class DiscordPublisher {
       : files.length ? [{
           category: files[0].englishSummary?.category || 'Documentation update',
           title: files.length === 1
-            ? files[0].englishSummary?.headline || 'Microsoft Entra documentation update'
-            : `${files.length} Microsoft Entra documentation updates`,
-          summary: fallbackSummary || `${files.length} Microsoft Entra documentation file${files.length === 1 ? '' : 's'} changed.`,
+            ? files[0].englishSummary?.headline || `${config.site.productName} documentation update`
+            : `${files.length} ${config.site.productName} documentation updates`,
+          summary: fallbackSummary || `${files.length} ${config.site.productName} documentation file${files.length === 1 ? '' : 's'} changed.`,
           sourceFiles: files.map(file => file.filename)
         }] : [];
     const messageCenterGroups = messageCenterItems.map(item => ({
@@ -98,9 +98,9 @@ class DiscordPublisher {
       .substring(0, 16);
 
     return {
-      eventId: `entra-news:batch:${dateForUrl}:${hash}`,
+      eventId: `${config.identity.batchEventPrefix}:batch:${dateForUrl}:${hash}`,
       type: 'daily',
-      title: `Microsoft Entra daily update — ${dateForUrl}`,
+      title: `${config.site.productName} daily update — ${dateForUrl}`,
       description: englishSummary.overview || `${files.length} documentation and ${messageCenterItems.length} Message Center update${files.length + messageCenterItems.length === 1 ? '' : 's'} were detected.`,
       groups,
       url: this.getReportUrl(dateForUrl)

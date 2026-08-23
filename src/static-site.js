@@ -24,6 +24,15 @@ const TOPICS = config.taxonomy.topics.map(topic => ({ ...topic, icon: `/assets/t
 
 const STOPWORDS = config.taxonomy.stopwords;
 
+// The browser bundles ship inside the packages that also serve as build-time
+// dependencies. Resolving them through the package's own package.json anchors
+// them to this module's dependency graph rather than to the working directory —
+// which is what lets the generator run from anywhere. marked restricts its
+// `exports` map, so the file itself cannot be require.resolve()d directly.
+function vendorFile(pkg, file) {
+  return path.join(path.dirname(require.resolve(`${pkg}/package.json`)), file);
+}
+
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
 }
@@ -62,7 +71,7 @@ function dailySummaryText(summary = {}) {
         ? summary.highlights.map(highlight => [plain(highlight.headline || highlight.title), plain(highlight.detail || highlight.summary)].filter(Boolean).join(': '))
         : [];
   parts.push(...keyChanges);
-  if (summary.adminImpact) parts.push(`For Entra administrators: ${plain(summary.adminImpact)}`);
+  if (summary.adminImpact) parts.push(`${config.copy.detail.adminImpactLabel}: ${plain(summary.adminImpact)}`);
   return [...new Set(parts.filter(Boolean))].join('\n\n');
 }
 
@@ -89,7 +98,7 @@ function rssHtmlText(value = '') {
 function richDailySummaryHtml(summary, date, sourceById = new Map()) {
   const dayUrl = `${SITE.url}/day/${date}/`;
   const dateLabel = moment(date).format('D MMMM YYYY');
-  const headline = summary.headline || `Microsoft Entra daily update for ${dateLabel}`;
+  const headline = summary.headline || `${SITE.productName} daily update for ${dateLabel}`;
   const productFromLabel = label => {
     const value = String(label || '').toLowerCase();
     return value ? [...PRODUCTS].sort((a, b) => b.name.length - a.name.length).find(product =>
@@ -132,7 +141,7 @@ function renderDailyRss(reports, daySummaries = {}, limit = 50, sourceItems = []
   const items = entries.map(entry => {
     const url = `${SITE.url}/day/${entry.date}/`;
     const dateLabel = moment(entry.date).format('D MMMM YYYY');
-    const title = entry.summary.headline ? `${entry.summary.headline} — ${dateLabel}` : `Microsoft Entra daily update — ${dateLabel}`;
+    const title = entry.summary.headline ? `${entry.summary.headline} — ${dateLabel}` : `${SITE.productName} daily update — ${dateLabel}`;
     const richContent = richDailySummaryHtml(entry.summary, entry.date, sourceById);
     return [
       '    <item>',
@@ -151,7 +160,7 @@ function renderDailyRss(reports, daySummaries = {}, limit = 50, sourceItems = []
     '  <channel>',
     `    <title>${SITE.name} summaries</title>`,
     `    <link>${SITE.url}/</link>`,
-    '    <description>Plain-English daily summaries of Microsoft Entra documentation and Message Center changes.</description>',
+    `    <description>Plain-English daily summaries of ${SITE.productName} documentation and Message Center changes.</description>`,
     '    <language>en</language>',
     `    <atom:link href="${SITE.url}/rss.xml" rel="self" type="application/rss+xml"/>`,
     items,
@@ -165,7 +174,7 @@ function slugify(value = '') {
   return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 96) || 'update';
 }
 
-function isEntraMessage(message) {
+function isProductMessage(message) {
   const pattern = config.messageCenter.servicePattern;
   return (message.Services || []).some(service => pattern.test(String(service))) || pattern.test(String(message.Title || ''));
 }
@@ -229,7 +238,7 @@ function extractMarkdownMetadata(patch = '', filename = '') {
     || humanizeFilename(filename);
   const description = joined.match(/^description:\s*["']?(.+?)["']?\s*$/mi)?.[1]
     || usable.find(line => line && !/^(---|title:|titleSuffix:|description:|ms\.|#|<!--|\[!)/i.test(line.trim()))
-    || `A Microsoft Entra documentation page was updated: ${title}.`;
+    || `A ${SITE.productName} documentation page was updated: ${title}.`;
   return {
     title: truncate(title.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1'), 150),
     description: String(description).replace(/\s+/g, ' ').trim()
@@ -358,7 +367,7 @@ function formatWeekRange(weekStart) {
 function renderLearnMarkdown(markdown = '') {
   return marked.parse(markdown, { async: false })
     .replace(/(href|src)="\/(?!\/)([^"]+)"/g, '$1="https://learn.microsoft.com/$2"')
-    .replace(/(href|src)="~\/([^"]+)"/g, '$1="https://learn.microsoft.com/en-us/entra/$2"');
+    .replace(/(href|src)="~\/([^"]+)"/g, `$1="${config.docs.learnRootUrl}$2"`);
 }
 
 function stripFrontMatter(records) {
@@ -779,7 +788,7 @@ class StaticSiteGenerator {
   async loadMessageCenterItems() {
     const byId = new Map();
     const ingest = message => {
-      if (!message || !message.Id || !isEntraMessage(message)) return;
+      if (!message || !message.Id || !isProductMessage(message)) return;
       const existing = byId.get(message.Id);
       if (!existing || new Date(message.LastModifiedDateTime || message.StartDateTime || 0) >= new Date(existing.LastModifiedDateTime || existing.StartDateTime || 0)) byId.set(message.Id, message);
     };
@@ -803,7 +812,7 @@ class StaticSiteGenerator {
       const bodyRoot = parse(String(body));
       const bodySummary = stripHtml(bodyRoot.querySelector('p')?.toString() || body);
       const summary = stripHtml(summaryDetail) || firstTwoSentences(bodySummary)
-        || 'A Microsoft 365 Message Center announcement relevant to Microsoft Entra administrators.';
+        || `A Microsoft 365 Message Center announcement relevant to ${SITE.audience}.`;
       const dateValue = message.LastModifiedDateTime || message.StartDateTime;
       const product = classifyProduct((message.Services || []).join(' '), message.Title, body);
       const topic = classifyTopic('', message.Title, body);
@@ -1077,7 +1086,7 @@ class StaticSiteGenerator {
       const taxonomy = productLabel || topic ? `<div class="period-change-taxonomy">${product?`<img src="/assets/products/${product.icon}" alt="">`:''}${topic?`<img class="topic-icon" src="${topic.icon}" alt="">`:''}<span title="${escapeHtml([productLabel, topic?.name].filter(Boolean).join(' · '))}">${escapeHtml([productLabel, topic?.name].filter(Boolean).join(' · '))}</span></div>` : '';
       return `<li><div class="period-change-heading">${taxonomy}<strong>${title}</strong></div><p>${escapeHtml(change.detail)}</p></li>`;
     }).join('');
-    const adminImpact = showAdminImpact && summary.adminImpact ? `<div class="period-admin-focus"><strong>For Entra administrators</strong><p>${escapeHtml(summary.adminImpact)}</p></div>` : '';
+    const adminImpact = showAdminImpact && summary.adminImpact ? `<div class="period-admin-focus"><strong>${config.copy.detail.adminImpactLabel}</strong><p>${escapeHtml(summary.adminImpact)}</p></div>` : '';
     const disclosure = summary.generatedBy === 'deterministic-backfill'
       ? 'This period briefing was assembled from the tracked Microsoft Learn and Message Center changes.'
       : 'This period briefing was generated by AI from the tracked Microsoft Learn and Message Center changes.';
@@ -1091,7 +1100,7 @@ class StaticSiteGenerator {
     const periodBrief = this.renderPeriodBrief(this.periodSummaries.weeks?.[weekStart], 'Week in brief', weekItems, items);
     const fallbackFeature = feature?`<article class="feature"><div class="eyebrow">${moment(feature.date).format('D MMMM YYYY')}</div><div class="grouped-story-head"><h2>${escapeHtml(feature.title)}</h2>${this.changePill(feature)}</div>${this.messageCenterMeta(feature)}<div class="taxonomy">${escapeHtml(feature.product.name)} &nbsp;›&nbsp; ${escapeHtml(feature.topic.name)}</div><p>${escapeHtml(feature.summary)}</p><a href="${feature.url}">Read full update →</a></article>`:'';
     const periodLinks = this.periodStepLinks(items, 'week', weekStart);
-    return `${this.head(`Week of ${moment(weekStart).format('D MMMM YYYY')}`, `Microsoft Entra changes for the week of ${moment(weekStart).format('D MMMM YYYY')}.`, `/week/${weekStart}/`, 'week')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav period-picker-nav">${periodLinks.previous}${this.periodPicker(items,'week',weekStart)}${periodLinks.next}</div>${periodBrief || fallbackFeature}<section class="story-list"><h2 class="section-title">Updates this week</h2>${weekItems.length?this.groupedItems(weekItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this week.</p></div>'}</section></main>${this.periodProductRail(items,weekItems,weekStart)}</div>${this.footer()}`;
+    return `${this.head(`Week of ${moment(weekStart).format('D MMMM YYYY')}`, `${SITE.productName} changes for the week of ${moment(weekStart).format('D MMMM YYYY')}.`, `/week/${weekStart}/`, 'week')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav period-picker-nav">${periodLinks.previous}${this.periodPicker(items,'week',weekStart)}${periodLinks.next}</div>${periodBrief || fallbackFeature}<section class="story-list"><h2 class="section-title">Updates this week</h2>${weekItems.length?this.groupedItems(weekItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this week.</p></div>'}</section></main>${this.periodProductRail(items,weekItems,weekStart)}</div>${this.footer()}`;
   }
 
   renderDay(items, date, { landing = false } = {}) {
@@ -1099,7 +1108,7 @@ class StaticSiteGenerator {
     const dayItems = items.filter(item => item.date === resolvedDate);
     const storedOverview = dayItems.find(item => item.dailyOverview)?.dailyOverview || '';
     const messageCenterItems = dayItems.filter(item => item.source === 'mc').sort((a,b)=>impactScore(b)-impactScore(a));
-    const fallbackOverview = dayItems.length ? `${dayItems.length} changes were tracked across ${new Set(dayItems.map(item => item.product.slug)).size} Microsoft Entra products. The leading updates include ${[...dayItems].sort((a,b)=>impactScore(b)-impactScore(a)).slice(0,3).map(item => item.title).join('; ')}.` : '';
+    const fallbackOverview = dayItems.length ? `${dayItems.length} changes were tracked across ${new Set(dayItems.map(item => item.product.slug)).size} ${SITE.productName} products. The leading updates include ${[...dayItems].sort((a,b)=>impactScore(b)-impactScore(a)).slice(0,3).map(item => item.title).join('; ')}.` : '';
     const messageCenterOverview = storedOverview && messageCenterItems.length ? `${messageCenterItems.length} Message Center announcement${messageCenterItems.length===1?' was':'s were'} also published, including ${messageCenterItems.slice(0,2).map(item=>item.title).join('; ')}.` : '';
     const dailyOverview = [storedOverview || fallbackOverview, messageCenterOverview].filter(Boolean).join(' ');
     const availableDates = this.archiveStart && this.archiveEnd
@@ -1114,8 +1123,8 @@ class StaticSiteGenerator {
     const archiveLink = this.archiveStart ? ` Browse the archive from <a href="/day/${this.archiveStart}/">${moment(this.archiveStart).format('D MMMM YYYY')} →</a>` : '';
     const landingIntro = landing ? `<section class="landing-intro"><h2>${config.copy.landing.heading}</h2><p>${config.copy.landing.blurb}${archiveLink} <a href="/about/">About this project →</a></p></section>` : '';
     const periodBrief = this.renderPeriodBrief(this.periodSummaries.days?.[resolvedDate], 'Day in brief', dayItems, items, { showAdminImpact: false });
-    const fallbackBrief = dailyOverview ? `<article class="feature"><div class="eyebrow">Microsoft Entra daily update</div><h2>What changed on this day</h2><p>${escapeHtml(dailyOverview)}</p></article>` : '';
-    return `${this.head(moment(resolvedDate).format('D MMMM YYYY'), `Microsoft Entra changes published on ${moment(resolvedDate).format('D MMMM YYYY')}.`, `/day/${resolvedDate}/`, 'day')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1><time datetime="${localDateTime}" data-local-day>${moment(resolvedDate).format('dddd, D MMMM YYYY')}</time></h1>${nextLink}</div>${landingIntro}${periodBrief || fallbackBrief}<section class="story-list"><h2 class="section-title">${dayItems.length} update${dayItems.length===1?'':'s'}</h2>${dayItems.length?this.groupedItems(dayItems):'<div class="empty"><h2>No tracked updates</h2><p>Try the previous day or browse the weekly archive.</p></div>'}</section></main>${this.dayRail(items,dayItems,resolvedDate)}</div>${this.footer()}`;
+    const fallbackBrief = dailyOverview ? `<article class="feature"><div class="eyebrow">${SITE.productName} daily update</div><h2>What changed on this day</h2><p>${escapeHtml(dailyOverview)}</p></article>` : '';
+    return `${this.head(moment(resolvedDate).format('D MMMM YYYY'), `${SITE.productName} changes published on ${moment(resolvedDate).format('D MMMM YYYY')}.`, `/day/${resolvedDate}/`, 'day')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav">${previousLink}<h1><time datetime="${localDateTime}" data-local-day>${moment(resolvedDate).format('dddd, D MMMM YYYY')}</time></h1>${nextLink}</div>${landingIntro}${periodBrief || fallbackBrief}<section class="story-list"><h2 class="section-title">${dayItems.length} update${dayItems.length===1?'':'s'}</h2>${dayItems.length?this.groupedItems(dayItems):'<div class="empty"><h2>No tracked updates</h2><p>Try the previous day or browse the weekly archive.</p></div>'}</section></main>${this.dayRail(items,dayItems,resolvedDate)}</div>${this.footer()}`;
   }
 
   renderMonth(items, month) {
@@ -1131,16 +1140,16 @@ class StaticSiteGenerator {
     const documentationCount=monthItems.filter(item=>item.source==='docs').length, messageCenterCount=monthItems.filter(item=>item.source==='mc').length;
     const sourceSummary=[documentationCount?`${documentationCount} documentation update${documentationCount===1?'':'s'}`:'',messageCenterCount?`${messageCenterCount} Message Center announcement${messageCenterCount===1?'':'s'}`:''].filter(Boolean);
     const themeNames=topicCounts.slice(0,3).map(({topic})=>topic.name), productNames=productCounts.slice(0,2).map(({product})=>product.short);
-    const monthNarrative=monthItems.length?`${joinNames(sourceSummary)} were tracked during ${first.format('MMMM')}. Activity centred on ${joinNames(themeNames)}, with the most changes affecting ${joinNames(productNames)}.`:`No tracked Microsoft Entra changes were recorded during ${first.format('MMMM')}.`;
+    const monthNarrative=monthItems.length?`${joinNames(sourceSummary)} were tracked during ${first.format('MMMM')}. Activity centred on ${joinNames(themeNames)}, with the most changes affecting ${joinNames(productNames)}.`:`No tracked ${SITE.productName} changes were recorded during ${first.format('MMMM')}.`;
     const monthOverview=this.renderPeriodBrief(this.periodSummaries.months?.[month], 'Month in brief', monthItems, items) || `<section class="month-overview compact"><div><div class="eyebrow">Month in brief</div><h2>What changed in ${first.format('MMMM')}</h2><p>${escapeHtml(monthNarrative)}</p></div></section>`;
     const periodLinks = this.periodStepLinks(items, 'month', month);
-    return `${this.head(first.format('MMMM YYYY'), `Microsoft Entra changes during ${first.format('MMMM YYYY')}.`, `/month/${month}/`, 'month')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav period-picker-nav">${periodLinks.previous}${this.periodPicker(items,'month',month)}${periodLinks.next}</div><div class="calendar">${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day=>`<div class="calendar-head"><span class="weekday-long">${day}</span><span class="weekday-short">${day.slice(0,3)}</span></div>`).join('')}${calendar}</div>${monthOverview}<section class="story-list"><h2 class="section-title">${monthItems.length} updates by product</h2>${monthItems.length?this.groupedItems(monthItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this month.</p></div>'}</section></main>${this.monthStatsRail(items,first,productCounts)}</div>${this.footer()}`;
+    return `${this.head(first.format('MMMM YYYY'), `${SITE.productName} changes during ${first.format('MMMM YYYY')}.`, `/month/${month}/`, 'month')}<div class="page-shell">${this.productRail()}<main class="content"><div class="period-nav period-picker-nav">${periodLinks.previous}${this.periodPicker(items,'month',month)}${periodLinks.next}</div><div class="calendar">${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day=>`<div class="calendar-head"><span class="weekday-long">${day}</span><span class="weekday-short">${day.slice(0,3)}</span></div>`).join('')}${calendar}</div>${monthOverview}<section class="story-list"><h2 class="section-title">${monthItems.length} updates by product</h2>${monthItems.length?this.groupedItems(monthItems,{showDate:true}):'<div class="empty"><h2>No tracked updates</h2><p>There are no documentation or Message Center changes recorded for this month.</p></div>'}</section></main>${this.monthStatsRail(items,first,productCounts)}</div>${this.footer()}`;
   }
 
   renderCollection(items, collection, kind) {
     const isProduct=kind==='product'; const filtered=items.filter(item=>(isProduct?item.product.slug:item.topic.slug)===collection.slug).sort((a,b)=>b.date.localeCompare(a.date));
     const title=collection.name; const icon=isProduct?`<img src="/assets/products/${collection.icon}" alt="">`:`<img src="${collection.icon}" alt="">`;
-    return `${this.head(title, `Recent Microsoft Entra updates for ${title}.`, `/${isProduct?'products':'topics'}/${collection.slug}/`, isProduct?'products':'topics')}<div class="detail-layout"><main class="detail-main"><section class="hero-product">${icon}<div><div class="eyebrow">${isProduct?'Product':'Cross-product topic'}</div><h1>${escapeHtml(title)}</h1><p>${isProduct?`Track documentation and Message Center changes for ${escapeHtml(title)}.`:`A cross-product view of Microsoft Entra changes related to ${escapeHtml(title)}.`}</p>${isProduct?`<a href="${collection.learn}">Microsoft Learn documentation ↗</a>`:''}</div></section><section class="article-list"><h2 class="section-title" style="margin-top:28px">Latest ${escapeHtml(title)} changes</h2>${filtered.slice(0,120).map(item=>`<article><time class="eyebrow">${moment(item.date).format('D MMMM YYYY')}</time><div><h2><a href="${item.url}">${escapeHtml(item.title)}</a></h2>${this.messageCenterMeta(item)}<div class="taxonomy">${escapeHtml(item.topic.name)}</div><p>${escapeHtml(item.summary)}</p></div></article>`).join('')||'<div class="empty">No changes currently classified here.</div>'}</section></main><aside class="detail-aside"><h2 class="rail-heading">Browse ${isProduct?'products':'topics'}</h2><ul class="plain-list">${(isProduct?PRODUCTS:TOPICS).map(item=>`<li><a href="/${isProduct?'products':'topics'}/${item.slug}/">${escapeHtml(item.name)}</a></li>`).join('')}</ul></aside></div>${this.footer()}`;
+    return `${this.head(title, `Recent ${SITE.productName} updates for ${title}.`, `/${isProduct?'products':'topics'}/${collection.slug}/`, isProduct?'products':'topics')}<div class="detail-layout"><main class="detail-main"><section class="hero-product">${icon}<div><div class="eyebrow">${isProduct?'Product':'Cross-product topic'}</div><h1>${escapeHtml(title)}</h1><p>${isProduct?`Track documentation and Message Center changes for ${escapeHtml(title)}.`:`A cross-product view of ${SITE.productName} changes related to ${escapeHtml(title)}.`}</p>${isProduct?`<a href="${collection.learn}">Microsoft Learn documentation ↗</a>`:''}</div></section><section class="article-list"><h2 class="section-title" style="margin-top:28px">Latest ${escapeHtml(title)} changes</h2>${filtered.slice(0,120).map(item=>`<article><time class="eyebrow">${moment(item.date).format('D MMMM YYYY')}</time><div><h2><a href="${item.url}">${escapeHtml(item.title)}</a></h2>${this.messageCenterMeta(item)}<div class="taxonomy">${escapeHtml(item.topic.name)}</div><p>${escapeHtml(item.summary)}</p></div></article>`).join('')||'<div class="empty">No changes currently classified here.</div>'}</section></main><aside class="detail-aside"><h2 class="rail-heading">Browse ${isProduct?'products':'topics'}</h2><ul class="plain-list">${(isProduct?PRODUCTS:TOPICS).map(item=>`<li><a href="/${isProduct?'products':'topics'}/${item.slug}/">${escapeHtml(item.name)}</a></li>`).join('')}</ul></aside></div>${this.footer()}`;
   }
 
   renderDirectory(items, kind) {
@@ -1271,11 +1280,11 @@ class StaticSiteGenerator {
     await fs.copyFile(path.join(this.siteAssetDir,'learn-diff.js'),path.join(this.websiteDir,'assets','learn-diff.js'));
     await fs.copyFile(path.join(this.siteAssetDir,'diff-config.js'),path.join(this.websiteDir,'assets','diff-config.js'));
     await fs.mkdir(path.join(this.websiteDir,'assets','vendor'),{recursive:true});
-    for (const [source, target] of [
-      ['node_modules/marked/lib/marked.umd.js', 'marked.js'],
-      ['node_modules/diff/dist/diff.min.js', 'diff.min.js'],
-      ['node_modules/node-htmldiff/js/htmldiff.js', 'htmldiff.js']
-    ]) await fs.copyFile(path.resolve(source), path.join(this.websiteDir,'assets','vendor',target));
+    for (const [pkg, file, target] of [
+      ['marked', 'lib/marked.umd.js', 'marked.js'],
+      ['diff', 'dist/diff.min.js', 'diff.min.js'],
+      ['node-htmldiff', 'js/htmldiff.js', 'htmldiff.js']
+    ]) await fs.copyFile(vendorFile(pkg, file), path.join(this.websiteDir,'assets','vendor',target));
     await this.write('assets/site.css',`${CSS}\n${SEARCH_CSS}\n${SEARCH_LOADING_CSS}`);
     await this.write('assets/site.js',JS);
     await this.write('assets/search.js',SEARCH_JS);
@@ -1303,7 +1312,7 @@ class StaticSiteGenerator {
     await this.write('about/index.html',this.renderAbout());
     await this.write('compare/index.html',this.renderLearnCompare());
     await this.write('search/index.html',this.renderSearch());
-    await this.write('message-center/index.html',`${this.head('Message Center','Microsoft 365 Message Center posts relevant to Microsoft Entra administrators.','/message-center/','message-center')}<div class="page-shell">${this.productRail()}<main class="content"><div class="eyebrow">Microsoft 365 roadmap signals</div><h1 class="page-title">Entra in Message Center</h1><p class="lede">Announcements where the service or title includes Microsoft Entra, presented beside related documentation changes.</p><section class="story-list">${this.itemRows(mc.slice(0,160))}</section></main>${this.periodRail(items,'month')}</div>${this.footer()}`);
+    await this.write('message-center/index.html',`${this.head('Message Center',`Microsoft 365 Message Center posts relevant to ${SITE.audience}.`,'/message-center/','message-center')}<div class="page-shell">${this.productRail()}<main class="content"><div class="eyebrow">Microsoft 365 roadmap signals</div><h1 class="page-title">${config.copy.messageCenterHeading}</h1><p class="lede">Announcements where the service or title includes ${SITE.productName}, presented beside related documentation changes.</p><section class="story-list">${this.itemRows(mc.slice(0,160))}</section></main>${this.periodRail(items,'month')}</div>${this.footer()}`);
     const earliestDate=this.archiveStart||items[items.length-1]?.date||latestDate;
     for(let day=moment(earliestDate);day.isSameOrBefore(moment(this.archiveEnd));day.add(1,'day')) {
       const date=day.format('YYYY-MM-DD');
@@ -1332,4 +1341,4 @@ class StaticSiteGenerator {
   }
 }
 
-module.exports = { StaticSiteGenerator, PRODUCTS, TOPICS, isEntraMessage, classifyProduct, classifyTopic, extractMarkdownMetadata, findRelatedItems, selectRelatedItems, sanitizeMcHtml, slugify, formattedDiff, renderMarkdownDiff, dailySummaryText, renderDailyRss };
+module.exports = { StaticSiteGenerator, PRODUCTS, TOPICS, isProductMessage, classifyProduct, classifyTopic, extractMarkdownMetadata, findRelatedItems, selectRelatedItems, sanitizeMcHtml, slugify, formattedDiff, renderMarkdownDiff, dailySummaryText, renderDailyRss };
