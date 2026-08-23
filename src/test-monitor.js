@@ -37,46 +37,24 @@ function createAnalysis(files = [createFile()]) {
   };
 }
 
-test('email messages omit sensitivity and carry the mail-flow marker', () => {
-  const previousRecipient = process.env.RECIPIENT_EMAIL;
-  const previousSender = process.env.SENDER_EMAIL;
+test('the monitor has no Microsoft Graph email-sending capability', async () => {
+  const root = path.join(__dirname, '..');
+  const [monitorSource, monitorWorkflow, kitWorkflow, packageJson, lockfile] = await Promise.all([
+    fs.readFile(path.join(__dirname, 'monitor-docs.js'), 'utf8'),
+    fs.readFile(path.join(root, '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8'),
+    fs.readFile(path.join(root, '.github', 'workflows', 'daily-kit-broadcast.yml'), 'utf8'),
+    fs.readFile(path.join(root, 'package.json'), 'utf8'),
+    fs.readFile(path.join(root, 'package-lock.json'), 'utf8')
+  ]);
+  // The lockfile is checked too: once shared code moves behind a dependency,
+  // package.json alone stops naming what actually gets installed.
+  const graphEmailPattern = /@azure\/msal-node|@microsoft\/microsoft-graph-client|graph\.microsoft\.com|sendMail|AZURE_CLIENT_ID|Mail\.Send|send-workflow-failure-email|notify-failure|FAILURE_RECIPIENT_EMAIL/;
 
-  process.env.RECIPIENT_EMAIL = 'recipient@example.com';
-  process.env.SENDER_EMAIL = 'sender@example.com';
-
-  try {
-    const monitor = new EntraDocsMonitor();
-    const message = monitor.buildEmailMessage('Daily update', '<p>Report</p>');
-
-    assert.equal(Object.hasOwn(message, 'sensitivity'), false);
-    assert.equal(message.importance, 'normal');
-    assert.deepEqual(message.internetMessageHeaders, [
-      { name: 'x-entra-docs-monitor', value: 'daily-report' },
-      { name: 'x-entra-docs-encryption', value: 'none' }
-    ]);
-    assert.equal(message.toRecipients[0].emailAddress.address, 'recipient@example.com');
-    assert.equal(message.from.emailAddress.address, 'sender@example.com');
-  } finally {
-    if (previousRecipient === undefined) delete process.env.RECIPIENT_EMAIL;
-    else process.env.RECIPIENT_EMAIL = previousRecipient;
-
-    if (previousSender === undefined) delete process.env.SENDER_EMAIL;
-    else process.env.SENDER_EMAIL = previousSender;
-  }
-});
-
-test('email online report link uses the static daily route', async () => {
-  const monitor = new EntraDocsMonitor();
-  const analysis = createAnalysis();
-  let sentPayload;
-  monitor.initializeGraphClient = async () => ({
-    api: () => ({ post: async payload => { sentPayload = payload; } })
-  });
-
-  await monitor.sendEmail('', analysis, { dateForUrl: '2026-08-04' });
-
-  assert.match(sentPayload.message.body.content, /https:\/\/daily\.entra\.news\/day\/2026-08-04\//);
-  assert.doesNotMatch(sentPayload.message.body.content, /entradiff\.merill\.net|2026-08-04\.html/);
+  assert.doesNotMatch(monitorSource, graphEmailPattern);
+  assert.doesNotMatch(monitorWorkflow, graphEmailPattern);
+  assert.doesNotMatch(kitWorkflow, graphEmailPattern);
+  assert.doesNotMatch(packageJson, graphEmailPattern);
+  assert.doesNotMatch(lockfile, graphEmailPattern);
 });
 
 test('commit parsing and analysis retain the first parent for exact documentation diffs', async () => {
@@ -215,20 +193,6 @@ test('rendered summaries escape model-provided HTML', () => {
   assert.match(html, /Safe &amp; useful/);
 });
 
-test('pending email events are collected across UTC day files without duplicates', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-email-queue-'));
-  const websiteDir = path.join(root, 'website');
-  await fs.mkdir(websiteDir, { recursive: true });
-  const first = createFile({ commitSha: 'first', eventId: 'entra-docs:first:added:docs/id-governance/new-preview.md' });
-  const second = createFile({ commitSha: 'second', eventId: 'entra-docs:second:added:docs/id-governance/new-preview.md' });
-  await fs.writeFile(path.join(websiteDir, '2026-08-05.json'), JSON.stringify(createAnalysis([first])));
-  await fs.writeFile(path.join(websiteDir, '2026-08-06.json'), JSON.stringify(createAnalysis([second])));
-  const monitor = new EntraDocsMonitor({ websiteDir, reportsDir: path.join(root, 'reports') });
-  const queued = await monitor.loadQueuedEmailAnalysis([first.eventId, second.eventId, second.eventId]);
-  assert.deepEqual(queued.newFiles.map(file => file.commitSha), ['first', 'second']);
-  assert.equal(queued.summary.totalCommits, 2);
-});
-
 test('successive monitor runs accumulate same-file commits and suppress cursor replay', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'entra-monitor-runs-'));
   const websiteDir = path.join(root, 'website');
@@ -244,7 +208,7 @@ test('successive monitor runs accumulate same-file commits and suppress cursor r
   const runWith = async (file, timestamp) => {
     const monitor = new EntraDocsMonitor({
       websiteDir, reportsDir, mcDataPath, discordPublisher,
-      now: () => new Date(timestamp), emailEnabled: false
+      now: () => new Date(timestamp)
     });
     monitor.openAISummaryEnabled = false;
     monitor.setupRepository = async () => {};

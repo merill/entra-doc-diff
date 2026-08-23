@@ -24,7 +24,7 @@ async function main() {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required');
   const dates = requestedDates(process.argv.slice(2));
   const websiteDir = path.resolve(process.env.WEBSITE_DIR || 'website');
-  const monitor = new EntraDocsMonitor({ websiteDir, emailEnabled: false });
+  const monitor = new EntraDocsMonitor({ websiteDir });
 
   for (const date of dates) {
     const filePath = path.join(websiteDir, `${date}.json`);
