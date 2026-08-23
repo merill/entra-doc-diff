@@ -98,6 +98,7 @@ function normalizeDocs(docs) {
     requireRegExp(areas.stripPrefix, 'docs.areas.stripPrefix');
   }
   return {
+    learnRootUrl: requireString(raw.learnRootUrl, 'docs.learnRootUrl'),
     trackedPaths: requireRegExp(raw.trackedPaths, 'docs.trackedPaths'),
     learnRoutes: normalizeRoutes(raw.learnRoutes, 'path', 'docs.learnRoutes'),
     areas: {
@@ -134,6 +135,7 @@ function normalizeCopy(raw) {
   if (!Array.isArray(about.extraSections)) fail('copy.about.extraSections must be an array');
   return {
     rssFeedLabel: requireString(copy.rssFeedLabel, 'copy.rssFeedLabel'),
+    messageCenterHeading: requireString(copy.messageCenterHeading, 'copy.messageCenterHeading'),
     landing: {
       heading: requireString(landing.heading, 'copy.landing.heading'),
       blurb: requireString(landing.blurb, 'copy.landing.blurb')
@@ -158,6 +160,7 @@ function normalizeCopy(raw) {
     },
     detail: {
       adminHeading: requireString(detail.adminHeading, 'copy.detail.adminHeading'),
+      adminImpactLabel: requireString(detail.adminImpactLabel, 'copy.detail.adminImpactLabel'),
       summaryLabel: requireString(detail.summaryLabel, 'copy.detail.summaryLabel'),
       summaryDisclosure: requireString(detail.summaryDisclosure, 'copy.detail.summaryDisclosure')
     },
@@ -252,6 +255,11 @@ function normalize(raw) {
       impactBoost: requireRegExp((raw.ai || {}).impactBoost, 'ai.impactBoost')
     },
     docs: normalizeDocs(raw.docs),
+    identity: {
+      docEventPrefix: requireString((raw.identity || {}).docEventPrefix, 'identity.docEventPrefix'),
+      batchEventPrefix: requireString((raw.identity || {}).batchEventPrefix, 'identity.batchEventPrefix'),
+      kitMarkerPrefix: requireString((raw.identity || {}).kitMarkerPrefix, 'identity.kitMarkerPrefix')
+    },
     analytics: {
       piqoSite: String(analytics.piqoSite || '').trim()
     },

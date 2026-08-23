@@ -2,6 +2,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const moment = require('moment-timezone');
 const { StaticSiteGenerator, PRODUCTS, TOPICS } = require('./static-site');
+const { getConfig } = require('./config');
+
+const config = getConfig();
 
 const MAX_SOURCE_LENGTH = 12000;
 
@@ -163,7 +166,7 @@ function groupUpdateRecords(records, maximumItems = 16) {
         language: 'en',
         meta: {
           title: `${first.meta.productShort || first.meta.product} updates on ${periodLabel('day', first.meta.date)}`,
-          description: `${chunk.length} searchable Microsoft Entra updates.`,
+          description: `${chunk.length} searchable ${config.site.productName} updates.`,
           date: first.meta.date,
           product: first.meta.product,
           productShort: first.meta.productShort,

@@ -1,5 +1,8 @@
 const fs = require('fs').promises;
 const path = require('path');
+const { getConfig } = require('./config');
+
+const config = getConfig();
 
 const STATE_VERSION = 1;
 const REFRESH_HOURS_UTC = [2, 8, 14, 20];
@@ -38,7 +41,7 @@ async function loadMonitorState(filePath) {
 }
 
 function documentationEventId(file) {
-  return `entra-docs:${file.commitSha || 'unknown'}:${file.status || 'modified'}:${file.filename}`;
+  return `${config.identity.docEventPrefix}:${file.commitSha || 'unknown'}:${file.status || 'modified'}:${file.filename}`;
 }
 
 function messageCenterVersion(item) {
