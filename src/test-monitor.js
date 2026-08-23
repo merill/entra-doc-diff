@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 const os = require('os');
 const path = require('path');
 
-const DocsMonitor = require('./monitor-docs');
+const DocsMonitor = require('@merill/dailynews-engine/monitor-docs');
 
 function createFile(overrides = {}) {
   return {
@@ -39,8 +39,12 @@ function createAnalysis(files = [createFile()]) {
 
 test('the monitor has no Microsoft Graph email-sending capability', async () => {
   const root = path.join(__dirname, '..');
+  // The monitor now lives in the engine, so the assertion follows it there. The
+  // engine runs the same check over its own sources and lockfile; this one keeps
+  // guarding what *this* repository pins and what its workflows pass in.
+  const engine = path.dirname(require.resolve('@merill/dailynews-engine/package.json'));
   const [monitorSource, monitorWorkflow, kitWorkflow, packageJson, lockfile] = await Promise.all([
-    fs.readFile(path.join(__dirname, 'monitor-docs.js'), 'utf8'),
+    fs.readFile(path.join(engine, 'src', 'monitor-docs.js'), 'utf8'),
     fs.readFile(path.join(root, '.github', 'workflows', 'daily-docs-monitor.yml'), 'utf8'),
     fs.readFile(path.join(root, '.github', 'workflows', 'daily-kit-broadcast.yml'), 'utf8'),
     fs.readFile(path.join(root, 'package.json'), 'utf8'),

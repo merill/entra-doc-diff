@@ -6,7 +6,7 @@ const {
   mergeDailyAnalysis,
   nextScheduledRefresh,
   serializeAnalysis
-} = require('./update-state');
+} = require('@merill/dailynews-engine/update-state');
 
 function analysis(files = []) {
   return {

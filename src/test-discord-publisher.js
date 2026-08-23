@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const test = require('node:test');
 
-const DiscordPublisher = require('./discord-publisher');
+const DiscordPublisher = require('@merill/dailynews-engine/discord-publisher');
 
 function createAnalysis() {
   const makeFile = (filename, commitSha) => ({

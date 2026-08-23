@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
-const { normalize, runRules } = require('./config');
+const { normalize, runRules } = require('@merill/dailynews-engine/config');
 
 const productConfig = require(path.join(__dirname, '..', 'dailynews.config.js'));
 

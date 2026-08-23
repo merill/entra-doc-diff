@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { getConfig } = require('./config');
+const { getConfig } = require('@merill/dailynews-engine/config');
 
 const { taxonomy } = getConfig();
 
