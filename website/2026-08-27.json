@@ -1,6 +1,33 @@
 {
   "newFiles": [],
-  "modifiedFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/app-provisioning/entra-id-scim-api-reference.md",
+      "status": "modified",
+      "additions": 10,
+      "deletions": 11,
+      "changes": 21,
+      "patch": "diff --git a/docs/identity/app-provisioning/entra-id-scim-api-reference.md b/docs/identity/app-provisioning/entra-id-scim-api-reference.md\nindex df779c6e3db..508cc71f3a9 100644\n--- a/docs/identity/app-provisioning/entra-id-scim-api-reference.md\n+++ b/docs/identity/app-provisioning/entra-id-scim-api-reference.md\n@@ -5,7 +5,7 @@ manager: pmwongera\n ms.service: entra-id\n ms.subservice: app-provisioning\n ms.topic: how-to\n-ms.date: 04/07/2026\n+ms.date: 08/12/2026\n ms.reviewer: chmutali\n ai-usage: ai-assisted\n \n@@ -158,11 +158,11 @@ Response is truncated for readability.\n       \"schemaExtensions\": [\n         {\n           \"schema\": \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\",\n-          \"required\": true\n+          \"required\": false\n         },\n         {\n           \"schema\": \"urn:ietf:params:scim:schemas:extension:Microsoft:Entra:2.0:User\",\n-          \"required\": true\n+          \"required\": false\n         }\n       ],\n       \"meta\": {\n@@ -217,7 +217,7 @@ Response is truncated for readability.\n   \"schemaExtensions\": [\n     {\n       \"schema\": \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\",\n-      \"required\": true\n+      \"required\": false\n     }\n   ],\n   \"meta\": {\n@@ -735,7 +735,8 @@ The following attributes are required for successful user creation:\n \n - `displayName`\n \n-- urn:ietf:params:scim:schemas:extension:Microsoft:Entra:2.0:User:mailNickname\n+> [!NOTE]\n+> The `urn:ietf:params:scim:schemas:extension:Microsoft:Entra:2.0:User:mailNickname` attribute is optional when you create a user. If you omit it, set it to `null`, or provide an empty value, Microsoft Entra ID derives `mailNickname` from `userName`. It uses the characters before the first `@`. If `userName` doesn't contain `@`, it uses the complete value. For example, `abc123@contoso.com` produces a `mailNickname` value of `abc123`.\n \n #### Example 1 – Create a new user\n \n@@ -750,8 +751,7 @@ Content-Type: application/scim+json\n ```json\n {\n   \"schemas\": [\n-    \"urn:ietf:params:scim:schemas:core:2.0:User\",\n-    \"urn:ietf:params:scim:schemas:extension:Microsoft:Entra:2.0:User\"\n+    \"urn:ietf:params:scim:schemas:core:2.0:User\"\n   ],\n   \"active\": true,\n   \"displayName\": \"Example User\",\n@@ -760,9 +760,6 @@ Content-Type: application/scim+json\n   \"name\": {\n     \"familyName\": \"Example familyName\",\n     \"givenName\": \"Example givenName\"\n-  },\n-  \"urn:ietf:params:scim:schemas:extension:Microsoft:Entra:2.0:User\": {\n-    \"mailNickname\": \"abc123\"\n   }\n }\n ```\n@@ -771,6 +768,8 @@ Content-Type: application/scim+json\n \n Returns the SCIM representation of the user created.\n \n+In this example, Microsoft Entra ID derives the `mailNickname` value `abc123` from `userName`.\n+\n ## Update a user\n \n The /users endpoint allows a PATCH request to be made for updating an existing user profile.\n@@ -794,7 +793,7 @@ Upon success, the API returns HTTP Status 204.\n \n - For PATCH operations, while updating complex multi-valued attributes like addresses, the path property only supports “[type eq \\\" work\\\"]\" filter.\n \n-- Mandatory attribute `mailNickname` can't be removed using PATCH operation.\n+- After a user is created, the `mailNickname` attribute can't be removed by using a PATCH operation.\n \n #### Example 1 – Update an attribute value\n \n",
+      "baseCommitSha": "63314a71866b3841f891dbdd1757a3e168226ea6",
+      "commitSha": "e29fe29a84ee98678ea41742620d751caecae4d5",
+      "commitMessage": "Document optional SCIM mailNickname fallback (#2071)",
+      "commitAuthor": "Chirag Mali",
+      "commitDate": "2026-08-27 06:55:48 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/entra-id-scim-api-reference.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/entra-id-scim-api-reference",
+      "eventId": "entra-docs:e29fe29a84ee98678ea41742620d751caecae4d5:modified:docs/identity/app-provisioning/entra-id-scim-api-reference.md",
+      "firstSeenAt": "2026-08-27T19:04:42.260Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "SCIM mailNickname is documented as optional",
+        "summary": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH.",
+        "adminImpact": "SCIM integrations can omit mailNickname when appropriate, but should account for Entra ID deriving the value. No administrator action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "deletedFiles": [],
   "messageCenterItems": [
     {
@@ -43,14 +70,31 @@
     }
   ],
   "summary": {
-    "totalCommits": 0,
-    "totalFiles": 0,
-    "authors": []
+    "totalCommits": 1,
+    "totalFiles": 1,
+    "authors": [
+      "Chirag Mali"
+    ]
   },
   "englishSummary": {
-    "overview": "No substantive Microsoft Entra documentation changes were detected for this report.",
-    "groups": [],
-    "highlights": [],
+    "overview": "Today's report includes 0 new, 1 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "Feature update",
+        "title": "identity/app-provisioning",
+        "summary": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH.",
+        "sourceFiles": [
+          "docs/identity/app-provisioning/entra-id-scim-api-reference.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Feature update",
+        "headline": "identity/app-provisioning",
+        "detail": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH."
+      }
+    ],
     "generatedBy": "fallback"
   }
 }
