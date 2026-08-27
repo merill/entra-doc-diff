@@ -26,6 +26,344 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "status": "modified",
+      "additions": 22,
+      "deletions": 4,
+      "changes": 26,
+      "patch": "diff --git a/docs/identity/enterprise-apps/manage-app-consent-policies.md b/docs/identity/enterprise-apps/manage-app-consent-policies.md\nindex c6ba8b3070b..6dbb7a30864 100644\n--- a/docs/identity/enterprise-apps/manage-app-consent-policies.md\n+++ b/docs/identity/enterprise-apps/manage-app-consent-policies.md\n@@ -121,10 +121,13 @@ Follow these steps to create a custom app consent policy:\n 1. Create a new empty app consent policy.\n \n    ```powershell\n-   New-MgPolicyPermissionGrantPolicy `\n-       -Id \"my-custom-policy\" `\n-       -DisplayName \"My first custom consent policy\" `\n-       -Description \"This is a sample custom app consent policy.\"\n+   $params = @{\n+    Id          = \"my-custom-policy\"\n+    DisplayName = \"My first custom consent policy\"\n+    Description = \"This is a sample custom app consent policy.\"\n+   }\n+     \n+   New-MgPolicyPermissionGrantPolicy @params\n    ```\n \n 1. Add \"include\" condition sets.\n@@ -136,6 +139,14 @@ Follow these steps to create a custom app consent policy:\n        -PermissionType \"delegated\" `\n        -PermissionClassification \"low\" `\n        -ClientApplicationsFromVerifiedPublisherOnly\n+   $params = @{\n+     PermissionGrantPolicyId                     = \"my-custom-policy\"\n+     PermissionType                               = \"delegated\"\n+     PermissionClassification                     = \"low\"\n+     ClientApplicationsFromVerifiedPublisherOnly  = $true\n+   }\n+\n+   New-MgPolicyPermissionGrantPolicyInclude @params\n    ```\n \n    Repeat this step to add more \"include\" condition sets.\n@@ -151,6 +162,13 @@ Follow these steps to create a custom app consent policy:\n        -PermissionGrantPolicyId \"my-custom-policy\" `\n        -PermissionType \"delegated\" `\n        -ResourceApplication $azureApi.AppId\n+   $params = @{\n+    PermissionGrantPolicyId = \"my-custom-policy\"\n+    PermissionType           = \"delegated\"\n+    ResourceApplication      = $azureApi.AppId\n+   }\n+\n+   New-MgPolicyPermissionGrantPolicyExclude @params\n    ```\n \n    Repeat this step to add more \"exclude\" condition sets.\n",
+      "baseCommitSha": "eed022af66fc5087b27acc3b953c0e2df02e7336",
+      "commitSha": "599346395c781a989a4ea55939b3525c5cdfd99f",
+      "commitMessage": "Refactor PowerShell commands to use hashtable parameters (#2082)",
+      "commitAuthor": "dotnvo",
+      "commitDate": "2026-08-27 17:45:22 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies",
+      "eventId": "entra-docs:599346395c781a989a4ea55939b3525c5cdfd99f:modified:docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "firstSeenAt": "2026-08-27T23:49:00.267Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "PowerShell consent-policy examples now use hashtables",
+        "summary": "The examples now define cmdlet parameters in `$params` hashtables before creating custom consent policies and configuring inclusions or exclusions.",
+        "adminImpact": "Administrators copying these examples should use the updated hashtable syntax.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/cloud-sync/exchange-hybrid.md",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2,
+      "changes": 14,
+      "patch": "diff --git a/docs/identity/hybrid/cloud-sync/exchange-hybrid.md b/docs/identity/hybrid/cloud-sync/exchange-hybrid.md\nindex 6e0f394bfaa..0e6276c59a5 100644\n--- a/docs/identity/hybrid/cloud-sync/exchange-hybrid.md\n+++ b/docs/identity/hybrid/cloud-sync/exchange-hybrid.md\n@@ -3,9 +3,10 @@ title: 'Exchange hybrid writeback with cloud sync'\n description: This article describes how to enable exchange hybrid writeback scenarios.\n ms.topic: how-to\n ms.tgt_pltfrm: na\n-ms.date: 04/09/2025\n+ms.date: 08/25/2026\n ms.subservice: hybrid-cloud-sync\n ms.custom: sfi-image-nochange\n+ai-usage: ai-assisted\n ---\n \n \n@@ -46,7 +47,16 @@ Exchange Hybrid Writeback is disabled by default.\n  >If the checkbox for **Exchange hybrid writeback** is disabled, it means that the schema has not been detected.  Verify that the prerequisites are met and that you have re-started the provisioning agent.\n \n ## Attributes synchronized\n-Cloud sync writes Exchange On-line attributes back to users in order to enable Exchange hybrid scenarios.  The following table is a list of the attributes and the mappings.\n+Cloud sync writes Exchange Online attributes back to users in order to enable Exchange hybrid scenarios.\n+\n+### Entra2ADExchangeOnlineAttributeWriteback (LES Writeback)\n+For the Exchange Online-authoritative attribute writeback (LES Writeback) scenario, see [Cloud-based management of Exchange attributes for Remote Mailboxes in hybrid environments](/exchange/hybrid-deployment/enable-exchange-attributes-cloud-management).\n+\n+In this scenario, Exchange Online is the source of truth for specific Exchange-related user attributes, and cloud sync writes those cloud-managed attributes back to your on-premises Active Directory.\n+\n+This differs from **Exchange hybrid writeback** (AAD2ADExchangeHybridWriteback), which follows the hybrid writeback template used in preview scenarios.\n+\n+The following table lists the supported attributes and the mappings for LES Writeback.\n \n |Microsoft Entra attribute|AD attribute|Object Class|Mapping Type|\n |-----|-----|-----|-----|\n",
+      "baseCommitSha": "6cc9c8ff1ea6accf959c534330457765029cfca3",
+      "commitSha": "4f29413d0d639c0588e5709a8dfd0855a3e4b2f0",
+      "commitMessage": "Describe LES Writeback in the Exchange hybrid writeback article",
+      "commitAuthor": "Dhanyah Krishnamoorthy (SHE/HER)",
+      "commitDate": "2026-08-25 14:14:22 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/cloud-sync/exchange-hybrid.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/cloud-sync/exchange-hybrid",
+      "eventId": "entra-docs:4f29413d0d639c0588e5709a8dfd0855a3e4b2f0:modified:docs/identity/hybrid/cloud-sync/exchange-hybrid.md",
+      "firstSeenAt": "2026-08-27T23:49:00.290Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Exchange hybrid writeback documentation now covers LES Writeback",
+        "summary": "The article now describes Entra2ADExchangeOnlineAttributeWriteback (LES Writeback), including its cloud-managed attribute flow, distinction from Exchange hybrid writeback, supported attributes, mappings, and related guidance.",
+        "adminImpact": "Administrators can identify the applicable writeback scenario and review the supported attribute mappings and linked guidance.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/concept-assignment-network.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/conditional-access/concept-assignment-network.md b/docs/identity/conditional-access/concept-assignment-network.md\nindex a8d85251919..a019547dfef 100644\n--- a/docs/identity/conditional-access/concept-assignment-network.md\n+++ b/docs/identity/conditional-access/concept-assignment-network.md\n@@ -125,7 +125,7 @@ To use **Determine location by GPS coordinates**, users need the Microsoft Authe\n - The first time the user must share their location from the Microsoft Authenticator app, they receive a notification in the app. The user must open the app and grant location permissions. For the next 24 hours, if the user is still accessing the resource and granted the app permission to run in the background, the device's location is shared silently once per hour.\n - After 24 hours, the user must open the app and approve the notification.\n - Every time the user shares their GPS location, the app does jailbreak detection using the same logic as the Microsoft Intune MAM SDK. If the device is jailbroken, the location isn't considered valid, and the user isn't granted access. \n-   - The Microsoft Authenticator app on Android uses the Google Play Integrity API to facilitate jailbreak detection. If the Google Play Integrity API is unavailable, the request is denied and the user isn't able to access the requested resource unless the Conditional Access policy is disabled. For more information about the Microsoft Authenticator app, see the article [Common questions about the Microsoft Authenticator app](https://support.microsoft.com/account-billing/common-questions-about-the-microsoft-authenticator-app-aaaabbbb-0000-cccc-1111-dddd2222eeee).\n+   - The Microsoft Authenticator app on Android uses the Google Play Integrity API to facilitate jailbreak detection. If the Google Play Integrity API is unavailable, the request is denied and the user isn't able to access the requested resource unless the Conditional Access policy is disabled. For more information about the Microsoft Authenticator app, see the article [Common questions about the Microsoft Authenticator app](https://support.microsoft.com/account-billing/common-questions-about-the-microsoft-authenticator-app-12d283d1-bcef-4875-9ae5-ac360e2945dd).\n - Users can modify the GPS location as reported by iOS and Android devices. As a result, the Microsoft Authenticator app denies authentications where the user might be using a different location than the actual GPS location of the mobile device where the app is installed. Users who modify the location of their device get a denial message for GPS location-based policies.\n - The country code returned depends on the device platform API: For example one platform might report US for Puerto Rico, while another reports PR.\n \n",
+      "baseCommitSha": "dd4307eeedb28cb0df6d2dc9c99f1b2c21e79a54",
+      "commitSha": "8d666f6b3e978fd1eb935fa56275853079094dc9",
+      "commitMessage": "Fix link.",
+      "commitAuthor": "Tim Sherer",
+      "commitDate": "2026-08-25 10:22:41 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-assignment-network.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network",
+      "eventId": "entra-docs:8d666f6b3e978fd1eb935fa56275853079094dc9:modified:docs/identity/conditional-access/concept-assignment-network.md",
+      "firstSeenAt": "2026-08-27T23:49:00.306Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Corrected link in Conditional Access network documentation",
+        "summary": "A link was fixed on the Conditional Access network assignment page.",
+        "adminImpact": "Administrators using this guidance can follow the corrected link.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/agent-id/agent-token-claims.md",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 5,
+      "changes": 10,
+      "patch": "diff --git a/docs/agent-id/agent-token-claims.md b/docs/agent-id/agent-token-claims.md\nindex ed61547af4d..3f84f2e43ff 100644\n--- a/docs/agent-id/agent-token-claims.md\n+++ b/docs/agent-id/agent-token-claims.md\n@@ -21,20 +21,20 @@ Tokens issued for identities used for resource access include claims that you'd\n \n ```json\n {\n-  \"aud\": \"f2510d34-8dca-4ab8-a0bc-aaec4d3a3e36\",\n+  \"aud\": \"00001111-aaaa-2222-bbbb-3333cccc4444\",\n   \"iss\": \"https://sts.windows.net/00000001-0000-0ff1-ce00-000000000000/\",\n   \"iat\": 1753392285,\n   \"nbf\": 1753392285,\n   \"exp\": 1753421385,\n   \"aio\": \"Y2JgYGhn1nzmErKqi0vc4Fr6H22/C5/4FP+xZbZYpik8nRkp+gEA\",\n-  \"appid\": \"aaaaaaaa-1111-2222-3333-444444444444\",\n+  \"appid\": \"11112222-bbbb-3333-cccc-4444dddd5555\",\n   \"appidacr\": \"2\",\n   \"idp\": \"https://sts.windows.net/00000001-0000-0ff1-ce00-000000000000/\",\n   \"idtyp\": \"app\",\n-  \"oid\": \"bbbbbbbb-1111-2222-3333-444444444444\",\n+  \"oid\": \"aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\",\n   \"rh\": \"1.AAAAAQAAAAAA8Q_OAAAAAAAAADQNUfLKjbhKoLyq7E06PjYAAAAAAA.\",\n-  \"sub\": \"cccccccc-1111-2222-3333-444444444444\",\n-  \"tid\": \"00000001-0000-0ff1-ce00-000000000000\",\n+  \"sub\": \"bbbbbbbb-1111-2222-3333-cccccccccccc\",\n+  \"tid\": \"aaaabbbb-0000-cccc-1111-dddd2222eeee\",\n   \"uti\": \"m5RaaRnoFUyp2TbSCAAAAA\",\n   \"ver\": \"1.0\",\n   \"xms_act_fct\": \"3 9 11\",\n",
+      "baseCommitSha": "d253970dba41919ba3df1840fa15f57eb72f51a6",
+      "commitSha": "9105e05221fc883257d4c24f2037658c18e8ad96",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-23 01:08:26 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/agent-token-claims.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/agent-id/agent-token-claims",
+      "eventId": "entra-docs:9105e05221fc883257d4c24f2037658c18e8ad96:modified:docs/agent-id/agent-token-claims.md",
+      "firstSeenAt": "2026-08-27T23:49:00.914Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Agent token claim examples use updated identifier values",
+        "summary": "The documentation now shows different sample GUID values for the aud, appid, oid, sub, and tid claims.",
+        "adminImpact": "No administrator action is stated. Administrators referencing these examples should use the updated sample identifiers.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/application-provisioning-configuration-api.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/app-provisioning/application-provisioning-configuration-api.md b/docs/identity/app-provisioning/application-provisioning-configuration-api.md\nindex ecc404aad3c..135fd97965e 100644\n--- a/docs/identity/app-provisioning/application-provisioning-configuration-api.md\n+++ b/docs/identity/app-provisioning/application-provisioning-configuration-api.md\n@@ -360,7 +360,7 @@ Content-type: application/json\n                 \"displayName\": \"AWS Contoso\",\n                 \"details\": {\n                     \"ApplicationId\": \"00001111-aaaa-2222-bbbb-3333cccc4444\",\n-                    \"ServicePrincipalId\": \"chc46a42-966b-47d7-9774-576b1c8bd0b8\",\n+                    \"ServicePrincipalId\": \"aaaaaaaa-bbbb-cccc-1111-222222222222\",\n                     \"ServicePrincipalDisplayName\": \"AWS Contoso\"\n                 }\n             },\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/application-provisioning-configuration-api.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/application-provisioning-configuration-api",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/app-provisioning/application-provisioning-configuration-api.md",
+      "firstSeenAt": "2026-08-27T23:49:00.923Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Example service principal ID updated",
+        "summary": "The documented ServicePrincipalId example was replaced with a generic UUID.",
+        "adminImpact": "No administrator action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 2,
+      "changes": 3,
+      "patch": "diff --git a/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md b/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\nindex c45d474bd6f..5c78e2d6824 100644\n--- a/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\n+++ b/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\n@@ -214,7 +214,7 @@ These capabilities enable security analysts to correlate authentication events w\n \n ```kql\n MicrosoftGraphActivityLogs\n-| where TimeGenerated > ago(4d) and UserId == '4624cd8c-6c94-4593-b0d8-a4983d797ccb'\n+| where TimeGenerated > ago(4d) and UserId == '00aa00aa-bb11-cc22-dd33-44ee44ee44ee'\n | join kind=leftouter (union\n SigninLogs,\n AADNonInteractiveUserSignInLogs,\n@@ -402,4 +402,3 @@ By analyzing the log files with linkable identifiers, tenant administrators and\n - [Teams audit logs](/purview/audit-teams-audit-log-events)\n - [SharePoint Online audit logs](/purview/audit-log-sharing#tabs=microsoft-purview-portal)\n - [Microsoft Graph activity logs](/graph/microsoft-graph-activity-logs-overview)\n-\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "firstSeenAt": "2026-08-27T23:49:00.927Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated UserId in tracking query example",
+        "summary": "The documented query now filters for UserId `00aa00aa-bb11-cc22-dd33-44ee44ee44ee` instead of the previous identifier.",
+        "adminImpact": "Administrators using the example should substitute the UserId relevant to their query; no configuration change is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/concept-assignment-network.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/conditional-access/concept-assignment-network.md b/docs/identity/conditional-access/concept-assignment-network.md\nindex a019547dfef..a8d85251919 100644\n--- a/docs/identity/conditional-access/concept-assignment-network.md\n+++ b/docs/identity/conditional-access/concept-assignment-network.md\n@@ -125,7 +125,7 @@ To use **Determine location by GPS coordinates**, users need the Microsoft Authe\n - The first time the user must share their location from the Microsoft Authenticator app, they receive a notification in the app. The user must open the app and grant location permissions. For the next 24 hours, if the user is still accessing the resource and granted the app permission to run in the background, the device's location is shared silently once per hour.\n - After 24 hours, the user must open the app and approve the notification.\n - Every time the user shares their GPS location, the app does jailbreak detection using the same logic as the Microsoft Intune MAM SDK. If the device is jailbroken, the location isn't considered valid, and the user isn't granted access. \n-   - The Microsoft Authenticator app on Android uses the Google Play Integrity API to facilitate jailbreak detection. If the Google Play Integrity API is unavailable, the request is denied and the user isn't able to access the requested resource unless the Conditional Access policy is disabled. For more information about the Microsoft Authenticator app, see the article [Common questions about the Microsoft Authenticator app](https://support.microsoft.com/account-billing/common-questions-about-the-microsoft-authenticator-app-12d283d1-bcef-4875-9ae5-ac360e2945dd).\n+   - The Microsoft Authenticator app on Android uses the Google Play Integrity API to facilitate jailbreak detection. If the Google Play Integrity API is unavailable, the request is denied and the user isn't able to access the requested resource unless the Conditional Access policy is disabled. For more information about the Microsoft Authenticator app, see the article [Common questions about the Microsoft Authenticator app](https://support.microsoft.com/account-billing/common-questions-about-the-microsoft-authenticator-app-aaaabbbb-0000-cccc-1111-dddd2222eeee).\n - Users can modify the GPS location as reported by iOS and Android devices. As a result, the Microsoft Authenticator app denies authentications where the user might be using a different location than the actual GPS location of the mobile device where the app is installed. Users who modify the location of their device get a denial message for GPS location-based policies.\n - The country code returned depends on the device platform API: For example one platform might report US for Puerto Rico, while another reports PR.\n \n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-assignment-network.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/conditional-access/concept-assignment-network.md",
+      "firstSeenAt": "2026-08-27T23:49:00.931Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated Android jailbreak-detection guidance",
+        "summary": "The Conditional Access documentation now describes Microsoft Authenticator for Android using Google Play Integrity API for jailbreak detection and denying access when the API is unavailable, unless the policy is disabled.",
+        "adminImpact": "Use this guidance when troubleshooting blocked Android access under Conditional Access.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/what-if-tool.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 4,
+      "changes": 8,
+      "patch": "diff --git a/docs/identity/conditional-access/what-if-tool.md b/docs/identity/conditional-access/what-if-tool.md\nindex 5be3eb5b7f5..282f2d8bf87 100644\n--- a/docs/identity/conditional-access/what-if-tool.md\n+++ b/docs/identity/conditional-access/what-if-tool.md\n@@ -83,10 +83,10 @@ Suppose you have a Conditional Access policy with the following configuration:\n \n | Example | Parameters | Result based on legacy What If evaluation | Result based on the new What If evaluation API |\n | :---: | --- | :---: | :---: |\n-| 1 | UserId = “aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\" | Applies | Does not apply |\n-| 2 | UserId = “aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" | Applies | Does not apply |\n-| 3 | UserId = “aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" <br> Location = “US” | Applies | Does not apply |\n-| 4 | UserId = “aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" <br> Location = “US” <br> Sign-in Risk = “High” <br> | Applies | Applies |\n+| 1 | UserId = “00aa00aa-bb11-cc22-dd33-44ee44ee44ee\" | Applies | Does not apply |\n+| 2 | UserId = “00aa00aa-bb11-cc22-dd33-44ee44ee44ee\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" | Applies | Does not apply |\n+| 3 | UserId = “00aa00aa-bb11-cc22-dd33-44ee44ee44ee\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" <br> Location = “US” | Applies | Does not apply |\n+| 4 | UserId = “00aa00aa-bb11-cc22-dd33-44ee44ee44ee\" <br> ApplicationId = “00000003-0000-0ff1-ce00-000000000000\" <br> Location = “US” <br> Sign-in Risk = “High” <br> | Applies | Applies |\n \n ## Related content\n \n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/what-if-tool.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/what-if-tool",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/conditional-access/what-if-tool.md",
+      "firstSeenAt": "2026-08-27T23:49:00.935Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "What If tool examples use an updated sample user ID",
+        "summary": "The Conditional Access What If tool documentation replaces the sample UserId in four example rows with a new sample identifier.",
+        "adminImpact": "Administrators referencing these examples should use the updated sample identifier when comparing or testing the documented scenarios. No action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/devices/troubleshoot-device-registration-tool-linux.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/devices/troubleshoot-device-registration-tool-linux.md b/docs/identity/devices/troubleshoot-device-registration-tool-linux.md\nindex 8a1ee0992b8..1432961b4bf 100644\n--- a/docs/identity/devices/troubleshoot-device-registration-tool-linux.md\n+++ b/docs/identity/devices/troubleshoot-device-registration-tool-linux.md\n@@ -133,7 +133,7 @@ Device State\n -----------------------------------------------------------------\n Device Registration Status   : Registered\n Device ID                    : a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6\n-Tenant ID                    : 12345678-90ab-cdef-1234-567890abcdef\n+Tenant ID                    : aaaabbbb-0000-cccc-1111-dddd2222eeee\n Tenant Name                  : contoso.com\n \n Primary Refresh Token\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/troubleshoot-device-registration-tool-linux.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/troubleshoot-device-registration-tool-linux",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/devices/troubleshoot-device-registration-tool-linux.md",
+      "firstSeenAt": "2026-08-27T23:49:00.939Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated sample Tenant ID in Linux device registration troubleshooting documentation",
+        "summary": "The example Tenant ID was changed from 12345678-90ab-cdef-1234-567890abcdef to aaaabbbb-0000-cccc-1111-dddd2222eeee.",
+        "adminImpact": "No administrator action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/assign-app-owners.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/enterprise-apps/assign-app-owners.md b/docs/identity/enterprise-apps/assign-app-owners.md\nindex e1172c3fa05..d29d9feddf4 100644\n--- a/docs/identity/enterprise-apps/assign-app-owners.md\n+++ b/docs/identity/enterprise-apps/assign-app-owners.md\n@@ -51,7 +51,7 @@ $params = @{\n     \"@odata.id\" = \"https://graph.microsoft.com/v1.0/directoryObjects/aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb\"\n }\n \n-New-MgServicePrincipalOwnerByRef -ServicePrincipalId '00001111-aaaa-2222-bbbb-3333cccc4444' -BodyParameter $params\n+New-MgServicePrincipalOwnerByRef -ServicePrincipalId 'aaaaaaaa-bbbb-cccc-1111-222222222222' -BodyParameter $params\n ```\n \n :::zone-end\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/assign-app-owners.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/assign-app-owners",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/enterprise-apps/assign-app-owners.md",
+      "firstSeenAt": "2026-08-27T23:49:00.943Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated service principal owner assignment example",
+        "summary": "The PowerShell example now uses a different sample ServicePrincipalId value in the New-MgServicePrincipalOwnerByRef command.",
+        "adminImpact": "Administrators referencing the example will see the updated sample identifier.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/create-service-principal-cross-tenant.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/enterprise-apps/create-service-principal-cross-tenant.md b/docs/identity/enterprise-apps/create-service-principal-cross-tenant.md\nindex bc56d43fe62..851088c9465 100644\n--- a/docs/identity/enterprise-apps/create-service-principal-cross-tenant.md\n+++ b/docs/identity/enterprise-apps/create-service-principal-cross-tenant.md\n@@ -60,7 +60,7 @@ Where:\n \n    ```powershell\n    Remove-MgServicePrincipal\n-      -ServicePrincipalId bbbbbbbb-1111-2222-3333-cccccccccccc\n+      -ServicePrincipalId aaaaaaaa-bbbb-cccc-1111-222222222222\n \n    ```\n :::zone-end\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/create-service-principal-cross-tenant.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/create-service-principal-cross-tenant",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/enterprise-apps/create-service-principal-cross-tenant.md",
+      "firstSeenAt": "2026-08-27T23:49:00.947Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated service principal ID example",
+        "summary": "The cross-tenant service principal article changes the example ServicePrincipalId from `bbbbbbbb-1111-2222-3333-cccccccccccc` to `aaaaaaaa-bbbb-cccc-1111-222222222222`.",
+        "adminImpact": "Administrators copying the example should use the updated identifier.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/grant-admin-consent.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/identity/enterprise-apps/grant-admin-consent.md b/docs/identity/enterprise-apps/grant-admin-consent.md\nindex 82551592b05..a10f2fd7ad1 100755\n--- a/docs/identity/enterprise-apps/grant-admin-consent.md\n+++ b/docs/identity/enterprise-apps/grant-admin-consent.md\n@@ -89,7 +89,7 @@ For more information on constructing the tenant-wide admin consent URL, see [Adm\n \n In this section, you grant delegated permissions to your application. Delegated permissions are permissions your application needs to access an API on behalf of a signed-in user. The permissions are defined by a resource API and granted to your enterprise application, which is the client application. This consent is granted on behalf of all users.\n \n-In the following example, the resource API is Microsoft Graph of object ID `aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb`. The Microsoft Graph API defines the delegated permissions, `User.Read.All`, and `Group.Read.All`. The consentType is `AllPrincipals`, indicating that you're consenting on behalf of all users in the tenant. The object ID of the client enterprise application is `aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb`.\n+In the following example, the resource API is Microsoft Graph of object ID `ffffffff-eeee-dddd-cccc-bbbbbbbbbbb0`. The Microsoft Graph API defines the delegated permissions, `User.Read.All`, and `Group.Read.All`. The consentType is `AllPrincipals`, indicating that you're consenting on behalf of all users in the tenant. The object ID of the client enterprise application is `ffffffff-eeee-dddd-cccc-bbbbbbbbbbb0`.\n \n > [!CAUTION]\n > Be careful! Permissions granted programmatically aren't subject to review or confirmation. They take effect immediately.\n@@ -131,7 +131,7 @@ In the following example, the resource API is Microsoft Graph of object ID `aaaa\n \n In this section, you grant application permissions to your enterprise application. Application permissions are permissions your application needs to access a resource API. The permissions are defined by the resource API and granted to your enterprise application, which is the principal application. After you grant your application access to the resource API, it runs as a background service or daemon without a signed-in user. Application permissions are also known as app roles.\n \n-In the following example, you grant the Microsoft Graph application (the principal of ID `aaaaaaaa-bbbb-cccc-1111-222222222222`) an app role (application permission) of ID `df021288-bdef-4463-88db-98f22de89214` that's exposed by a resource API of ID `11112222-bbbb-3333-cccc-4444dddd5555`.\n+In the following example, you grant the Microsoft Graph application (the principal of ID `aaaaaaaa-bbbb-cccc-1111-222222222222`) an app role (application permission) of ID `df021288-bdef-4463-88db-98f22de89214` that's exposed by a resource API of ID `aaaabbbb-0000-cccc-1111-dddd2222eeee`.\n \n 1. Connect to Microsoft Graph PowerShell and sign in as at least a [Privileged Role Administrator](~/identity/role-based-access-control/permissions-reference.md#privileged-role-administrator).\n \n@@ -170,7 +170,7 @@ In this section, you grant delegated permissions to your application. Delegated\n \n You need to sign in as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).\n \n-In the following example, the resource API is Microsoft Graph of object ID `aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb`. The Microsoft Graph API defines the delegated permissions, `User.Read.All` and `Group.Read.All`. The consentType is `AllPrincipals`, indicating that you're consenting on behalf of all users in the tenant. The object ID of the client enterprise application is `aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb`.\n+In the following example, the resource API is Microsoft Graph of object ID `ffffffff-eeee-dddd-cccc-bbbbbbbbbbb0`. The Microsoft Graph API defines the delegated permissions, `User.Read.All` and `Group.Read.All`. The consentType is `AllPrincipals`, indicating that you're consenting on behalf of all users in the tenant. The object ID of the client enterprise application is `ffffffff-eeee-dddd-cccc-bbbbbbbbbbb0`.\n \n > [!CAUTION]\n > Be careful! Permissions granted programmatically are not subject to review or confirmation. They take effect immediately.\n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/grant-admin-consent.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/enterprise-apps/grant-admin-consent.md",
+      "firstSeenAt": "2026-08-27T23:49:00.952Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Microsoft Graph consent examples use updated object IDs",
+        "summary": "The grant-admin-consent documentation updates the resource API object IDs shown in delegated- and application-permission examples.",
+        "adminImpact": "No administrator action is indicated; use the revised IDs when referring to these examples.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 6,
+      "changes": 12,
+      "patch": "diff --git a/docs/identity/enterprise-apps/manage-app-consent-policies.md b/docs/identity/enterprise-apps/manage-app-consent-policies.md\nindex 5e6b70767de..17678bac916 100644\n--- a/docs/identity/enterprise-apps/manage-app-consent-policies.md\n+++ b/docs/identity/enterprise-apps/manage-app-consent-policies.md\n@@ -64,12 +64,12 @@ The setting labeled \"Let Microsoft manage your consent settings,\" the Microsoft\n \n ### Mail client policy\n An additional policy is enabled by default is the **microsoft-user-allow-default-consent-apps** policy. This policy allows end-users in your organization to consent for popular mail applications for mail permissions. When this policy is enabled, end users will be able to consent for specific delegated mail permissions (Microsoft Graph and Office 365 Exchange Online permissions: EAS.AccessAsUser.All, EWS.AccessAsUser.All, IMAP.AccessAsUser.All, POP.AccessAsUser.All) for the following applications:\n-- Apple Mail (application ID: f8d98a96-0999-43f5-8af3-69971c7bb423)\n-- Spark Email (application ID:b50c1dbd-1855-4e54-b07c-d3c3029e93d3)\n-- eM Client (application ID:e9a7fea1-1cc0-4cd9-a31b-9137ca5deedd)\n-- Android-Samsung (application ID:8acd33ea-7197-4a96-bc33-d7cc7101262f)\n-- Android-Mail (application ID:2cee05de-2b8f-45a2-8289-2a06ca32c4c8)\n-- Thunderbird (application ID:9e5f94bc-e8a4-4e73-b8be-63364c29d753)\n+- Apple Mail (application ID: 00001111-aaaa-2222-bbbb-3333cccc4444)\n+- Spark Email (application ID:11112222-bbbb-3333-cccc-4444dddd5555)\n+- eM Client (application ID:22223333-cccc-4444-dddd-5555eeee6666)\n+- Android-Samsung (application ID:33334444-dddd-5555-eeee-6666ffff7777)\n+- Android-Mail (application ID:44445555-eeee-6666-ffff-7777aaaa8888)\n+- Thunderbird (application ID:55556666-ffff-7777-aaaa-8888bbbb9999)\n \n ## Multiple policies or authorization mechanisms to grant consent\n \n",
+      "baseCommitSha": "8192979cb2d4ae8ab5c509f3c83410e98f0b2644",
+      "commitSha": "54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa",
+      "commitMessage": "status",
+      "commitAuthor": "OpenPublishing.Build",
+      "commitDate": "2026-06-03 01:43:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies",
+      "eventId": "entra-docs:54e1f5d51e4c2c99be3b7009e5f585fa108bf0fa:modified:docs/identity/enterprise-apps/manage-app-consent-policies.md",
+      "firstSeenAt": "2026-08-27T23:49:00.956Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated application IDs in consent policy documentation",
+        "summary": "The documented application IDs for Apple Mail, Spark Email, eM Client, Android-Samsung, Android-Mail, and Thunderbird were replaced.",
+        "adminImpact": "Administrators using these identifiers in consent policy rules should verify them against the updated documentation.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
@@ -70,21 +408,80 @@
     }
   ],
   "summary": {
-    "totalCommits": 1,
-    "totalFiles": 1,
+    "totalCommits": 6,
+    "totalFiles": 14,
     "authors": [
-      "Chirag Mali"
+      "Chirag Mali",
+      "Dhanyah Krishnamoorthy (SHE/HER)",
+      "OpenPublishing.Build",
+      "Tim Sherer",
+      "dotnvo"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 0 new, 1 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "overview": "Today's report includes 0 new, 14 updated, and 0 removed Microsoft Entra documentation files across 7 documentation areas.",
     "groups": [
       {
         "category": "Feature update",
         "title": "identity/app-provisioning",
-        "summary": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH.",
+        "summary": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH. The documented ServicePrincipalId example was replaced with a generic UUID.",
         "sourceFiles": [
-          "docs/identity/app-provisioning/entra-id-scim-api-reference.md"
+          "docs/identity/app-provisioning/entra-id-scim-api-reference.md",
+          "docs/identity/app-provisioning/application-provisioning-configuration-api.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/enterprise-apps",
+        "summary": "The examples now define cmdlet parameters in `$params` hashtables before creating custom consent policies and configuring inclusions or exclusions. The PowerShell example now uses a different sample ServicePrincipalId value in the New-MgServicePrincipalOwnerByRef command. The cross-tenant service principal article changes the example ServicePrincipalId from `bbbbbbbb-1111-2222-3333-cccccccccccc` to `aaaaaaaa-bbbb-cccc-1111-222222222222`. The grant-admin-consent documentation updates the resource API object IDs shown in delegated- and application-permission examples. The documented application IDs for Apple Mail, Spark Email, eM Client, Android-Samsung, Android-Mail, and Thunderbird were repl",
+        "sourceFiles": [
+          "docs/identity/enterprise-apps/manage-app-consent-policies.md",
+          "docs/identity/enterprise-apps/assign-app-owners.md",
+          "docs/identity/enterprise-apps/create-service-principal-cross-tenant.md",
+          "docs/identity/enterprise-apps/grant-admin-consent.md",
+          "docs/identity/enterprise-apps/manage-app-consent-policies.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/hybrid",
+        "summary": "The article now describes Entra2ADExchangeOnlineAttributeWriteback (LES Writeback), including its cloud-managed attribute flow, distinction from Exchange hybrid writeback, supported attributes, mappings, and related guidance.",
+        "sourceFiles": [
+          "docs/identity/hybrid/cloud-sync/exchange-hybrid.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/conditional-access",
+        "summary": "A link was fixed on the Conditional Access network assignment page. The Conditional Access documentation now describes Microsoft Authenticator for Android using Google Play Integrity API for jailbreak detection and denying access when the API is unavailable, unless the policy is disabled. The Conditional Access What If tool documentation replaces the sample UserId in four example rows with a new sample identifier.",
+        "sourceFiles": [
+          "docs/identity/conditional-access/concept-assignment-network.md",
+          "docs/identity/conditional-access/concept-assignment-network.md",
+          "docs/identity/conditional-access/what-if-tool.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "agent-id",
+        "summary": "The documentation now shows different sample GUID values for the aud, appid, oid, sub, and tid claims.",
+        "sourceFiles": [
+          "docs/agent-id/agent-token-claims.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/authentication",
+        "summary": "The documented query now filters for UserId `00aa00aa-bb11-cc22-dd33-44ee44ee44ee` instead of the previous identifier.",
+        "sourceFiles": [
+          "docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/devices",
+        "summary": "The example Tenant ID was changed from 12345678-90ab-cdef-1234-567890abcdef to aaaabbbb-0000-cccc-1111-dddd2222eeee.",
+        "sourceFiles": [
+          "docs/identity/devices/troubleshoot-device-registration-tool-linux.md"
         ]
       }
     ],
@@ -92,7 +489,37 @@
       {
         "category": "Feature update",
         "headline": "identity/app-provisioning",
-        "detail": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH."
+        "detail": "The SCIM API reference now states that mailNickname may be omitted, null, or empty when creating a user. Microsoft Entra ID derives it from the characters before the first @ in userName. After creation, it cannot be removed with PATCH. The documented ServicePrincipalId example was replaced with a generic UUID."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/enterprise-apps",
+        "detail": "The examples now define cmdlet parameters in `$params` hashtables before creating custom consent policies and configuring inclusions or exclusions. The PowerShell example now uses a different sample ServicePrincipalId value in the New-MgServicePrincipalOwnerByRef command. The cross-tenant service principal article changes the example ServicePrincipalId from `bbbbbbbb-1111-2222-3333-cccccccccccc` to `aaaaaaaa-bbbb-cccc-1111-222222222222`. The grant-admin-consent documentation updates the resource API object IDs shown in delegated- and application-permission examples. The documented application IDs for Apple Mail, Spark Email, eM Client, Android-Samsung, Android-Mail, and Thunderbird were repl"
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/hybrid",
+        "detail": "The article now describes Entra2ADExchangeOnlineAttributeWriteback (LES Writeback), including its cloud-managed attribute flow, distinction from Exchange hybrid writeback, supported attributes, mappings, and related guidance."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/conditional-access",
+        "detail": "A link was fixed on the Conditional Access network assignment page. The Conditional Access documentation now describes Microsoft Authenticator for Android using Google Play Integrity API for jailbreak detection and denying access when the API is unavailable, unless the policy is disabled. The Conditional Access What If tool documentation replaces the sample UserId in four example rows with a new sample identifier."
+      },
+      {
+        "category": "Doc update",
+        "headline": "agent-id",
+        "detail": "The documentation now shows different sample GUID values for the aud, appid, oid, sub, and tid claims."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/authentication",
+        "detail": "The documented query now filters for UserId `00aa00aa-bb11-cc22-dd33-44ee44ee44ee` instead of the previous identifier."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/devices",
+        "detail": "The example Tenant ID was changed from 12345678-90ab-cdef-1234-567890abcdef to aaaabbbb-0000-cccc-1111-dddd2222eeee."
       }
     ],
     "generatedBy": "fallback"
