@@ -25,6 +25,32 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/global-secure-access/how-to-configure-custom-headers.md",
+      "status": "added",
+      "additions": 109,
+      "deletions": 0,
+      "changes": 109,
+      "patch": "diff --git a/docs/global-secure-access/how-to-configure-custom-headers.md b/docs/global-secure-access/how-to-configure-custom-headers.md\nnew file mode 100644\nindex 00000000000..629f16717f9\n--- /dev/null\n+++ b/docs/global-secure-access/how-to-configure-custom-headers.md\n@@ -0,0 +1,109 @@\n+---\n+title: How to configure custom HTTP headers in Global Secure Access\n+description: \"Add custom HTTP headers to outbound web requests with Global Secure Access web filtering policies to enforce tenant restrictions and configure other header-aware services.\"\n+ms.topic: how-to\n+ms.date: 08/28/2026\n+ms.reviewer: alexpav\n+ms.author: alexpav\n+ms.subservice: entra-internet-access\n+ai-usage: ai-assisted\n+---\n+\n+# How to configure custom headers\n+\n+Custom headers in Global Secure Access (GSA) lets you add custom HTTP headers to outbound web requests for specific destinations. You configure headers as part of a web filtering policy rule, so the headers are added only to traffic that matches the fully qualified domain names (FQDNs) that you select.\n+\n+The most common use case is tenant restrictions for software as a service (SaaS) applications. Some popular SaaS services understand specific HTTP headers that identifies your organization's approved tenant or workspace in that service. When you add the HTTP header understood by the SaaS provider, the SaaS application allows access to your approved tenant and blocks access to consumer tenants or tenants from other organizations. You can also use header modification to add any custom header that a destination service expects, such as an identifier or policy tag.\n+\n+> [!IMPORTANT]\n+> Header modification is currently in preview. This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.\n+\n+## How it works\n+\n+When you create a web filtering policy version 2 (v2) rule, you select one or more destination FQDNs and define the custom headers to add. After you link the policy to a security profile, Global Secure Access adds the configured headers into matching outbound requests for users who are assigned that security profile. The destination service reads the header and applies its own tenant restriction or access logic.\n+\n+Because Global Secure Access adds the headers at the service layer, users can't view, remove, or modify these headers on their devices.\n+\n+## Prerequisites\n+\n+- The account that you use to configure web filtering policies has an active [Global Secure Access Administrator](/azure/active-directory/roles/permissions-reference) role assignment.\n+- Your organization has [Microsoft Entra Internet Access](concept-internet-access.md) onboarded, with internet traffic forwarding enabled.\n+- The [Global Secure Access client](how-to-install-windows-client.md) is installed on end user devices, or traffic is routed through a remote network or GSA explicit forward proxy.\n+- TLS inspection is configured and devices that you use for testing this feature trust the TLS root certificate\n+- You have the tenant or workspace identifier values that each destination service requires for its header. For more information, see [Common services and headers](#common-services-and-headers).\n+\n+## Review the TLS inspection policy and create it for custom headers if necessary\n+>[!IMPORTANT]\n+>TLS inspection is required for all destinations that need custom headers and that enforce TLS (https).\n+\n+1. Sign in to the [Microsoft Entra Admin Center](https://entra.microsoft.com).\n+1. Browse to **Global Secure Access** > **Secure** > **TLS inspection policies**.\n+1. Review the TLSi policies and rules. If you have already defined TLSi policies that apply to your users and cover TLS inspection for destinations to which you plan to add custom headers, no further action is necessary and you can proceed to the next section (create a web filtering policy).\n+1. To create a rule for custom headers inside an existing TLSi policy, click on **+ Add rule** button on the TLSi policy rules screen and add fully qualified domain names (FQDNs) of destination services that need custom headers. Ensure that the **Rules action** is set to **Inspect**.\n+\n+    ![Screenshot that shows the TLS inspection rules for specific destinations.](media/how-to-configure-custom-headers/custom-headers-configure-interception.png)\n+\n+## Create a web filtering policy\n+\n+1. Sign in to the [Microsoft Entra Admin Center](https://entra.microsoft.com).\n+1. Browse to **Global Secure Access** > **Secure** > **Web content filtering policies**.\n+1. Select **Create policy**. Alternatively, you can add header modification rules to an existing **Web Content Filtering v2 policy**. If you are using an existing policy, skip to the next section.\n+1. On the **Basics** tab, enter a **Name** for the policy, such as `Custom Headers`. Optionally, enter a **Description**.\n+1. Select **Next** to go to the **Review** tab, and then select **Create**.\n+\n+\n+## Add security policy rules with custom headers\n+\n+After you create the policy, add rules that add HTTP headers to specific destinations. Since header names and values are destination-specific, you can add multiple rules (one rule per destination FQDN) to the same policy.\n+\n+1. On the **Web Filtering Policies (V2)** page, select the name of the policy that you created.\n+1. Select **Rules**, and then select **Add rule**.\n+1. Enter a **Rule name**, such as `ChatGPT Tenant Restrictions`, and set the **Priority**. Keep the **Status** as **Enabled**.\n+1. Under **Destination matching**, select **Select Destinations**. In the **Destination matching** pane, enter one or more destination **URLs or FQDNs** separated by commas, such as `*.chatgpt.com, chatgpt.com`. Select **Save**.\n+1. Under **Rule action**, keep the **Rule action** as **Allow**, and then select **Configure custom headers**.\n+1. In the **Custom headers** pane, select **Add custom headers**. Enter the **Header name** and **Header value** that the destination service requires, such as a header name of `ChatGPT-Allowed-Workspace-Id` and your workspace ID as the value. To add more headers, select **Add header**. Select **Save**.\n+1. Select **Create rule**.\n+    \n+    ![Screenshot that shows the custom header rule.](media/how-to-configure-custom-headers/add-custom-headers-rule.png)\n+\n+1. For each distinct service that requires different headers to be added, create a separate web content filtering policy rule.\n+\n+## Link the policy to a security profile\n+\n+To enforce customer headers for users, the security policy must be linked to the security profile. Security profiles are assigned to users through Microsoft Entra Conditional Access. \n+\n+1. Browse to **Global Secure Access** > **Secure** > **Security profiles**, and select an existing security profile or create one. If you create a new profile, you will also need a new Conditional Access policy that assigns that profile to users.\n+\n+1. Select **Link policies** > **Link a policy** > **Existing Web Filtering Policy (V2)**, and select the policy that you created.\n+   >[!NOTE]\n+   >You can only link one V2 WFP policy to a security profile.\n+\n+1. Assign a priority to the linked policy, and save your changes.\n+\n+After the security profile is delivered through Conditional Access, users who are assigned that profile have the configured headers added into matching traffic. For example, users browsing to ChatGPT have the tenant restriction header added automatically.\n+\n+> [!NOTE]\n+> Applying a new security profile can take up to 60-90 minutes because the user must receive a new access token for Internet Access that contains the security profile claim before enforcement begins. Changes to existing security profiles take effect near real-time.\n+\n+## Common services and headers\n+\n+Custom headers works with any service that supports header-based tenant restrictions, so the following list isn't exhaustive. The table shows a few common examples, along with the FQDNs to match and the header to add. Many other services support similar headers. Header names, supported values, and the location of the identifier are defined by each service provider and can change. **Always confirm the specific header names and values in the destination service's own documentation.**\n+\n+| Service | FQDNs | Header name | Header value (where to find it) |\n+|---|---|---|---|\n+| ChatGPT | `*.chatgpt.com`, `chatgpt.com` | `ChatGPT-Allowed-Workspace-Id` | The ID of your ChatGPT Enterprise or Team workspace, found in the workspace admin settings. |\n+| Claude | `claude.ai`, `*.claude.ai`, `claude.com`, `*.claude.com`,`anthropic.com`,`*.anthropic.com`, `api.anthropic.com`,`*.api.anthropic.com` | `anthropic-allowed-org-ids` | The ID of your approved Anthropic organization, found in the Anthropic Console organization settings. |\n+| GitHub | `github.com`,`*.github.com`,`api.github.com`,`*.api.github.com`,`*.githubcopilot.com`,`.githubcopilot.com` | `sec-GitHub-allowed-enterprise` | The ID (slug) of your approved GitHub enterprise, found in your GitHub enterprise account settings. |\n+| Google Workspace | `*.google.com` | `X-GoogApps-Allowed-Domains` | A comma-separated list of the domains that you allow, defined in your Google Workspace configuration. |\n+| Slack | `*.slack.com`,`.slack.com` | `X-Slack-Allowed-Workspaces-Requester` | The ID of your approved Slack workspace or enterprise, found in your Slack organization settings. |\n+| Dropbox | `*.dropbox.com`,`dropbox.com` | `X-Dropbox-allowed-Team-Ids` | The team ID of your approved Dropbox Business team, found in the Dropbox admin console. |\n+| YouTube | `*.youtube.com`,`.youtube.com` | `YouTube-Restrict` | `Strict` or `Moderate` to set the YouTube content restriction level. |\n+\n+> [!IMPORTANT]\n+> To restrict access to Microsoft Entra tenants, use [universal tenant restrictions](how-to-universal-tenant-restrictions.md) instead of custom headers.\n+\n+## Related content\n+\n+- [How to configure Global Secure Access web content filtering](how-to-configure-web-content-filtering.md)\n+- [Universal tenant restrictions](how-to-universal-tenant-restrictions.md)\n+- [Learn about the traffic dashboard](concept-traffic-dashboard.md)\n",
+      "baseCommitSha": "2b47765dfd4bb42ecbecdf3e717959d6f189731f",
+      "commitSha": "95d3a03130b7f0622228ff3139c0e89314e1b819",
+      "commitMessage": "Alexpav/header modification tenant restrictions (#14269)",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-08-31 11:49:41 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-custom-headers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-custom-headers",
+      "eventId": "entra-docs:95d3a03130b7f0622228ff3139c0e89314e1b819:added:docs/global-secure-access/how-to-configure-custom-headers.md",
+      "firstSeenAt": "2026-08-31T23:53:10.950Z",
+      "englishSummary": {
+        "category": "Public preview",
+        "headline": "Configure custom HTTP headers in Global Secure Access",
+        "summary": "New documentation describes adding custom HTTP headers to matching outbound web requests through Web Content Filtering v2 rules. The capability is currently in preview and supports tenant restrictions and other header-aware services.",
+        "adminImpact": "Administrators can enforce approved SaaS tenants or workspaces, but must configure TLS inspection and meet the documented Global Secure Access prerequisites to use it.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "modifiedFiles": [
@@ -313,6 +339,58 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/agent-id/agent-access-packages.md",
+      "status": "modified",
+      "additions": 18,
+      "deletions": 0,
+      "changes": 18,
+      "patch": "diff --git a/docs/agent-id/agent-access-packages.md b/docs/agent-id/agent-access-packages.md\nindex 43e10d04513..251dd14a3b6 100644\n--- a/docs/agent-id/agent-access-packages.md\n+++ b/docs/agent-id/agent-access-packages.md\n@@ -77,6 +77,24 @@ Agents can then be assigned access packages through three different request path\n \n After submission, the access request is routed to designated approvers based on the access package policy configuration.\n \n+## Request an access package on behalf of another user\n+\n+Users with the appropriate permissions can request access packages on behalf of another user in their organization.\n+\n+1. Sign in to the My Access portal at [https://myaccess.microsoft.com](https://myaccess.microsoft.com/). For US Government, the domain in the My Access portal link is `myaccess.microsoft.us`.\n+\n+1. On the My Access Portal page, select **Access packages**.\n+\n+1. On the Access packages page, locate the access package you want to request for a direct report and select **Request**.\n+\n+1. On the Request pane under **Request details**, select requesting for **Others**.\n+\n+1. Select **Anyone in your organization** and search for the user you want to submit the request for.\n+\n+   [![Screenshot of selecting Anyone in your organization when requesting an access package on behalf of another user.](../id-governance/media/entitlement-management-request-behalf/request-access-package-for-anyone.png)](../id-governance/media/entitlement-management-request-behalf/request-access-package-for-anyone.png#lightbox)\n+\n+1. Continue with the remaining request steps to complete the access package request on behalf of the user.\n+\n ## Access assignment lifecycle\n \n Once an approver accepts the access package assignment request, the agent identity receives time-bound access to the specified resources. The access is granted according to the resource roles defined in the access package. This establishes a clear start and end date for the access the agent might need.\n",
+      "baseCommitSha": "95d3a03130b7f0622228ff3139c0e89314e1b819",
+      "commitSha": "bf86d6cab658ddb842e821bf17b7daa918bdaed9",
+      "commitMessage": "docs: enhance on-behalf-of request documentation with UI instructions and policy configuration (#14201)",
+      "commitAuthor": "Sri",
+      "commitDate": "2026-08-31 12:17:44 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/agent-access-packages.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/agent-id/agent-access-packages",
+      "eventId": "entra-docs:bf86d6cab658ddb842e821bf17b7daa918bdaed9:modified:docs/agent-id/agent-access-packages.md",
+      "firstSeenAt": "2026-08-31T23:53:10.938Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Added instructions for requesting access packages on behalf of users",
+        "summary": "The documentation now provides step-by-step My Access portal instructions for authorized users to request an access package for another user, including the US Government portal URL.",
+        "adminImpact": "Administrators can use these instructions to guide users through submitting requests; no administrator action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-request-behalf.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-request-behalf.md b/docs/id-governance/entitlement-management-request-behalf.md\nindex 88bfad459a4..3f19bc3e2c8 100644\n--- a/docs/id-governance/entitlement-management-request-behalf.md\n+++ b/docs/id-governance/entitlement-management-request-behalf.md\n@@ -61,7 +61,7 @@ Follow these steps to edit the policies, allowing on behalf of requests, for an\n 1. Select the policy you wish to edit or create a new policy. \n \n 1. On the **Requests** tab, set **Enable new requests** to Yes. This should show you the option **Allow managers to request on behalf of employees**. Set that option to Yes.  \n-    :::image type=\"content\" source=\"media/entitlement-management-request-behalf/edit-request-policy-behalf.png\" lightbox=\"media/entitlement-management-request-behalf/edit-request-policy-behalf.png\" alt-text=\"Screenshot of editing an access package;s request on behalf of policy.\":::\n+    :::image type=\"content\" source=\"media/entitlement-management-request-behalf/configure-request-policy-for-anyone.png\" lightbox=\"media/entitlement-management-request-behalf/configure-request-policy-for-anyone.png\" alt-text=\"Screenshot of editing an access package's request on behalf of policy.\":::\n 1. Save your policy. \n \n ## Request an access package on behalf of an employee\n",
+      "baseCommitSha": "95d3a03130b7f0622228ff3139c0e89314e1b819",
+      "commitSha": "bf86d6cab658ddb842e821bf17b7daa918bdaed9",
+      "commitMessage": "docs: enhance on-behalf-of request documentation with UI instructions and policy configuration (#14201)",
+      "commitAuthor": "Sri",
+      "commitDate": "2026-08-31 12:17:44 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-request-behalf.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-behalf",
+      "eventId": "entra-docs:bf86d6cab658ddb842e821bf17b7daa918bdaed9:modified:docs/id-governance/entitlement-management-request-behalf.md",
+      "firstSeenAt": "2026-08-31T23:53:10.942Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated screenshot for on-behalf-of request policies",
+        "summary": "The documentation now uses a new screenshot showing configuration of an access package’s request-on-behalf-of policy.",
+        "adminImpact": "Administrators may see updated visual guidance when following this documentation; no action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [
@@ -501,14 +579,16 @@
   ],
   "messageCenterItems": [],
   "summary": {
-    "totalCommits": 1,
-    "totalFiles": 19,
+    "totalCommits": 3,
+    "totalFiles": 22,
     "authors": [
-      "Dhanyah Krishnamoorthy"
+      "Alexander Pavlovsky",
+      "Dhanyah Krishnamoorthy",
+      "Sri"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 1 new, 11 updated, and 7 removed Microsoft Entra documentation files across 2 documentation areas.",
+    "overview": "Today's report includes 2 new, 13 updated, and 7 removed Microsoft Entra documentation files across 5 documentation areas.",
     "groups": [
       {
         "category": "New feature",
@@ -535,12 +615,36 @@
         ]
       },
       {
+        "category": "Public preview",
+        "title": "global-secure-access",
+        "summary": "New documentation describes adding custom HTTP headers to matching outbound web requests through Web Content Filtering v2 rules. The capability is currently in preview and supports tenant restrictions and other header-aware services.",
+        "sourceFiles": [
+          "docs/global-secure-access/how-to-configure-custom-headers.md"
+        ]
+      },
+      {
         "category": "Doc update",
         "title": "architecture",
         "summary": "The Access guidance now points to an updated Microsoft Entra Cloud Sync documentation link for provisioning groups to Active Directory. The documentation now links to the Microsoft Entra Cloud Sync group provisioning tutorial instead of the configuration guide.",
         "sourceFiles": [
           "docs/architecture/protect-m365-from-on-premises-attacks.md",
           "docs/architecture/road-to-the-cloud-implement.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "agent-id",
+        "summary": "The documentation now provides step-by-step My Access portal instructions for authorized users to request an access package for another user, including the US Government portal URL.",
+        "sourceFiles": [
+          "docs/agent-id/agent-access-packages.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "id-governance",
+        "summary": "The documentation now uses a new screenshot showing configuration of an access package’s request-on-behalf-of policy.",
+        "sourceFiles": [
+          "docs/id-governance/entitlement-management-request-behalf.md"
         ]
       }
     ],
@@ -551,9 +655,24 @@
         "detail": "A new tutorial explains how to configure Microsoft Entra Cloud Sync to provision groups to on-premises AD DS. It covers Entra-to-AD and AD-to-Entra scenarios, including how source of authority and membership affect provisioning. The article was retitled and updated to focus on provisioning directory extensions to Active Directory with Cloud Sync, including group schema, scoping, and attribute mapping. Links now point to updated Cloud Sync resources and a group-provisioning scenario. The article was rewritten for provisioning groups from Microsoft Entra ID to Active Directory, adding updated setup steps, screenshots, and sections for scoping, attribute mapping, testing, and default settings. "
       },
       {
+        "category": "Public preview",
+        "headline": "global-secure-access",
+        "detail": "New documentation describes adding custom HTTP headers to matching outbound web requests through Web Content Filtering v2 rules. The capability is currently in preview and supports tenant restrictions and other header-aware services."
+      },
+      {
         "category": "Doc update",
         "headline": "architecture",
         "detail": "The Access guidance now points to an updated Microsoft Entra Cloud Sync documentation link for provisioning groups to Active Directory. The documentation now links to the Microsoft Entra Cloud Sync group provisioning tutorial instead of the configuration guide."
+      },
+      {
+        "category": "Doc update",
+        "headline": "agent-id",
+        "detail": "The documentation now provides step-by-step My Access portal instructions for authorized users to request an access package for another user, including the US Government portal URL."
+      },
+      {
+        "category": "Doc update",
+        "headline": "id-governance",
+        "detail": "The documentation now uses a new screenshot showing configuration of an access package’s request-on-behalf-of policy."
       }
     ],
     "generatedBy": "fallback"
