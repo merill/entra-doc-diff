@@ -1,6 +1,86 @@
 {
-  "newFiles": [],
-  "modifiedFiles": [],
+  "newFiles": [
+    {
+      "filename": "docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md",
+      "status": "added",
+      "additions": 72,
+      "deletions": 0,
+      "changes": 72,
+      "patch": "diff --git a/docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md b/docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md\nnew file mode 100644\nindex 00000000000..7492903a413\n--- /dev/null\n+++ b/docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md\n@@ -0,0 +1,72 @@\n+---\n+title: Troubleshoot STATUS_ACCOUNT_DISABLED in Microsoft Entra\n+description: Learn how to diagnose intermittent STATUS_ACCOUNT_DISABLED errors on Microsoft Entra hybrid joined Windows devices and restore user sign-in.\n+ms.topic: troubleshooting\n+ms.date: 09/01/2026\n+ms.reviewer: mozmaili\n+ms.custom: has-adal-ref, sfi-ropc-nochange, sfi-image-nochange, msecd-doc-authoring-1018\n+ai-usage: ai-assisted\n+#customer intent: As an IT administrator, I want to diagnose intermittent STATUS_ACCOUNT_DISABLED errors on Microsoft Entra hybrid joined devices so that users can restore access and I can understand the underlying cause.\n+---\n+# Troubleshoot intermittent STATUS_ACCOUNT_DISABLED errors on Microsoft Entra hybrid joined devices\n+\n+This article provides troubleshooting guidance to help you resolve potential issues with Windows devices that are Microsoft Entra hybrid joined and receive intermittent STATUS_ACCOUNT_DISABLED errors when users attempt to sign in or unlock the device.\n+\n+## Symptoms\n+\n+In a Microsoft Entra hybrid joined environment, you might occasionally receive the error message STATUS_ACCOUNT_DISABLED ('The user is disabled') when attempting to sign in or unlock the device.\n+\n+However, the user account in question is not disabled.\n+\n+The issue typically self-resolves after waiting a few minutes and trying to unlock again, or rebooting, or signing out completely and signing back in instead of trying to unlock.\n+\n+In addition, you see the following events in the event log:\n+\n+```text\n+Log:  Microsoft-Windows-AAD/Operational\n+Event ID 1081\n+Level: Error\n+\n+OAuth response error: invalid_grant\n+Error description: AADSTS50034: The user account {user} does not exist in the\n+{guid} directory. To sign into this application, the account\n+must be added to the directory.\n+```\n+\n+```text\n+Log:  Microsoft-Windows-Hello-for-Business/Operational\n+Event ID 7001\n+\n+A user failed to sign into the device with the following information:\n+Username: SYSTEM  User SID: S-1-5-18\n+Credential Type: Software Key  Deployment Type: Cloud Trust\n+Software Lockout Counter: 0\n+Authentication Error Status: 0xC000006D  Authentication Error Substatus: 0xC0000072\n+\n+ 0xC000006D / 0xC0000072  = STATUS_LOGON_FAILURE / STATUS_ACCOUNT_DISABLED.\n+```\n+\n+The issue does not occur in Entra-native deployments.\n+\n+## Cause\n+\n+Microsoft Entra hybrid join caches some user data locally on the Windows client. Events such as primary refresh token (PRT) expiration and VSM session key rollover can make this cache stale. Rebuilding the cache requires communication with the on-premises Active Directory domain controller. That communication can fail when:\n+\n+- The computer recently resumed from hibernation.\n+- The computer recently resumed from a deep sleep state.\n+- Virtual private network (VPN) or network adapter connectivity isn't ready when the client tries to communicate with the on-premises domain controller.\n+- The VPN requires a user to sign in before it connects, such as when using a user VPN instead of a device VPN.\n+\n+When this communication fails, the Windows client sends Microsoft Entra ID the user's Security Account Manager (SAM) account name instead of the full user principal name (UPN). Microsoft Entra ID doesn't recognize a SAM account name without the domain, so the sign-in attempt fails. The Windows client then maps Microsoft Entra error AADSTS50034 (user not found) to STATUS_ACCOUNT_DISABLED, which can cause confusion.\n+\n+Although Microsoft may improve this behavior in future updates, it is currently viewed as by design. Microsoft recommends all future deployments be Entra-native, where this problem doesn't exist.\n+\n+<a name='resources'></a>\n+\n+## Related content\n+\n+[Windows Hello for Business cloud Kerberos trust FAQ](/windows/security/identity-protection/hello-for-business/faq#do-i-need-line-of-sight-to-a-domain-controller-to-use-windows-hello-for-business-cloud-kerberos-trust)\n+\n+[Troubleshoot Microsoft Entra hybrid joined devices](troubleshoot-hybrid-join-windows-current.md)\n+\n+[What is a Microsoft Entra hybrid joined device?](concept-hybrid-join.md)\n",
+      "baseCommitSha": "8a1ecb6e0488de6a35c94777a14bf7f05190aa6a",
+      "commitSha": "8bac9f5e3be127ded0dfc65973f634560a4c0713",
+      "commitMessage": "Add copy-edited STATUS_ACCOUNT_DISABLED troubleshooting article (#14292)",
+      "commitAuthor": "Laura Williams [MSFT]",
+      "commitDate": "2026-09-02 08:48:58 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/troubleshoot-intermittent-status-account-disabled",
+      "eventId": "entra-docs:8bac9f5e3be127ded0dfc65973f634560a4c0713:added:docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md",
+      "firstSeenAt": "2026-09-02T17:56:09.649Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "New troubleshooting guidance for intermittent STATUS_ACCOUNT_DISABLED errors",
+        "summary": "A new article explains how to diagnose intermittent STATUS_ACCOUNT_DISABLED sign-in and unlock errors on Microsoft Entra hybrid joined Windows devices, including relevant event logs and the stale-cache and connectivity conditions that can cause them.",
+        "adminImpact": "Administrators can use the documented symptoms, causes, and related resources to troubleshoot affected users; no action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity-platform/sample-v2-code.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity-platform/sample-v2-code.md b/docs/identity-platform/sample-v2-code.md\nindex 2cd181ee2ad..486c0f7347c 100644\n--- a/docs/identity-platform/sample-v2-code.md\n+++ b/docs/identity-platform/sample-v2-code.md\n@@ -48,7 +48,7 @@ The following samples illustrate web applications that sign in users. Some sampl\n | Blazor | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-docs-code-dotnet/tree/main/spa-blazor-wasm) <br/>&#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-blazor-server/tree/main/WebApp-graph-user/Call-MSGraph) <br/>&#8226; [Call web API](https://github.com/Azure-Samples/ms-identity-blazor-server/tree/main/WebApp-your-API/MyOrg) | [MSAL.NET](/entra/msal/dotnet) | Hybrid flow | | |\n | Java Spring | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/1-Authentication/sign-in) <br/>&#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/2-Authorization-I/call-graph) <br/>&#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/3-Authorization-II/roles) <br/>&#8226; [Use Groups for access control](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/3-Authorization-II/groups) <br/>&#8226; [Protect a web API](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/3-Authorization-II/protect-web-api) <br/>&#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/4-spring-web-app/4-Deployment/deploy-to-azure-app-service) | [MSAL Java](/java/api/com.microsoft.aad.msal4j) | Authorization code | |[Tutorial](/azure/developer/java/spring-framework/configure-spring-boot-starter-java-app-with-azure-active-directory) |\n | Java Servlets | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/3-java-servlet-web-app/1-Authentication/sign-in) <br/>&#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/3-java-servlet-web-app/2-Authorization-I/call-graph) <br/>&#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/3-java-servlet-web-app/3-Authorization-II/roles) <br/>&#8226; [Use Security Groups for access control](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/3-java-servlet-web-app/3-Authorization-II/groups) <br/>&#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/3-java-servlet-web-app/4-Deployment/deploy-to-azure-app-service) | [MSAL Java](/java/api/com.microsoft.aad.msal4j) | Authorization code |[Quickstart](quickstart-web-app-java-sign-in.md) | |\n-| Node.js Express | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/1-Authentication/1-sign-in/README.md) <br/>&#8226; [Express web application built with MSAL Node and Microsoft identity platform](https://github.com/Azure-Samples/ms-identity-node/blob/main/README.md) <br/>&#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/2-Authorization/1-call-graph/README.md) <br/>&#8226; [Call Microsoft Graph via BFF proxy](https://github.com/Azure-Samples/ms-identity-node) <br/>&#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/1-app-roles/README.md) <br/>&#8226; [Use Security Groups for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/2-security-groups/README.md) <br/>&#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/3-Deployment/README.md)  | [MSAL Node](/javascript/api/@azure/msal-node) | &#8226; Authorization code <br/>&#8226; Backend-for-Frontend (BFF) proxy | [Quickstart](quickstart-web-app-nodejs-sign-in.md)| [Tutorial](tutorial-v2-nodejs-webapp-msal.md) |\n+| Node.js Express | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/1-Authentication/1-sign-in/README.md) <br/>&#8226; [Express web application built with MSAL Node and Microsoft identity platform](https://github.com/Azure-Samples/ms-identity-node/blob/main/README.md) <br/>&#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/2-Authorization/1-call-graph/README.md) <br/>&#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/1-app-roles/README.md) <br/>&#8226; [Use Security Groups for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/2-security-groups/README.md) <br/>&#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/3-Deployment/README.md)  | [MSAL Node](/javascript/api/@azure/msal-node) | &#8226; Authorization code <br/>&#8226; Backend-for-Frontend (BFF) proxy | [Quickstart](quickstart-web-app-nodejs-sign-in.md)| [Tutorial](tutorial-v2-nodejs-webapp-msal.md) |\n | Python Flask | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-docs-code-python/tree/main/flask-web-app) <br/>&#8226; [Template to sign in Microsoft Entra ID, and optionally call a downstream API (Microsoft Graph)](https://github.com/Azure-Samples/ms-identity-python-webapp) | [MSAL Python](/entra/msal/python) | Authorization code | [Quickstart](quickstart-web-app-python-flask.md)| [Tutorial](tutorial-web-app-python-register-app.md) |\n | Python Django | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-docs-code-python/tree/main/django-web-app) | [MSAL Python](/entra/msal/python) | Authorization code | | |\n | Ruby | &#8226; [Sign in users and call Microsoft Graph](https://github.com/microsoftgraph/msgraph-training-rubyrailsapp) | OmniAuth OAuth2 | Authorization code | | |\n@@ -225,7 +225,7 @@ The following samples show how to build applications for the JavaScript language\n > [!div class=\"mx-tdCol2BreakAll\"]\n > | App type | Code sample(s) <br/>on GitHub | Auth <br/>libraries | Auth flow | Quickstart | Tutorial |\n > | -------- | ----------------------------- | ------------------- | --------- | ---------- | -------- |\n-> | Web application | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/1-Authentication/1-sign-in/README.md) <br/> &#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/2-Authorization/1-call-graph/README.md)<br/> &#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/3-Deployment/README.md)<br/> &#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/1-app-roles/README.md)<br/> &#8226; [Use Security Groups for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/2-security-groups/README.md) <br/> &#8226; [Web app that sign in users](https://github.com/Azure-Samples/ms-identity-node) | [MSAL Node](/javascript/api/@azure/msal-node) | Authorization code | [Quickstart](quickstart-web-app-nodejs-sign-in.md) | [Tutorial](tutorial-v2-nodejs-webapp-msal.md)  |\n+> | Web application | &#8226; [Sign in users](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/1-Authentication/1-sign-in/README.md) <br/> &#8226; [Call Microsoft Graph](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/2-Authorization/1-call-graph/README.md)<br/> &#8226; [Deploy to Azure App Service](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/3-Deployment/README.md)<br/> &#8226; [Use App Roles for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/1-app-roles/README.md)<br/> &#8226; [Use Security Groups for access control](https://github.com/Azure-Samples/ms-identity-javascript-nodejs-tutorial/blob/main/4-AccessControl/2-security-groups/README.md) <br/> &#8226; [Express web application built with MSAL Node and Microsoft identity platform](https://github.com/Azure-Samples/ms-identity-node) | [MSAL Node](/javascript/api/@azure/msal-node) | Authorization code | [Quickstart](quickstart-web-app-nodejs-sign-in.md) | [Tutorial](tutorial-v2-nodejs-webapp-msal.md)  |\n \n #### React\n \n",
+      "baseCommitSha": "8a1ecb6e0488de6a35c94777a14bf7f05190aa6a",
+      "commitSha": "9ed51da18464ee08aa00c37fe0c2ebd7c21afd38",
+      "commitMessage": "Learn Editor: Update sample-v2-code.md",
+      "commitAuthor": "Reeza Ali",
+      "commitDate": "2026-09-01 17:30:26 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/sample-v2-code.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/sample-v2-code",
+      "eventId": "entra-docs:9ed51da18464ee08aa00c37fe0c2ebd7c21afd38:modified:docs/identity-platform/sample-v2-code.md",
+      "firstSeenAt": "2026-09-02T17:56:09.660Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Sample code references updated",
+        "summary": "The Node.js Express and web application entries in the sample code documentation were updated, including their linked sample resources.",
+        "adminImpact": "Administrators using these examples should follow the updated references; no configuration change is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/authentication/concept-system-preferred-authentication.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/authentication/concept-system-preferred-authentication.md b/docs/identity/authentication/concept-system-preferred-authentication.md\nindex ffa22b35ce3..9244548891e 100644\n--- a/docs/identity/authentication/concept-system-preferred-authentication.md\n+++ b/docs/identity/authentication/concept-system-preferred-authentication.md\n@@ -2,7 +2,7 @@\n title: System-preferred authentication in Microsoft Entra ID\n description: Learn how system-preferred authentication evaluates methods to prompt users with the most secure sign-in option for both first-factor and second-factor authentication.\n ms.topic: overview\n-ms.date: 04/15/2026\n+ms.date: 09/01/2026\n ms.reviewer: msft-poulomi\n ms.custom: msecd-doc-authoring-1012\n ai-usage: ai-assisted\n@@ -19,7 +19,7 @@ For example, if a user registered both a password and a passkey, system-preferre\n System-preferred authentication is a Microsoft managed setting, which is a [three-state policy](#authentication-method-feature-configuration-properties) (enabled, disabled, or Microsoft managed). If you don't want to enable system-preferred authentication, change the state from **Microsoft managed** to **Disabled**, or exclude users and groups from the policy.\n \n > [!NOTE]\n-> The **Microsoft managed** state behavior affects both first-factor and multifactor authentication and is being gradually deployed to tenants through August 2026. If your tenant or users don't experience system-preferred authentication as the first factor when the **State** is **Microsoft managed**, the rollout isn't deployed yet for your tenant.\n+> The **Microsoft managed** state behavior affects both first-factor and multifactor authentication and is being gradually deployed to tenants through September 2026. If your tenant or users don't experience system-preferred authentication as the first factor when the **State** is **Microsoft managed**, the rollout isn't deployed yet for your tenant.\n \n After system-preferred authentication is enabled, the authentication system does all the work. Users don't need to set any authentication method as their default because the system always determines and presents the most secure method they registered.\n \n",
+      "baseCommitSha": "8075470c946d4ef8e83daf7c88d3d1fa641e55ae",
+      "commitSha": "bd00d7e8f9bb15fbce5b935b743bdf52be0e33a5",
+      "commitMessage": "Update system-preferred authentication rollout date",
+      "commitAuthor": "marinasanchezz1",
+      "commitDate": "2026-09-01 12:07:07 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-system-preferred-authentication.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-system-preferred-authentication",
+      "eventId": "entra-docs:bd00d7e8f9bb15fbce5b935b743bdf52be0e33a5:modified:docs/identity/authentication/concept-system-preferred-authentication.md",
+      "firstSeenAt": "2026-09-02T17:56:09.671Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "System-preferred authentication rollout date extended",
+        "summary": "The documentation now states that Microsoft-managed system-preferred authentication deployment will continue through September 2026, rather than August 2026.",
+        "adminImpact": "Administrators should account for the revised rollout timeline when monitoring tenant and user behavior.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "deletedFiles": [],
   "messageCenterItems": [
     {
@@ -43,14 +123,59 @@
     }
   ],
   "summary": {
-    "totalCommits": 0,
-    "totalFiles": 0,
-    "authors": []
+    "totalCommits": 3,
+    "totalFiles": 3,
+    "authors": [
+      "Laura Williams [MSFT]",
+      "Reeza Ali",
+      "marinasanchezz1"
+    ]
   },
   "englishSummary": {
-    "overview": "No substantive Microsoft Entra documentation changes were detected for this report.",
-    "groups": [],
-    "highlights": [],
+    "overview": "Today's report includes 1 new, 2 updated, and 0 removed Microsoft Entra documentation files across 3 documentation areas.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "identity/devices",
+        "summary": "A new article explains how to diagnose intermittent STATUS_ACCOUNT_DISABLED sign-in and unlock errors on Microsoft Entra hybrid joined Windows devices, including relevant event logs and the stale-cache and connectivity conditions that can cause them.",
+        "sourceFiles": [
+          "docs/identity/devices/troubleshoot-intermittent-status-account-disabled.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity-platform",
+        "summary": "The Node.js Express and web application entries in the sample code documentation were updated, including their linked sample resources.",
+        "sourceFiles": [
+          "docs/identity-platform/sample-v2-code.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/authentication",
+        "summary": "The documentation now states that Microsoft-managed system-preferred authentication deployment will continue through September 2026, rather than August 2026.",
+        "sourceFiles": [
+          "docs/identity/authentication/concept-system-preferred-authentication.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "identity/devices",
+        "detail": "A new article explains how to diagnose intermittent STATUS_ACCOUNT_DISABLED sign-in and unlock errors on Microsoft Entra hybrid joined Windows devices, including relevant event logs and the stale-cache and connectivity conditions that can cause them."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity-platform",
+        "detail": "The Node.js Express and web application entries in the sample code documentation were updated, including their linked sample resources."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/authentication",
+        "detail": "The documentation now states that Microsoft-managed system-preferred authentication deployment will continue through September 2026, rather than August 2026."
+      }
+    ],
     "generatedBy": "fallback"
   }
 }
