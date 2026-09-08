@@ -27,18 +27,73 @@
       }
     }
   ],
-  "modifiedFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "status": "modified",
+      "additions": 63,
+      "deletions": 2,
+      "changes": 65,
+      "patch": "diff --git a/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md b/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\nindex e1680e8e47b..5787f45ad30 100644\n--- a/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\n+++ b/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md\n@@ -2,7 +2,8 @@\n title: Track and investigate identity activities with linkable identifiers in Microsoft Entra\n description: Discover how linkable identifiers like session IDs and unique token identifiers in Microsoft Entra help track and investigate identity-related activities, enhancing security and transparency.\n ms.topic: how-to\n-ms.date: 05/27/2025\n+ms.date: 09/02/2026\n+ai-usage: ai-assisted\n ms.subservice: hybrid\n ms.custom: msecd-doc-authoring-106\n ms.reviewer: vranganathan\n@@ -49,9 +50,10 @@ This table describes all the linkable identifier claims in the Entra tokens.\n \n ## Log availability for linkable identifiers\n \n-Currently, linkable identifiers are recorded in the following log sources:\n+Currently, one or more linkable identifiers are recorded in the following log sources:\n \n - Microsoft Entra sign-in logs\n+- Microsoft Entra audit logs\n - Microsoft Exchange Online audit logs\n - Microsoft Graph activity logs\n - Microsoft SharePoint Online audit logs\n@@ -86,6 +88,65 @@ To view the sign-in logs from the Microsoft Entra admin center:\n \n Start with the User ID attribute in Microsoft Entra sign-in logs, then search the workload audit logs to track all activities using a specific access token. Similarly, use the Session ID attribute to search the workload audit logs and track all activities within a session.\n \n+## Linkable identifiers in Microsoft Entra audit logs\n+\n+[Microsoft Entra audit logs](~/identity/monitoring-health/concept-audit-logs.md) provide visibility into administrative and directory operations in a tenant. These logs capture activities such as user and group management, application and service principal changes, role assignments, policy updates, and device lifecycle events.\n+\n+For supported audit events, the logs include the directory user session identifier (DUSI). DUSI enables security analysts to correlate an administrative operation with the authenticated user session from which the operation originated.\n+\n+### Investigation scenarios using DUSI\n+\n+For scenarios involving administrative activity, you can:\n+\n+- Start with DUSI from a Microsoft Entra sign-in log.\n+- Use the identifier to find events from the same authenticated session in Microsoft Entra audit logs.\n+- Correlate sign-in activity with subsequent administrative operations.\n+- Trace configuration changes performed during a specific authenticated session.\n+- Investigate privileged operations associated with a suspicious or compromised account.\n+\n+This correlation establishes an audit trail from authentication through subsequent administrative actions.\n+\n+### Linkable identifier mapping\n+\n+The following table maps linkable identifier claims to their attribute names in Microsoft Entra audit logs.\n+\n+| **Claim** | **Microsoft Entra audit log attribute name** | **Description** |\n+|-----------|----------------------------------------------|-----------------|\n+| oid       | Object ID                                    | The immutable identifier of the user or service principal that initiated the operation. |\n+| tid       | Tenant ID                                    | The identifier of the tenant where the operation was recorded. |\n+| sid       | Session ID                                   | The identifier that links the operation to the authenticated user session. |\n+| deviceid  | Device ID                                    | The identifier of the device associated with the session, when available. |\n+| uti       | Unique Token Identifier                      | The unique, case-sensitive identifier of the token or request associated with the operation. |\n+| iat       | Issued at datetime                           | The date and time when the token associated with the operation was issued. |\n+\n+### Correlate sign-in activity with audit logs\n+\n+Use the same DUSI value to correlate Microsoft Entra sign-in logs with Microsoft Entra audit logs:\n+\n+1. Identify a suspicious sign-in in Microsoft Entra sign-in logs.\n+1. Capture the associated DUSI value.\n+1. Search Microsoft Entra audit logs for the same DUSI value.\n+1. Review the administrative and directory operations associated with the authenticated session.\n+\n+This approach helps you determine whether a sign-in resulted in changes to users, groups, applications, devices, policies, or role assignments.\n+\n+:::image type=\"content\" border=\"true\" source=\"media/how-to-authentication-track-linkable-identifiers/entra-audit-log-linkable-identifier.png\" alt-text=\"Screenshot of Microsoft Entra audit log details showing a session ID and synthetic example values.\" lightbox=\"media/how-to-authentication-track-linkable-identifiers/entra-audit-log-linkable-identifier.png\":::\n+\n+### Example: Investigate administrative activity from a compromised session\n+\n+Suppose an administrator account is suspected of being compromised after a suspicious sign-in. By using the DUSI captured from Microsoft Entra sign-in logs, you can:\n+\n+- Identify Microsoft Entra audit log events associated with the session.\n+- Review role assignment changes.\n+- Investigate Conditional Access policy updates.\n+- Examine application and service principal modifications.\n+- Determine the overall impact of the session.\n+\n+Using DUSI across Microsoft Entra sign-in and audit logs helps security teams trace administrative activity back to the originating authenticated session.\n+\n+> [!NOTE]\n+> DUSI is intended for investigation and correlation scenarios. A session identifier is available only when the audit event includes authenticated user-session context. Some service-generated, background, or otherwise unsupported audit events might not include a DUSI value.\n+\n ## Linkable identifiers in Microsoft Exchange Online logs\n \n Exchange Online audit logs provide visibility into critical user activity and support in-depth investigations by capturing detailed audit events. These logs include linkable identifiers carried forward from Microsoft Entra tokens, enabling correlation across authentication artifacts and workloads.\n",
+      "baseCommitSha": "d108132c44f7f4342a6d7f633bdfa6deb16bc4b6",
+      "commitSha": "e8204fef55b1badaa37f493a795ca6574f2770d7",
+      "commitMessage": "Add linkable identifiers to Microsoft Entra audit log guidance (#14303)",
+      "commitAuthor": "vimrang",
+      "commitDate": "2026-09-08 09:36:26 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers",
+      "eventId": "entra-docs:e8204fef55b1badaa37f493a795ca6574f2770d7:modified:docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md",
+      "firstSeenAt": "2026-09-08T17:57:12.089Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Audit log guidance adds DUSI correlation",
+        "summary": "The documentation now explains how supported audit events can include DUSI, maps linkable identifiers to audit-log attributes, and provides steps for correlating sign-ins with administrative activity. Some events may not include DUSI.",
+        "adminImpact": "No configuration change or deadline is stated. Administrators can use DUSI to investigate suspicious sessions and trace related changes.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/fundamentals/what-is-entra.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/fundamentals/what-is-entra.md b/docs/fundamentals/what-is-entra.md\nindex 5e75bac6ac5..ce09c74301c 100644\n--- a/docs/fundamentals/what-is-entra.md\n+++ b/docs/fundamentals/what-is-entra.md\n@@ -74,7 +74,7 @@ If you're a **Microsoft 365, Azure, or Dynamics CRM Online subscriber**, you're\n \n [Microsoft Entra Workload ID](~/workload-id/workload-identities-overview.md) is the identity and access management solution for workload identities — applications, services, and containers that require authentication and authorization policies. It lets organizations secure access to resources using adaptive policies and custom security attributes.\n \n-**For example**, GitHub Actions need a workload identity to access Azure subscriptions to automate, customize, and execute software development workflows.\n+**For example**, GitHub Actions needs a workload identity to access Azure subscriptions to automate, customize, and execute software development workflows.\n \n ### Secure access for AI agents\n \n",
+      "baseCommitSha": "aac35fef0e64356291da46144e24b6a60357b7d2",
+      "commitSha": "193436706a1bc86da5e36bc69f3a7b1c66f4f66a",
+      "commitMessage": "Fix grammatical error in Entra documentation (#2097)",
+      "commitAuthor": "Adeoye Oluwaferanmi",
+      "commitDate": "2026-09-08 15:15:08 +0100",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/fundamentals/what-is-entra.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/fundamentals/what-is-entra",
+      "eventId": "entra-docs:193436706a1bc86da5e36bc69f3a7b1c66f4f66a:modified:docs/fundamentals/what-is-entra.md",
+      "firstSeenAt": "2026-09-08T17:57:12.122Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Grammar corrected in GitHub Actions example",
+        "summary": "The Entra documentation now uses the singular verb “needs” for “GitHub Actions” in an example about workload identities accessing Azure subscriptions.",
+        "adminImpact": "No administrator action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "deletedFiles": [],
   "messageCenterItems": [],
   "summary": {
-    "totalCommits": 1,
-    "totalFiles": 1,
+    "totalCommits": 3,
+    "totalFiles": 3,
     "authors": [
-      "Rohit Gulati"
+      "Adeoye Oluwaferanmi",
+      "Rohit Gulati",
+      "vimrang"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 1 new, 0 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "overview": "Today's report includes 1 new, 2 updated, and 0 removed Microsoft Entra documentation files across 3 documentation areas.",
     "groups": [
       {
         "category": "Doc update",
@@ -47,6 +102,22 @@
         "sourceFiles": [
           "docs/external-id/customers/verified-id-setup-issuance-presentation.md"
         ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/authentication",
+        "summary": "The documentation now explains how supported audit events can include DUSI, maps linkable identifiers to audit-log attributes, and provides steps for correlating sign-ins with administrative activity. Some events may not include DUSI.",
+        "sourceFiles": [
+          "docs/identity/authentication/how-to-authentication-track-linkable-identifiers.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "fundamentals",
+        "summary": "The Entra documentation now uses the singular verb “needs” for “GitHub Actions” in an example about workload identities accessing Azure subscriptions.",
+        "sourceFiles": [
+          "docs/fundamentals/what-is-entra.md"
+        ]
       }
     ],
     "highlights": [
@@ -54,6 +125,16 @@
         "category": "Doc update",
         "headline": "external-id",
         "detail": "The new article explains how to use Quick setup, register applications, create credentials, and issue and verify credentials in a Microsoft Entra External ID tenant. It documents prerequisites and limits, including custom-domain requirements, shared signing keys, two requests per second per tenant, and six-month credential validity."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/authentication",
+        "detail": "The documentation now explains how supported audit events can include DUSI, maps linkable identifiers to audit-log attributes, and provides steps for correlating sign-ins with administrative activity. Some events may not include DUSI."
+      },
+      {
+        "category": "Doc update",
+        "headline": "fundamentals",
+        "detail": "The Entra documentation now uses the singular verb “needs” for “GitHub Actions” in an example about workload identities accessing Azure subscriptions."
       }
     ],
     "generatedBy": "fallback"
