@@ -1,0 +1,61 @@
+{
+  "newFiles": [
+    {
+      "filename": "docs/external-id/customers/verified-id-setup-issuance-presentation.md",
+      "status": "added",
+      "additions": 119,
+      "deletions": 0,
+      "changes": 119,
+      "patch": "diff --git a/docs/external-id/customers/verified-id-setup-issuance-presentation.md b/docs/external-id/customers/verified-id-setup-issuance-presentation.md\nnew file mode 100644\nindex 00000000000..ec6a4e81a39\n--- /dev/null\n+++ b/docs/external-id/customers/verified-id-setup-issuance-presentation.md\n@@ -0,0 +1,119 @@\n+---\n+title: Set up Microsoft Entra Verified ID\n+description: Configure Microsoft Entra Verified ID in an external tenant, issue credentials, and verify presented credentials in an application.\n+author: rogulati\n+ms.author: rogulati\n+ms.service: entra-external-id\n+ms.topic: how-to\n+ms.custom: msecd-doc-authoring-1026\n+ms.date: 09/08/2026\n+ai-usage: ai-generated\n+\n+#customer intent: As an External ID tenant administrator or developer, I want to configure Verified ID, issue credentials, and verify presented credentials so that my applications can use verified claims.\n+---\n+\n+# Configure Microsoft Entra Verified ID in an external tenant\n+\n+If you're an External ID tenant administrator or developer, use this article to configure Microsoft Entra Verified ID in an external tenant. Before you start, review the prerequisites for Quick setup and the sample application. When you finish, you can create a credential type, issue a credential to a user, and configure an application to request and verify the credential.\n+\n+Quick setup is the supported setup method for external tenants. It configures signing keys, registers a decentralized identifier (DID), verifies domain ownership, and creates a default Verified Workplace credential.\n+\n+> [!IMPORTANT]\n+> Advanced setup and Face Check aren't available in external tenants. Quick setup uses a Microsoft-managed shared signing key, supports two issuance and verification requests per second per tenant, and limits credential validity to six months.\n+\n+## Prerequisites\n+\n+- A Microsoft Entra External ID tenant with a [registered custom domain](/entra/identity/users/domains-manage). Without a registered custom domain, there isn't a supported Verified ID setup path for an external tenant.\n+- The [Authentication Policy Administrator](/entra/identity/role-based-access-control/permissions-reference#authentication-policy-administrator) role to configure Verified ID.\n+- The [Application Administrator](/entra/identity/role-based-access-control/permissions-reference#application-administrator) role if you need to register an application.\n+- A mobile device with the latest version of Microsoft Authenticator.\n+- For the .NET sample application, [Git](https://git-scm.com/downloads), [Visual Studio Code](https://code.visualstudio.com/Download) or a similar code editor, [.NET 8.0](https://dotnet.microsoft.com/download/dotnet/8.0), and an [ngrok](https://ngrok.com/) account.\n+\n+## Set up Verified ID\n+\n+Use Quick setup to configure Verified ID without deploying Azure Key Vault or managing signing keys.\n+\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) with the Authentication Policy Administrator role.\n+1. Select **Verified ID**.\n+1. On the left menu, select **Setup**.\n+1. Select **Get started**.\n+1. If your tenant has multiple registered domains, select the domain to use for Verified ID.\n+1. Wait for setup to finish, and verify that the default workplace credential appears.\n+\n+Quick setup creates a DID in the format `did:web:verifiedid.entra.microsoft.com:<tenant-id>:<authority-id>`. For more information about Quick setup and the default credential, see [Quick Microsoft Entra Verified ID setup](/entra/verified-id/verifiable-credentials-configure-tenant-quick).\n+\n+## Register an application\n+\n+Register an application so it can get access tokens to call the Verified ID Request Service for issuance and presentation.\n+\n+1. In the Microsoft Entra admin center, select **Microsoft Entra ID**.\n+1. Select **Applications** > **App registrations** > **New registration**.\n+1. Enter a display name for the application.\n+1. For **Supported account types**, select **Accounts in this organizational directory only**.\n+1. Select **Register**.\n+1. On the application page, select **API permissions** > **Add a permission**.\n+1. Select **APIs my organization uses**.\n+1. Search for and select **Verifiable Credentials Service Request**.\n+1. Select **Application permissions**, expand **VerifiableCredential.Create.All**, and select **Add permissions**.\n+1. Select **Grant admin consent for \\<your tenant name\\>**.\n+\n+You can grant issuance and presentation permissions to separate applications if you need to separate those responsibilities. For the complete registration procedure, see [Register an application in Microsoft Entra ID](/entra/verified-id/verifiable-credentials-configure-tenant#register-an-application-in-microsoft-entra-id).\n+\n+## Create a credential type\n+\n+Create a custom credential with display and rules definitions for the claims that your application issues.\n+\n+1. Under **Verified ID**, select **Credentials**.\n+1. Select **Add a credential**.\n+1. Select **Custom Credential**, and then select **Next**.\n+1. Enter a credential name.\n+1. Add the display definition for the credential.\n+1. Add the rules definition that maps the input claims from your application to the output claims in the credential.\n+1. Select **Create**.\n+1. Select **Issue credential** for the credential that you created.\n+1. Record the authority DID, manifest URL, and tenant ID. You use these values to configure the issuing application.\n+\n+For a sample display definition, rules definition, and credential, see [Issue Microsoft Entra Verified ID credentials from an application](/entra/verified-id/verifiable-credentials-configure-issuer).\n+\n+## Issue a credential\n+\n+Configure an issuing application to request a credential for a user and add it to the user's Microsoft Authenticator wallet.\n+\n+1. Download or clone the [.NET sample application](https://github.com/Azure-Samples/active-directory-verifiable-credentials-dotnet).\n+1. Configure the sample application with the tenant ID, application client ID, application credential, authority DID, and credential manifest URL that you recorded.\n+1. Run the sample application and make its callback endpoint available.\n+1. In the sample application, select **Get Credential**.\n+1. Scan the QR code with Microsoft Authenticator.\n+1. Follow the prompts in Microsoft Authenticator to add the credential.\n+1. Return to the sample application, and verify that it reports a successful issuance.\n+\n+For the sample configuration and complete testing procedure, see [Issue Microsoft Entra Verified ID credentials from an application](/entra/verified-id/verifiable-credentials-configure-issuer).\n+\n+## Configure credential presentation\n+\n+Configure a relying-party application to request a credential and process the verified claims returned in the callback.\n+\n+1. In the Microsoft Entra admin center, select **Verified ID** > **Organization settings**.\n+1. Record the tenant identifier and DID for the verifying organization.\n+1. Configure the verifier application with its tenant ID, application client ID, application credential, DID authority, and the credential type to request.\n+1. Create a presentation request for the credential type.\n+1. Configure the application to receive the authenticated callback and use the verified claims to make its access decision.\n+\n+The issuer and verifier can use the same tenant or separate organizations and tenants. When they're separate, configure the verifier with its own tenant identifier and DID. For the complete sample configuration, see [Configure Microsoft Entra Verified ID verifier](/entra/verified-id/verifiable-credentials-configure-verifier).\n+\n+## Present and verify a credential\n+\n+Test the presentation request with the credential in Microsoft Authenticator.\n+\n+1. Run the verifier application and make its callback endpoint available.\n+1. In the verifier application, select **Verify Credential**.\n+1. Scan the QR code with Microsoft Authenticator.\n+1. Review the presentation request, and select **Allow**.\n+1. Return to the verifier application, and verify that it received the presentation.\n+1. Confirm that the application uses the verified claims to make the expected access decision.\n+\n+## Related content\n+\n+- [Quick Microsoft Entra Verified ID setup](/entra/verified-id/verifiable-credentials-configure-tenant-quick)\n+- [Issue Microsoft Entra Verified ID credentials from an application](/entra/verified-id/verifiable-credentials-configure-issuer)\n+- [Configure Microsoft Entra Verified ID verifier](/entra/verified-id/verifiable-credentials-configure-verifier)\n",
+      "baseCommitSha": "fa9766c5fe7a8a54dd0e55fd0aaf4cb5bfca2edc",
+      "commitSha": "ed9dbfa0885197bab1389ca5f3ae051088346e50",
+      "commitMessage": "Add Verified ID setup guidance for external tenants (#14324)",
+      "commitAuthor": "Rohit Gulati",
+      "commitDate": "2026-09-08 11:55:02 +0100",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/verified-id-setup-issuance-presentation.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/verified-id-setup-issuance-presentation",
+      "eventId": "entra-docs:ed9dbfa0885197bab1389ca5f3ae051088346e50:added:docs/external-id/customers/verified-id-setup-issuance-presentation.md",
+      "firstSeenAt": "2026-09-08T12:52:25.789Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Guidance added for setting up Verified ID in external tenants",
+        "summary": "The new article explains how to use Quick setup, register applications, create credentials, and issue and verify credentials in a Microsoft Entra External ID tenant. It documents prerequisites and limits, including custom-domain requirements, shared signing keys, two requests per second per tenant, and six-month credential validity.",
+        "adminImpact": "Administrators have a documented setup path and required roles for enabling Verified ID in external tenants.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [],
+  "deletedFiles": [],
+  "messageCenterItems": [],
+  "summary": {
+    "totalCommits": 1,
+    "totalFiles": 1,
+    "authors": [
+      "Rohit Gulati"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 1 new, 0 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "external-id",
+        "summary": "The new article explains how to use Quick setup, register applications, create credentials, and issue and verify credentials in a Microsoft Entra External ID tenant. It documents prerequisites and limits, including custom-domain requirements, shared signing keys, two requests per second per tenant, and six-month credential validity.",
+        "sourceFiles": [
+          "docs/external-id/customers/verified-id-setup-issuance-presentation.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "external-id",
+        "detail": "The new article explains how to use Quick setup, register applications, create credentials, and issue and verify credentials in a Microsoft Entra External ID tenant. It documents prerequisites and limits, including custom-domain requirements, shared signing keys, two requests per second per tenant, and six-month credential validity."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
