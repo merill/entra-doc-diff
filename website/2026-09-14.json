@@ -234,32 +234,300 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/id-governance/tenant-governance/licensing.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/tenant-governance/licensing.md b/docs/id-governance/tenant-governance/licensing.md\nindex 4df5e916f21..d7db5eeab8d 100644\n--- a/docs/id-governance/tenant-governance/licensing.md\n+++ b/docs/id-governance/tenant-governance/licensing.md\n@@ -3,7 +3,7 @@ title: Licensing for Microsoft Entra Tenant Governance\n titleSuffix: Microsoft Entra ID Governance\n description: Learn which Microsoft Entra Tenant Governance features are available with each license tier, including P1, P2, and ID Governance\n author: tafra00\n-ms.author: tafra00\n+ms.author: tazkiaafra\n ms.service: entra-id-governance\n ms.topic: concept-article\n ms.date: 09/14/2026\n",
+      "baseCommitSha": "160cea0b0b841d74b71c39d2b130f17da61e6b80",
+      "commitSha": "7a6369501d149ce1d4f0a0be1c081196c2861e2c",
+      "commitMessage": "Correct Microsoft author alias",
+      "commitAuthor": "tafra00",
+      "commitDate": "2026-09-14 15:49:41 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/licensing.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/licensing",
+      "eventId": "entra-docs:7a6369501d149ce1d4f0a0be1c081196c2861e2c:modified:docs/id-governance/tenant-governance/licensing.md",
+      "firstSeenAt": "2026-09-14T23:09:59.226Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Corrected Microsoft author metadata",
+        "summary": "The licensing documentation’s Microsoft author alias was updated from `tafra00` to `tazkiaafra`.",
+        "adminImpact": "No administrator impact or action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/how-to-account-discovery.md",
+      "status": "modified",
+      "additions": 36,
+      "deletions": 54,
+      "changes": 90,
+      "patch": "diff --git a/docs/identity/app-provisioning/how-to-account-discovery.md b/docs/identity/app-provisioning/how-to-account-discovery.md\nindex dd28c90ead0..dbb6e0f37b6 100644\n--- a/docs/identity/app-provisioning/how-to-account-discovery.md\n+++ b/docs/identity/app-provisioning/how-to-account-discovery.md\n@@ -1,6 +1,6 @@\n ---\n title: Discover identities in target applications with account discovery\n-description: Learn how to use account discovery to find and categorize existing user accounts in target applications, match them to Microsoft Entra ID users, and prepare for provisioning governance.\n+description: Learn how to use account discovery to find and categorize existing users and groups in target applications, match them to Microsoft Entra ID identities, and prepare for provisioning governance.\n ms.topic: how-to\n ms.date: 08/11/2026\n ms.reviewer: arvinh\n@@ -8,21 +8,25 @@ ms.service: entra-id\n ms.subservice: app-provisioning\n ai-usage: ai-assisted\n \n-#Customer intent: As an IT administrator, I want to discover existing user accounts in target applications and match them to Microsoft Entra ID identities so I can identify unmanaged accounts and bring them under governance.\n+#Customer intent: As an IT administrator, I want to discover existing users and groups in target applications and match them to Microsoft Entra ID identities so I can identify unmanaged accounts and bring them under governance.\n \n ---\n \n # Discover identities in target applications with account discovery \n \n-When organizations adopt Microsoft Entra ID for application provisioning, target applications often already contain user accounts that were created before provisioning was configured. Account discovery helps you find these existing accounts, match them to Microsoft Entra ID users, and categorize them so you can bring unmanaged identities under governance. After onboarding to provisioning, application administrators can manually create accounts in the application. This report allows organizations to identify local or orphan accounts both during initial onboarding and after they have operationalized provisioning.\n+When organizations adopt Microsoft Entra ID for application provisioning, target applications often already contain users and groups that were created before provisioning was configured. Account discovery uses the **Discover identities** experience to retrieve users and groups from a target application, match them to corresponding users and groups in Microsoft Entra ID, and classify the results so you can bring unmanaged identities under governance. After onboarding to provisioning, application administrators can manually create accounts in the application. The discovery report helps you identify local or orphan identities both during initial onboarding and during ongoing provisioning operations.\n \n-Account discovery retrieves all user accounts from a target application and classifies them into three categories:\n+Account discovery retrieves users and groups from a target application and classifies them into three categories:\n \n-- **Local accounts** — Accounts in the target application that have no matching user in Microsoft Entra ID. These accounts might belong to former employees, service accounts, users who were provisioned through a different process, or accounts that didn't match due to data quality issues (for example, mismatched or outdated attribute values).\n-- **Unassigned users** — Accounts that match a Microsoft Entra ID user but the user isn't assigned to the enterprise application. These users exist in your directory but don't have the required application assignment for provisioning to manage them.\n-- **Assigned users** — Accounts that match a Microsoft Entra ID user who is assigned to the enterprise application. These accounts are fully managed by the provisioning service.\n+- **Local identities** — Users or groups in the target application that have no corresponding user or group in Microsoft Entra ID. These identities might belong to former employees, service accounts, users who were provisioned through a different process, groups created directly in the target application, or identities that didn't match due to data quality issues (for example, mismatched or outdated attribute values).\n+- **Unassigned identities** — Users or groups that match a user or group in Microsoft Entra ID but aren't assigned to the enterprise application. These identities exist in your directory but don't have the required application assignment for provisioning to manage them.\n+- **Assigned identities** — Users or groups that match a user or group in Microsoft Entra ID and are assigned to the enterprise application. These identities are fully managed by the provisioning service.\n \n-This classification gives you visibility into who has access to your applications and helps you identify accounts that should be governed, reassigned, or removed.\n+This classification gives you visibility into who has access to your applications and helps you identify identities that should be governed, reassigned, or removed.\n+\n+> [!IMPORTANT]\n+> Group discovery is currently in preview.\n+> This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.\n \n ## Prerequisites\n \n@@ -30,48 +34,25 @@ Before you can use account discovery, the following must be in place:\n \n - The [Microsoft Entra ID Governance](https://www.microsoft.com/security/business/identity-access/microsoft-entra-id-governance) add-on license or [Microsoft Entra Suite](https://www.microsoft.com/security/business/microsoft-entra-pricing). For details on feature availability by license, see [Microsoft Entra ID Governance licensing fundamentals](/entra/id-governance/licensing-fundamentals#features-by-license).\n - An enterprise application configured for provisioning with valid credentials and a successful test connection.\n-- A **direct matching attribute mapping** configured between Microsoft Entra ID and the target application. Account discovery uses the first matching attribute to correlate users between the two systems.\n+- A **direct matching attribute mapping** configured between Microsoft Entra ID and the target application. Account discovery uses the first matching attribute to correlate users and groups between the two systems.\n - One of the following roles: [Application Administrator](../../identity/role-based-access-control/permissions-reference.md#application-administrator), [Cloud Application Administrator](../../identity/role-based-access-control/permissions-reference.md#cloud-application-administrator), or [Hybrid Identity Administrator](../../identity/role-based-access-control/permissions-reference.md#hybrid-identity-administrator).\n \n ## Known limitations\n \n-- Account discovery requires a **direct matching attribute** for user correlation. Expression-based transformations aren't supported for matching.\n+- Account discovery requires a **direct matching attribute** for correlation. Expression-based transformations aren't supported for matching.\n - If multiple matching attributes are configured, only the **first** matching attribute is used.\n \n ## Application support\n \n-For SCIM-based connectors, account discovery requires that the application support [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4).\n-\n-### Connectors with established discovery behavior\n-\n-Customers using account discovery with the following applications consistently receive complete discovery results:\n-\n-- Atlassian Cloud\n-- SCIM\n-- Salesforce\n-- SAP Cloud Identity Services\n-- ECMA (enables support for on-premises applications through SQL, LDAP, web services, and PowerShell connectors)\n-- GitHub Enterprise Cloud (see [List SCIM provisioned identities](https://docs.github.com/enterprise-cloud@latest/rest/scim/scim?apiVersion=2026-03-10#list-scim-provisioned-identities) for limitations)\n-\n-### Connectors that do not support discovery\n-\n-Account discovery is currently unsupported for the following applications:\n-\n-- HR provisioning (Workday, SAP SuccessFactors, API-driven provisioning)\n-- ServiceNow\n-- Amazon Web Services (AWS)\n-- Snowflake\n-- Cross-tenant synchronization\n-- Cloud sync\n-- Group provisioning to Active Directory\n+Account discovery is enabled for all provisioning connectors except those listed below. For account discovery to work, the target application must implement SCIM pagination as described in [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4). Discovery outcomes vary depending on whether the target application supports listing users and groups and pagination through its SCIM API. If your discovery report has zero results, verify that you configured a single direct matching attribute (no expressions) in your attribute mappings. Next, verify with the application vendor that the application supports pagination in accordance with [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4).\n \n-### All other connectors\n+The following connectors and provisioning scenarios don't support user or group discovery at this time: Adobe Identity Management, Amazon Web Services (AWS), Cloud sync, Cross-tenant synchronization and cross-cloud synchronization, Freshservice, Group provisioning to Active Directory, HR provisioning (Workday, SAP SuccessFactors, HiBob, and API-driven provisioning), LinkedIn Learning, LinkedIn Sales Navigator, N-able, ServiceNow, and Snowflake.\n \n-Account discovery can be enabled for all other supported connectors. Discovery outcomes might vary depending on whether the target application supports listing users and pagination through its SCIM API. If your discovery report has zero results, verify that you configured a single direct matching attribute (no expressions) in your attribute mappings. Next, verify with the application vendor that the application supports pagination in accordance with [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4).\n+The following connectors and provisioning scenarios support user discovery, but don't support group discovery at this time: ECMA, Google Cloud, and Google Workspace.\n \n ## Discover identities in a target application\n \n-To discover existing user accounts in a target application:\n+To discover existing users and groups in a target application:\n \n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least an [Application Administrator](../../identity/role-based-access-control/permissions-reference.md#application-administrator).\n 1. Browse to **Identity** > **Applications** > **Enterprise applications**.\n@@ -80,34 +61,35 @@ To discover existing user accounts in a target application:\n 1. Verify that the provisioning configuration has valid credentials and a successful test connection.\n 1. Select **Discover identities**.\n \n-The provisioning service retrieves all user accounts from the target application and displays them organized by category. The discovery takes at least 30 minutes to generate a report. The more accounts that are included in the target application, the longer the report takes. For example, an application with 250,000 accounts might take 12 hours or more to generate a discovery report.\n+The provisioning service retrieves users and groups from the target application and displays them organized by category. The discovery takes at least 30 minutes to generate a report. The more identities that are included in the target application, the longer the report takes. For example, an application with 250,000 identities might take 12 hours or more to generate a discovery report.\n \n-## Review discovered accounts\n+## Review discovered identities\n \n After the discovery process completes, review the results in each category.\n \n-### Local accounts\n+### Local identities\n \n-Local accounts exist in the target application but have no matching user in Microsoft Entra ID. These accounts might represent:\n+Local identities exist in the target application but have no corresponding user or group in Microsoft Entra ID. These identities might represent:\n \n - Former employees whose directory accounts were removed but whose application accounts weren't deprovisioned.\n - Service accounts or shared accounts created directly in the application.\n - Users provisioned through a separate process that didn't use Microsoft Entra ID.\n+- Groups created directly in the target application.\n - A data quality issue that prevents a match.\n \n-Review these accounts to determine whether they should be removed from the target application, matched to an existing Microsoft Entra ID user, or kept as-is.\n+Review these identities to determine whether they should be removed from the target application, matched to an existing user or group in Microsoft Entra ID, or kept as-is.\n \n-### Unassigned users\n+### Unassigned identities\n \n-Unassigned users match a Microsoft Entra ID user based on the matching attribute but aren't assigned to the enterprise application. To bring these accounts under provisioning management:\n+Unassigned identities match a user or group in Microsoft Entra ID based on the matching attribute but aren't assigned to the enterprise application. To bring these identities under provisioning management:\n \n 1. Navigate to the enterprise application's **Users and groups** page.\n 1. Assign the appropriate users or groups to the application.\n-1. After assignment, the provisioning service manages these accounts on subsequent provisioning cycles.\n+1. After assignment, the provisioning service manages these identities on subsequent provisioning cycles.\n \n-### Assigned users\n+### Assigned identities\n \n-Assigned users match a Microsoft Entra ID user who is already assigned to the application. These accounts are fully managed by the provisioning service. No action is needed unless you want to review or update their attribute mappings.\n+Assigned identities match a user or group in Microsoft Entra ID that's already assigned to the application. These identities are fully managed by the provisioning service. No action is needed unless you want to review or update their attribute mappings.\n \n ## Assign correlated users to your enterprise application and/or access packages\n \n@@ -226,8 +208,8 @@ After you connect your MCP client, you can ask questions such as:\n - \"Are any account discovery reports still in progress?\"\n - \"Get identity correlation report `<report-id>`.\"\n - \"List the identities in identity correlation report `<report-id>`.\"\n-- \"Which identities in report `<report-id>` are local accounts?\"\n-- \"Which identities in report `<report-id>` match Microsoft Entra users but don't have an application assignment?\"\n+- \"Which identities in report `<report-id>` are local identities?\"\n+- \"Which identities in report `<report-id>` match a Microsoft Entra user or group but don't have an application assignment?\"\n - \"Which identities in report `<report-id>` failed to correlate?\"\n \n Depending on the question, the MCP server can execute requests such as:\n@@ -245,9 +227,9 @@ The Microsoft Graph API represents the account discovery categories with the fol\n \n | Correlation category | Microsoft Graph status | Description |\n |---|---|---|\n-| Assigned users | `correlatedAssigned` | The target identity matches an Entra user which is assigned to the enterprise application. |\n-| Unassigned users | `correlatedNotAssigned` |  The target identity matches an Entra user, but the Entra user is not assigned to the enterprise application. |\n-| Local accounts | `uncorrelated` | No corresponding Microsoft Entra ID user was found for the target identity. |\n+| Assigned identities | `correlatedAssigned` | The target identity matches a user or group in Microsoft Entra ID that's assigned to the enterprise application. |\n+| Unassigned identities | `correlatedNotAssigned` |  The target identity matches a user or group in Microsoft Entra ID, but that user or group isn't assigned to the enterprise application. |\n+| Local identities | `uncorrelated` | No corresponding user or group in Microsoft Entra ID was found for the target identity. |\n | Correlation failure | `failToCorrelate` | The correlation process couldn't evaluate the identity successfully. Review the error information returned for the identity. |\n \n ### Example investigation\n@@ -257,7 +239,7 @@ The following conversation illustrates how an administrator might investigate a\n 1. Ask, \"Show me the latest completed account discovery report for service principal `<service-principal-id>`.\"\n 1. Copy the report ID returned by the MCP client.\n 1. Ask, \"List the identities in identity correlation report `<report-id>`.\"\n-1. Ask another question that includes the report ID, such as, \"Which identities in report `<report-id>` are local accounts?\" or \"Which identities in report `<report-id>` failed to correlate?\"\n+1. Ask another question that includes the report ID, such as, \"Which identities in report `<report-id>` are local identities?\" or \"Which identities in report `<report-id>` failed to correlate?\"\n \n Review the Microsoft Graph request displayed by the MCP client before relying on the result. For large reports, the client might need to follow `@odata.nextLink` to retrieve additional pages.\n \n@@ -293,4 +275,4 @@ Use the search and filter capabilities to find specific accounts:\n \n ## For application developers\n \n-For account discovery to work with a target application, the application must support SCIM pagination as described in [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4). The provisioning service uses pagination to retrieve all user accounts from the target application during the discovery process.\n+For account discovery to work with a target application, the application must support SCIM pagination as described in [RFC 7644, Section 3.4.2.4](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.4). The provisioning service uses pagination to retrieve all users and groups from the target application during the discovery process.\n",
+      "baseCommitSha": "e8eb4c7b442a116efd472a62e745cf03b838e7df",
+      "commitSha": "aeb938de96e4a9da8276a29a206d5e0e7e3187a9",
+      "commitMessage": "Update account discovery requirements and connector support (#14174)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-09-14 15:45:35 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/how-to-account-discovery.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/how-to-account-discovery",
+      "eventId": "entra-docs:aeb938de96e4a9da8276a29a206d5e0e7e3187a9:modified:docs/identity/app-provisioning/how-to-account-discovery.md",
+      "firstSeenAt": "2026-09-14T23:09:59.234Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "Account discovery documentation adds group discovery",
+        "summary": "Account discovery now covers users and groups, classifying them as local, unassigned, or assigned identities. Group discovery is identified as being in preview, and correlation requires a direct matching attribute.",
+        "adminImpact": "Administrators can assess unmanaged groups alongside users, but should account for the preview status and matching-attribute requirement.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/tenant-governance/licensing.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 7,
+      "changes": 9,
+      "patch": "diff --git a/docs/id-governance/tenant-governance/licensing.md b/docs/id-governance/tenant-governance/licensing.md\nindex dbace9f49a5..4df5e916f21 100644\n--- a/docs/id-governance/tenant-governance/licensing.md\n+++ b/docs/id-governance/tenant-governance/licensing.md\n@@ -91,15 +91,10 @@ Secure add-on tenant creation is available with Microsoft Entra Free for paid Mi\n \n For more information about the general tenant creation requirements, see [Create a new tenant in Microsoft Entra ID](~/fundamentals/create-new-tenant.md).\n \n-## Licensing for related services\n-\n-Tenant Governance capabilities can also be used with Microsoft Agent 365 and Microsoft Defender. Review the licensing and service-specific requirements for each product:\n-\n-- [Microsoft Agent 365 Licensing FAQs](https://www.microsoft.com/licensing/faqs/122)\n-- [Configure delegated access with governance relationships for multitenant organizations](/unified-secops/governance-relationships)\n-\n ## Related content\n \n - [What is Microsoft Entra Tenant Governance?](overview.md)\n - [Governance relationships](governance-relationships.md)\n - [Microsoft Entra licensing](~/fundamentals/licensing.md)\n+- [Microsoft Agent 365 Licensing FAQs](https://www.microsoft.com/licensing/faqs/122)\n+- [Configure delegated access with governance relationships for multitenant organizations](/unified-secops/governance-relationships)\n",
+      "baseCommitSha": "0fcdb243b77f67f51fde2d6bf3cd0ef44c67332b",
+      "commitSha": "160cea0b0b841d74b71c39d2b130f17da61e6b80",
+      "commitMessage": "Move licensing links to related content",
+      "commitAuthor": "tafra00",
+      "commitDate": "2026-09-14 15:25:24 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/licensing.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/licensing",
+      "eventId": "entra-docs:160cea0b0b841d74b71c39d2b130f17da61e6b80:modified:docs/id-governance/tenant-governance/licensing.md",
+      "firstSeenAt": "2026-09-14T23:09:59.241Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Licensing page reorganizes related-service links",
+        "summary": "The page now lists the Microsoft Agent 365 Licensing FAQs and governance relationships links without the previous section heading and introductory text.",
+        "adminImpact": "No action is required; the related links remain available on the page.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/tenant-governance/licensing.md",
+      "status": "modified",
+      "additions": 8,
+      "deletions": 1,
+      "changes": 9,
+      "patch": "diff --git a/docs/id-governance/tenant-governance/licensing.md b/docs/id-governance/tenant-governance/licensing.md\nindex 9e3e14980e7..dbace9f49a5 100644\n--- a/docs/id-governance/tenant-governance/licensing.md\n+++ b/docs/id-governance/tenant-governance/licensing.md\n@@ -6,7 +6,7 @@ author: tafra00\n ms.author: tafra00\n ms.service: entra-id-governance\n ms.topic: concept-article\n-ms.date: 07/29/2026\n+ms.date: 09/14/2026\n ms.custom: msecd-doc-authoring-1018\n ai-usage: ai-assisted\n \n@@ -91,6 +91,13 @@ Secure add-on tenant creation is available with Microsoft Entra Free for paid Mi\n \n For more information about the general tenant creation requirements, see [Create a new tenant in Microsoft Entra ID](~/fundamentals/create-new-tenant.md).\n \n+## Licensing for related services\n+\n+Tenant Governance capabilities can also be used with Microsoft Agent 365 and Microsoft Defender. Review the licensing and service-specific requirements for each product:\n+\n+- [Microsoft Agent 365 Licensing FAQs](https://www.microsoft.com/licensing/faqs/122)\n+- [Configure delegated access with governance relationships for multitenant organizations](/unified-secops/governance-relationships)\n+\n ## Related content\n \n - [What is Microsoft Entra Tenant Governance?](overview.md)\n",
+      "baseCommitSha": "2dc0b86d11f8878a31cc9905f3229944bd1e34d5",
+      "commitSha": "0fcdb243b77f67f51fde2d6bf3cd0ef44c67332b",
+      "commitMessage": "Add related service licensing links",
+      "commitAuthor": "tafra00",
+      "commitDate": "2026-09-14 15:20:16 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/tenant-governance/licensing.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/tenant-governance/licensing",
+      "eventId": "entra-docs:0fcdb243b77f67f51fde2d6bf3cd0ef44c67332b:modified:docs/id-governance/tenant-governance/licensing.md",
+      "firstSeenAt": "2026-09-14T23:09:59.257Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Added licensing guidance for related services",
+        "summary": "The Tenant Governance licensing page now links to Microsoft Agent 365 licensing FAQs and guidance for using governance relationships with Microsoft Defender.",
+        "adminImpact": "Administrators can use these links to review product-specific licensing and service requirements.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/licensing-fundamentals.md",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 6,
+      "changes": 11,
+      "patch": "diff --git a/docs/id-governance/licensing-fundamentals.md b/docs/id-governance/licensing-fundamentals.md\nindex d54a2799a75..f7642a059b7 100644\n--- a/docs/id-governance/licensing-fundamentals.md\n+++ b/docs/id-governance/licensing-fundamentals.md\n@@ -1,8 +1,6 @@\n ---\n title: 'Microsoft Entra ID Governance licensing fundamentals'\n description: Learn about Microsoft Entra ID Governance license types, prerequisites, feature requirements, trials, and licensing for employees, guests, and agents.\n-author: tafra00\n-ms.author: tafra00\n ms.service: entra-id-governance\n ms.topic: concept-article\n ms.date: 07/29/2026\n@@ -90,10 +88,6 @@ A Global Administrator in a commercial tenant that has an appropriate prerequisi\n \n This feature is available with Microsoft Entra ID P1, P2, and Microsoft Entra ID Governance subscriptions. A subscription license is required with enough seats for every identity that is sourced using the [/bulkUpload](/graph/api/synchronization-synchronizationjob-post-bulkupload) API and provisioned to either on-premises Active Directory or Microsoft Entra ID.\n \n-## Account Discovery\n-\n-Account Discovery requires the Microsoft Entra ID Governance add-on or Microsoft Entra Suite. This feature allows administrators to discover existing user accounts in target applications and identify which users have matching Entra accounts or are orphan accounts. For more information, see [Discover identities in target applications with Account Discovery](../identity/app-provisioning/how-to-account-discovery.md).\n-\n ### License scenarios\n \n |Customer License  |Usage limits enforced at tenant level for API-driven provisioning  |\n@@ -101,6 +95,11 @@ Account Discovery requires the Microsoft Entra ID Governance add-on or Microsoft\n |Microsoft Entra ID P1 or P2      |   Daily usage quota (number of user records that can be uploaded over 24-hour period): **100K user records (2000 /bulkUpload API calls with each request containing max of 50 records)**.<br><br>Max number of API-driven provisioning jobs for each flow: 2<br>o Max 2 apps for API-driven provisioning to on-premises Active Directory.<br>o Max 2 apps for API-driven provisioning to Microsoft Entra ID.      |\n |Microsoft Entra ID Governance alongside Microsoft Entra ID P1 or P2     | Daily usage quota (number of user records that can be uploaded over 24-hour period): **300K user records  (6000 /bulkUpload API calls with each request containing max of 50 records)**.<br><br>Max number of API-driven provisioning jobs for each flow: 20<br>o Max 20 apps for API-driven provisioning to on-premises Active Directory.<br>o Max 20 apps for API-driven provisioning to Microsoft Entra ID.        |\n \n+## Account Discovery\n+\n+Account Discovery requires the Microsoft Entra ID Governance add-on or Microsoft Entra Suite. This feature allows administrators to discover existing user accounts in target applications and identify which users have matching Entra accounts or are orphan accounts. For more information, see [Discover identities in target applications with Account Discovery](../identity/app-provisioning/how-to-account-discovery.md).\n+\n+\n ## Licensing FAQs\n \n ### Do licenses need to be assigned to users to use Identity Governance features?\n",
+      "baseCommitSha": "2dc0b86d11f8878a31cc9905f3229944bd1e34d5",
+      "commitSha": "e8eb4c7b442a116efd472a62e745cf03b838e7df",
+      "commitMessage": "update license requirements for hibob and fixed section alignment in license doc (#14363)",
+      "commitAuthor": "Chetan Desai",
+      "commitDate": "2026-09-14 12:11:15 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/licensing-fundamentals.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/licensing-fundamentals",
+      "eventId": "entra-docs:e8eb4c7b442a116efd472a62e745cf03b838e7df:modified:docs/id-governance/licensing-fundamentals.md",
+      "firstSeenAt": "2026-09-14T23:09:59.268Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Account Discovery licensing documentation updated",
+        "summary": "The licensing fundamentals page was updated to align the Account Discovery section and state that the feature requires the Microsoft Entra ID Governance add-on or Microsoft Entra Suite.",
+        "adminImpact": "Administrators can use the updated licensing guidance when planning or validating Account Discovery deployments; no action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "patch": "diff --git a/docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md b/docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md\nindex 0c5d684f8a8..bb1fa0f2c1e 100644\n--- a/docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md\n@@ -22,6 +22,7 @@ Before you begin, make sure that you have:\n \n - A HiBob tenant and permission to install and configure Bob Marketplace integrations.\n - A Microsoft Entra tenant connected to the target Active Directory environment.\n+- A [Microsoft Entra ID P1, Microsoft Entra ID P2, or Microsoft Entra ID Governance license](../../id-governance/licensing-fundamentals.md#api-driven-provisioning). You need enough licenses for every identity that the integration sources through API-driven provisioning.\n - The [Microsoft Entra provisioning agent](../hybrid/cloud-sync/how-to-install.md) installed and configured for the target Active Directory domain.\n - The Active Directory domain name and organizational unit (OU) in which HiBob should create or update users.\n - A Microsoft Entra account with the [Privileged Role Administrator](../role-based-access-control/permissions-reference.md#privileged-role-administrator) or Global Administrator role to grant consent to the following API permissions:\n",
+      "baseCommitSha": "2dc0b86d11f8878a31cc9905f3229944bd1e34d5",
+      "commitSha": "e8eb4c7b442a116efd472a62e745cf03b838e7df",
+      "commitMessage": "update license requirements for hibob and fixed section alignment in license doc (#14363)",
+      "commitAuthor": "Chetan Desai",
+      "commitDate": "2026-09-14 12:11:15 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial",
+      "eventId": "entra-docs:e8eb4c7b442a116efd472a62e745cf03b838e7df:modified:docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md",
+      "firstSeenAt": "2026-09-14T23:09:59.272Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "HiBob provisioning documentation adds license requirements",
+        "summary": "The tutorial now requires Microsoft Entra ID P1, P2, or Governance licenses for every identity sourced through API-driven provisioning.",
+        "adminImpact": "Ensure sufficient licenses are available for all identities using this integration.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/devices/enterprise-state-roaming-enable.md",
+      "status": "modified",
+      "additions": 31,
+      "deletions": 44,
+      "changes": 75,
+      "patch": "diff --git a/docs/identity/devices/enterprise-state-roaming-enable.md b/docs/identity/devices/enterprise-state-roaming-enable.md\nindex f9fc4bcfe94..de81a5b9037 100644\n--- a/docs/identity/devices/enterprise-state-roaming-enable.md\n+++ b/docs/identity/devices/enterprise-state-roaming-enable.md\n@@ -1,66 +1,53 @@\n ---\n-title: Enable Enterprise State Roaming in Microsoft Entra ID\n-description: Frequently asked questions about Enterprise State Roaming settings in Windows devices.\n+title: Migrate Microsoft Entra Enterprise State Roaming\n+description: Learn how to migrate Enterprise State Roaming management from Microsoft Entra ID to Windows settings backup and restore policies.\n ms.topic: how-to\n-ms.date: 08/28/2025\n+ms.date: 09/14/2026\n ms.reviewer: sempofu, micrider\n-ms.custom: references_regions, sfi-ga-blocked\n+ms.custom: references_regions, sfi-ga-blocked, msecd-doc-authoring-1028\n+ai-usage: ai-assisted\n+#customer intent: As an IT administrator, I want to migrate Enterprise State Roaming management so that users can continue to sync supported Windows settings across devices.\n ---\n-# Enable Enterprise State Roaming in Microsoft Entra ID\n+# Migrate Enterprise State Roaming from Microsoft Entra ID\n \n-Enterprise State Roaming provides users with a unified experience across their Windows devices and reduces the time needed for configuring a new device. Enterprise State Roaming operates similar to the standard [consumer settings sync](https://go.microsoft.com/fwlink/?linkid=2015135) that was first introduced in Windows 8. Enterprise State Roaming is available to any organization with a Microsoft Entra ID P1 or P2 or Enterprise Mobility + Security (EMS) license. For more information on how to get a Microsoft Entra subscription, see the [Microsoft Entra product page](https://azure.microsoft.com/services/active-directory).\n+Enterprise State Roaming (ESR) lets users sync supported Windows settings across devices associated with their Microsoft Entra ID account. ESR management moved from the Microsoft Entra admin center to Windows settings backup and restore in July 2026. IT administrators now configure backup policies by using Microsoft Intune, another mobile device management (MDM) provider, or Group Policy.\n \n-> [!NOTE]\n-> This article applies to the Microsoft Edge Legacy HTML-based browser launched with Windows 10 in July 2015. The article doesn't apply to the new Microsoft Edge Chromium-based browser released on January 15, 2020. For more information on the Sync behavior for the new Microsoft Edge, see the article [Microsoft Edge Sync](/deployedge/microsoft-edge-enterprise-sync).\n-\n-## To enable Enterprise State Roaming\n-\n-1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as a [Global Administrator](../role-based-access-control/permissions-reference.md#global-administrator).\n-1. Browse to **Entra ID** > **Devices** > **Overview** > **Enterprise State Roaming**.\n-1. Select **Users may sync settings and app data across devices**. For more information, see [how to configure device settings](./manage-device-identities.md).\n+The set of ESR settings remains unchanged. Only the management experience has changed. For the current list of supported settings, see the [Enterprise State Roaming settings catalog](/windows/configuration/windows-backup/catalog-esr).\n \n-For a Windows 11 or Windows 10, version 21H2 or newer device to use the Enterprise State Roaming service, the device must authenticate using a Microsoft Entra identity. For devices that are joined to Microsoft Entra ID, the user’s primary sign-in identity is their Microsoft Entra identity, so no other configuration is required. For devices that use on-premises Active Directory, the IT admin must [Configure Microsoft Entra hybrid joined devices](./hybrid-join-plan.md).\n+ESR is separate from [consumer settings sync](https://go.microsoft.com/fwlink/?linkid=2015135), which uses a personal Microsoft account. Before July 2026, a [Global Administrator](../role-based-access-control/permissions-reference.md#global-administrator) could configure ESR through [device settings](./manage-device-identities.md) in the [Microsoft Entra admin center](https://entra.microsoft.com). That portal management option is no longer available.\n \n-## Data storage\n+> [!IMPORTANT]\n+> You can no longer manage ESR through the Microsoft Entra admin center. Configure Windows settings backup and restore policies to continue roaming supported settings. If you take no action, Windows honors existing ESR and Group Policy or MDM roaming controls for one year and prioritizes Group Policy or MDM. After that period, ESR no longer works until you configure Windows settings backup and restore policies.\n \n-Enterprise State Roaming data is hosted in one or more [Azure regions](https://azure.microsoft.com/regions/) that best align with the country/region value set in the Microsoft Entra instance. Enterprise State Roaming data is partitioned based on three major geographic regions: North America, EMEA, and APAC. Enterprise State Roaming data for the tenant is locally located with the geographical region, and isn't replicated across regions. For example:\n+<a name='to-enable-enterprise-state-roaming'></a>\n \n-| Country/region value | has their data hosted in |\n-| -------------------- | ------------------------ |\n-| An EMEA country/region such as France or Zambia | One or more of the Azure regions within Europe |\n-| A North American country/region such as United States or Canada | One or more of the Azure regions within the US |\n-| An APAC country/region such as Australia or New Zealand | One or more of the Azure regions within Asia |\n-| South American and Antarctica regions | One or more Azure regions within the US |\n+## Migrate Enterprise State Roaming management\n \n-The country/region value is set as part of the Microsoft Entra directory creation process and can’t be modified later. If you need more details on your data storage location, file a ticket with [Azure support](https://azure.microsoft.com/support/options/).\n+To migrate ESR management, follow these steps:\n \n-## Data retention\n+1. Review your current use of ESR and identify the users and devices that need settings backup and roaming.\n+1. Confirm that your devices meet the backup requirements and that users have an eligible license. For current requirements and licensing information, see [Windows settings backup and restore](/windows/configuration/windows-backup/), the [Enterprise State Roaming settings catalog](/windows/configuration/windows-backup/catalog-esr), and the [Microsoft Entra product page](https://azure.microsoft.com/services/active-directory).\n+1. Configure the **Enable Windows Backup** policy by using Microsoft Intune, the Policy configuration service provider (CSP), or Group Policy.\n+1. Assign the policy to the users or devices that need settings backup and roaming.\n+1. Verify that the policy applies successfully.\n \n-Data synced to the Microsoft cloud using Enterprise State Roaming is retained until manually deleted or the data is determined to be stale.\n-\n-### Explicit deletion\n-\n-Explicit deletion is when an administrator deletes a user, directory, or requests explicitly that data is to be deleted.\n+> [!NOTE]\n+> Configure Windows settings backup and restore by using either Group Policy or CSP. Don't combine both policy sources because conflicting settings can cause unexpected results.\n \n-* **User deletion**: When a user is deleted in Microsoft Entra ID, the user account roaming data is deleted after 90 to 180 days.\n-* **Directory deletion**: Deleting an entire directory in Microsoft Entra ID is an immediate operation. All the settings data associated with that directory is deleted after 90 to 180 days.\n-* **On request deletion**: If the Microsoft Entra admin wants to manually delete a specific user’s data or settings data, the admin can file a ticket with [Azure support](https://azure.microsoft.com/support/).\n+For information about the legacy controls that limit which settings sync, see [Group Policy and MDM settings for settings sync](enterprise-state-roaming-group-policy-settings.md).\n \n-### Stale data deletion\n+Backup is supported for eligible Microsoft Entra joined and [Microsoft Entra hybrid joined](./hybrid-join-plan.md) devices. For current operating system versions and build requirements, see [Windows settings backup and restore system requirements](/windows/configuration/windows-backup/#system-requirements).\n \n-Data that isn't accessed for one year (\"the retention period\") is treated as stale and might be deleted from the Microsoft cloud. The retention period is subject to change but isn't less than 90 days. The stale data might be a specific set of Windows/application settings or all settings for a user. For example:\n+Microsoft Edge sync is managed separately from ESR. For more information, see [Microsoft Edge Sync](/deployedge/microsoft-edge-enterprise-sync). For legacy ESR diagnostics, see [Troubleshoot Enterprise State Roaming](enterprise-state-roaming-troubleshooting.md).\n \n-* If no devices access a particular settings collection like language, then that collection becomes stale after the retention period and might be deleted.\n-* If a user turned off settings sync on all their devices, then none of the settings data is accessed. All the settings data for that user will become stale and might be deleted after the retention period.\n-* If the Microsoft Entra directory admin turns off Enterprise State Roaming for the entire directory, then all users in that directory stop syncing settings. All settings data for all users will become stale and might be deleted after the retention period.\n+## Data storage and retention\n \n-### Deleted data recovery\n+Windows settings backup and restore treats user-specific settings as personal data and stores the data in the tenant's region. In the public cloud, the country or region selected when the tenant is created maps to a geographic location in Exchange Online.\n \n-The data retention policy isn't configurable. Once the data is permanently deleted, it isn't recoverable. However, The settings data is deleted only from the Microsoft cloud, not from the end-user device. If any device later reconnects to the Enterprise State Roaming service, the settings are again synced and stored in the Microsoft cloud.\n+By default, data is retained while it's associated with an active account and device. For current information about storage, encryption, compliance, and retention, see the [Windows settings backup and restore FAQ](/windows/configuration/windows-backup/faq#data-storage-and-retention). For legacy ESR-specific questions, see the [Settings and data roaming FAQ](enterprise-state-roaming-faqs.yml). For general information about cloud locations, see [Azure regions](https://azure.microsoft.com/regions/). If you need help determining a data location, review [Azure support options](https://azure.microsoft.com/support/options/) or contact [Azure support](https://azure.microsoft.com/support/).\n \n-## Next steps\n+## Related content\n \n-* [Settings and data roaming FAQ](enterprise-state-roaming-faqs.yml)\n-* [Group Policy and MDM settings for settings sync](enterprise-state-roaming-group-policy-settings.md)\n+* [Configure Windows settings backup and restore](/windows/configuration/windows-backup/)\n+* [Windows settings backup and restore policy settings](/windows/configuration/windows-backup/policy-settings)\n * [Enterprise State Roaming settings catalog](/windows/configuration/windows-backup/catalog-esr)\n-* [Troubleshooting](enterprise-state-roaming-troubleshooting.md)\n",
+      "baseCommitSha": "f30d08cd1f1e88886acb862070d81cd7e25b70a4",
+      "commitSha": "2dc0b86d11f8878a31cc9905f3229944bd1e34d5",
+      "commitMessage": "Update Enterprise State Roaming migration guidance (#14366)",
+      "commitAuthor": "Navi Beesetti",
+      "commitDate": "2026-09-14 13:53:25 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/enterprise-state-roaming-enable.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/enterprise-state-roaming-enable",
+      "eventId": "entra-docs:2dc0b86d11f8878a31cc9905f3229944bd1e34d5:modified:docs/identity/devices/enterprise-state-roaming-enable.md",
+      "firstSeenAt": "2026-09-14T23:09:59.280Z",
+      "englishSummary": {
+        "category": "Retirement",
+        "headline": "Enterprise State Roaming management moved to Windows settings backup",
+        "summary": "As of July 2026, ESR can no longer be managed in the Microsoft Entra admin center. Administrators must use Windows settings backup and restore policies; the supported settings remain unchanged.",
+        "adminImpact": "Review existing ESR use and configure Windows backup and restore policies to maintain settings roaming. Without action, existing controls are honored for one year.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
-  "messageCenterItems": [],
+  "messageCenterItems": [
+    {
+      "id": "MC1459133",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-09-14",
+      "title": "Microsoft Entra ID: Passkey support for B2B users",
+      "summary": "Microsoft Entra ID will support passkey registration and sign-in for B2B users, enabling phishing-resistant MFA using resource tenant passkeys. Rollout begins October 2026, with automatic enablement for eligible users. Administrators should review authentication policies and configurations; no immediate action is required.",
+      "product": {
+        "slug": "entra-id",
+        "name": "Microsoft Entra ID",
+        "short": "Entra ID",
+        "icon": "entra-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/identity/"
+      },
+      "topic": {
+        "slug": "conditional-access",
+        "name": "Conditional Access",
+        "icon": "/assets/topics/conditional-access.svg"
+      },
+      "changeType": "Message",
+      "url": "/message-center/MC1459133/",
+      "originalUrl": "https://mc.merill.net/message/MC1459133",
+      "body": "<p>Updated September 14, 2026: We have updated the content. Thank you for your patience. </p><p><b><b>What and why</b></b></p><p>Microsoft Entra ID will support passkey registration and sign-in for B2B users, including <a href=\"https://learn.microsoft.com/entra/external-id/user-properties\" rel=\"noopener noreferrer\">internal guest users and external users</a>. Eligible B2B users will be able to register and use passkeys issued by the resource tenant to satisfy that tenant's multifactor authentication (MFA) requirements.</p><p>Passkeys are already supported for member users in their home tenant. Until now, B2B users could not use a resource tenant passkey when that tenant required MFA and did not trust the home tenant's MFA. This update closes that gap and gives guest and external users a phishing-resistant way to satisfy MFA requirements in the resource tenant.</p><p>B2B users can register a resource tenant passkey from the resource tenant's My Security Info page, during a proof-up prompt, or through a passkey registration campaign. Once registered, the passkey can satisfy the resource tenant's MFA requirements during sign-in.</p><p>Microsoft Authenticator app passkeys will be supported for internal guest users but not for external users.</p><p>Important: This rollout intersects with the previously announced retirement of SMS and voice authentication. As described in Message Center posts MC1426371 and MC1434201, any user enabled for SMS or voice in the Authentication methods policy or legacy MFA policies will be automatically enabled for all passkey types. This will include eligible B2B users when B2B passkey support becomes available. </p><p><b><b>Rollout schedule</b></b></p><p><b>General Availability (GCC, Worldwide): </b>Beginning in <b>early October 2026</b> and expected to complete by <b>late February 2027</b></p><ul><li><b>Internal guest users: Beginning in early October 2026 and is expected to complete by late October 2026</b></li><li><b>External users (excluding Microsoft Authenticator app passkeys):</b> Rollout timing will be communicated in a future Message center post update.</li></ul><p><b><b>Impact on your organization</b></b></p><p><i>Who is affected</i></p><ul><li>Microsoft Entra administrators managing Authentication methods policies</li><li>Organizations that use Microsoft Entra B2B collaboration</li><li>Internal guest users and external users who are in scope for passkey authentication</li><li>Internal guest users and external users who are enabled for SMS or voice in the Authentication methods policy or legacy MFA policies</li></ul><p><i>Platforms and services</i></p><ul><li>Microsoft Entra ID</li><li>My Security Info</li><li>Authentication methods policy</li><li>Conditional Access</li></ul><p><i>What will happen</i></p><ul><li>The feature will be enabled by default.</li><li>B2B users who are already in scope for passkeys in your Authentication methods policy will automatically be able to register and sign in with resource tenant passkeys.</li><li>Eligible B2B users may receive prompts to register a passkey during sign-in through proof-up experiences or passkey registration campaigns, if those experiences are configured in your tenant.</li><li>Users can also register a passkey from the resource tenant's My Security Info page.</li><li>If your organization has excluded B2B users from passkeys in the Authentication methods policy, and those users are not separately subject to automatic passkey enablement through the SMS and voice retirement changes, they will not be prompted and will not be able to register or sign in with a resource tenant passkey.</li><li>Under the SMS and voice retirement changes described in MC1426371 and MC1434201, B2B users who are enabled for SMS or voice in the Authentication methods policy or legacy MFA policies will be automatically enabled for all passkey types. Excluding these users from the passkey policy alone will not prevent this automatic enablement if they remain enabled for SMS or voice.</li><li>This change gives guest and external users a phishing-resistant sign-in option and helps organizations extend strong authentication requirements to their B2B population.</li></ul><p><b><b>Action required and recommendations</b></b></p><p>No action is required.</p><p>We recommend that administrators review current passkey and MFA configurations before rollout:</p><ul><li>Review your Authentication methods policy. Confirm which users are in scope for passkeys, including guest and external users. B2B users who are in scope will be enabled automatically. Exclude them from the policy if that is not the intended behavior.</li><li>Review Message Center posts MC1426371 and MC1434201 for details about the SMS and voice retirement changes.</li><li>Review SMS and voice assignments in both the Authentication methods policy and legacy MFA policies. If you do not want specific B2B users to be automatically enabled for all passkey types, move those users off SMS and voice in all applicable policies. Excluding them only from the passkey policy is not sufficient while they remain enabled for SMS or voice.</li><li>Review your passkey registration campaign. Confirm that the campaign's user scope includes the intended users.</li><li>Review your Conditional Access policies. Confirm that MFA and authentication strength requirements will apply as intended for B2B users when resource tenant passkeys become available.</li><li>Confirm user scoping across authentication-related policies. Make sure the groups and user types targeted by each policy align with your organization's requirements for guest and external users.</li></ul><p>Consider notifying your help desk and identity support teams that eligible B2B users may begin receiving passkey registration prompts after rollout.</p><p><b><b>Compliance considerations</b></b></p><table><tbody><tr><td>Question</td><td>Answer</td></tr><tr><td>Does the change store new customer data?</td><td>Passkey credential registration data may be stored as part of Microsoft Entra authentication management.</td></tr><tr><td>Does the change alter how existing customer data is processed, stored, or accessed?</td><td>The change introduces an additional authentication method for B2B users accessing resource tenant resources.</td></tr></tbody></table><p><b></b></p>",
+      "category": "stayInformed",
+      "services": [
+        "Microsoft Entra"
+      ],
+      "tags": [
+        "Updated message",
+        "Feature update",
+        "User impact",
+        "Admin impact"
+      ],
+      "startDate": "2026-08-21T22:38:08Z",
+      "endDate": "2027-03-30T07:00:00Z",
+      "lastModifiedDateTime": "2026-09-14T18:48:07.21Z",
+      "version": "2026-09-14T18:48:07.21Z",
+      "eventId": "message-center:MC1459133:2026-09-14T18:48:07.21Z",
+      "firstSeenAt": "2026-09-14T23:10:16.254Z"
+    },
+    {
+      "id": "MC1450133",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-09-14",
+      "title": "Microsoft Entra: Users can register a passkey or passwordless sign-in as their first multifactor authentication method",
+      "summary": "Users can now register passkeys or passwordless sign-in as their first multifactor authentication method in Microsoft Entra, eliminating the need to set up weaker methods first. This change, rolling out in phases from October 2026 to February 2027, aims to increase adoption of phishing-resistant sign-in.",
+      "product": {
+        "slug": "entra-id",
+        "name": "Microsoft Entra ID",
+        "short": "Entra ID",
+        "icon": "entra-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/identity/"
+      },
+      "topic": {
+        "slug": "conditional-access",
+        "name": "Conditional Access",
+        "icon": "/assets/topics/conditional-access.svg"
+      },
+      "changeType": "Message",
+      "url": "/message-center/MC1450133/",
+      "originalUrl": "https://mc.merill.net/message/MC1450133",
+      "body": "<p>Updated September 14, 2026: We have updated the content. Thank you for your patience.&nbsp;</p><p><b><b>What and why</b></b></p><p>Users will soon be able to register a passkey as their first multifactor authentication method. Previously, people had to set up an alternate MFA method like SMS or Voice before they could add a passkey (FIDO2), Windows Hello for Business, macOS Platform SSO. That extra step pushed users toward weaker methods and slowed the move to phishing-resistant sign-in. Now password-only users can go straight to a passkey, making it easier to adopt strong authentication from day one. As part of this work, we will also be enabling Authenticator App passwordless sign-in to be a user's first registered MFA method.&nbsp;</p><p><b><b>Rollout schedule</b></b><b><br></b></p><p>This feature will roll out in phases:&nbsp;</p><p>Phase 1: Support for synced passkeys, Microsoft Entra passkeys on Windows, and FIDO2 security keys.&nbsp;&nbsp;</p><p>General Availability (Worldwide, GCC): We will begin rolling out in early October 2026 (previously mid-October) and expect to complete by mid-November 2026.&nbsp;</p><p>Phase 2: Support for Windows Hello for Business, macOS Platform SSO, Authenticator App passkey, and Authenticator App passwordless sign-in.&nbsp;</p><p>General Availability (Worldwide, GCC): We will begin rolling out in early January 2026 and expect to complete by late February 2027.&nbsp;</p><p><b><b>Impact on your organization</b></b></p><p><i>Who is affected</i></p><ul><li>Users who have not yet registered a multifactor authentication method</li><li>Identity and security administrators responsible for authentication onboarding and registration policies</li></ul><p><i>Platforms and services</i></p><ul><li>Microsoft Entra ID</li><li>Passkeys (FIDO2)</li><li>Windows Hello for Business</li><li>macOS Platform SSO</li><li>Microsoft Authenticator passwordless sign-in</li></ul><p><i>What will happen</i></p><ul><li>Password-only users will be able to register passkeys or passwordless sign-in as their first MFA method.</li><li>Users will no longer need to register a method such as SMS or voice before registering a passkey (FIDO2), Windows Hello for Business, macOS Platform SSO, or Authenticator passwordless sign-in.</li><li>Organizations may see reduced registration friction and increased adoption of phishing-resistant authentication methods.</li></ul><p><b><b>Action required and recommendations</b></b></p><p>No action is required for this change.</p><p>We recommend that administrators:</p><ul><li>Review Conditional Access policies related to security information registration.</li><li>Consider requiring MFA to register security information if additional verification is required by your organization.</li><li>Review onboarding and registration guidance so users know to set up a passkey as their preferred first method.</li></ul><p>Learn more&nbsp;</p><ul><li>(To be updated closer to rollout)&nbsp;<a href=\"https://learn.microsoft.com/entra/identity/authentication/how-to-register-passkey\" rel=\"noopener noreferrer\">Register a synced passkey (FIDO2) | Authentication | Microsoft Entra ID | Microsoft Learn</a></li></ul><p><b><b>Compliance considerations</b></b></p><table><tbody><tr><td>Question</td><td>Answer</td></tr><tr><td>Does the change include an admin control?</td><td>Yes. Administrators can control which authentication methods users are allowed to register through existing Microsoft Entra authentication method policies and Conditional Access policies.</td></tr><tr><td>Does the change affect access or authentication controls?</td><td>Yes. The update changes how users register multifactor authentication methods by allowing eligible users to register supported passkeys or passwordless authentication methods as their first MFA method.</td></tr><tr><td>Can administrators govern the feature through existing Microsoft Entra controls?</td><td>Yes. Administrators retain control over the feature through Microsoft Entra authentication method policies and Conditional Access configurations.</td></tr></tbody></table>",
+      "category": "stayInformed",
+      "services": [
+        "Microsoft Entra"
+      ],
+      "tags": [
+        "Updated message",
+        "New feature",
+        "User impact",
+        "Admin impact"
+      ],
+      "startDate": "2026-08-07T21:55:44Z",
+      "endDate": "2027-03-29T07:00:00Z",
+      "lastModifiedDateTime": "2026-09-14T18:38:32.82Z",
+      "version": "2026-09-14T18:38:32.82Z",
+      "eventId": "message-center:MC1450133:2026-09-14T18:38:32.82Z",
+      "firstSeenAt": "2026-09-14T23:10:16.254Z"
+    }
+  ],
   "summary": {
-    "totalCommits": 6,
-    "totalFiles": 9,
+    "totalCommits": 12,
+    "totalFiles": 16,
     "authors": [
       "Albert",
+      "ArvindHarinder1",
+      "Chetan Desai",
       "Jeremy Conley",
+      "Navi Beesetti",
       "Sanjana Saloni",
       "Tristan Mitchell",
       "diogbo",
-      "hkinyunyu_microsoft"
+      "hkinyunyu_microsoft",
+      "tafra00"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 0 new, 9 updated, and 0 removed Microsoft Entra documentation files across 5 documentation areas.",
+    "overview": "Today's report includes 0 new, 16 updated, and 0 removed Microsoft Entra documentation files across 7 documentation areas.",
     "groups": [
       {
         "category": "Doc update",
         "title": "identity/devices",
-        "summary": "The troubleshooting guide now uses `-vAuth` instead of `-v` when starting `Start-auth.ps1`. The troubleshooting guidance for SEC_E_NO_AUTHENTICATING_AUTHORITY now links to Windows Server 2025 build 26100.6905 information.",
+        "summary": "The troubleshooting guide now uses `-vAuth` instead of `-v` when starting `Start-auth.ps1`. The troubleshooting guidance for SEC_E_NO_AUTHENTICATING_AUTHORITY now links to Windows Server 2025 build 26100.6905 information. As of July 2026, ESR can no longer be managed in the Microsoft Entra admin center. Administrators must use Windows settings backup and restore policies; the supported settings remain unchanged.",
         "sourceFiles": [
           "docs/identity/devices/troubleshoot-primary-refresh-token.md",
-          "docs/identity/devices/how-to-hybrid-join-using-microsoft-entra-kerberos.md"
+          "docs/identity/devices/how-to-hybrid-join-using-microsoft-entra-kerberos.md",
+          "docs/identity/devices/enterprise-state-roaming-enable.md"
         ]
       },
       {
@@ -273,10 +541,14 @@
       {
         "category": "Doc update",
         "title": "id-governance",
-        "summary": "The access package creation documentation now explains that the search box can find matching SharePoint Online roles that are not initially displayed, especially on sites with many roles. The documentation now recommends using the search box to find SharePoint Online roles when adding them to an access package. Search returns matching roles even when they are not initially displayed.",
+        "summary": "The access package creation documentation now explains that the search box can find matching SharePoint Online roles that are not initially displayed, especially on sites with many roles. The documentation now recommends using the search box to find SharePoint Online roles when adding them to an access package. Search returns matching roles even when they are not initially displayed. The licensing documentation’s Microsoft author alias was updated from `tafra00` to `tazkiaafra`. The page now lists the Microsoft Agent 365 Licensing FAQs and governance relationships links without the previous section heading and introductory text. The Tenant Governance licensing page now links to Microsoft Age",
         "sourceFiles": [
           "docs/id-governance/entitlement-management-access-package-create.md",
-          "docs/id-governance/entitlement-management-access-package-resources.md"
+          "docs/id-governance/entitlement-management-access-package-resources.md",
+          "docs/id-governance/tenant-governance/licensing.md",
+          "docs/id-governance/tenant-governance/licensing.md",
+          "docs/id-governance/tenant-governance/licensing.md",
+          "docs/id-governance/licensing-fundamentals.md"
         ]
       },
       {
@@ -296,13 +568,29 @@
         "sourceFiles": [
           "docs/identity/enterprise-apps/validate-oidc-multitenant-app-gallery.md"
         ]
+      },
+      {
+        "category": "New feature",
+        "title": "identity/app-provisioning",
+        "summary": "Account discovery now covers users and groups, classifying them as local, unassigned, or assigned identities. Group discovery is identified as being in preview, and correlation requires a direct matching attribute.",
+        "sourceFiles": [
+          "docs/identity/app-provisioning/how-to-account-discovery.md"
+        ]
+      },
+      {
+        "category": "Feature update",
+        "title": "identity/saas-apps",
+        "summary": "The tutorial now requires Microsoft Entra ID P1, P2, or Governance licenses for every identity sourced through API-driven provisioning.",
+        "sourceFiles": [
+          "docs/identity/saas-apps/hibob-to-active-directory-user-provisioning-tutorial.md"
+        ]
       }
     ],
     "highlights": [
       {
         "category": "Doc update",
         "headline": "identity/devices",
-        "detail": "The troubleshooting guide now uses `-vAuth` instead of `-v` when starting `Start-auth.ps1`. The troubleshooting guidance for SEC_E_NO_AUTHENTICATING_AUTHORITY now links to Windows Server 2025 build 26100.6905 information."
+        "detail": "The troubleshooting guide now uses `-vAuth` instead of `-v` when starting `Start-auth.ps1`. The troubleshooting guidance for SEC_E_NO_AUTHENTICATING_AUTHORITY now links to Windows Server 2025 build 26100.6905 information. As of July 2026, ESR can no longer be managed in the Microsoft Entra admin center. Administrators must use Windows settings backup and restore policies; the supported settings remain unchanged."
       },
       {
         "category": "Doc update",
@@ -312,7 +600,7 @@
       {
         "category": "Doc update",
         "headline": "id-governance",
-        "detail": "The access package creation documentation now explains that the search box can find matching SharePoint Online roles that are not initially displayed, especially on sites with many roles. The documentation now recommends using the search box to find SharePoint Online roles when adding them to an access package. Search returns matching roles even when they are not initially displayed."
+        "detail": "The access package creation documentation now explains that the search box can find matching SharePoint Online roles that are not initially displayed, especially on sites with many roles. The documentation now recommends using the search box to find SharePoint Online roles when adding them to an access package. Search returns matching roles even when they are not initially displayed. The licensing documentation’s Microsoft author alias was updated from `tafra00` to `tazkiaafra`. The page now lists the Microsoft Agent 365 Licensing FAQs and governance relationships links without the previous section heading and introductory text. The Tenant Governance licensing page now links to Microsoft Age"
       },
       {
         "category": "Doc update",
@@ -323,6 +611,16 @@
         "category": "Doc update",
         "headline": "identity/enterprise-apps",
         "detail": "The documentation now states that applications using Microsoft identity platform v1 endpoints cannot be validated through self-service App Gallery onboarding. It recommends migrating to v2 endpoints."
+      },
+      {
+        "category": "New feature",
+        "headline": "identity/app-provisioning",
+        "detail": "Account discovery now covers users and groups, classifying them as local, unassigned, or assigned identities. Group discovery is identified as being in preview, and correlation requires a direct matching attribute."
+      },
+      {
+        "category": "Feature update",
+        "headline": "identity/saas-apps",
+        "detail": "The tutorial now requires Microsoft Entra ID P1, P2, or Governance licenses for every identity sourced through API-driven provisioning."
       }
     ],
     "generatedBy": "fallback"
