@@ -1,0 +1,142 @@
+{
+  "newFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity-platform/howto-add-app-roles-in-apps.md",
+      "status": "modified",
+      "additions": 34,
+      "deletions": 2,
+      "changes": 36,
+      "patch": "diff --git a/docs/identity-platform/howto-add-app-roles-in-apps.md b/docs/identity-platform/howto-add-app-roles-in-apps.md\nindex d78ee035159..acf112e8a18 100644\n--- a/docs/identity-platform/howto-add-app-roles-in-apps.md\n+++ b/docs/identity-platform/howto-add-app-roles-in-apps.md\n@@ -2,11 +2,12 @@\n title: Add app roles and get them from a token\n description: Learn how to add app roles to an application registered in Microsoft Entra ID. Assign users and groups to these roles, and receive them in the 'roles' claim in the token.\n manager: pmwongera\n-ms.date: 11/13/2024\n+ms.date: 09/25/2026\n ms.reviewer: jmprieur\n ms.service: identity-platform\n ms.topic: how-to\n ms.custom: sfi-image-nochange\n+ai-usage: ai-assisted\n #Customer intent: As a developer, I want to add app roles to my application using RBAC, so I can assign users and groups to those roles.\n ---\n \n@@ -26,7 +27,7 @@ Currently, if you add a service principal to a group, and then assign an app rol\n \n App roles are declared using App roles UI in the Microsoft Entra admin center:\n \n-The number of roles you add counts toward application manifest limits enforced by Microsoft Entra ID. For information about these limits, see the [Manifest limits](./reference-app-manifest.md#manifest-limits) section of [Microsoft Entra app manifest reference](reference-app-manifest.md).\n+App roles are subject to a default limit of 700 permission definitions per application or service principal, shared with exposed delegated permission scopes. They also count toward the separate 1,200-entry application manifest limit. For counting rules and guidance for existing objects, see [App role limits](#app-role-limits).\n \n ### App roles UI\n \n@@ -58,6 +59,37 @@ When the app role is set to **Enabled**, any users, applications, or groups who\n \n When the app role is set to **Disabled**, it becomes inactive and no longer assignable. However, the current app role assignments to users, groups and applications will remain, and the app role will continue to pass in the token(s). Remove the app role from the user, group or application to ensure the app role is also removed from the token(s).\n \n+## App role limits\n+\n+Microsoft Entra ID enforces a default limit of 700 permission definitions on each [application](/graph/api/resources/application) and [service principal](/graph/api/resources/serviceprincipal). App roles (`appRoles`) and exposed delegated permission scopes (`api.oauth2PermissionScopes` on an application, or `oauth2PermissionScopes` on a service principal) share this limit because they're stored in the same underlying `Entitlement` collection.\n+\n+The following counting rules apply:\n+\n+- The limit counts permission definitions, not the users, groups, or applications assigned to a role. App role assignments have [separate limits](../identity/users/directory-service-limits-restrictions.md).\n+- Enabled and disabled definitions both count. Setting `isEnabled` to `false` doesn't free capacity.\n+- Each distinct permission ID in the combined role and scope collection counts once. A role and a scope that share an ID and have matching shared properties are stored as one definition.\n+- The count applies to each object's resulting collection, not just the entries added in a request. For a service principal, it includes definitions inherited from the application and definitions added directly to the service principal.\n+\n+For example, 650 app roles and 50 exposed delegated permission scopes with distinct IDs use all 700 entries. The separate [1,200-entry application manifest limit](reference-microsoft-graph-app-manifest.md#manifest-limits) doesn't allow you to exceed this limit.\n+\n+### Existing objects above the limit\n+\n+Existing objects can have more than 700 permission definitions. The count check allows updates that keep the number of definitions unchanged or reduce it, even when the result remains above the applicable limit. Other validation rules still apply. An update that increases the count above the applicable limit is rejected.\n+\n+Some existing objects have a higher service-assigned limit. Don't assume that a higher limit on one object applies to another object or tenant. You can't configure this limit through the application manifest.\n+\n+When the 700-value limit rejects an update, the error can identify the underlying property rather than `appRoles`:\n+\n+```text\n+The total count of values: 701 exceeds the set maxValuesCount limit: 700 for property: Entitlement\n+```\n+\n+### Design within the limit\n+\n+Use app roles for stable authorization categories, such as `Reader`, `Writer`, and `Administrator`, rather than defining a role for every resource, customer, or individual action. Keep finer-grained resource permissions in your application's authorization data and enforce them in the application.\n+\n+Remove obsolete roles and scopes to free capacity. Before deleting an app role, disable it and review its assignments and the application behavior that depends on it. Assigning groups to existing app roles can simplify assignment management, but doesn't increase the number of role definitions you can store.\n+\n ## Assign application owner \n \n Before you can assign app roles to applications, you need to assign yourself as the application owner.\n",
+      "baseCommitSha": "0fdb3cb9228ae1dee6b8e39b3b3f5bf9b213cad2",
+      "commitSha": "4f4d839572dacc86143e06967decb1b8076f680c",
+      "commitMessage": "Document the 700-value app role and permission scope limit",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-09-25 11:58:34 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/howto-add-app-roles-in-apps.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/howto-add-app-roles-in-apps",
+      "eventId": "entra-docs:4f4d839572dacc86143e06967decb1b8076f680c:modified:docs/identity-platform/howto-add-app-roles-in-apps.md",
+      "firstSeenAt": "2026-09-25T13:44:44.343Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "App role documentation adds the 700-definition limit",
+        "summary": "The page now documents a shared default limit of 700 app roles and exposed delegated permission scopes per application or service principal, including counting rules, existing objects above the limit, and design guidance.",
+        "adminImpact": "Administrators should consider the shared limit when designing roles and scopes and review definition counts before updates.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity-platform/reference-app-manifest.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 0,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity-platform/reference-app-manifest.md b/docs/identity-platform/reference-app-manifest.md\nindex afafb3d73e3..804a7ea041b 100644\n--- a/docs/identity-platform/reference-app-manifest.md\n+++ b/docs/identity-platform/reference-app-manifest.md\n@@ -147,6 +147,8 @@ Example:\n \n Specifies the collection of roles that an app may declare. These roles can be assigned to users, groups, or service principals. For more examples and info, see [Add app roles in your application and receive them in the token](./howto-add-app-roles-in-apps.md).\n \n+App roles and exposed delegated permission scopes share a default limit of 700 permission definitions per application or service principal. Disabled definitions also count. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits) for counting rules and behavior for existing objects above the limit.\n+\n Example:\n \n ```json\n@@ -591,6 +593,8 @@ Example:\n \n ### Manifest limits\n \n+Individual collections also have limits. App roles and exposed delegated permission scopes share a default limit of 700 permission definitions, separate from the aggregate manifest limit. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits).\n+\n An application manifest has multiple attributes that are referred to as collections; for example, appRoles, keyCredentials, knownClientApplications, identifierUris, redirectUris, requiredResourceAccess, and oauth2Permissions. Within the complete application manifest for any application, the total number of entries in all the collections combined has been capped at 1200. If you previously specify 100 redirect URIs in the application manifest, then you're only left with 1,100 remaining entries to use across all other collections combined that make up the manifest.\n \n > [!NOTE]\n",
+      "baseCommitSha": "0fdb3cb9228ae1dee6b8e39b3b3f5bf9b213cad2",
+      "commitSha": "4f4d839572dacc86143e06967decb1b8076f680c",
+      "commitMessage": "Document the 700-value app role and permission scope limit",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-09-25 11:58:34 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/reference-app-manifest.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest",
+      "eventId": "entra-docs:4f4d839572dacc86143e06967decb1b8076f680c:modified:docs/identity-platform/reference-app-manifest.md",
+      "firstSeenAt": "2026-09-25T13:44:44.347Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "700-definition limit documented for app roles and permission scopes",
+        "summary": "The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 permission definitions per application or service principal. Disabled definitions count, and this limit is separate from the aggregate manifest limit.",
+        "adminImpact": "Administrators should account for disabled definitions and the separate collection limit when configuring app roles and delegated permission scopes.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity-platform/reference-microsoft-graph-app-manifest.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 0,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity-platform/reference-microsoft-graph-app-manifest.md b/docs/identity-platform/reference-microsoft-graph-app-manifest.md\nindex 20cd4b4c9c0..46201f2bb99 100644\n--- a/docs/identity-platform/reference-microsoft-graph-app-manifest.md\n+++ b/docs/identity-platform/reference-microsoft-graph-app-manifest.md\n@@ -113,6 +113,8 @@ Example:\n \n Specifies the collection of roles that an app may declare. These roles can be assigned to users, groups, or service principals. For more examples and info, see [Add app roles in your application and receive them in the token](./howto-add-app-roles-in-apps.md).\n \n+App roles and exposed delegated permission scopes share a default limit of 700 permission definitions per application or service principal. Disabled definitions also count. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits) for counting rules and behavior for existing objects above the limit.\n+\n Example:\n \n ```json\n@@ -558,6 +560,8 @@ Example:\n \n ### Manifest limits\n \n+Individual collections also have limits. App roles and exposed delegated permission scopes share a default limit of 700 permission definitions, separate from the aggregate manifest limit. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits).\n+\n An application manifest has multiple attributes that are referred to as collections; for example, appRoles, keyCredentials, knownClientApplications, identifierUris, redirectUris, requiredResourceAccess, and oauth2PermissionScopes. Within the complete application manifest for any application, the total number of entries in all the collections combined has been capped at 1200. If you previously specify 100 appRoles in the application manifest, then you're only left with 1,100 remaining entries to use across all other collections combined that make up the manifest.\n \n > [!NOTE]\n",
+      "baseCommitSha": "0fdb3cb9228ae1dee6b8e39b3b3f5bf9b213cad2",
+      "commitSha": "4f4d839572dacc86143e06967decb1b8076f680c",
+      "commitMessage": "Document the 700-value app role and permission scope limit",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-09-25 11:58:34 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/reference-microsoft-graph-app-manifest.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest",
+      "eventId": "entra-docs:4f4d839572dacc86143e06967decb1b8076f680c:modified:docs/identity-platform/reference-microsoft-graph-app-manifest.md",
+      "firstSeenAt": "2026-09-25T13:44:44.351Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "700-definition limit documented for app roles and permission scopes",
+        "summary": "The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 definitions per application or service principal. Disabled definitions count, and this limit is separate from the aggregate manifest limit.",
+        "adminImpact": "Administrators should account for this limit when managing app roles and delegated permission scopes.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity-platform/supported-accounts-validation.md",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 4,
+      "changes": 9,
+      "patch": "diff --git a/docs/identity-platform/supported-accounts-validation.md b/docs/identity-platform/supported-accounts-validation.md\nindex c3f44149a52..9213e0f97ea 100644\n--- a/docs/identity-platform/supported-accounts-validation.md\n+++ b/docs/identity-platform/supported-accounts-validation.md\n@@ -3,11 +3,12 @@ title: Validation differences by supported account types\n description: Learn about the validation differences of various properties for different supported account types when registering your app with the Microsoft identity platform.\n manager: pmwongera\n ms.custom: \n-ms.date: 03/24/2023\n+ms.date: 09/25/2026\n ms.reviewer: sureshja\n ms.service: identity-platform\n \n ms.topic: reference\n+ai-usage: ai-assisted\n #Customer intent: As a developer registering an application with the Microsoft identity platform, I want to understand the validation differences between supported account types, so that I can ensure that the properties of my application are configured correctly.\n ---\n \n@@ -38,13 +39,13 @@ See the following table for the validation differences of various properties for\n | Client secrets (`passwordCredentials`)      | No limit\\*                | No limit\\*               | Maximum of two client secrets  |\n | Redirect URIs (`replyURLs`)                 | See [Redirect URI/reply URL restrictions and limitations](reply-url.md) for more info.  |  |   |\n | API permissions (`requiredResourceAccess`)  | No more than 50 total APIs (resource apps), with no more than 10 APIs from other tenants. No more than 400 permissions total across all APIs.  | No more than 50 total APIs (resource apps), with no more than 10 APIs from other tenants. No more than 400 permissions total across all APIs. | No more than 50 total APIs (resource apps), with no more than 10 APIs from other tenants. No more than 200 permissions total across all APIs. Maximum of 30 permissions per resource (for example, Microsoft Graph).   |\n-| Scopes defined by this API (`oauth2Permissions`)             | Maximum scope name length of 120 characters <br><br> No set limit\\* on the number of scopes defined       | Maximum scope name length of 120 characters <br><br> No set limit\\* on the number of scopes defined    | Maximum scope name length of 40 characters <br><br> Maximum of 100 scopes defined     |\n+| Scopes defined by this API (`oauth2Permissions`)             | Maximum scope name length of 120 characters <br><br> Default limit of 700 permission definitions, shared with app roles. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits). | Maximum scope name length of 120 characters <br><br> Default limit of 700 permission definitions, shared with app roles. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits). | Maximum scope name length of 40 characters <br><br> Maximum of 100 scopes defined, also subject to the shared [app role limit](howto-add-app-roles-in-apps.md#app-role-limits). |\n | Authorized client applications (`preAuthorizedApplications`) | No set limit\\*  | No set limit\\*    | Total maximum of 500 <br><br> Maximum of 100 client apps defined <br><br> Maximum of 30 scopes defined per client  |\n-| appRoles      | Supported <br> No limit\\*   | Supported <br> No limit\\* | `PersonalMicrosoftAccount`: Not supported <br><br> `AzureADandPersonalMicrosoftAccount`: Supported <br> No limit\\* <br> App roles are not supported for consumer (MSA) users of the application at runtime |\n+| appRoles      | Supported <br> Default limit of 700 permission definitions, shared with exposed delegated permission scopes. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits). | Supported <br> Default limit of 700 permission definitions, shared with exposed delegated permission scopes. See [App role limits](howto-add-app-roles-in-apps.md#app-role-limits). | `PersonalMicrosoftAccount`: Not supported <br><br> `AzureADandPersonalMicrosoftAccount`: Supported, subject to the shared [app role limit](howto-add-app-roles-in-apps.md#app-role-limits). <br> App roles are not supported for consumer (MSA) users of the application at runtime |\n | Front-channel logout URL      | `https://localhost` is allowed <br><br> `http` scheme isn't allowed <br><br> Maximum length of 255 characters  | `https://localhost` is allowed <br><br> `http` scheme isn't allowed <br><br> Maximum length of 255 characters  | `https://localhost` is allowed, `http://localhost` fails <br><br> `http` scheme isn't allowed <br><br> Maximum length of 255 characters <br><br>   |\n | Display name    | Maximum length of 120 characters  | Maximum length of 120 characters  | Maximum length of 90 characters  |\n \n-\\* There's a global limit of about 1000 items across all the collection properties on the app object.\n+\\* There's an aggregate limit of 1,200 entries across the collection properties in the application manifest. Individual collection limits also apply. See [Manifest limits](reference-microsoft-graph-app-manifest.md#manifest-limits).\n \n ## Next steps\n \n",
+      "baseCommitSha": "0fdb3cb9228ae1dee6b8e39b3b3f5bf9b213cad2",
+      "commitSha": "4f4d839572dacc86143e06967decb1b8076f680c",
+      "commitMessage": "Document the 700-value app role and permission scope limit",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-09-25 11:58:34 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/supported-accounts-validation.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/supported-accounts-validation",
+      "eventId": "entra-docs:4f4d839572dacc86143e06967decb1b8076f680c:modified:docs/identity-platform/supported-accounts-validation.md",
+      "firstSeenAt": "2026-09-25T13:44:44.355Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "App role and permission-scope limits are now documented",
+        "summary": "The documentation now lists a default limit of 700 shared permission definitions for app roles and exposed delegated scopes, plus an aggregate manifest limit of 1,200 collection entries.",
+        "adminImpact": "Review applications with large numbers of app roles or permission scopes against these limits; no immediate administrator action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [],
+  "messageCenterItems": [],
+  "summary": {
+    "totalCommits": 1,
+    "totalFiles": 4,
+    "authors": [
+      "Philippe Signoret"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 0 new, 4 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "identity-platform",
+        "summary": "The page now documents a shared default limit of 700 app roles and exposed delegated permission scopes per application or service principal, including counting rules, existing objects above the limit, and design guidance. The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 permission definitions per application or service principal. Disabled definitions count, and this limit is separate from the aggregate manifest limit. The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 definitions per application or service principal. Disabled definitions count, and this limit is separ",
+        "sourceFiles": [
+          "docs/identity-platform/howto-add-app-roles-in-apps.md",
+          "docs/identity-platform/reference-app-manifest.md",
+          "docs/identity-platform/reference-microsoft-graph-app-manifest.md",
+          "docs/identity-platform/supported-accounts-validation.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "identity-platform",
+        "detail": "The page now documents a shared default limit of 700 app roles and exposed delegated permission scopes per application or service principal, including counting rules, existing objects above the limit, and design guidance. The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 permission definitions per application or service principal. Disabled definitions count, and this limit is separate from the aggregate manifest limit. The documentation now states that app roles and exposed delegated permission scopes share a default limit of 700 definitions per application or service principal. Disabled definitions count, and this limit is separ"
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
