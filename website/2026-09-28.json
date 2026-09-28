@@ -1,0 +1,88 @@
+{
+  "newFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/global-secure-access/how-to-configure-connectors.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/global-secure-access/how-to-configure-connectors.md b/docs/global-secure-access/how-to-configure-connectors.md\nindex 158e9742809..5a5f5c8211f 100644\n--- a/docs/global-secure-access/how-to-configure-connectors.md\n+++ b/docs/global-secure-access/how-to-configure-connectors.md\n@@ -112,7 +112,7 @@ To enable TLS 1.2:\n \n - Optimize performance between the connector and the application. Physically locate the connector server close to the application servers. For more information, see [Optimize traffic flow with Microsoft Entra application proxy](../identity/app-proxy/application-proxy-network-topology.md).\n - Make sure the connector server and the web application servers are in the same Active Directory domain or span trusting domains. Having the servers in the same domain or trusting domains is required for single sign-on (SSO) with integrated Windows authentication (IWA) and Kerberos Constrained Delegation (KCD). If the connector server and web application servers are in different Active Directory domains, use resource-based delegation for single sign-on.\n-- Consider [performance and scalability](concept-connectors.md#performance-and-scalability) of your connector deployment, including [extending the TCP and UDP ephemeral ports](concept-connectors.md#expanding-ephemeral-port-range) on your connector server. See [Understand the Microsoft Entra private network connector](concept-connectors.md) for more information.\n+- Consider [performance and scalability](concept-connectors.md#performance-and-scalability) of your connector deployment, including [configuring dynamic and AutoReuse TCP port ranges](concept-connectors.md#configure-dynamic-and-autoreuse-tcp-port-ranges) on your connector server. See [Understand the Microsoft Entra private network connector](concept-connectors.md) for more information.\n - Consider creating a [performance baseline](/troubleshoot/windows-server/performance/troubleshoot-performance-problems-in-windows) for your private network connectors.\n \n ### Prepare your on-premises environment\n",
+      "baseCommitSha": "78a31c7df72e0d54787aa36e2b254df08576d0ac",
+      "commitSha": "05c1795f729eb4c2ed3188dc194fd972022228ad",
+      "commitMessage": "Update connector server performance recommendations",
+      "commitAuthor": "Kamran Tabish",
+      "commitDate": "2026-09-27 20:40:04 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-connectors.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-connectors",
+      "eventId": "entra-docs:05c1795f729eb4c2ed3188dc194fd972022228ad:modified:docs/global-secure-access/how-to-configure-connectors.md",
+      "firstSeenAt": "2026-09-28T08:44:14.528Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Connector server port-range guidance updated",
+        "summary": "The connector configuration guidance now refers to configuring dynamic and AutoReuse TCP port ranges instead of extending TCP and UDP ephemeral ports.",
+        "adminImpact": "Review the updated performance and scalability guidance when configuring connector servers.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/global-secure-access/concept-connectors.md",
+      "status": "modified",
+      "additions": 61,
+      "deletions": 13,
+      "changes": 74,
+      "patch": "diff --git a/docs/global-secure-access/concept-connectors.md b/docs/global-secure-access/concept-connectors.md\nindex b9900076a83..0787527e300 100644\n--- a/docs/global-secure-access/concept-connectors.md\n+++ b/docs/global-secure-access/concept-connectors.md\n@@ -128,25 +128,73 @@ Another factor that affects performance is the quality of the networking between\n \n For guidance on where to install connectors and how to optimize your network, see [Optimize traffic flow with Microsoft Entra application proxy](../identity/app-proxy/application-proxy-network-topology.md).\n \n-## Expanding ephemeral port range\n+## Configure dynamic and AutoReuse TCP port ranges\n+\n+Private network connectors initiate outbound TCP and UDP connections to configured destinations. Each connection requires an available source port on the connector host.\n+ \n+For high-volume TCP workloads, configure separate, non-overlapping dynamic and AutoReuse port ranges:\n+- **Dynamic TCP range**: 49152–65535 (16,384 ports)\n+- **AutoReuse TCP range**: 10000–49151 (39,152 ports)\n+ \n+The AutoReuse range improves TCP connection scalability by allowing eligible outbound connections to reuse a local source port when the complete connection tuple—source IP, source port, destination IP, and destination port—remains unique.\n+ \n+> [!IMPORTANT]\n+> The dynamic and AutoReuse TCP ranges must not overlap.\n+ \n+Before you begin:\n+- Use Windows Server 2016 or later.\n+- Run the commands from an elevated PowerShell session.\n+- Confirm that ports  10000–49151  aren't required by applications installed on the connector server.\n+- Review the excluded TCP port ranges:\n \n-Private network connectors initiate TCP and UDP connections to designated destination endpoints. These connections require available source ports on the connector host machine. Expanding the ephemeral port range can improve the availability of source ports, particularly when you're managing a high volume of concurrent connections.\n+```\n+netsh int ipv4 show excludedportrange tcp\n+netsh int ipv6 show excludedportrange tcp\n+```\n+ \n+### Configure the port ranges\n+ \n+**Configure the dynamic TCP range**\n \n-To view the current dynamic port range on a system, use the following `netsh` commands:\n+```\n+netsh int ipv4 set dynamicport tcp start=49152 num=16384\n+netsh int ipv6 set dynamicport tcp start=49152 num=16384\n+```\n+ \n+**Configure the AutoReuse TCP range**\n \n-- `netsh int ipv4 show dynamicport tcp`\n-- `netsh int ipv4 show dynamicport udp`\n-- `netsh int ipv6 show dynamicport tcp`\n-- `netsh int ipv6 show dynamicport udp`\n+```\n+Set-NetTCPSetting `\n+  -SettingName Internet,Datacenter,Compat `\n+  -AutoReusePortRangeStartPort 10000 `\n+  -AutoReusePortRangeNumberOfPorts 39152\n+```\n \n-Here are sample `netsh` commands to increase the ports:\n+### Verify the configuration\n \n-- `netsh int ipv4 set dynamicport tcp start=1025 num=64511`\n-- `netsh int ipv4 set dynamicport udp start=1025 num=64511`\n-- `netsh int ipv6 set dynamicport tcp start=1025 num=64511`\n-- `netsh int ipv6 set dynamicport udp start=1025 num=64511`\n+```\n+netsh int ipv4 show dynamicport tcp\n+netsh int ipv6 show dynamicport tcp\n+ \n+Get-NetTCPSetting -SettingName Internet,Datacenter,Compat |\n+  Select-Object SettingName,\n+    DynamicPortRangeStartPort,\n+    DynamicPortRangeNumberOfPorts,\n+    AutoReusePortRangeStartPort,\n+    AutoReusePortRangeNumberOfPorts\n+```\n \n-These commands set the dynamic port range from 1025 to the maximum of 65535. The minimum start port is 1025.\n+Expected values:\n+\n+|Setting|Start port|Number of ports|End port|\n+|---|---|---|---|\n+|Dynamic TCP range|49152|16384|65535|\n+|AutoReuse TCP range|10000|39152|49151|\n+ \n+> [!NOTE]\n+> AutoReuse allows the same source port to be used for simultaneous connections to different destinations. Connections from the same connector IP to the same resolved destination IP and port still require different source ports. Sustained high connection volume to a single destination can therefore still exhaust the available source ports.\n+> A destination can be configured as an IP address or a fully qualified domain name (FQDN). For an FQDN, Windows establishes the connection to the IP address returned by DNS resolution.\n+> AutoReuse applies only to TCP. UDP continues to use its configured dynamic port range.\n \n ## Specifications and sizing requirements\n \n",
+      "baseCommitSha": "d58c4207d6023b9a90b20a612cdad679dac5cb45",
+      "commitSha": "78a31c7df72e0d54787aa36e2b254df08576d0ac",
+      "commitMessage": "Revise TCP port range configuration guidance",
+      "commitAuthor": "Kamran Tabish",
+      "commitDate": "2026-09-27 20:23:17 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-connectors.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/concept-connectors",
+      "eventId": "entra-docs:78a31c7df72e0d54787aa36e2b254df08576d0ac:modified:docs/global-secure-access/concept-connectors.md",
+      "firstSeenAt": "2026-09-28T08:44:14.537Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Connector guidance adds separate dynamic and AutoReuse TCP ranges",
+        "summary": "The documentation specifies non-overlapping dynamic TCP ports 49152–65535 and AutoReuse TCP ports 10000–49151, with new configuration and verification commands. It also adds Windows Server 2016+ prerequisites and clarifies that AutoReuse applies only to TCP.",
+        "adminImpact": "Administrators managing high-volume TCP workloads should review available and excluded ports before applying these settings; the ranges must not overlap.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [],
+  "messageCenterItems": [],
+  "summary": {
+    "totalCommits": 2,
+    "totalFiles": 2,
+    "authors": [
+      "Kamran Tabish"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 0 new, 2 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "global-secure-access",
+        "summary": "The connector configuration guidance now refers to configuring dynamic and AutoReuse TCP port ranges instead of extending TCP and UDP ephemeral ports. The documentation specifies non-overlapping dynamic TCP ports 49152–65535 and AutoReuse TCP ports 10000–49151, with new configuration and verification commands. It also adds Windows Server 2016+ prerequisites and clarifies that AutoReuse applies only to TCP.",
+        "sourceFiles": [
+          "docs/global-secure-access/how-to-configure-connectors.md",
+          "docs/global-secure-access/concept-connectors.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "global-secure-access",
+        "detail": "The connector configuration guidance now refers to configuring dynamic and AutoReuse TCP port ranges instead of extending TCP and UDP ephemeral ports. The documentation specifies non-overlapping dynamic TCP ports 49152–65535 and AutoReuse TCP ports 10000–49151, with new configuration and verification commands. It also adds Windows Server 2016+ prerequisites and clarifies that AutoReuse applies only to TCP."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
