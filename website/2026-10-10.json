@@ -1,0 +1,102 @@
+{
+  "newFiles": [
+    {
+      "filename": "docs/id-governance/agent-lifecycle-policies.md",
+      "status": "added",
+      "additions": 157,
+      "deletions": 0,
+      "changes": 157,
+      "patch": "diff --git a/docs/id-governance/agent-lifecycle-policies.md b/docs/id-governance/agent-lifecycle-policies.md\nnew file mode 100644\nindex 00000000000..986c003903e\n--- /dev/null\n+++ b/docs/id-governance/agent-lifecycle-policies.md\n@@ -0,0 +1,157 @@\n+---\n+title: Entra Agent ID lifecycle policies\n+description: Configure Microsoft Entra Agent ID lifecycle policies to automate lifecycle management of agent identities\n+author: chiragdayani\n+ms.author: chiragdayani\n+ms.service: entra-id-governance\n+ms.subservice: lifecycle-workflows\n+ms.topic: how-to\n+ms.custom: msecd-doc-authoring-1030\n+ms.date: 10/06/2026\n+ai-usage: ai-generated\n+\n+#customer intent: As an identity or security administrator, I want to configure agent identity lifecycle policies so that I can manage inactive or orphaned agent identities.\n+---\n+\n+# Entra Agent ID lifecycle policies (preview)\n+\n+AI agent adoption is accelerating, resulting in a growing number of agent identities with access to critical resources. Without clear lifecycle controls, these identities can persist beyond their usefulness and introduce security risk. Keeping agent identities around when they are no longer needed can lead to security incidents, as forgotten identities can become easy targets for attackers, while agent identities without clear accountability may continue to retain access indefinitely. As organizations deploy more AI agents, these risks become amplified. Security and identity administrators therefore need automated lifecycle management to avoid agent proliferation to manage unmonitored, inactive and orphaned agent identities \n+\n+> [!IMPORTANT]\n+> Agent ID lifecycle policy is in preview. Preview features are provided without a service-level agreement and aren't recommended for production workloads. Certain features might not be supported or might have limited capabilities.\n+\n+## Prerequisites\n+\n+### License requirements\n+\n+[!INCLUDE [licensing-agent-id-governance](../includes/licensing-agent-id-governance.md)]\n+\n+### Roles\n+\n+One of the following roles:\n+\n+- [Lifecycle Workflows Administrator](../identity/role-based-access-control/permissions-reference.md#lifecycle-workflows-administrator)\n+- [AI Administrator](../identity/role-based-access-control/permissions-reference.md#ai-administrator)\n+\n+## Create an agent lifecycle policy\n+\n+Create a policy to define which agent identities should be evaluated and what happens when an agent identity doesn't meet an enabled rule.\n+\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Lifecycle Workflows Administrator](../identity/role-based-access-control/permissions-reference.md#lifecycle-workflows-administrator) or [AI Administrator](../identity/role-based-access-control/permissions-reference.md#ai-administrator).\n+1. Browse to **ID Governance** > **Lifecycle Workflows** > **Lifecycle Policies** > **Agent IDs**.\n+1. Select **New policy**.\n+1. Enter a unique policy name and description.\n+1. Enable the lifecycle policy.\n+1. Select the scope of agent identities that needs to be governed by the policy.\n+1. Configure one or more lifecycle rules:\n+   - Periodic reconfirmation\n+   - Minimum sponsor requirement\n+   - Inactivity monitoring\n+1. Choose a policy action and, if needed, configure a grace period.\n+1. Review the notification behavior.\n+1. Optionally, add one or more fallback recipients to receive lifecycle notifications when an agent identity has no accountable representative, such as a sponsor or owner.\n+1. Review the configuration, and then select **Save**.\n+1. If multiple Agent ID lifecycle policies exist, configure the policy priority.\n+\n+After you create the policy, our system periodically evaluates the agent identities within its scope. When an agent identity violates any enabled lifecycle policy rule, the identity enters the configured notification and enforcement process.\n+\n+## Configure lifecycle rules\n+\n+Each Agent ID lifecycle policy can contain one or more rules. Configure the rules that represent your organization's requirements for continued use and accountability.\n+\n+### Configure periodic reconfirmation\n+\n+Use periodic reconfirmation to verify that an agent identity is still needed.\n+\n+1. Enable **Periodic reconfirmation**.\n+1. Configure the reconfirmation frequency i.e. how often sponsor or owner must re-confirm that the agent identity is still required (between 30 and 730 days).\n+\n+If the agent identity isn't reconfirmed within the configured timeframe, the configured policy actions trigger so that the accountable representatives can take action via the Manage Agents experience (https://myaccount.microsoft.com/agents)\n+\n+### Configure minimum sponsor requirements\n+\n+Use the minimum sponsor requirement to ensure that each agent identity has clear accountability.\n+\n+1. Enable **Minimum sponsor requirement**.\n+1. Specify the minimum number of sponsors required for each agent identity.\n+\n+If an agent identity has fewer than the configured number of sponsors, the configured policy actions trigger, so that the available accountable representatives can take action to add / update the sponsors via the Manage Agents experience (https://myaccount.microsoft.com/agents), to ensure the agent identity is not disabled / deleted. In case the agent identity has no accountability, then the fallback recipient is notified.\n+\n+### Configure inactivity monitoring\n+\n+Use inactivity monitoring to identify stale and unused agent identities.\n+\n+1. Enable **Inactivity monitoring**.\n+1. Specify the inactivity duration.\n+1. Define how long an agent identity can remain inactive before the configured policy actions are triggered.\n+\n+If an agent identity has been inactive for more than the configured duration i.e. no tokens have been issued for the identity during that time, the configured policy actions trigger, so that the accountable representatives can take appropriate action.\n+\n+## Configure policy actions\n+\n+Policy actions define what actions can be taken when an agent identity does not satisfy the policy requirements\n+\n+| Action | Result |\n+| --- | --- |\n+| **Disable** | Disables the agent identity and prevents future sign-ins or usage. |\n+| **Delete** | Soft Deletes the agent identity. |\n+| **Disable and delete** | Disables the agent identity immediately and then deletes it after the configurable grace period.\n+\n+1. Select the action that should be taken for the agent identities which do not fulfill the organizational policy rules.\n+1. If you select **Disable and delete**, specify the number of days when delete action triggers after the disablement is completed.\n+1. To give accountable representatives time to remediate a policy violation, enable the grace period and specify its duration.\n+1. Review the selected action before you create or update the policy.\n+\n+## Configure notifications\n+\n+Notifications inform accountable representatives which lifecycle policy rule was violated by an agent identity and which policy action will be triggered if the required action is not executed.\n+\n+1. Review the notifications sent to sponsors, owners, or other accountable representatives.\n+1. Add one or more fallback recipients when notifications need to reach someone if an agent identity has no sponsor or owner.\n+1. Confirm that the notification schedule gives recipients enough time to remediate the violation before the disable / delete action is triggered.\n+\n+If the violation isn't remediated within the configured timeframe, Lifecycle Workflows automatically executes the policy action.\n+\n+## Set policy priority\n+\n+You can create multiple agent identity lifecycle policies with different scopes, rules, and actions. Policy priority determines which policy applies when an agent identity is included in more than one policy.\n+\n+1. Open the list of agent identity lifecycle policies.\n+1. Review policies with overlapping agent identity scopes.\n+1. Move the policy that should take precedence above the other matching policies.\n+1. Review the scopes again before you enable broad enforcement.\n+\n+The highest-priority matching policy applies to the agent identity.\n+\n+## Verify the policy\n+\n+Validate the policy with a limited set of test agent identities before you apply it broadly.\n+\n+1. Select **Specific agents** as the policy scope.\n+1. Add a small set of test agent identities.\n+1. For periodic reconfirmation testing, use the minimum allowed frequency of 30 days.\n+1. Confirm that sponsors or other configured recipients receive the expected notifications.\n+1. In the [Manage Agents experience](https://myaccount.microsoft.com/agents), verify that a sponsor can reconfirm/ extend, or disable the agent identity.\n+1. Any unremediated violation results in the configured policy action after the applicable timeframe and grace period.\n+\n+## How policy enforcement works\n+\n+Lifecycle policy uses the following process to evaluate and enforce an agent identity lifecycle policy:\n+\n+1. **Scope evaluation:** identifies the agent identities included in the policy scope.\n+1. **Rule evaluation:** evaluates each enabled policy rule. An agent identity becomes noncompliant when it violates any enabled rule.\n+1. **Notification:** notifies the applicable sponsors, owners, or fallback recipients.\n+1. **Enforcement:** If the violation isn't remediated within the configured timeframe, Lifecycle Workflows disables, deletes, or disables and then deletes the agent identity according to the policy configuration.\n+\n+| Rule violation | Notification recipient | Action Required |\n+| --- | --- | --- |\n+| Reconfirmation overdue | Sponsor or owner or fallback recipient | Disable if no longer needed or reconfirm that the agent identity is still required by clicking on 'Extend' in Manage Agents experience |\n+| Minimum sponsor requirement not met | Sponsor or owner or fallback recipient | Update sponsors in Manage Agents experience |\n+| Inactive beyond the configured threshold | Sponsor or accountable representative | Disable if no longer needed or make it active by interacting with it |\n+\n+\n+## Related content\n+\n+- [Governing Agent Identities](agent-id-governance-overview.md)\n+- [Microsoft Entra ID Governance licensing fundamentals](licensing-fundamentals.md)\n+- [Manage agents in the end-user experience](/entra/agent-id/manage-agent-identities-end-user)\n",
+      "baseCommitSha": "6af50fff9522c32adc2937ddb67a1faa7f1e299b",
+      "commitSha": "4315a4c6037e6e3ba0da0487583a41f70f902ccc",
+      "commitMessage": "Add Microsoft Entra Agent ID lifecycle policies article (#14540)",
+      "commitAuthor": "Chirag Dayani",
+      "commitDate": "2026-10-09 11:55:09 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/agent-lifecycle-policies.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/agent-lifecycle-policies",
+      "eventId": "entra-docs:4315a4c6037e6e3ba0da0487583a41f70f902ccc:added:docs/id-governance/agent-lifecycle-policies.md",
+      "firstSeenAt": "2026-10-10T00:04:45.617Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "Entra Agent ID lifecycle policies are now documented",
+        "summary": "The article explains how to create policies for agent identities, including periodic reconfirmation, minimum sponsor requirements, inactivity monitoring, notifications, grace periods, and enforcement actions. The capability is in preview.",
+        "adminImpact": "Administrators can govern inactive or orphaned agent identities and improve accountability through sponsors or owners. No mandatory action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [],
+  "deletedFiles": [],
+  "messageCenterItems": [
+    {
+      "id": "MC1437671",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-10-09",
+      "title": "Microsoft Entra: Authenticated password change in My Sign-Ins",
+      "summary": "Microsoft Entra will enable users to change passwords after secure sign-in using strong credentials (passkey, FIDO2, Windows Hello) without knowing the current password or using SSPR. This feature, disabled by default, requires admin activation and will roll out globally from October to November 2026.",
+      "product": {
+        "slug": "entra-id",
+        "name": "Microsoft Entra ID",
+        "short": "Entra ID",
+        "icon": "entra-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/identity/"
+      },
+      "topic": {
+        "slug": "authentication",
+        "name": "Authentication",
+        "icon": "/assets/topics/authentication.svg"
+      },
+      "changeType": "Message",
+      "url": "/message-center/MC1437671/",
+      "originalUrl": "https://mc.merill.net/message/MC1437671",
+      "body": "<p>Updated October 9, 2026: We have updated the content. Thank you for your patience.&nbsp;</p><p><b><b>What and Why</b></b></p><p>We're introducing a new Microsoft Entra capability that Allow password change after secure sign-in directly from My Sign-Ins using an existing strong credential, such as a passkey, FIDO2 security key, or Windows Hello for Business. Users can complete this action even if they don't know their current password and without using self-service password reset (SSPR) or contacting the helpdesk.</p><p>Many organizations are adopting allowed password changes after secure sign-ins but still maintain passwords for legacy applications and services. This update helps reduce password-related support requests and removes a common barrier to adoption. The feature is disabled by default and requires administrator enablement before users can access it.</p><p><b><b>Rollout Schedule</b></b></p><ul><li><b>General Availability (Worldwide and GCC): </b>Beginning <b>end of October 2026</b> (previously mid-October) and expected to complete by <b>end of November 2026</b> (previously late October)</li></ul><p><b><b>Impact on Your Organization</b></b></p><p><i>Who is affected</i></p><ul><li>Microsoft Entra administrators who manage password change settings</li><li>Users who have a registered allowed password change after secure sign-in<span> method</span> (passkey, FIDO2 security key, or Windows Hello for Business) and also maintain a password</li><li>Organizations that choose to enable the feature</li></ul><p><i>Platforms/Services</i></p><ul><li>Microsoft Entra</li><li>My Sign-Ins (mysignins.microsoft.com)</li></ul><p><i>What will happen</i></p><ul><li>Because this feature is off by default, there is no change to your users' experience unless you turn it on.&nbsp;</li><li>After the feature is enabled, eligible users will see a new <b>Change password option</b> in <i>My Sign-Ins</i>.</li><li>Users can authenticate set a new password without knowing their existing password.</li><li>Users are not required to enroll in or use SSPR to complete this action.</li><li>Administrators can choose to enable or disable the capability through Microsoft Entra management interfaces available at release.</li><li>Authentication continues to require a strong<span> password change method</span>, such as a passkey, FIDO2 security key, or Windows Hello for Business.</li><li>The setting is tenant-wide: you can turn it on for your entire tenant or leave it off for everyone. There is no per-user or per-group scoping.&nbsp;</li></ul><p><b><b>Action Required/Recommendations</b></b></p><p>No action is required.</p><p>If your organization plans to support allowed password changes after secure sign-in:</p><ul><li>Review your password management and allowed password changes after secure sign-in strategy.</li><li>Evaluate whether enabling this capability aligns with your organization's security and support requirements.</li><li>Communicate the new self-service capability to helpdesk and support teams.</li><li>Update internal user guidance and documentation as needed.</li><li>If your organization chooses to offer allowed password changes after secure sign-in, enable the feature through the Microsoft Entra admin experience or supported APIs when it becomes available in October 2026.</li></ul><p><b>Learn more&nbsp;</b></p><ul><li>Microsoft Learn documentation will be available when the feature releases in October.&nbsp;</li></ul><p><b><b>Compliance Considerations</b></b></p><table><tbody><tr><td>Question</td><td>Answer</td></tr><tr><td>Does the change include an admin control?</td><td>Yes. The feature is disabled by default and requires explicit administrator enablement.</td></tr><tr><td>Does the change modify how users can access or correct their personal data?</td><td>Yes. Users gain a new self-service method to update their password using an existing allowed password change after secure sign-in.</td></tr></tbody></table>",
+      "category": "stayInformed",
+      "services": [
+        "Microsoft Entra"
+      ],
+      "tags": [
+        "Updated message",
+        "New feature",
+        "User impact",
+        "Admin impact"
+      ],
+      "startDate": "2026-07-23T22:39:23Z",
+      "endDate": "2026-12-31T08:00:00Z",
+      "lastModifiedDateTime": "2026-10-09T16:43:01.717Z",
+      "version": "2026-10-09T16:43:01.717Z",
+      "eventId": "message-center:MC1437671:2026-10-09T16:43:01.717Z",
+      "firstSeenAt": "2026-10-10T00:04:54.915Z"
+    }
+  ],
+  "summary": {
+    "totalCommits": 1,
+    "totalFiles": 1,
+    "authors": [
+      "Chirag Dayani"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 1 new, 0 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "New feature",
+        "title": "id-governance",
+        "summary": "The article explains how to create policies for agent identities, including periodic reconfirmation, minimum sponsor requirements, inactivity monitoring, notifications, grace periods, and enforcement actions. The capability is in preview.",
+        "sourceFiles": [
+          "docs/id-governance/agent-lifecycle-policies.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "New feature",
+        "headline": "id-governance",
+        "detail": "The article explains how to create policies for agent identities, including periodic reconfirmation, minimum sponsor requirements, inactivity monitoring, notifications, grace periods, and enforcement actions. The capability is in preview."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
