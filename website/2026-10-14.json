@@ -25,6 +25,32 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-sap-ac-integration.md",
+      "status": "added",
+      "additions": 308,
+      "deletions": 0,
+      "changes": 308,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-sap-ac-integration.md b/docs/id-governance/entitlement-management-sap-ac-integration.md\nnew file mode 100644\nindex 00000000000..a49220344e6\n--- /dev/null\n+++ b/docs/id-governance/entitlement-management-sap-ac-integration.md\n@@ -0,0 +1,308 @@\n+---\n+title: Microsoft Entra SAP Access Control integration (Preview)\n+description: Learn how to integrate SAP Access Control (SAP AC/GRC) with Microsoft Entra ID Governance so users can request SAP business roles through entitlement management access packages.\n+author: sponnada\n+ms.author: sriponnada\n+manager: teeearls\n+ms.service: entra-id-governance\n+ms.subservice: entitlement-management\n+ms.topic: how-to\n+ms.date: 09/08/2026\n+---\n+\n+# Microsoft Entra SAP Access Control integration (Preview)\n+\n+Microsoft Entra ID Governance integrates with SAP Access Control (SAP AC), part of the SAP Governance, Risk and Compliance solution (SAP GRC), so you can govern SAP access from Microsoft Entra. With this integration, you add SAP business roles as resources in entitlement management catalogs and let users request them through Microsoft Entra access packages, while SAP AC continues to run its own approval, risk analysis, and provisioning workflows.\n+\n+This integration enables you to:\n+\n+- Add SAP AC business roles as resources in entitlement management catalogs.\n+- Let users request SAP access through Microsoft Entra access packages and the My Access portal.\n+- Keep SAP AC as the system of record for SAP-side approval and provisioning.\n+- Reconcile the SAP request outcome back to Microsoft Entra so the assignment status reflects the SAP result.\n+\n+Microsoft Entra defines and governs *who can request* access; SAP AC *executes* the request within SAP; and SAP Business Technology Platform (BTP) connects the two in a secure, controlled way.\n+\n+> [!IMPORTANT]\n+> The Microsoft Entra SAP AC integration is currently in PREVIEW. See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Microsoft Entra features that are in beta, preview, or otherwise not yet released into general availability.\n+\n+## How the integration works\n+\n+The [SAP Identity Access Governance (IAG) integration](entitlement-management-sap-integration.md) and SAP AC integration use different connectivity paths. The SAP IAG integration connects through SAP Cloud Identity Services, while the SAP AC integration reaches your on-premises SAP AC system through SAP BTP. The SAP AC request path is:\n+\n+**Microsoft Entra ID Governance entitlement management → SAP BTP Integration Suite (iFlows) → SAP Cloud Connector → on-premises SAP AC**\n+\n+- Microsoft Entra never calls SAP AC directly. It calls the OAuth-protected SAP Integration Suite runtime endpoint.\n+- SAP Integration Suite iFlows translate Microsoft Entra's REST calls into the SOAP web-service calls that SAP AC exposes.\n+- SAP Cloud Connector provides the secure tunnel from SAP BTP to the on-premises SAP AC system. SAP AC is never exposed directly to the internet.\n+- SAP AC processes the request using its existing business roles, workflows, approvals, and risk controls.\n+- Microsoft Entra polls SAP AC for request status through the same chain, and updates the access-package assignment when SAP completes its workflow. Status reconciliation can take up to 10 minutes.\n+\n+The following diagram shows the request and status-reconciliation path across Microsoft Entra, SAP BTP, and the on-premises SAP AC system.\n+\n+```mermaid\n+flowchart LR\n+    subgraph MS[\"Microsoft cloud\"]\n+        EM[\"Microsoft Entra ID Governance<br/>Entitlement management\"]\n+        KV[\"Azure Key Vault<br/>SAP BTP client secret\"]\n+    end\n+    subgraph BTP[\"SAP Business Technology Platform\"]\n+        IS[\"SAP Integration Suite<br/>iFlows: REST to SOAP\"]\n+    end\n+    subgraph ONPREM[\"Customer network (on-premises)\"]\n+        CC[\"SAP Cloud Connector<br/>secure tunnel\"]\n+        AC[\"SAP AC<br/>SAP GRC\"]\n+    end\n+    KV -. \"connector reads secret\" .-> EM\n+    EM -- \"1. REST call with OAuth token\" --> IS\n+    IS -- \"2. SOAP via virtual host\" --> CC\n+    CC -- \"3. SOAP\" --> AC\n+    AC -. \"4. request status (polled)\" .-> CC\n+    CC -. \"status\" .-> IS\n+    IS -. \"status\" .-> EM\n+```\n+\n+<!-- Alternative static image (add screenshots/diagram export if Mermaid isn't preferred):\n+[![Architecture diagram showing the request path from Microsoft Entra ID Governance through SAP BTP Integration Suite and SAP Cloud Connector to on-premises SAP AC.](media/entitlement-management-sap-ac-integration/sap-ac-architecture.png)](media/entitlement-management-sap-ac-integration/sap-ac-architecture.png#lightbox) -->\n+\n+## License requirements\n+\n+[!INCLUDE [active-directory-p2-governance-license.md](~/includes/entra-p2-governance-license.md)]\n+\n+Using this feature requires Microsoft Entra ID Governance or Microsoft Entra Suite licenses. To find the right license for your requirements, see [Microsoft Entra ID Governance licensing fundamentals](licensing-fundamentals.md).\n+\n+## Prerequisites\n+\n+### SAP prerequisites\n+\n+- A working on-premises **SAP AC** system.\n+- **SAP Cloud Connector** installed in your network and connected to the SAP BTP subaccount you use for this integration.\n+- An **SAP BTP subaccount** with:\n+  - A subscription to **SAP Integration Suite**.\n+  - The `integrationflows` entitlement and an appropriate quota for creating integration flows.\n+- Appropriate SAP licensing for **SAP Integration Suite** and **SAP AC**.\n+- The SAP AC role **`SAP_GRAC_ALL`** assigned to a technical (service) account that is authorized to call the SAP AC SOAP web services.\n+- An SAP AC user that corresponds to the administrator who creates the connector, holding at least one of these SAP AC authorization roles: `SAP_GRAC_ALL`, `SAP_GRC_FN_ALL`, `ZSAP_GRAC_ALL`, or `ZSAP_GRC_FN_ALL`. Microsoft Entra verifies one of these roles during connector creation (see [Step 6](#step-6-connect-sap-ac-in-microsoft-entra)).\n+\n+> [!NOTE]\n+> The SAP AC system must also be available in SAP AC as a target or managed connector. Run a repository synchronization job for this system to bring its user and user authorization information into SAP AC.\n+\n+### Microsoft prerequisites\n+\n+- A Microsoft Entra ID Governance license, Microsoft Entra Suite license, or Microsoft Entra ID Governance step-up.\n+- One of the following administrator roles: [Global Administrator](../identity/role-based-access-control/permissions-reference.md#global-administrator) or [Identity Governance Administrator](../identity/role-based-access-control/permissions-reference.md#identity-governance-administrator).\n+- An **Azure subscription** that contains an **Azure Key Vault** used to store the SAP BTP client secret.\n+\n+## Step 1: Prepare SAP AC\n+\n+Configure SAP AC to expose and authorize the SOAP web services that the integration calls.\n+\n+1. In SAP AC, open transaction **`SICF`** and activate each web service listed in the following table.\n+1. In SAP SOA Manager, confirm that each service has an active binding and that its alternate-access URL alias exactly matches the value in the table.\n+1. Test each service endpoint from a system that can reach SAP AC. Resolve any network, authorization, or binding errors before configuring SAP Cloud Connector.\n+1. Create or identify a technical user or service account, and assign it the `SAP_GRAC_ALL` role so that it can call the SAP AC SOAP web services.\n+\n+### Required SAP AC web services and aliases\n+\n+The iFlows call SAP AC using fixed alternate-access URL aliases. These alias names are hard-coded in the integration flows and must match **exactly**. Do not rename them in SAP AC or in the iFlows.\n+\n+| SAP AC/GRC web service | Required alternate-access URL alias |\n+| --- | --- |\n+| `GRAC_LOOKUP_WS` | `/grac_lookup_ws` |\n+| `GRAC_REQUEST_STATUS_WS` | `/grac_request_status_ws` |\n+| `GRAC_ROLE_DETAILS_WS` | `/grac_role_details_ws` |\n+| `GRAC_SEARCH_ROLES_WS` | `/grac_search_roles_ws` |\n+| `GRAC_SELECT_APPL_WS` | `/grac_select_appl_ws` |\n+| `GRAC_USER_ACCESS_WS` | `/grac_user_access_ws` |\n+| `GRAC_USER_EXISTING_ASSGN_WS` | `/grac_user_existing_assgn_ws` |\n+\n+> [!NOTE]\n+> If a SOAP call later returns `404 Not Found`, a mismatched or inactive binding is the most common cause.\n+\n+## Step 2: Configure SAP Cloud Connector\n+\n+SAP Cloud Connector provides the secure tunnel from your SAP BTP subaccount to the on-premises SAP AC system.\n+\n+### Create the system mapping\n+\n+1. Open the Cloud Connector administration UI (typically `https://<cloud-connector-host>:8443`).\n+1. Select the subaccount that contains the SAP Integration Suite subscription used for this integration.\n+1. Go to **Cloud To On-Premises** and add a new system mapping:\n+\n+   | Setting | Value |\n+   | --- | --- |\n+   | Back-end Type | `ABAP System` |\n+   | Protocol | `HTTPS` (recommended) or `HTTP` |\n+   | Internal Host | Your SAP AC hostname |\n+   | Internal Port | Your SAP AC HTTPS port |\n+   | Virtual Host | A virtual hostname that BTP uses to reach SAP AC |\n+   | Virtual Port | A virtual port that BTP uses to reach SAP AC |\n+\n+   You enter the same **virtual host** and **virtual port** in each applicable iFlow in the next step.\n+\n+### Restrict resource access\n+\n+Add resource-access rules for **only** the SOAP service paths required by the integration.\n+\n+> [!WARNING]\n+> Do not expose `/sap/` or create broad access to the entire SAP namespace. Permit only the specific service paths the integration needs. Limiting the exposed paths reduces the attack surface reachable through Cloud Connector.\n+\n+### Validate connectivity\n+\n+Confirm all of the following:\n+\n+- The SAP AC system mapping shows **Reachable** in Cloud Connector.\n+- The subaccount connection is active.\n+- In SAP BTP Cockpit, under **Connectivity** > **Cloud Connectors**, the Cloud Connector shows **Connected**.\n+- After you import the iFlows, a test call from BTP resolves through the configured virtual host.\n+\n+## Step 3: Set up SAP BTP Integration Suite\n+\n+For the preview, the integration is distributed as a downloadable ZIP package of integration flows.\n+\n+### Import the integration package\n+\n+1. Download the integration-flow ZIP package from the preview team's GitHub repository (`<add GitHub branch archive URL in the format https://github.com/microsoft/REPOSITORY/archive/refs/heads/main.zip>`).\n+1. Sign in to your SAP BTP subaccount and open **SAP Integration Suite** > **Design** > **Integrations**.\n+1. Select **Import** and upload the ZIP file.\n+1. Confirm that the imported package and all of its integration flows are listed. The package contains one flow for each SAP AC web service the integration uses.\n+\n+### Configure each iFlow\n+\n+Modify only the parameters called out here. Don't change the preconfigured alias names or endpoint paths.\n+\n+For each applicable iFlow, set:\n+\n+- **Destination / virtual host** — the exact virtual host and port you created in Cloud Connector (`<virtual-host>:<virtual-port>`).\n+- **Authentication to SAP AC** — the credentials for the SAP AC technical user (the account that holds `SAP_GRAC_ALL`).\n+\n+### Deploy the iFlows\n+\n+1. Save each flow's configuration and select **Deploy**.\n+1. Monitor deployment and confirm every flow reaches **Started** status.\n+1. Record the runtime endpoint URLs; they follow the pattern `https://<your-btp-subdomain>.it-<region>.cfapps.<landscape>.hana.ondemand.com/...`.\n+\n+## Step 4: Get the SAP BTP authentication credentials\n+\n+Microsoft Entra authenticates to the SAP Integration Suite endpoint using the **OAuth 2.0 client-credentials** flow. The credentials come from a service key on the SAP BTP Integration Suite runtime (service **SAP Process Integration Runtime**, plan **integration-flow**, service technical name `it-rt`).\n+\n+Create or open the service key and record these values:\n+\n+| Field | Description |\n+| --- | --- |\n+| `clientid` | OAuth client ID for the Integration Suite runtime |\n+| `clientsecret` | OAuth client secret |\n+| `tokenurl` | OAuth token endpoint base URL |\n+| `url` | Integration Suite runtime base URL |\n+\n+You use these values when you create the Microsoft Entra connector in Step 6.\n+\n+## Step 5: Configure Azure Key Vault\n+\n+Microsoft Entra reads the SAP BTP client secret from an Azure Key Vault rather than storing it in the connector.\n+\n+1. [Create an Azure Key Vault](/azure/key-vault/general/quick-create-portal) (or use an existing one) in your Azure subscription.\n+1. Under **Settings** > **Networking**, select **Allow public access from all networks**.\n+\n+   > [!NOTE]\n+   > The preview connector requires public network access on the Key Vault. Private endpoints and selected-network configurations aren't supported for the preview.\n+\n+1. [Add a secret](/azure/key-vault/secrets/quick-create-portal) whose value is the `clientsecret` from your SAP BTP service key. Record the **subscription**, **Key Vault name**, and **secret name**.\n+\n+### Assign Key Vault permissions\n+\n+During connector creation, the signed-in administrator needs access to the Key Vault to select and validate the secret. After the connector is created, the Microsoft Entra ID Governance service principal runs the integration as a background service. It reads the SAP BTP client secret from Key Vault each time it submits a request or polls SAP AC for status. Therefore, both the administrator who configures the connector and the service principal need access to the Key Vault.\n+\n+- The user performing setup needs the **Owner** and **Key Vault Secrets Officer** roles on the Key Vault.\n+- The following service principal is added automatically as part of connector configuration. Assign it the **Key Vault Secrets User** role on the Key Vault after it appears in your tenant:\n+\n+  | Service principal | Application ID |\n+  | --- | --- |\n+  | Microsoft Entra ID Governance - SAP Cloud Identity Access Governance | `22223333-cccc-4444-dddd-5555eeee6666` |\n+\n+## Step 6: Connect SAP AC in Microsoft Entra\n+\n+When you create the connector, Microsoft Entra calls the `GRAC_USER_EXISTING_ASSGN_WS` web service to read the SAP AC roles assigned to the SAP AC user that corresponds to the administrator creating the connector. Creation succeeds only if that user holds at least one of these SAP AC authorization roles:\n+\n+- `SAP_GRAC_ALL`\n+- `SAP_GRC_FN_ALL`\n+- `ZSAP_GRAC_ALL`\n+- `ZSAP_GRC_FN_ALL`\n+\n+If none of these roles is assigned, connector creation fails with a *not authorized* error.\n+\n+1. In the [Microsoft Entra admin center](https://entra.microsoft.com), browse to **ID Governance** > **Entitlement management** > **Control configurations**.\n+1. On the **Manage External Connectors (Preview)** card, select **View Connectors**.\n+1. Select **+ New connector**, and in **Type** select **SAP AC**.\n+1. Complete the connector fields:\n+\n+   | Field | What to enter |\n+   | --- | --- |\n+   | Type | `SAP AC` |\n+   | Name | A custom name for the connector |\n+   | Description | A description for the connector |\n+   | Subscription ID | The Azure subscription that contains your Key Vault |\n+   | Key Vault Name | The Key Vault that stores the SAP BTP client secret |\n+   | Secret Name | The Key Vault secret containing the SAP BTP `clientsecret` |\n+   | Client ID | The `clientid` from your SAP BTP service key |\n+   | Access Token URL | The `tokenurl` from your SAP BTP service key, with `/oauth/token` appended. Example: `https://<subdomain>.authentication.<region>.hana.ondemand.com/oauth/token` |\n+    | AC URL | The `url` from your SAP BTP service key, with `/http/` appended. Example: `https://<subdomain>.it-<region>.cfapps.<landscape>.hana.ondemand.com/http/` |\n+   | System ID | The system ID of your on-premises SAP AC instance. Example: `AC1` |\n+   | User Identifier | The Microsoft Entra attribute that maps to the user's SAP AC/GRC username. Example: `userPrincipalName` |\n+\n+   > [!IMPORTANT]\n+    > The **AC URL** is the SAP Integration Suite runtime URL — not the SAP AC host URL — and must end with `/http/`. Don't paste the client secret into any field; the connector reads it from Key Vault.\n+\n+1. Select **Create**.\n+\n+Catalog administrators can now add SAP AC business roles to entitlement management catalogs and access packages.\n+\n+## Step 7: Add SAP business roles to a catalog\n+\n+1. In the Microsoft Entra admin center, browse to **ID Governance** > **Entitlement management** > **Catalogs**.\n+1. [Create a new catalog](entitlement-management-catalog-create.md) or open an existing one.\n+1. On the catalog's **Resources** tab, select **+ Add resource** > **External Resources**.\n+1. Select the **SAP AC** connector you configured, then select the SAP AC Access Rights to add.\n+1. Save the resource selection.\n+\n+## Step 8: Create an access package with SAP business roles\n+\n+1. In the catalog, open the **Access packages** tab and select **New access package**. Enter the [basic information](entitlement-management-access-package-create.md#configure-basics).\n+1. On the **Resource roles** tab, select **SAP AC** and choose the business roles to include.\n+1. On the **Requests** tab, configure who can request the package and the request policy. For end-to-end testing, configure the policy so that **Microsoft Entra approval isn't required** (SAP AC is the approval authority).\n+1. Complete the remaining tabs and select **Create**. For more information, see [Create an access package in entitlement management](entitlement-management-access-package-create.md).\n+\n+## Test the integration\n+\n+1. As an Identity Governance Administrator, [directly assign a test user](entitlement-management-access-package-assignments.md#directly-assign-an-identity) to the access package, or have the user [request it](entitlement-management-request-access.md) from the My Access portal.\n+1. Confirm that the request appears in SAP AC.\n+1. Approve (or deny) the request in SAP AC. The preview demonstrates a two-level approval in SAP AC.\n+1. If approved, verify that the role is provisioned in SAP AC and that the assignment status in Microsoft Entra updates to **Delivered**.\n+1. Allow up to 10 minutes for status to reconcile between the two systems.\n+\n+## Troubleshooting\n+\n+| Symptom | Checks |\n+| --- | --- |\n+| BTP-to-SAP AC connection timeout | Cloud Connector shows **Connected** in SAP BTP Cockpit; the iFlow virtual host and port match the Cloud Connector mapping exactly; resource-access rules permit the required SOAP paths; SAP AC internal host and port are reachable from Cloud Connector. |\n+| SOAP call returns `403 Forbidden` | The technical user has the required authorizations; the services are activated in `SICF`; the alternate-access URLs match the hard-coded aliases; the SOA bindings are active and correctly named. |\n+| iFlow deployment fails | The subaccount has the SAP Integration Suite entitlement and quota; the administrator has the required Integration Suite roles (for example, `PIIntegrationDeveloper`); every flow reaches **Started** rather than only saved. |\n+| Connector can't reach the iFlow endpoint | The runtime endpoint URL is correct; **AC URL** was built from the BTP `url` with `/http/` appended; **Client ID** is correct; the Key Vault secret holds the correct BTP `clientsecret`; **Access Token URL** matches the BTP `tokenurl` (with `/oauth/token`); no firewall blocks outbound traffic from Microsoft Entra to SAP BTP. |\n+| Connector can't find the Key Vault secret | The subscription, Key Vault, and secret name are correct; you have **Owner** and **Key Vault Secrets Officer**; the required service principal exists and has **Key Vault Secrets User**; Key Vault networking allows public access from all networks. |\n+| Connector creation fails with a *not authorized* error | The SAP AC user that corresponds to the signed-in administrator holds one of `SAP_GRAC_ALL`, `SAP_GRC_FN_ALL`, `ZSAP_GRAC_ALL`, or `ZSAP_GRC_FN_ALL`; the `GRAC_USER_EXISTING_ASSGN_WS` service is activated and reachable so Microsoft Entra can read the user's existing role assignments; the **User Identifier** attribute maps to the correct SAP AC username. |\n+| SAP SOAP endpoint returns `404 Not Found` | Verify the endpoint URL, `SICF` activation, the SAP SOA Manager binding, and that the binding names match the names the iFlow expects. |\n+\n+## Preview considerations and limitations\n+\n+- The integration is in public preview. The iFlow package is distributed as a ZIP from the preview GitHub repository and isn't yet a generally available SAP Integration Suite marketplace package.\n+- Service aliases are hard-coded and can't be renamed. Modify only the documented iFlow parameters.\n+- Azure Key Vault must allow public network access for this preview.\n+- Status reconciliation is polling-based and can take up to 10 minutes; event-driven callback isn't yet available.\n+- The preview uses the broad SAP role `SAP_GRAC_ALL`; a validated least-privilege role isn't yet defined. If you don't want the integration to use the standard `SAP_GRAC_ALL` role, you can define a custom SAP AC role that grants only the authorizations needed to call the AC SOAP web services.\n+- Cross-system separation-of-duties analysis, access drift reconciliation, and SAP-scoped administrative delegation aren't yet available.\n+\n+## Next steps\n+\n+- [Create an access package in entitlement management](entitlement-management-access-package-create.md)\n+- [Request access to an access package](entitlement-management-request-access.md)\n+- [Microsoft Entra SAP IAG integration (Preview)](entitlement-management-sap-integration.md)\n",
+      "baseCommitSha": "54e5b8dbfde12df0e253ab7ac68071954c2cd912",
+      "commitSha": "46e1192e40a6ee6ab1e5e06d30b18eb4dcfd95e7",
+      "commitMessage": "Add SAP Access Control entitlement management integration (Preview) how-to (#14265)",
+      "commitAuthor": "Sri",
+      "commitDate": "2026-10-14 15:14:49 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-sap-ac-integration.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-sap-ac-integration",
+      "eventId": "entra-docs:46e1192e40a6ee6ab1e5e06d30b18eb4dcfd95e7:added:docs/id-governance/entitlement-management-sap-ac-integration.md",
+      "firstSeenAt": "2026-10-14T23:16:36.978Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "SAP Access Control integration guide added",
+        "summary": "The documentation describes integrating SAP Access Control with Microsoft Entra entitlement management to govern SAP business roles through catalogs, access packages, and My Access. It covers SAP BTP, Cloud Connector, prerequisites, licensing, and status reconciliation.",
+        "adminImpact": "Administrators managing SAP access can use this integration to centralize request governance while retaining SAP AC workflows and approvals.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "modifiedFiles": [
@@ -153,6 +179,84 @@
         "headline": "Security Defaults adds individual protection management",
         "summary": "The documentation describes four separately manageable protections—administrator MFA, user MFA, legacy authentication blocking, and device code flow blocking—for selected Microsoft Entra ID Free tenants. It also explains how these protections work with Conditional Access and which roles can manage them.",
         "adminImpact": "Eligible administrators can review each protection’s scope and state and change protections independently instead of using one global switch.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/agent-id/create-blueprint.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "changes": 3,
+      "patch": "diff --git a/docs/agent-id/create-blueprint.md b/docs/agent-id/create-blueprint.md\nindex 582bfb06d09..92aea5827f4 100644\n--- a/docs/agent-id/create-blueprint.md\n+++ b/docs/agent-id/create-blueprint.md\n@@ -21,9 +21,10 @@ You can create an agent identity blueprint in two ways:\n \n To create an agent identity blueprint, you need:\n \n+\n - [Privileged Role Administrator](../identity/role-based-access-control/permissions-reference.md#privileged-role-administrator) role is the least privileged role required to grant Microsoft Graph Application permissions.\n - [Cloud Application Administrator](../identity/role-based-access-control/permissions-reference.md#cloud-application-administrator) or [Application Administrator](../identity/role-based-access-control/permissions-reference.md#application-administrator) is required to grant Microsoft Graph delegated permissions.\n-- Both [Agent ID Developer](../identity/role-based-access-control/permissions-reference.md#agent-id-developer) and [Agent ID Administrator](../identity/role-based-access-control/permissions-reference.md#agent-id-administrator) roles can create agent identity blueprints and agent identity blueprint principals.\n+- If the organization-wide setting **Users can create agent blueprints** is set to **Yes**, any user within the tenant can create an agent identity blueprint and its agent identity blueprint principal. Otherwise, both [Agent ID Developer](../identity/role-based-access-control/permissions-reference.md#agent-id-developer) and [Agent ID Administrator](../identity/role-based-access-control/permissions-reference.md#agent-id-administrator) roles can create agent identity blueprints and agent identity blueprint principals.\n     - [Agent ID Developer](../identity/role-based-access-control/permissions-reference.md#agent-id-developer) can configure federated identity credentials on an agent identity blueprint.\n     - [Agent ID Administrator](../identity/role-based-access-control/permissions-reference.md#agent-id-administrator) can configure federated identity credentials on an agent identity blueprint and is required to add a secret or certificate credential.\n - If using PowerShell, version 7 is required.\n",
+      "baseCommitSha": "b298db0205f9c2dcb6ccf766f84933d2c6d9549b",
+      "commitSha": "97366337175f17ae5947dbcd87c166ed63b57ae3",
+      "commitMessage": "Update prerequisites for agent identity blueprints",
+      "commitAuthor": "Erin Greenlee",
+      "commitDate": "2026-10-12 13:35:14 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/create-blueprint.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/agent-id/create-blueprint",
+      "eventId": "entra-docs:97366337175f17ae5947dbcd87c166ed63b57ae3:modified:docs/agent-id/create-blueprint.md",
+      "firstSeenAt": "2026-10-14T23:16:36.990Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Agent blueprint creation prerequisites now include a tenant setting",
+        "summary": "The documentation now states that when **Users can create agent blueprints** is set to **Yes**, any tenant user can create an agent identity blueprint and its principal. Otherwise, the Agent ID Developer and Agent ID Administrator roles can create them.",
+        "adminImpact": "Review this organization-wide setting to control who can create agent identity blueprints.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/role-based-access-control/delegate-app-roles.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/role-based-access-control/delegate-app-roles.md b/docs/identity/role-based-access-control/delegate-app-roles.md\nindex 9d27e06d246..6f7498a29c0 100644\n--- a/docs/identity/role-based-access-control/delegate-app-roles.md\n+++ b/docs/identity/role-based-access-control/delegate-app-roles.md\n@@ -12,7 +12,7 @@ ms.custom: it-pro, sfi-image-nochange\n \n This article describes how to use permissions granted by custom roles in Microsoft Entra ID to address your application and agent management needs. In Microsoft Entra ID, you can delegate Application and agent creation and management permissions in the following ways:\n \n-- [Restricting who can create applications](#restrict-who-can-create-applications) and manage the applications they create. By default in Microsoft Entra ID, all users can register applications and manage all aspects of applications they create. This can be restricted to only allow selected people that permission.\n+- [Restricting who can create applications](#restrict-who-can-create-applications-and-agents) and manage the applications they create. By default in Microsoft Entra ID, all users can register applications and manage all aspects of applications they create. This can be restricted to only allow selected people that permission.\n - [Assigning one or more owners to an application](#assign-application-owners). This is a simple way to grant someone the ability to manage all aspects of Microsoft Entra configuration for a specific application.\n - [Assigning a built-in administrative role](#assign-built-in-application-administrator-roles) that grants access to manage configuration in Microsoft Entra ID for all applications. This is the recommended way to grant IT experts access to manage broad application configuration permissions without granting access to manage other parts of Microsoft Entra not related to application configuration.\n - [Creating a custom role](#create-and-assign-a-custom-role-preview) defining very specific permissions and assigning it to someone either to the scope of a single application as a limited owner, or at the directory scope (all applications) as a limited administrator.\n@@ -108,7 +108,7 @@ You don't have permission to register applications in the <directoryName> direct\n \n **Cause**\n \n-You can't register the application in the directory because your directory administrator has [restricted who can create applications](#restrict-who-can-create-applications).\n+You can't register the application in the directory because your directory administrator has [restricted who can create applications](#restrict-who-can-create-applications-and-agents).\n \n **Solution**\n \n",
+      "baseCommitSha": "59379e56ec5d6605d5e3cfdab165d2d8075212c8",
+      "commitSha": "b298db0205f9c2dcb6ccf766f84933d2c6d9549b",
+      "commitMessage": "Update delegate-app-roles.md",
+      "commitAuthor": "Erin Greenlee",
+      "commitDate": "2026-10-12 13:26:30 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/delegate-app-roles.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles",
+      "eventId": "entra-docs:b298db0205f9c2dcb6ccf766f84933d2c6d9549b:modified:docs/identity/role-based-access-control/delegate-app-roles.md",
+      "firstSeenAt": "2026-10-14T23:16:36.999Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated links for application creation restrictions",
+        "summary": "The documentation now links to the “Restricting who can create applications and agents” section in two references, including the application registration error guidance.",
+        "adminImpact": "Administrators following these links will be directed to the updated section; no action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/role-based-access-control/delegate-app-roles.md",
+      "status": "modified",
+      "additions": 18,
+      "deletions": 6,
+      "changes": 24,
+      "patch": "diff --git a/docs/identity/role-based-access-control/delegate-app-roles.md b/docs/identity/role-based-access-control/delegate-app-roles.md\nindex df56fd09db0..9d27e06d246 100644\n--- a/docs/identity/role-based-access-control/delegate-app-roles.md\n+++ b/docs/identity/role-based-access-control/delegate-app-roles.md\n@@ -1,8 +1,8 @@\n ---\n-title: Delegate application management administrator permissions\n-description: Grant permissions for application access management in Microsoft Entra ID\n+title: Delegate application and agent management administrator permissions\n+description: Grant permissions for application and agent access management in Microsoft Entra ID\n ms.topic: how-to\n-ms.date: 11/17/2024\n+ms.date: 10/12/2026\n ms.reviewer: vincesm\n ms.custom: it-pro, sfi-image-nochange\n #Customer intent: As a Microsoft Entra administrator, I want to reduce overusing highly-privileged administrator roles by delegating app access management to lower-privilege roles.\n@@ -10,7 +10,7 @@ ms.custom: it-pro, sfi-image-nochange\n \n # Delegate app registration permissions in Microsoft Entra ID\n \n-This article describes how to use permissions granted by custom roles in Microsoft Entra ID to address your application management needs. In Microsoft Entra ID, you can delegate Application creation and management permissions in the following ways:\n+This article describes how to use permissions granted by custom roles in Microsoft Entra ID to address your application and agent management needs. In Microsoft Entra ID, you can delegate Application and agent creation and management permissions in the following ways:\n \n - [Restricting who can create applications](#restrict-who-can-create-applications) and manage the applications they create. By default in Microsoft Entra ID, all users can register applications and manage all aspects of applications they create. This can be restricted to only allow selected people that permission.\n - [Assigning one or more owners to an application](#assign-application-owners). This is a simple way to grant someone the ability to manage all aspects of Microsoft Entra configuration for a specific application.\n@@ -19,9 +19,9 @@ This article describes how to use permissions granted by custom roles in Microso\n \n It's important to consider granting access using one of the above methods for two reasons. First, delegating the ability to perform administrative tasks reduces highly-privileged administrator overhead. Second, using limited permissions improves your security posture and reduces the potential for unauthorized access. For guidelines about role security planning, see [Securing privileged access for hybrid and cloud deployments in Microsoft Entra ID](security-planning.md).\n \n-## Restrict who can create applications\n+## Restrict who can create applications and agents\n \n-By default in Microsoft Entra ID, all users can register applications and manage all aspects of applications they create. Everyone also has the ability to consent to apps accessing company data on their behalf. You can choose to selectively grant those permissions by setting the global switches to 'No' and adding the selected users to the Application Developer role.\n+By default in Microsoft Entra ID, all users can register applications and manage all aspects of applications they create. They are also able to create an agent identity blueprint, create agent identities of those agents, and manage all aspects of the agents they create. Everyone also has the ability to consent to apps and agents accessing company data on their behalf. You can choose to selectively grant those permissions by setting the global switches to 'No' and adding the selected users to the Application Developer role.\n \n ### To disable the default ability to create application registrations or consent to applications\n \n@@ -41,6 +41,18 @@ To disable the default ability to create application registrations or consent to\n \n     This will disable the default ability for users to consent to applications accessing company data on their behalf.\n \n+### To disable the default ability to create new agents (agent identity blueprints)\n+\n+By default, users in your organization can create agent identity blueprints. To restrict creation to administrators and users assigned the Agent ID Developer role, turn off **Users can create agent blueprints**.\n+\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](permissions-reference.md#cloud-application-administrator).\n+\n+1. Browse to **Entra ID** > **Users** > **User settings**.\n+\n+1. Set the **Users can create agent blueprints** setting to **No**.\n+\n+    This will disable the default ability for users to create new agents within Entra.\n+\n ### Grant individual permissions to create and consent to applications when the default ability is disabled\n \n Assign the [Application Developer role](~/identity/role-based-access-control/permissions-reference.md#application-developer) to grant the ability to create application registrations when the **Users can register applications** setting is set to No. This role also grants permission to consent on one's own behalf when the **Users can consent to apps accessing company data on their behalf** setting is set to No.\n",
+      "baseCommitSha": "cf5fb4acd93c566b2b76b6d53c38dd718ac5f0a0",
+      "commitSha": "59379e56ec5d6605d5e3cfdab165d2d8075212c8",
+      "commitMessage": "Revise app management permissions to include agents",
+      "commitAuthor": "Erin Greenlee",
+      "commitDate": "2026-10-12 12:02:02 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/role-based-access-control/delegate-app-roles.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles",
+      "eventId": "entra-docs:59379e56ec5d6605d5e3cfdab165d2d8075212c8:modified:docs/identity/role-based-access-control/delegate-app-roles.md",
+      "firstSeenAt": "2026-10-14T23:16:37.015Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Documentation adds agent management permissions",
+        "summary": "The article now covers application and agent creation and management. It documents the **Users can create agent blueprints** setting, which administrators can turn off to restrict agent blueprint creation to administrators and Agent ID Developers.",
+        "adminImpact": "Administrators can use the documented setting to control who creates agents; no required action is stated.",
         "actionRequired": false,
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
@@ -317,22 +421,61 @@
       "version": "2026-10-13T16:45:08.037Z",
       "eventId": "message-center:MC1437671:2026-10-13T16:45:08.037Z",
       "firstSeenAt": "2026-10-14T07:40:44.477Z"
+    },
+    {
+      "id": "MC1507808",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-10-14",
+      "title": "Reminder: Microsoft‑managed CA policy will be enforced soon — Require risk remediation for high‑risk users",
+      "summary": "To strengthen your organization's security posture, Microsoft created a new Microsoft‑managed Conditional Access (CA) policy—Require risk remediation for high‑risk users—in your tenant, along with a new security group for this policy.  This policy uses Microsoft Entra ID Protection to identify users at high risk and prompts them to self‑remediate through adaptive risk remediation, allowing users to resolve their own risk without administrator intervention.",
+      "product": {
+        "slug": "id-protection",
+        "name": "Microsoft Entra ID Protection",
+        "short": "ID Protection",
+        "icon": "id-protection.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/id-protection/"
+      },
+      "topic": {
+        "slug": "conditional-access",
+        "name": "Conditional Access",
+        "icon": "/assets/topics/conditional-access.svg"
+      },
+      "changeType": "Message",
+      "url": "/message-center/MC1507808/",
+      "originalUrl": "https://mc.merill.net/message/MC1507808",
+      "body": "<p>To strengthen your organization's security posture, Microsoft created a new Microsoft‑managed Conditional Access (CA) policy—<a href=\"https://learn.microsoft.com/entra/identity/conditional-access/managed-policies#require-remediation-for-high-risk-users\" rel=\"noopener noreferrer\">Require risk remediation for high‑risk users</a>—in your tenant, along with a new security group for this policy. This policy uses <a href=\"https://learn.microsoft.com/entra/id-protection/concept-identity-protection-risks\" rel=\"noopener noreferrer\">Microsoft Entra ID Protection</a> to identify users at high risk and prompts them to <a href=\"https://learn.microsoft.com/entra/id-protection/howto-identity-protection-remediate-unblock\" rel=\"noopener noreferrer\">self‑remediate</a> through <a href=\"https://learn.microsoft.com/entra/id-protection/concept-identity-protection-user-experience\" rel=\"noopener noreferrer\">adaptive risk remediation</a>, allowing users to resolve their own risk without administrator intervention.</p><p>The policy is currently in <a href=\"https://learn.microsoft.com/entra/identity/conditional-access/concept-conditional-access-report-only\" rel=\"noopener noreferrer\">report‑only mode</a> and the 30‑day evaluation period is ending soon. If you take no action, the policy will automatically switch to On.</p><p><b><b>When this will happen</b></b></p><p>The Microsoft‑managed CA policy was created in report‑only mode.</p><p>The week of October 28, 2026: End of evaluation period — policy will be enforced (automatically switched to On)</p><p><b><b>How this affects your organization</b></b></p><p><b>Who is affected</b></p><ul><li>Organizations with Microsoft Entra ID P2 licenses.</li></ul><p><b>What will happen</b></p><ul><li>A new Microsoft‑managed Require risk remediation for high‑risk users CA policy is currently in report‑only mode.</li><li>If you do not set the policy to On or Off within the remaining evaluation period, it will automatically turn On.</li><li>When On, users identified as High User Risk will be prompted to self‑remediate. After successful remediation, risk is cleared and access is restored.</li><li>No existing Conditional Access settings or exclusions (such as break‑glass accounts) will be altered.</li><li>The policy will remain enabled by default unless customized.</li></ul><p><b><b>What you can do to prepare</b></b></p><ul><li>Review the policy in the <a href=\"https://entra.microsoft.com/#view/Microsoft_AAD_ConditionalAccess/ConditionalAccessBlade/~/Policies\" rel=\"noopener noreferrer\">Microsoft Entra admin portal</a>.</li><li>Decide whether to:<ul><li>Allow the policy to automatically turn on at the end of the evaluation period, or</li><li>Set it to Off if you do not want the policy enforced.</li></ul></li><li>Customize the policy as needed (for example, <a href=\"https://learn.microsoft.com/entra/identity/conditional-access/concept-conditional-access-users-groups?WT.mc_id=Portal-Microsoft_AAD_IAM#exclude-users\" rel=\"noopener noreferrer\">exclude emergency access accounts</a>), or by modifying membership in the policy's security group.</li><li>Ensure users are registered for multifactor authentication so they can complete self‑remediation when prompted.</li><li>If you need assistance, submit a <a href=\"https://entra.microsoft.com/#view/Microsoft_AAD_ConditionalAccess/ConditionalAccessBlade/~/supportRequest\" rel=\"noopener noreferrer\">support request</a>: Technical → Microsoft Entra Sign‑In and Multi‑Factor Authentication → Conditional Access → Microsoft‑managed</li></ul><p><b>Learn more:</b></p><ul><li><a href=\"https://learn.microsoft.com/entra/identity/conditional-access/managed-policies\" rel=\"noopener noreferrer\">Microsoft-managed Conditional Access policies for enhanced security</a></li><li><a href=\"https://learn.microsoft.com/entra/identity/conditional-access/managed-policies#require-remediation-for-high-risk-users\" rel=\"noopener noreferrer\">Require risk remediation for high-risk users</a></li><li><a href=\"https://learn.microsoft.com/entra/id-protection/concept-identity-protection-user-experience\" rel=\"noopener noreferrer\">User self-remediation with Microsoft Entra ID Protection</a></li><li><a href=\"https://learn.microsoft.com/entra/id-protection/concept-identity-protection-risks\" rel=\"noopener noreferrer\">What are risk detections?</a></li></ul><p><b><b>Compliance considerations</b></b></p><p>No compliance considerations identified. Review as appropriate for your organization.</p>",
+      "category": "planForChange",
+      "services": [
+        "Microsoft Entra"
+      ],
+      "tags": [
+        "Admin impact"
+      ],
+      "startDate": "2026-10-14T19:01:44Z",
+      "endDate": "2027-01-26T00:00:00Z",
+      "lastModifiedDateTime": "2026-10-14T19:01:44.98Z",
+      "version": "2026-10-14T19:01:44.98Z",
+      "eventId": "message-center:MC1507808:2026-10-14T19:01:44.98Z",
+      "firstSeenAt": "2026-10-14T23:16:50.658Z"
     }
   ],
   "summary": {
-    "totalCommits": 6,
-    "totalFiles": 6,
+    "totalCommits": 10,
+    "totalFiles": 10,
     "authors": [
+      "Erin Greenlee",
       "Jackson Woods (MSFT)",
       "Kamran Tabish",
       "OpenPublishing.Build",
+      "Sri",
       "Vimala Ranganathan",
       "anksridhar",
       "sweta Kumari"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 1 new, 5 updated, and 0 removed Microsoft Entra documentation files across 6 documentation areas.",
+    "overview": "Today's report includes 2 new, 8 updated, and 0 removed Microsoft Entra documentation files across 7 documentation areas.",
     "groups": [
       {
         "category": "Private preview",
@@ -343,11 +486,22 @@
         ]
       },
       {
+        "category": "New feature",
+        "title": "id-governance",
+        "summary": "The documentation describes integrating SAP Access Control with Microsoft Entra entitlement management to govern SAP business roles through catalogs, access packages, and My Access. It covers SAP BTP, Cloud Connector, prerequisites, licensing, and status reconciliation. The documentation adds postapproval extensions with deferred outcomes and asynchronous validation before assignment provisioning. It also describes collecting attributes such as cost center and project code, along with the required Graph permissions and endpoint configuration.",
+        "sourceFiles": [
+          "docs/id-governance/entitlement-management-sap-ac-integration.md",
+          "docs/id-governance/privileged-identity-management/privileged-identity-management-custom-extensions.md"
+        ]
+      },
+      {
         "category": "Feature update",
         "title": "identity/role-based-access-control",
-        "summary": "The permissions reference now states that Application Developer role holders can update applications they own, in addition to creating application registrations independently of the user registration setting.",
+        "summary": "The permissions reference now states that Application Developer role holders can update applications they own, in addition to creating application registrations independently of the user registration setting. The documentation now links to the “Restricting who can create applications and agents” section in two references, including the application registration error guidance. The article now covers application and agent creation and management. It documents the **Users can create agent blueprints** setting, which administrators can turn off to restrict agent blueprint creation to administrators and Agent ID Developers.",
         "sourceFiles": [
-          "docs/identity/role-based-access-control/permissions-reference.md"
+          "docs/identity/role-based-access-control/permissions-reference.md",
+          "docs/identity/role-based-access-control/delegate-app-roles.md",
+          "docs/identity/role-based-access-control/delegate-app-roles.md"
         ]
       },
       {
@@ -356,14 +510,6 @@
         "summary": "The documentation now specifies tenant ID or the tenant’s onmicrosoft.com domain for the issuer URI, says custom verified domains aren’t supported, and requires matching onmicrosoft.com values for domain_hint. It also documents steps to refresh a user flow after provider configuration changes.",
         "sourceFiles": [
           "docs/external-id/customers/how-to-entra-id-federation-customers.md"
-        ]
-      },
-      {
-        "category": "New feature",
-        "title": "id-governance",
-        "summary": "The documentation adds postapproval extensions with deferred outcomes and asynchronous validation before assignment provisioning. It also describes collecting attributes such as cost center and project code, along with the required Graph permissions and endpoint configuration.",
-        "sourceFiles": [
-          "docs/id-governance/privileged-identity-management/privileged-identity-management-custom-extensions.md"
         ]
       },
       {
@@ -381,6 +527,14 @@
         "sourceFiles": [
           "docs/fundamentals/security-defaults.md"
         ]
+      },
+      {
+        "category": "Feature update",
+        "title": "agent-id",
+        "summary": "The documentation now states that when **Users can create agent blueprints** is set to **Yes**, any tenant user can create an agent identity blueprint and its principal. Otherwise, the Agent ID Developer and Agent ID Administrator roles can create them.",
+        "sourceFiles": [
+          "docs/agent-id/create-blueprint.md"
+        ]
       }
     ],
     "highlights": [
@@ -390,19 +544,19 @@
         "detail": "A new guide explains how directly connected local resources can remain reachable while Private Access is enabled, including routing behavior, prerequisites, and configuration steps."
       },
       {
+        "category": "New feature",
+        "headline": "id-governance",
+        "detail": "The documentation describes integrating SAP Access Control with Microsoft Entra entitlement management to govern SAP business roles through catalogs, access packages, and My Access. It covers SAP BTP, Cloud Connector, prerequisites, licensing, and status reconciliation. The documentation adds postapproval extensions with deferred outcomes and asynchronous validation before assignment provisioning. It also describes collecting attributes such as cost center and project code, along with the required Graph permissions and endpoint configuration."
+      },
+      {
         "category": "Feature update",
         "headline": "identity/role-based-access-control",
-        "detail": "The permissions reference now states that Application Developer role holders can update applications they own, in addition to creating application registrations independently of the user registration setting."
+        "detail": "The permissions reference now states that Application Developer role holders can update applications they own, in addition to creating application registrations independently of the user registration setting. The documentation now links to the “Restricting who can create applications and agents” section in two references, including the application registration error guidance. The article now covers application and agent creation and management. It documents the **Users can create agent blueprints** setting, which administrators can turn off to restrict agent blueprint creation to administrators and Agent ID Developers."
       },
       {
         "category": "Doc update",
         "headline": "external-id",
         "detail": "The documentation now specifies tenant ID or the tenant’s onmicrosoft.com domain for the issuer URI, says custom verified domains aren’t supported, and requires matching onmicrosoft.com values for domain_hint. It also documents steps to refresh a user flow after provider configuration changes."
-      },
-      {
-        "category": "New feature",
-        "headline": "id-governance",
-        "detail": "The documentation adds postapproval extensions with deferred outcomes and asynchronous validation before assignment provisioning. It also describes collecting attributes such as cost center and project code, along with the required Graph permissions and endpoint configuration."
       },
       {
         "category": "Doc update",
@@ -413,6 +567,11 @@
         "category": "Private preview",
         "headline": "fundamentals",
         "detail": "The documentation describes four separately manageable protections—administrator MFA, user MFA, legacy authentication blocking, and device code flow blocking—for selected Microsoft Entra ID Free tenants. It also explains how these protections work with Conditional Access and which roles can manage them."
+      },
+      {
+        "category": "Feature update",
+        "headline": "agent-id",
+        "detail": "The documentation now states that when **Users can create agent blueprints** is set to **Yes**, any tenant user can create an agent identity blueprint and its principal. Otherwise, the Agent ID Developer and Agent ID Administrator roles can create them."
       }
     ],
     "generatedBy": "fallback"
