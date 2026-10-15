@@ -1,6 +1,85 @@
 {
   "newFiles": [],
-  "modifiedFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/enterprise-apps/application-properties.md",
+      "status": "modified",
+      "additions": 21,
+      "deletions": 1,
+      "changes": 22,
+      "patch": "diff --git a/docs/identity/enterprise-apps/application-properties.md b/docs/identity/enterprise-apps/application-properties.md\nindex 17b4b944179..ad437659f94 100644\n--- a/docs/identity/enterprise-apps/application-properties.md\n+++ b/docs/identity/enterprise-apps/application-properties.md\n@@ -3,7 +3,7 @@ title: 'Properties of an enterprise application'\n description: Learn about the properties of an enterprise application in Microsoft Entra ID.\n ms.topic: concept-article\n ai-usage: ai-assisted\n-ms.date: 01/31/2025\n+ms.date: 10/15/2026\n ms.reviewer: ergreenl\n ms.custom: enterprise-apps\n \n@@ -14,12 +14,32 @@ ms.custom: enterprise-apps\n \n This article describes the properties that you can configure for an enterprise application in your Microsoft Entra tenant. To configure the properties, see [Configure enterprise application properties](add-application-portal-configure.md).\n \n+## Activation status\n+\n+**Activation status** summarizes disablement conditions for the enterprise application. It shows **Deactivated** if any of the following conditions applies:\n+\n+- Sign-in is disabled for the service principal in your tenant (`accountEnabled=false`).\n+- The app registration is deactivated (`isDisabled=true` on the app registration), which is reflected on the service principal.\n+- Microsoft has disabled the application (`disabledByMicrosoftStatus=DisabledDueToViolationOfServicesAgreement`).\n+\n+The label alone doesn't identify which condition applies or prove that the app registration is deactivated. More than one condition can apply.\n+\n+| Condition | How to check | Guidance |\n+|---|---|---|\n+| Tenant-local sign-in disablement | Check **Enabled for users to sign-in?** on the enterprise application's **Properties** page, or read the service principal's `accountEnabled` property in Microsoft Graph. | Review why sign-in was disabled before restoring it. To restore tenant-local sign-in, set **Enabled for users to sign-in?** to **Yes** and save, or set `accountEnabled=true`. See [Disable user sign-in](disable-user-sign-in-portal.md). |\n+| App registration deactivation | Check the app registration's **State** in its home tenant, or read the application object's `isDisabled` property in Microsoft Graph. | An authorized administrator in the application's home tenant can [reactivate the app registration](deactivate-app-registration.md#reactivate-an-application). |\n+| Microsoft disablement | Read the service principal's `disabledByMicrosoftStatus` property in Microsoft Graph. | See [Protect against consent phishing](protect-against-consent-phishing.md#recommended-response-and-remediation) for investigation and remediation guidance. |\n+\n+You need appropriate permissions in the tenant where you make a change. Enabling tenant-local sign-in doesn't override app registration deactivation or Microsoft disablement. Reactivating the app registration doesn't enable a service principal whose `accountEnabled` remains `false`.\n+\n ## Enabled for users to sign in?\n \n If this option is set to **Yes**, then assigned users are able to sign in to the application from the My Apps portal, the User access URL, or by navigating to the application URL directly. If assignment is required, then only users who are assigned to the application are able to sign-in. If assignment is required, applications must be assigned to get a token.\n \n If this option is set to **No**, then no users are able to sign in to the application, even if they're assigned to it. Tokens aren't issued for the application. This setting not only prevents users from signing in but also restricts service principals from accessing the application using application permissions.\n \n+This setting maps to the service principal's `accountEnabled` property in your tenant. Setting it to **No** (`accountEnabled=false`) also makes **Activation status** show **Deactivated**, even if the app registration isn't deactivated. For instructions, see [Disable user sign-in for an application](disable-user-sign-in-portal.md).\n+\n ## Name\n \n This property is the name of the application that users see on the My Apps portal. Administrators see the name when they manage access to the application. Other tenants see the name when integrating the application into their directory.\n",
+      "baseCommitSha": "46e1192e40a6ee6ab1e5e06d30b18eb4dcfd95e7",
+      "commitSha": "a7fb5f325f0de7693ed005e260573946b0fa26a5",
+      "commitMessage": "Clarify enterprise-app activation status and tenant-local disablement",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-10-15 13:46:29 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/application-properties.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/application-properties",
+      "eventId": "entra-docs:a7fb5f325f0de7693ed005e260573946b0fa26a5:modified:docs/identity/enterprise-apps/application-properties.md",
+      "firstSeenAt": "2026-10-15T13:24:11.155Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Activation status conditions are clarified",
+        "summary": "The documentation now explains that Deactivated can result from tenant-local sign-in disablement, app registration deactivation, or Microsoft disablement. It also documents the related properties and clarifies that these conditions can overlap and must be remediated independently.",
+        "adminImpact": "Administrators can use the documented checks to identify the actual cause instead of relying on the status label alone. No action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/deactivate-app-registration.md",
+      "status": "modified",
+      "additions": 7,
+      "deletions": 4,
+      "changes": 11,
+      "patch": "diff --git a/docs/identity/enterprise-apps/deactivate-app-registration.md b/docs/identity/enterprise-apps/deactivate-app-registration.md\nindex 3f7d643e6fc..7cb765d51eb 100644\n--- a/docs/identity/enterprise-apps/deactivate-app-registration.md\n+++ b/docs/identity/enterprise-apps/deactivate-app-registration.md\n@@ -2,7 +2,8 @@\n title: Deactivate an app registration\n description: Learn how to deactivate an app registration in Microsoft Entra ID to prevent token issuance while preserving application configuration.\n ms.topic: how-to\n-ms.date: 03/16/2026\n+ai-usage: ai-assisted\n+ms.date: 10/15/2026\n ms.reviewer: ariels\n ms.custom: enterprise-apps, no-azure-ad-ps-ref, sfi-image-nochange\n #Customer intent: As an IT admin, I want to immediately stop a suspicious or unused application from accessing resources in my organization while keeping all its settings intact so I can investigate potential security issues and easily restore access if needed.\n@@ -14,7 +15,7 @@ Deactivating an app registration provides a reversible way to prevent the applic\n \n Unlike permanently deleting an application, deactivation preserves all application metadata, permissions, and configuration settings, making it easy to reactivate the application if needed. The application remains visible in your tenant's enterprise applications list, but users can't sign in and no new tokens are issued.\n \n-This article shows you how to deactivate an enterprise application, view deactivated applications, and reactivate them when necessary.\n+This article shows you how to deactivate an app registration, view deactivated applications, and reactivate them when necessary.\n \n ## Prerequisites\n \n@@ -135,7 +136,7 @@ You can view deactivated applications to monitor their status and track which ap\n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com).\n 1. Browse to  **App registrations**.\n 1. Select the **Deactivated applications** tab.\n-1. Alternatively, navigate to the **Enterprise apps** pane and check on a given enterprise app under **Manage** -> **Properties** -> **Activation status**.\n+1. To view the related enterprise application's summary status, browse to **Enterprise apps**, select the application, and then select **Manage** > **Properties** > **Activation status**. This status also includes tenant-local sign-in disablement and Microsoft disablement; it isn't specific to app registration deactivation.\n \n     :::image type=\"content\" source=\"media/deactivate-app-registration/view-activation-status.png\" alt-text=\"Screenshot showing the Activation status field in the Enterprise app Properties page displaying whether an application is active or deactivated.\":::\n \n@@ -156,7 +157,7 @@ You can view deactivated applications to monitor their status and track which ap\n ---\n \n > [!IMPORTANT]\n-> Deactivation must be performed on the app registration (application object). The deactivated state is then reflected on the enterprise app (service principal object). You can't deactivate the service principal directly. You can only disable sign-in on the service principal, by using set `accountEnabled = false`.\n+> The **Deactivate** operation applies to the app registration (application object), and its deactivated state is reflected on the enterprise application (service principal object). Separately, disabling sign-in on the tenant-local service principal (`accountEnabled=false`) is sufficient for its **Activation status** to show **Deactivated**, even when the app registration isn't deactivated. The label alone doesn't identify the cause. See [Activation status](application-properties.md#activation-status) to distinguish the conditions and choose the appropriate recovery guidance.\n \n ## Investigate deactivated applications\n \n@@ -168,6 +169,8 @@ Based on your investigation, take appropriate action such as escalating to secur\n \n To reactivate an application using Microsoft Graph API or Microsoft Entra admin center, you need at least the [Cloud Application Administrator](../role-based-access-control/permissions-reference.md#cloud-application-administrator) role or a custom role with the `microsoft.directory/applications/disablement/update` action.\n \n+Reactivate the app registration in its home tenant. This doesn't enable tenant-local sign-in if a service principal's `accountEnabled` remains `false`, and it doesn't override Microsoft disablement. If only tenant-local sign-in is disabled, follow [Restore tenant-local sign-in](disable-user-sign-in-portal.md#restore-tenant-local-sign-in) instead.\n+\n ## [Microsoft Entra admin center](#tab/admin-center)\n \n 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](../role-based-access-control/permissions-reference.md#cloud-application-administrator).\n",
+      "baseCommitSha": "46e1192e40a6ee6ab1e5e06d30b18eb4dcfd95e7",
+      "commitSha": "a7fb5f325f0de7693ed005e260573946b0fa26a5",
+      "commitMessage": "Clarify enterprise-app activation status and tenant-local disablement",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-10-15 13:46:29 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/deactivate-app-registration.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/deactivate-app-registration",
+      "eventId": "entra-docs:a7fb5f325f0de7693ed005e260573946b0fa26a5:modified:docs/identity/enterprise-apps/deactivate-app-registration.md",
+      "firstSeenAt": "2026-10-15T13:24:11.159Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Clarified app deactivation and sign-in status guidance",
+        "summary": "The article now distinguishes deactivating an app registration from disabling sign-in on a tenant-local service principal. It also explains that activation status includes tenant-local and Microsoft disablement, and that reactivating the app registration does not automatically restore tenant-local sign-in.",
+        "adminImpact": "Administrators can identify the correct object and understand why reactivation may not restore sign-in access.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/enterprise-apps/disable-user-sign-in-portal.md",
+      "status": "modified",
+      "additions": 9,
+      "deletions": 2,
+      "changes": 11,
+      "patch": "diff --git a/docs/identity/enterprise-apps/disable-user-sign-in-portal.md b/docs/identity/enterprise-apps/disable-user-sign-in-portal.md\nindex 2def1445cd9..62ebc56f77c 100644\n--- a/docs/identity/enterprise-apps/disable-user-sign-in-portal.md\n+++ b/docs/identity/enterprise-apps/disable-user-sign-in-portal.md\n@@ -2,7 +2,8 @@\n title: Disable user sign-in for application\n description: Learn how to prevent users from signing in to an application in Microsoft Entra ID and prevent tokens from being issued.\n ms.topic: how-to\n-ms.date: 03/03/2025\n+ai-usage: ai-assisted\n+ms.date: 10/15/2026\n ms.reviewer: ergreenl\n ms.custom: it-pro, enterprise-apps, no-azure-ad-ps-ref\n ms.collection: M365-identity-device-management\n@@ -17,7 +18,7 @@ There might be situations while configuring or managing an application where you\n In this article, you learn how to prevent users from signing in to an application in Microsoft Entra ID through both the Microsoft Entra admin center and PowerShell. If you're looking for how to block specific users from accessing an application, use [user or group assignment](./assign-user-or-group-access-portal.md).\n \n > [!NOTE]\n-> The steps in this article disable user sign-in for a single tenant. If you need to globally disable an application across all tenants (for multitenant apps), consider [deactivating the application](deactivate-application-portal.md) instead, which prevents all token issuance globally.\n+> The steps in this article disable user sign-in for a single tenant by setting the service principal's `accountEnabled` property to `false`. This also makes the enterprise application's **Activation status** show **Deactivated**. The label doesn't necessarily mean that the app registration is deactivated. If you need to disable an application across all tenants, see [Deactivate an app registration](deactivate-app-registration.md).\n \n ## Prerequisites\n \n@@ -111,6 +112,12 @@ Content-type: application/json\n \n :::zone-end\n \n+## Restore tenant-local sign-in\n+\n+Before restoring sign-in, review why it was disabled and confirm that restoring access is appropriate. With the permissions listed in [Prerequisites](#prerequisites) in the affected tenant, set **Enabled for users to sign-in?** to **Yes** and select **Save**. For programmatic updates, set the service principal's `accountEnabled` property to `true` instead of `false`.\n+\n+Enabling tenant-local sign-in doesn't override app registration deactivation or Microsoft disablement. If **Activation status** still shows **Deactivated**, check the other conditions described in [Activation status](application-properties.md#activation-status).\n+\n ## Related content\n \n - [Remove a user or group assignment from an enterprise app](./assign-user-or-group-access-portal.md)\n",
+      "baseCommitSha": "46e1192e40a6ee6ab1e5e06d30b18eb4dcfd95e7",
+      "commitSha": "a7fb5f325f0de7693ed005e260573946b0fa26a5",
+      "commitMessage": "Clarify enterprise-app activation status and tenant-local disablement",
+      "commitAuthor": "Philippe Signoret",
+      "commitDate": "2026-10-15 13:46:29 +0200",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/disable-user-sign-in-portal.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/disable-user-sign-in-portal",
+      "eventId": "entra-docs:a7fb5f325f0de7693ed005e260573946b0fa26a5:modified:docs/identity/enterprise-apps/disable-user-sign-in-portal.md",
+      "firstSeenAt": "2026-10-15T13:24:11.162Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Documentation clarifies tenant-local sign-in status and restoration",
+        "summary": "The article now explains that disabling sign-in sets the service principal’s `accountEnabled` property to `false` and changes Activation status to Deactivated. It also adds steps to restore tenant-local sign-in and notes that other deactivation conditions can still apply.",
+        "adminImpact": "Administrators can better interpret Activation status and follow the documented steps to restore access when appropriate.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "deletedFiles": [],
   "messageCenterItems": [
     {
@@ -45,14 +124,33 @@
     }
   ],
   "summary": {
-    "totalCommits": 0,
-    "totalFiles": 0,
-    "authors": []
+    "totalCommits": 1,
+    "totalFiles": 3,
+    "authors": [
+      "Philippe Signoret"
+    ]
   },
   "englishSummary": {
-    "overview": "No substantive Microsoft Entra documentation changes were detected for this report.",
-    "groups": [],
-    "highlights": [],
+    "overview": "Today's report includes 0 new, 3 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "identity/enterprise-apps",
+        "summary": "The documentation now explains that Deactivated can result from tenant-local sign-in disablement, app registration deactivation, or Microsoft disablement. It also documents the related properties and clarifies that these conditions can overlap and must be remediated independently. The article now distinguishes deactivating an app registration from disabling sign-in on a tenant-local service principal. It also explains that activation status includes tenant-local and Microsoft disablement, and that reactivating the app registration does not automatically restore tenant-local sign-in. The article now explains that disabling sign-in sets the service principal’s `accountEnabled` property to `fal",
+        "sourceFiles": [
+          "docs/identity/enterprise-apps/application-properties.md",
+          "docs/identity/enterprise-apps/deactivate-app-registration.md",
+          "docs/identity/enterprise-apps/disable-user-sign-in-portal.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "identity/enterprise-apps",
+        "detail": "The documentation now explains that Deactivated can result from tenant-local sign-in disablement, app registration deactivation, or Microsoft disablement. It also documents the related properties and clarifies that these conditions can overlap and must be remediated independently. The article now distinguishes deactivating an app registration from disabling sign-in on a tenant-local service principal. It also explains that activation status includes tenant-local and Microsoft disablement, and that reactivating the app registration does not automatically restore tenant-local sign-in. The article now explains that disabling sign-in sets the service principal’s `accountEnabled` property to `fal"
+      }
+    ],
     "generatedBy": "fallback"
   }
 }
