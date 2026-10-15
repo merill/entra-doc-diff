@@ -25,6 +25,58 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md",
+      "status": "added",
+      "additions": 133,
+      "deletions": 0,
+      "changes": 133,
+      "patch": "diff --git a/docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md b/docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md\nnew file mode 100644\nindex 00000000000..5f9b81058a0\n--- /dev/null\n+++ b/docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md\n@@ -0,0 +1,133 @@\n+---\n+title: Route Invited Users to an External Identity Provider\n+description: Learn how to invite users to a Microsoft Entra external tenant and route them to a configured OpenID Connect, SAML/WS-Federation, or social identity provider.\n+author: nanguil\n+ms.author: nguilanians\n+ms.topic: how-to\n+ms.date: 10/12/2026\n+ms.custom: it-pro, msecd-doc-authoring-1026\n+ai-usage: ai-assisted\n+\n+#customer intent: As an IT admin or developer, I want to route invited users to a specific external identity provider so that they can access my application by using their existing credentials.\n+---\n+\n+# Route invited users to an external identity provider\n+\n+[!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]\n+\n+You can invite consumers, business customers, and admins to a Microsoft Entra external tenant. By default, the [invitation redemption flow](../redemption-experience.md#invitation-redemption-flow) determines how an invited user authenticates. This article describes how to explicitly route an invited user to a configured external identity provider (IdP), such as a social provider, custom OpenID Connect (OIDC) provider, or Security Assertion Markup Language (SAML)/WS-Federation provider.\n+\n+Explicit identity provider routing is useful when:\n+\n+- Only invited users should be able to access your application (no self-service sign-up).\n+- Users must authenticate with a specific external identity provider.\n+- You want full control over the invitation experience and communication.\n+\n+Before you begin, ensure you have an external tenant, registered application, associated user flow, configured identity provider, and the provider's `domain_hint` value.\n+\n+## Prerequisites\n+\n+- A [Microsoft Entra External ID tenant](how-to-create-external-tenant-portal.md).\n+- A configured external identity provider: [Custom OIDC](how-to-custom-oidc-federation-customers.md), [Microsoft Entra ID](how-to-entra-id-federation-customers.md), [SAML/WS-Fed](../direct-federation.md), or a social provider ([Google](how-to-google-federation-customers.md), [Facebook](how-to-facebook-federation-customers.md), [Apple](how-to-apple-federation-customers.md)).\n+- A [registered application](/entra/identity-platform/quickstart-register-app) in your external tenant.\n+- A [user flow](how-to-user-flow-sign-up-sign-in-customers.md) associated with your application. The user flow is required even if sign-up is disabled. You don't need to add the identity provider to the user flow when you route invited users by using `domain_hint`.\n+- The `domain_hint` value for the identity provider, as described in [Issuer acceleration](concept-authentication-methods-customers.md#issuer-acceleration).\n+\n+> [!IMPORTANT]\n+> The `domain_hint` parameter changes authentication routing during invitation redemption. It isn't required to invite a user, doesn't determine who is eligible for an invitation, and doesn't grant access to an application. When you use `domain_hint` to route a user from another Microsoft Entra tenant to custom OIDC federation, the sign-in doesn't use the native Microsoft Entra business-to-business (B2B) federation path or its home-tenant multifactor authentication (MFA) trust.\n+\n+## Disable self-service sign-up (optional)\n+\n+If you want only explicitly invited users to access your application, disable sign-up in your user flow. This prevents users who aren't invited from creating accounts through self-service registration. Your application still controls authorization for invited users.\n+\n+For detailed steps on finding your user flow ID and disabling sign-up, see [Disable sign-up in a user flow](how-to-disable-sign-up-user-flow.md).\n+\n+## Invite users\n+\n+You can invite users by using either the Microsoft Graph API or the admin center. Configure the invitation not to send the default email. Instead, send a custom email with an application link after you create the invitation (next step).\n+\n+Regardless of which option you use, when the invitation is created:\n+\n+- A user object is created in the external tenant with `externalUserState` set to `PendingAcceptance`.\n+- No identity provider is yet associated with the user object.\n+\n+> [!NOTE]\n+> Unlike self-service sign-up users, invited users aren't prompted for additional attributes during sign-in. Their user properties are based on the invitation and claims received from the external identity provider.\n+\n+<a name='option-1-use-the-invitation-api'></a>\n+\n+### Option 1: Use the Microsoft Graph invitation API\n+\n+Create a user in the External ID tenant using the [Microsoft Graph Invitation API](/graph/api/invitation-post).\n+\n+```http\n+POST https://graph.microsoft.com/v1.0/invitations\n+Content-Type: application/json\n+\n+{\n+    \"invitedUserEmailAddress\": \"user@contoso.com\",\n+    \"inviteRedirectUrl\": \"https://your-app-url.com\",\n+    \"sendInvitationMessage\": false\n+}\n+```\n+\n+### Option 2: Use the admin center\n+\n+You can also invite users through the Microsoft Entra admin center using the [Invite external user](~/fundamentals/how-to-create-delete-users.md#invite-an-external-user) option. To use this pattern, disable the default Microsoft invitation email and send your own custom invitation containing the `domain_hint` parameter as described in the next step.\n+\n+## Send a custom invitation email with the `domain_hint` parameter\n+\n+After creating the user, send your own email with a link to an application route that starts the External ID authorization request. Configure the application route to pass the `domain_hint` parameter in the authorization request so that External ID routes the user to the specified identity provider.\n+\n+The application route depends on your application. For example:\n+\n+```text\n+https://<app-url>/<sign-in-route>?domain_hint=<identity-provider-domain>\n+```\n+\n+Use the `domain_hint` value specified for your provider in [Issuer acceleration](concept-authentication-methods-customers.md#issuer-acceleration). For example, for custom OIDC, use the domain part of the issuer URI. For a Microsoft Entra ID tenant configured as a custom OIDC provider, use the tenant domain, such as `contoso.onmicrosoft.com`.\n+\n+Include this link in your custom invitation email. For example:\n+\n+> **Subject**: You're invited to access [Your Application Name]\n+>\n+> Hello,\n+>\n+> You've been invited to access [Your Application Name]. Select the following link to get started:\n+>\n+> [Accept invitation and sign in](https://your-app-url.com/signin?domain_hint=contoso.onmicrosoft.com)\n+>\n+> You'll be asked to sign in with your existing credentials.\n+\n+> [!NOTE]\n+> If you use the default Microsoft invitation email, the [invitation redemption flow](../redemption-experience.md#invitation-redemption-flow) determines how the user authenticates and might not route the user to your intended identity provider.\n+\n+## End-user experience\n+\n+After you complete the configuration and send the invitation, here's what the invited user experiences.\n+\n+### First sign-in (invitation redemption)\n+\n+1. The user receives your custom invitation email and selects the link that includes the `domain_hint` parameter.\n+1. The application starts the External ID authorization request with the `domain_hint` parameter, and the user is routed to the specified identity provider.\n+1. The user authenticates with their existing credentials at the identity provider.\n+1. The invitation is redeemed. In your external tenant, the user object is updated:\n+    - A federated identity is added to the `identities` collection.\n+    - The `externalUserState` changes to `Accepted`.\n+\n+> [!NOTE]\n+> The `domain_hint` parameter is only required during this initial invitation redemption step.\n+\n+### Subsequent sign-ins\n+\n+After the user completes invitation redemption:\n+\n+1. The user navigates to your application (no `domain_hint` parameter is needed).\n+1. The user enters their email address on the sign-in page.\n+1. The user is recognized as an existing user and is redirected to the identity provider used during invitation redemption.\n+\n+## Related content\n+\n+- [Create invitation (Microsoft Graph)](/graph/api/invitation-post)\n+- [Add and manage customer accounts](how-to-manage-customer-accounts.md)\n+- [Issuer acceleration](concept-authentication-methods-customers.md#issuer-acceleration)\n",
+      "baseCommitSha": "b6ec3206cec9ac8db8013e1cc962047b94970ec4",
+      "commitSha": "4df42e6f03f5fd9bff11e32579428a97601c47ee",
+      "commitMessage": "Route invited users to an external identity provider with domain_hint (#13281)",
+      "commitAuthor": "nanguil",
+      "commitDate": "2026-10-15 15:33:51 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-invite-external-identity-provider-users-customers",
+      "eventId": "entra-docs:4df42e6f03f5fd9bff11e32579428a97601c47ee:added:docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md",
+      "firstSeenAt": "2026-10-15T23:06:12.993Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "Route invited users to a specific external identity provider",
+        "summary": "New guidance explains how to use the domain_hint parameter to route invited external-tenant users to configured OpenID Connect, SAML/WS-Federation, or social identity providers. It covers prerequisites, invitations through Microsoft Graph or the admin center, and custom invitation emails.",
+        "adminImpact": "Admins can control the authentication provider used during invitation redemption. Adoption requires an external tenant, registered application, associated user flow, configured provider, and its domain_hint value.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/devices/macos-platform-sso-architecture.md",
+      "status": "added",
+      "additions": 205,
+      "deletions": 0,
+      "changes": 205,
+      "patch": "diff --git a/docs/identity/devices/macos-platform-sso-architecture.md b/docs/identity/devices/macos-platform-sso-architecture.md\nnew file mode 100644\nindex 00000000000..effccb56e93\n--- /dev/null\n+++ b/docs/identity/devices/macos-platform-sso-architecture.md\n@@ -0,0 +1,205 @@\n+---\n+title: \"Architecture and authentication flow for macOS Platform SSO (Apple) with Microsoft Entra ID\"\n+description: \"Understand how macOS Platform SSO registration, device keys, the Platform SSO PRT, app SSO, and Platform Credentials work with Microsoft Entra ID.\"\n+ms.topic: concept-article\n+ms.date: 10/14/2026\n+---\n+\n+# Architecture and authentication flow for macOS Platform SSO (Apple) with Microsoft Entra ID\n+\n+macOS Platform Single Sign-on (PSSO) integrates a user's organizational identity with macOS. When PSSO is configured with Microsoft Entra ID, a managed Mac can establish a device-bound identity, register a local user, and provide single sign-on (SSO) to supported applications and websites.\n+\n+This article explains the architecture and authentication lifecycle behind that experience. It focuses on the responsibility boundaries between device management, macOS, the Microsoft Enterprise SSO plug-in, Microsoft Entra ID, and applications.\n+\n+> [!IMPORTANT]\n+> This article is a conceptual architecture overview. Exact behavior depends on the macOS version, the configured authentication method, the Microsoft Enterprise SSO plug-in version, the mobile device management (MDM) configuration, and Microsoft Entra tenant policy.\n+\n+## Roles and responsibilities\n+\n+PSSO is an Apple platform capability implemented through an identity provider's SSO extension. It isn't a standalone Microsoft credential provider, and applications don't implement the device and user registration protocol themselves.\n+\n+With Microsoft Entra ID:\n+\n+- **The device management service** deploys the Extensible SSO policy and PSSO configuration.\n+- **The Microsoft Enterprise SSO plug-in** registers the Mac and user with Microsoft Entra ID and supplies the identity-provider configuration required by macOS.\n+- **macOS Platform SSO (Apple)** owns the operating-system experience. It invokes registration, protects platform credentials, coordinates authentication, and makes the resulting Platform SSO PRT available to the Microsoft SSO extension through Apple's supported framework.\n+- **Microsoft Entra ID** registers the device and user credential, verifies the registered credential, validates the user and device proofs, and issues the Platform SSO Primary Refresh Token (PRT).\n+- **Applications and browsers** request access to resources and receive only the tokens or sessions intended for them.\n+\n+[![Diagram that shows Platform SSO roles and responsibilities.](media/macos-platform-sso-architecture/platform-sso-public-01-architecture.png)](media/macos-platform-sso-architecture/platform-sso-public-01-architecture.png#lightbox)\n+\n+*Figure 1. Device management deploys PSSO, Microsoft registers the device and user, macOS orchestrates authentication, and applications benefit from SSO.*\n+\n+## Components\n+\n+| Component | Primary responsibility |\n+| --- | --- |\n+| Microsoft Intune or another supported MDM | Deploy the Extensible SSO configuration and select the PSSO authentication method |\n+| Company Portal for macOS | Deliver the Microsoft Enterprise SSO plug-in used for Microsoft Entra PSSO |\n+| Microsoft Enterprise SSO plug-in | Perform Microsoft Entra device and user registration and provide identity-provider configuration to macOS |\n+| macOS Platform SSO (Apple) | Coordinate registration and authentication, protect platform credentials, and integrate the organizational identity with macOS |\n+| Microsoft Entra ID | Register the device and credential, verify the registered credential, validate the user and device proofs, and issue the Platform SSO PRT |\n+| Secure Enclave | Protect device-bound keys and, with the UserSecureEnclaveKey method, the user-bound key |\n+| Apps and browsers | Request resource tokens or web sessions backed by the Platform SSO foundation |\n+\n+## Policy deployment and device keys\n+\n+Before registration begins, the Mac receives an Extensible SSO configuration through MDM. The configuration identifies the SSO extension and contains the organization's PSSO settings, including the selected authentication method and registration behavior.\n+\n+When the device is MDM enrolled and the SSO extension policy with PSSO configuration is deployed, macOS generates two Secure Enclave-backed device keys:\n+\n+- **Device signing key:** Signs device-bound PSSO requests.\n+- **Device encryption key:** Enables Microsoft Entra ID to protect responses so that only the registered Mac can recover them.\n+\n+This key-generation step occurs before Microsoft Entra device registration. Registration accesses the existing keys; it doesn't generate them as part of the service exchange. The private keys remain protected on the Mac and aren't exported to applications or Microsoft Entra ID.\n+\n+## Device registration\n+\n+Device registration establishes the Mac as a known Microsoft Entra device:\n+\n+1. macOS invokes the Microsoft Enterprise SSO plug-in.\n+2. macOS makes the previously generated device signing and encryption keys available through the PSSO framework.\n+3. The extension creates device-registration proof and sends the required public-key material to Microsoft Entra ID.\n+4. Microsoft Entra ID validates the request and creates or updates the device identity.\n+5. Microsoft Entra ID returns a **registration certificate** associated with the device signing public key.\n+6. The extension saves the registration certificate through the PSSO framework and completes registration.\n+\n+The registration certificate contains the device signing public key and binds it to the registered device identity. It isn't the private signing key and it isn't the user's authentication credential.\n+\n+## User registration\n+\n+User registration associates the local macOS user with a Microsoft Entra identity and provisions the authentication method selected by the administrator.\n+\n+The supported methods are:\n+\n+- Password\n+- UserSecureEnclaveKey\n+- Smart Card\n+\n+With the UserSecureEnclaveKey method, user registration also provisions a hardware-bound user key:\n+\n+1. The user completes Microsoft Entra authentication and any required multifactor authentication.\n+2. macOS creates or accesses a user key protected by the Secure Enclave.\n+3. The public key is registered with Microsoft Entra ID and associated with the user and device.\n+4. The private key remains protected on the Mac.\n+5. The extension completes the user's PSSO configuration.\n+\n+[![Diagram that shows the Platform SSO device and user registration sequence.](media/macos-platform-sso-architecture/platform-sso-public-02-registration.png)](media/macos-platform-sso-architecture/platform-sso-public-02-registration.png#lightbox)\n+\n+*Figure 2. Device registration establishes device trust; user registration associates a user and authentication method with the Mac.*\n+\n+## Identity-provider configuration\n+\n+After registration, the Microsoft extension supplies macOS with the configuration required to operate the Microsoft Entra authentication protocol. Conceptually, this configuration identifies:\n+\n+- The Microsoft Entra authority and endpoints.\n+- The registered user.\n+- The active authentication method.\n+- The application, audience, and scopes used by the protocol.\n+- The requirements for validating service responses.\n+- The representation of method-specific authentication proof.\n+\n+macOS persists this information through Apple's PSSO framework. This arrangement allows macOS to coordinate login, unlock, account management, credential refresh, and System Settings experiences while Microsoft remains responsible for Microsoft Entra registration and service-specific validation.\n+\n+## Obtain the Platform SSO PRT\n+\n+The Microsoft Entra SSO credential used by PSSO is a hardware-bound PRT. The user proof differs by authentication method, but the high-level flow is shared:\n+\n+1. macOS determines that the Platform SSO PRT must be obtained or refreshed.\n+2. macOS loads the identity-provider configuration saved during registration.\n+3. macOS obtains anti-replay information from Microsoft Entra ID.\n+4. macOS collects or invokes the configured user proof.\n+5. macOS binds authentication to the registered device identity.\n+6. Microsoft Entra ID verifies the registered credential and validates the user and device proofs.\n+7. Microsoft Entra ID returns the Platform SSO PRT protected for the registered Mac.\n+8. macOS decrypts, validates, and saves the Platform SSO PRT using operating-system protections.\n+9. macOS makes the PRT available to the Microsoft SSO extension through Apple's PSSO framework.\n+10. The extension uses the PRT to obtain app-specific tokens or complete supported web SSO.\n+\n+The user's password, private key used by UserSecureEnclaveKey, or smart-card private key isn't converted into a PRT. Those credentials prove the user's identity. Microsoft Entra ID issues the PRT after validating that proof and the registered device context.\n+\n+[![Diagram that shows how macOS obtains and protects the Platform SSO PRT.](media/macos-platform-sso-architecture/platform-sso-public-03-authentication.png)](media/macos-platform-sso-architecture/platform-sso-public-03-authentication.png#lightbox)\n+\n+*Figure 3. macOS sends the device-bound authentication request, protects the returned Platform SSO PRT, and shares it with the Microsoft SSO extension.*\n+\n+## Authentication methods\n+\n+The authentication method changes how the user proves identity. It doesn't change the broader device-registration and app-SSO architecture.\n+\n+### Password\n+\n+The Microsoft Entra password and local macOS password are synchronized according to PSSO policy. The authentication request remains bound to the registered Mac. This method reduces the number of passwords the user manages, but it isn't passwordless or phishing-resistant.\n+\n+### UserSecureEnclaveKey\n+\n+A hardware-bound user key is protected by the Secure Enclave. When fresh proof is required, macOS requests a signature from the private key and Microsoft Entra ID verifies it with the registered public key. The private key doesn't leave the Mac. The local account password remains a separate local credential.\n+\n+Microsoft recommends the UserSecureEnclaveKey auth method for most PSSO deployments.\n+\n+### SmartCard\n+\n+The user proves identity with a certificate and its associated private key. The user completes the required card and PIN interaction, and the smart card signs the authentication proof without exporting the private key. Microsoft Entra certificate-based authentication validates the certificate, signature, user mapping, registered device, and policy.\n+\n+[![Diagram that shows a comparison of Platform SSO authentication methods.](media/macos-platform-sso-architecture/platform-sso-public-04-authentication-methods.png)](media/macos-platform-sso-architecture/platform-sso-public-04-authentication-methods.png#lightbox)\n+\n+*Figure 4. Password, UserSecureEnclaveKey, and Smart Card are alternative methods for producing user authentication proof.*\n+\n+## Application and browser SSO\n+\n+Applications don't receive the user's private keys, registration certificate, or Platform SSO PRT.\n+\n+A supported app or browser starts a normal Microsoft Entra authentication operation. The Microsoft Enterprise SSO plug-in checks whether macOS has a compatible Platform SSO PRT. If one is available, the extension uses it to request an app-specific token or complete the supported web SSO flow.\n+\n+The resulting resource token remains scoped to the requesting client and resource. PSSO provides the reusable device and user authentication foundation; it doesn't give one application access to another application's tokens.\n+\n+[![Diagram that shows the Platform SSO application and browser sign-in sequence.](media/macos-platform-sso-architecture/platform-sso-public-05-app-sso.png)](media/macos-platform-sso-architecture/platform-sso-public-05-app-sso.png#lightbox)\n+\n+*Figure 5. The extension uses the Platform SSO PRT to complete SSO while each application receives only its own authorization.*\n+\n+## Platform Credentials and passkeys\n+\n+Platform Credential passkey authentication is an optional related capability. It isn't required to obtain or use the Platform SSO PRT.\n+\n+With supported Microsoft Entra scenarios, the Secure Enclave Platform Credential (Secure Enclave backed user key registered during PSSO with UserSecureEnclaveKey auth method) can answer a WebAuthn challenge:\n+\n+1. A browser or application receives a WebAuthn challenge from Microsoft Entra ID.\n+2. macOS presents the eligible Platform Credential.\n+3. The user completes verification, such as Touch ID when required.\n+4. The Secure Enclave key signs the WebAuthn assertion.\n+5. Microsoft Entra ID verifies the assertion using the registered public key.\n+\n+[![Diagram that shows Platform Credential passkey authentication.](media/macos-platform-sso-architecture/platform-sso-public-06-passkey.png)](media/macos-platform-sso-architecture/platform-sso-public-06-passkey.png#lightbox)\n+\n+*Figure 6. A passkey operation uses the registered hardware-bound credential for WebAuthn without exporting its private key.*\n+\n+Routine PRT acquisition and passkey authentication can use the same registered hardware-backed identity, but they answer different protocol requests:\n+\n+- PSSO authentication obtains or refreshes the Platform SSO PRT.\n+- Passkey authentication answers a WebAuthn challenge for a relying party.\n+\n+## Complete lifecycle\n+\n+The complete conceptual lifecycle is:\n+\n+1. MDM enrollment deploys the SSO extension policy and PSSO configuration.\n+2. macOS generates the Secure Enclave-backed device signing and encryption keys.\n+3. macOS invokes the extension for device registration.\n+4. Microsoft Entra ID registers the device public keys and returns the device identity and registration certificate.\n+5. macOS invokes user registration.\n+6. The user registers the configured Password, UserSecureEnclaveKey, or Smart Card method.\n+7. The extension saves the Microsoft Entra identity-provider configuration through Apple's PSSO framework.\n+8. macOS obtains, validates, and protects the Platform SSO PRT.\n+9. macOS shares the PRT with the Microsoft SSO extension through Apple's framework.\n+10. Supported applications and browsers use the extension to obtain their own tokens or sessions.\n+11. When policy requires new proof, macOS invokes the configured authentication method again.\n+12. With UserSecureEnclaveKey, the Platform Credential can also answer supported WebAuthn passkey challenges.\n+\n+## Related content\n+\n+- [macOS Platform Single Sign-on (PSSO) overview](macos-psso.md)\n+- [Configure Platform SSO for macOS devices in Microsoft Intune](/intune/device-configuration/settings-catalog/configure-platform-sso-macos)\n+- [Configure Platform SSO during Automated Device Enrollment](/intune/device-configuration/settings-catalog/configure-platform-sso-during-enrollment)\n+- [Microsoft Enterprise SSO plug-in for Apple devices](../../identity-platform/apple-sso-plugin.md)\n+- [Apple Platform Single Sign-on deployment guide](https://support.apple.com/guide/deployment/platform-sso-for-mac-dep7bbb05313/web)\n+- [Passkeys in Microsoft Entra ID](../authentication/concept-authentication-passkeys-fido2.md)\n+- [Microsoft Entra certificate-based authentication on Apple devices](../authentication/concept-certificate-based-authentication-mobile-ios.md)\n",
+      "baseCommitSha": "856b4a9a645ea07b8cf544e72962917ff36b58e3",
+      "commitSha": "b4ee77b795dbbcddf88efaa5c0ae2fb31aca32de",
+      "commitMessage": "Add macOS Platform SSO architecture and authentication flow (#14603)",
+      "commitAuthor": "Veena Soman",
+      "commitDate": "2026-10-15 10:42:28 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/macos-platform-sso-architecture.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/macos-platform-sso-architecture",
+      "eventId": "entra-docs:b4ee77b795dbbcddf88efaa5c0ae2fb31aca32de:added:docs/identity/devices/macos-platform-sso-architecture.md",
+      "firstSeenAt": "2026-10-15T23:06:13.059Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "New architecture guide for macOS Platform SSO",
+        "summary": "Microsoft added a conceptual guide describing macOS Platform SSO registration, Secure Enclave device keys, the Platform SSO PRT, app SSO, and the roles of MDM, macOS, the Microsoft Enterprise SSO plug-in, and Microsoft Entra ID.",
+        "adminImpact": "Administrators can use the guide to understand PSSO authentication flows and component responsibilities. No administrator action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "modifiedFiles": [
@@ -131,6 +183,162 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/external-id/customers/how-to-custom-oidc-federation-customers.md",
+      "status": "modified",
+      "additions": 18,
+      "deletions": 7,
+      "changes": 25,
+      "patch": "diff --git a/docs/external-id/customers/how-to-custom-oidc-federation-customers.md b/docs/external-id/customers/how-to-custom-oidc-federation-customers.md\nindex b26800e8667..69e8e27cdec 100644\n--- a/docs/external-id/customers/how-to-custom-oidc-federation-customers.md\n+++ b/docs/external-id/customers/how-to-custom-oidc-federation-customers.md\n@@ -1,10 +1,10 @@\n ---\n title: Add OIDC for customer sign-in\n-description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing accounts. \n+description: Learn how to set up OpenID Connect as an external identity provider in Microsoft Entra External ID, enabling users to sign in using their existing identities.\n ms.topic: how-to\n-ms.date: 07/29/2026\n+ms.date: 10/12/2026\n ms.reviewer: brozbab\n-ms.custom: it-pro, msecd-doc-authoring-1012\n+ms.custom: it-pro, msecd-doc-authoring-1026\n ai-usage: ai-assisted\n \n #customer intent: As a developer, devops, or it administrator, I want to learn how to add an OpenID Connect identity provider for my external tenant.\n@@ -13,13 +13,20 @@ ai-usage: ai-assisted\n \n [!INCLUDE [applies-to-external-only](../includes/applies-to-external-only.md)]\n \n-By setting up federation with a custom-configured OpenID Connect (OIDC) identity provider, you enable users to sign in to your applications using their existing accounts from the federated external provider. This OIDC federation allows authentication with various providers that adhere to the OpenID Connect protocol. (Learn more about [authentication methods and identity providers for customers](concept-authentication-methods-customers.md).)\n+By setting up federation with a custom-configured OpenID Connect (OIDC) identity provider, you enable users to sign up and sign in to your applications using their existing accounts from the federated external provider. This OIDC federation allows authentication with various providers that adhere to the OpenID Connect protocol.\n+\n+After you configure an OIDC identity provider, there are two ways to enable users to authenticate with it:\n+\n+- **Add the identity provider to a user flow**: Adding the identity provider to a user flow displays a sign-in button on the sign-in page, allowing users to self-register and sign in. See [Add an identity provider to a user flow](how-to-add-identity-provider-to-user-flow-customers.md).\n+- **Invite users**: Have your application pass `domain_hint` in the authorization request to route invitation redemption to the configured OIDC provider. See [Route invited users to an external identity provider](how-to-invite-external-identity-provider-users-customers.md).\n+\n+For an overview of supported options, see [Authentication methods and identity providers for customers](concept-authentication-methods-customers.md).\n \n ## Prerequisites\n \n - An [external tenant](how-to-create-external-tenant-portal.md).\n - A [registered application](/entra/identity-platform/quickstart-register-app) in the external tenant.\n-- A [sign-up and sign-in user flow](how-to-user-flow-sign-up-sign-in-customers.md).\n+- A [sign-up and sign-in user flow](how-to-user-flow-sign-up-sign-in-customers.md) associated with your application.\n \n ## Set up your OpenID Connect identity provider\n \n@@ -80,7 +87,7 @@ After you configure your identity provider, complete this step to configure a ne\n    - **OpenID Issuer URI**: The entity of your identity provider that issues access tokens for your application. For example, if you use OpenID Connect to [federate with your Azure AD B2C](how-to-b2c-federation-customers.md), your issuer URI looks like: `https://login.b2clogin.com/{tenant}/v2.0/`. The issuer URI is a case-sensitive URL that uses the https scheme. It contains scheme, host, and optionally port number and path components, but no query or fragment components.\n    \n    > [!NOTE]\n-   > To federate with a Microsoft Entra ID tenant, see [Add a Microsoft Entra ID tenant as an OpenID Connect identity provider](how-to-entra-id-federation-customers.md). OIDC federation also isn't compatible with the [Invite external user (preview)](/entra/external-id/customers/concept-supported-features-customers#identity-providers-and-authentication-methods) feature.\n+   > For Microsoft Entra ID configuration details, see [Add a Microsoft Entra ID tenant as an OpenID Connect identity provider](how-to-entra-id-federation-customers.md). Users who select this provider during self-service sign-up authenticate through custom OIDC. Invited users from another Microsoft Entra tenant use [native Microsoft Entra federation by default](../redemption-experience.md#invitation-redemption-flow), unless your application [routes them to the custom OIDC provider with `domain_hint`](how-to-invite-external-identity-provider-users-customers.md).\n \n    - **Client ID** and **Client Secret** are the identifiers your identity provider uses to identify the registered application service. Provide a client secret when you select a `client_secret`-based authentication method.\n    - **Client Authentication** is the type of client authentication method to be used to authenticate with your identity provider using the token endpoint. `client_secret_post` and `client_secret_jwt` authentication methods are supported. Although the admin center UI might display `private_key_jwt` as an option, this method isn't currently supported and shouldn't be selected.\n@@ -98,7 +105,10 @@ Therefore, OpenID Connect external identity provider configuration doesn't suppo\n \n ## Enable users to sign in and sign up with the identity provider\n \n-After you configure the OIDC identity provider, add it to a user flow to allow sign-in and sign-up with the identity provider. See [Add an identity provider to a user flow](how-to-add-identity-provider-to-user-flow-customers.md).\n+Choose how users authenticate with the configured OIDC identity provider:\n+\n+- **Self-service sign-up**: [Add the identity provider to the user flow](how-to-add-identity-provider-to-user-flow-customers.md).\n+- **Invitations**: [Invite users](how-to-invite-external-identity-provider-users-customers.md) and route invitation redemption with `domain_hint`. You don't need to add the identity provider to the user flow.\n \n ## Make email optional for external identity provider sign-up\n \n@@ -177,4 +187,5 @@ To apply the change:\n ## Related content\n \n - [Add a Microsoft Entra ID tenant as an OIDC identity provider](how-to-entra-id-federation-customers.md)\n+- [Route invited users to an external identity provider](how-to-invite-external-identity-provider-users-customers.md)\n - [OIDC claims mapping](reference-oidc-claims-mapping-customers.md)\n",
+      "baseCommitSha": "b6ec3206cec9ac8db8013e1cc962047b94970ec4",
+      "commitSha": "4df42e6f03f5fd9bff11e32579428a97601c47ee",
+      "commitMessage": "Route invited users to an external identity provider with domain_hint (#13281)",
+      "commitAuthor": "nanguil",
+      "commitDate": "2026-10-15 15:33:51 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-custom-oidc-federation-customers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-custom-oidc-federation-customers",
+      "eventId": "entra-docs:4df42e6f03f5fd9bff11e32579428a97601c47ee:modified:docs/external-id/customers/how-to-custom-oidc-federation-customers.md",
+      "firstSeenAt": "2026-10-15T23:06:12.983Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "OIDC federation guidance adds invited-user routing",
+        "summary": "The page now explains self-service sign-up through a user flow and invitation redemption through a custom OIDC provider using the domain_hint authorization parameter.",
+        "adminImpact": "Administrators can use domain_hint to route invited users without adding the provider to the user flow; no required action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/external-id/customers/how-to-disable-sign-up-user-flow.md",
+      "status": "modified",
+      "additions": 10,
+      "deletions": 8,
+      "changes": 18,
+      "patch": "diff --git a/docs/external-id/customers/how-to-disable-sign-up-user-flow.md b/docs/external-id/customers/how-to-disable-sign-up-user-flow.md\nindex 39315d7dfb3..124d4bf0d96 100644\n--- a/docs/external-id/customers/how-to-disable-sign-up-user-flow.md\n+++ b/docs/external-id/customers/how-to-disable-sign-up-user-flow.md\n@@ -2,9 +2,10 @@\n title: Disable sign-up in a sign-up and sign-in user flow\n description: Disable sign-up in your user flow with Microsoft Graph API. Prevent new registrations and allow only sign-in for your external users. \n ms.topic: how-to\n-ms.date: 06/30/2025\n-ms.custom: it-pro, seo-july-2024, sfi-image-nochange\n-#Customer intent: As a developer or IT admin, I want to disable sign-up in a user flow so that only existing external users can sign in. \n+ms.date: 10/12/2026\n+ms.custom: it-pro, seo-july-2024, sfi-image-nochange, msecd-doc-authoring-1026\n+ai-usage: ai-assisted\n+#Customer intent: As a developer or IT admin, I want to disable sign-up in a user flow so that only existing external users can sign in.\n ---\n \n # Disable sign-up in a sign-up and sign-in user flow\n@@ -56,12 +57,13 @@ Follow these steps to disable the sign-up flow:\n \n     Replace `{user-flow-id}` with the user flow ID that you obtained in the previous step. Notice the `isSignUpAllowed` parameter is set to *false*. To re-enable sign-up, make a call to the Microsoft Graph API endpoint, but set the `isSignUpAllowed` parameter to *true*.   \n \n-## Next steps\n-\n-- [Add your application to the user flow](how-to-user-flow-add-application.md)\n-- [Create custom user attributes and customize the order of the attributes on the sign-up page](how-to-define-custom-attributes.md).\n+## Next step\n \n+> [!div class=\"nextstepaction\"]\n+> [Test your user flow](./how-to-test-user-flows.md)\n \n ## Related content\n \n-- [Test your user flow](./how-to-test-user-flows.md).\n\\ No newline at end of file\n+- [Add your application to the user flow](how-to-user-flow-add-application.md)\n+- [Create custom user attributes and customize the order of the attributes on the sign-up page](how-to-define-custom-attributes.md)\n+- [Route invited users to an external identity provider](how-to-invite-external-identity-provider-users-customers.md)\n\\ No newline at end of file\n",
+      "baseCommitSha": "b6ec3206cec9ac8db8013e1cc962047b94970ec4",
+      "commitSha": "4df42e6f03f5fd9bff11e32579428a97601c47ee",
+      "commitMessage": "Route invited users to an external identity provider with domain_hint (#13281)",
+      "commitAuthor": "nanguil",
+      "commitDate": "2026-10-15 15:33:51 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-disable-sign-up-user-flow.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-disable-sign-up-user-flow",
+      "eventId": "entra-docs:4df42e6f03f5fd9bff11e32579428a97601c47ee:modified:docs/external-id/customers/how-to-disable-sign-up-user-flow.md",
+      "firstSeenAt": "2026-10-15T23:06:12.986Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated next steps for disabling sign-up",
+        "summary": "The article now highlights testing the user flow as the primary next step and adds links for adding applications, managing custom attributes, and routing invited users to an external identity provider.",
+        "adminImpact": "Administrators get clearer follow-up guidance and direct access to related configuration and testing instructions.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/external-id/customers/how-to-entra-id-federation-customers.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 2,
+      "changes": 6,
+      "patch": "diff --git a/docs/external-id/customers/how-to-entra-id-federation-customers.md b/docs/external-id/customers/how-to-entra-id-federation-customers.md\nindex 1adcde8be47..6cef8429bd5 100644\n--- a/docs/external-id/customers/how-to-entra-id-federation-customers.md\n+++ b/docs/external-id/customers/how-to-entra-id-federation-customers.md\n@@ -3,7 +3,7 @@ title: Add Microsoft Entra ID for customer sign-in\n description: Learn how to configure a Microsoft Entra ID tenant as an OpenID Connect identity provider in Microsoft Entra External ID, enabling users to sign in using their existing organizational accounts.\n ms.topic: how-to\n ms.date: 10/13/2026\n-ms.custom: it-pro, msecd-doc-authoring-1012\n+ms.custom: it-pro, msecd-doc-authoring-1026\n ai-usage: ai-assisted\n \n #customer intent: As a developer, DevOps, or IT administrator, I want to learn how to add a Microsoft Entra ID tenant as an OpenID Connect identity provider in my external tenant.\n@@ -153,6 +153,8 @@ Error `40015` means that authentication at the external identity provider succee\n \n **How is adding Microsoft Entra ID as a custom OIDC federation different from inviting Microsoft Entra ID users as B2B guests?**\n \n+Invited users from another Microsoft Entra tenant use the [default invitation redemption flow](../redemption-experience.md#invitation-redemption-flow) unless your application explicitly routes them to the custom OIDC identity provider.\n+\n With Microsoft Entra ID federation:\n \n - User authentication always occurs in the home Microsoft Entra ID tenant.\n@@ -193,5 +195,5 @@ Yes. You can configure multiple Microsoft Entra ID tenants as separate custom OI\n ## Related content\n \n - [Add OpenID Connect as an external identity provider](how-to-custom-oidc-federation-customers.md)\n-- [Add an Azure AD B2C tenant as an OIDC identity provider](how-to-b2c-federation-customers.md)\n+- [Route invited users to an external identity provider](how-to-invite-external-identity-provider-users-customers.md)\n - [OIDC claims mapping](reference-oidc-claims-mapping-customers.md)\n",
+      "baseCommitSha": "b6ec3206cec9ac8db8013e1cc962047b94970ec4",
+      "commitSha": "4df42e6f03f5fd9bff11e32579428a97601c47ee",
+      "commitMessage": "Route invited users to an external identity provider with domain_hint (#13281)",
+      "commitAuthor": "nanguil",
+      "commitDate": "2026-10-15 15:33:51 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-entra-id-federation-customers.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-entra-id-federation-customers",
+      "eventId": "entra-docs:4df42e6f03f5fd9bff11e32579428a97601c47ee:modified:docs/external-id/customers/how-to-entra-id-federation-customers.md",
+      "firstSeenAt": "2026-10-15T23:06:12.990Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated guidance for routing invited users to external identity providers",
+        "summary": "The documentation now clarifies that invited users from another Microsoft Entra tenant use the default redemption flow unless an application explicitly routes them to a custom OIDC provider. The related link was also updated.",
+        "adminImpact": "Administrators configuring external identity provider invitations can use the updated guidance and link.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-reports.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-reports.md b/docs/id-governance/entitlement-management-reports.md\nindex 6513dbc883f..1f5044e373c 100644\n--- a/docs/id-governance/entitlement-management-reports.md\n+++ b/docs/id-governance/entitlement-management-reports.md\n@@ -4,7 +4,7 @@ description: Learn how to view the identity assignments report and audit logs in\n editor: jocastel-MSFT\n ms.subservice: entitlement-management\n ms.topic: how-to\n-ms.date: 09/03/2026\n+ms.date: 10/15/2026\n ms.reviewer: jocastel\n ai-usage: ai-assisted\n ms.custom: sfi-ga-nochange, sfi-image-nochange, msecd-doc-authoring-1026\n@@ -168,7 +168,7 @@ The workbook *Application role assignment activity* shows if there have been cha\n \n ## View access package drift\n \n-Access package drift reports show where access to governed groups and enterprise applications no longer matches entitlement management policies. You can use this report to find users who have direct resource access without an access package assignment, and users who have an active access package assignment without the expected group membership or application assignment.\n+Access package drift reports show where access to governed groups and enterprise applications no longer matches entitlement management policies. You can use this report to find users / agent IDs who have direct resource access without an access package assignment, and users / agent IDs who have an active access package assignment without the expected group membership or application assignment.\n \n Access package drift reports are in preview.\n \n",
+      "baseCommitSha": "47f3c78baf8eeb308457d8f642c00a8bbbb5f011",
+      "commitSha": "b6ec3206cec9ac8db8013e1cc962047b94970ec4",
+      "commitMessage": "Update entitlement management reports for clarity (#14612)",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-10-15 17:31:38 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-reports.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-reports",
+      "eventId": "entra-docs:b6ec3206cec9ac8db8013e1cc962047b94970ec4:modified:docs/id-governance/entitlement-management-reports.md",
+      "firstSeenAt": "2026-10-15T23:06:13.001Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Access package drift report documentation now mentions agent IDs",
+        "summary": "The documentation date was updated, and the report description now refers to users and agent IDs when explaining direct access and active assignment mismatches.",
+        "adminImpact": "Administrators reviewing drift reports can account for agent IDs as well as users.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-protection/concept-identity-protection-risks.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-protection/concept-identity-protection-risks.md b/docs/id-protection/concept-identity-protection-risks.md\nindex 38108afec24..1f08b8c53d1 100644\n--- a/docs/id-protection/concept-identity-protection-risks.md\n+++ b/docs/id-protection/concept-identity-protection-risks.md\n@@ -31,7 +31,7 @@ Select a risk detection from the list to view the description of the risk detect\n | [Admin confirmed user compromised](#admin-confirmed-user-compromised) | Offline | Nonpremium | adminConfirmedUserCompromised |\n | [Anomalous Token (sign-in)](#anomalous-token-sign-in) | Real-time or Offline | Premium | anomalousToken | \n | [Anonymous IP address](#anonymous-ip-address) | Real-time | Nonpremium | anonymizedIPAddress |\n-| [Atypical travel](#atypical-travel) | Offline | Premium | unlikelyTravel |\n+| [Atypical travel](#atypical-travel) | Real-time | Premium | unlikelyTravel |\n | [Impossible travel](#impossible-travel) | Offline | Premium | mcasImpossibleTravel |\n | [Malicious IP address](#malicious-ip-address) | Offline | Premium | maliciousIPAddress |\n | [Mass Access to Sensitive Files](#mass-access-to-sensitive-files) | Offline | Premium | mcasFinSuspiciousFileAccess |\n",
+      "baseCommitSha": "f6b02dd2370658cd0d3d5e16c37defc4bcc03345",
+      "commitSha": "2d2e626c1672c50cf343475a20b553870e84fd60",
+      "commitMessage": "Update atypical travel detection table",
+      "commitAuthor": "Roshni Rajavadivel",
+      "commitDate": "2026-10-15 15:43:30 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/concept-identity-protection-risks.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-risks",
+      "eventId": "entra-docs:2d2e626c1672c50cf343475a20b553870e84fd60:modified:docs/id-protection/concept-identity-protection-risks.md",
+      "firstSeenAt": "2026-10-15T23:06:13.045Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Atypical travel detection is documented as real-time",
+        "summary": "The risk detection table now lists Atypical travel as “Real-time” instead of “Offline.” Its Premium requirement and unlikelyTravel identifier are unchanged.",
+        "adminImpact": "Review documentation or operational expectations that refer to atypical travel processing timing.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-protection/concept-identity-protection-risks.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/id-protection/concept-identity-protection-risks.md b/docs/id-protection/concept-identity-protection-risks.md\nindex 3f273fc766e..38108afec24 100644\n--- a/docs/id-protection/concept-identity-protection-risks.md\n+++ b/docs/id-protection/concept-identity-protection-risks.md\n@@ -120,9 +120,9 @@ This risk detection type indicates sign-ins from an anonymous IP address (for ex\n \n This risk detection type identifies two sign-ins originating from geographically distant locations, where at least one of the locations might also be atypical for the user, given past behavior. The algorithm takes into account multiple factors including the time between the two sign-ins and the time it would take for the user to travel from the first location to the second. This risk might indicate that a different user is using the same credentials. \n \n-The algorithm ignores obvious \"false positives\" contributing to the impossible travel conditions, such as VPNs and locations regularly used by other users in the organization. The system has an initial learning period of the earliest of 14 days or 10 logins, during which it learns a new user's sign-in behavior. \n+The system uses adaptive learning to learn a new user's sign-in behavior.\n \n-- Calculated offline\n+- Calculated in real-time\n - License requirement: Microsoft Entra ID P2\n - [Tips for investigating atypical travel detections.](howto-identity-protection-investigate-risk.md#atypical-travel-detections)\n \n",
+      "baseCommitSha": "b4ee77b795dbbcddf88efaa5c0ae2fb31aca32de",
+      "commitSha": "f6b02dd2370658cd0d3d5e16c37defc4bcc03345",
+      "commitMessage": "Update atypical travel detection details",
+      "commitAuthor": "Roshni Rajavadivel",
+      "commitDate": "2026-10-15 15:28:07 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-protection/concept-identity-protection-risks.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-risks",
+      "eventId": "entra-docs:f6b02dd2370658cd0d3d5e16c37defc4bcc03345:modified:docs/id-protection/concept-identity-protection-risks.md",
+      "firstSeenAt": "2026-10-15T23:06:13.052Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Atypical travel detection documentation updated",
+        "summary": "The documentation now describes adaptive learning for new users’ sign-in behavior and says detection is calculated in real time, replacing the previous learning-period and offline-calculation details.",
+        "adminImpact": "Administrators should use the updated description when interpreting atypical travel risk detections. No action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
@@ -177,16 +385,20 @@
     }
   ],
   "summary": {
-    "totalCommits": 3,
-    "totalFiles": 5,
+    "totalCommits": 8,
+    "totalFiles": 13,
     "authors": [
+      "ArvindHarinder1",
       "Kamran Tabish",
       "Philippe Signoret",
-      "lebaro-msft"
+      "Roshni Rajavadivel",
+      "Veena Soman",
+      "lebaro-msft",
+      "nanguil"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 1 new, 4 updated, and 0 removed Microsoft Entra documentation files across 3 documentation areas.",
+    "overview": "Today's report includes 3 new, 10 updated, and 0 removed Microsoft Entra documentation files across 7 documentation areas.",
     "groups": [
       {
         "category": "Doc update",
@@ -194,6 +406,25 @@
         "summary": "The documentation explains when users may encounter Arkose Labs anti-bot verification before receiving SMS messages or voice calls, including user experience, network requirements, and help-desk guidance.",
         "sourceFiles": [
           "docs/identity/authentication/concept-telephony-risk-based-captcha.md"
+        ]
+      },
+      {
+        "category": "New feature",
+        "title": "external-id",
+        "summary": "New guidance explains how to use the domain_hint parameter to route invited external-tenant users to configured OpenID Connect, SAML/WS-Federation, or social identity providers. It covers prerequisites, invitations through Microsoft Graph or the admin center, and custom invitation emails. The page now explains self-service sign-up through a user flow and invitation redemption through a custom OIDC provider using the domain_hint authorization parameter. The article now highlights testing the user flow as the primary next step and adds links for adding applications, managing custom attributes, and routing invited users to an external identity provider. The documentation now clarifies that invi",
+        "sourceFiles": [
+          "docs/external-id/customers/how-to-invite-external-identity-provider-users-customers.md",
+          "docs/external-id/customers/how-to-custom-oidc-federation-customers.md",
+          "docs/external-id/customers/how-to-disable-sign-up-user-flow.md",
+          "docs/external-id/customers/how-to-entra-id-federation-customers.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/devices",
+        "summary": "Microsoft added a conceptual guide describing macOS Platform SSO registration, Secure Enclave device keys, the Platform SSO PRT, app SSO, and the roles of MDM, macOS, the Microsoft Enterprise SSO plug-in, and Microsoft Entra ID.",
+        "sourceFiles": [
+          "docs/identity/devices/macos-platform-sso-architecture.md"
         ]
       },
       {
@@ -213,6 +444,23 @@
         "sourceFiles": [
           "docs/global-secure-access/concept-connector-groups.md"
         ]
+      },
+      {
+        "category": "Doc update",
+        "title": "id-governance",
+        "summary": "The documentation date was updated, and the report description now refers to users and agent IDs when explaining direct access and active assignment mismatches.",
+        "sourceFiles": [
+          "docs/id-governance/entitlement-management-reports.md"
+        ]
+      },
+      {
+        "category": "Feature update",
+        "title": "id-protection",
+        "summary": "The risk detection table now lists Atypical travel as “Real-time” instead of “Offline.” Its Premium requirement and unlikelyTravel identifier are unchanged. The documentation now describes adaptive learning for new users’ sign-in behavior and says detection is calculated in real time, replacing the previous learning-period and offline-calculation details.",
+        "sourceFiles": [
+          "docs/id-protection/concept-identity-protection-risks.md",
+          "docs/id-protection/concept-identity-protection-risks.md"
+        ]
       }
     ],
     "highlights": [
@@ -220,6 +468,16 @@
         "category": "Doc update",
         "headline": "identity/authentication",
         "detail": "The documentation explains when users may encounter Arkose Labs anti-bot verification before receiving SMS messages or voice calls, including user experience, network requirements, and help-desk guidance."
+      },
+      {
+        "category": "New feature",
+        "headline": "external-id",
+        "detail": "New guidance explains how to use the domain_hint parameter to route invited external-tenant users to configured OpenID Connect, SAML/WS-Federation, or social identity providers. It covers prerequisites, invitations through Microsoft Graph or the admin center, and custom invitation emails. The page now explains self-service sign-up through a user flow and invitation redemption through a custom OIDC provider using the domain_hint authorization parameter. The article now highlights testing the user flow as the primary next step and adds links for adding applications, managing custom attributes, and routing invited users to an external identity provider. The documentation now clarifies that invi"
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/devices",
+        "detail": "Microsoft added a conceptual guide describing macOS Platform SSO registration, Secure Enclave device keys, the Platform SSO PRT, app SSO, and the roles of MDM, macOS, the Microsoft Enterprise SSO plug-in, and Microsoft Entra ID."
       },
       {
         "category": "Doc update",
@@ -230,6 +488,16 @@
         "category": "New feature",
         "headline": "global-secure-access",
         "detail": "The documentation adds Performance mode, which routes user traffic to the connector with the lowest measured network latency. It also clarifies that connector load balancing applies only to Microsoft Entra Private Access applications, not application proxy applications."
+      },
+      {
+        "category": "Doc update",
+        "headline": "id-governance",
+        "detail": "The documentation date was updated, and the report description now refers to users and agent IDs when explaining direct access and active assignment mismatches."
+      },
+      {
+        "category": "Feature update",
+        "headline": "id-protection",
+        "detail": "The risk detection table now lists Atypical travel as “Real-time” instead of “Offline.” Its Premium requirement and unlikelyTravel identifier are unchanged. The documentation now describes adaptive learning for new users’ sign-in behavior and says detection is calculated in real time, replacing the previous learning-period and offline-calculation details."
       }
     ],
     "generatedBy": "fallback"
