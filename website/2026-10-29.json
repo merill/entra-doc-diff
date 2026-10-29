@@ -1,5 +1,32 @@
 {
-  "newFiles": [],
+  "newFiles": [
+    {
+      "filename": "docs/agent-id/govern-agent-access-azure-postgresql.md",
+      "status": "added",
+      "additions": 242,
+      "deletions": 0,
+      "changes": 242,
+      "patch": "diff --git a/docs/agent-id/govern-agent-access-azure-postgresql.md b/docs/agent-id/govern-agent-access-azure-postgresql.md\nnew file mode 100644\nindex 00000000000..7da39807def\n--- /dev/null\n+++ b/docs/agent-id/govern-agent-access-azure-postgresql.md\n@@ -0,0 +1,242 @@\n+---\n+title: Govern agent access to data in Azure Database for PostgreSQL flexible server\n+description: Learn how to use Microsoft Entra agent ID identity governance and conditional access for an agent accessing an Azure Database for PostgreSQL database.\n+ms.topic: tutorial\n+ms.date: 10/28/2026\n+ms.author: mwahl\n+author: markwahl-msft\n+ms.service: entra-id\n+ai-usage: ai-assisted\n+\n+#Customer intent: As an IT administrator, I want to understand how to deploy an AI agent that is able to authenticate to a Azure Database for PostgreSQL database using a Microsoft Entra Agent ID and has permissions to interact in that database.\n+\n+---\n+\n+# Govern agent access to data in Azure Database for PostgreSQL flexible server\n+\n+Microsoft Entra Agent ID provides a centralized set of tools for managing agent identities and their access to applications across your organization. This guide illustrates how to govern an agent with a Microsoft Entra Agent ID needing access to data in an example application, [Azure Database for PostgreSQL](https://azure.microsoft.com/products/postgresql/). Azure Database for PostgreSQL integrates with Microsoft Entra for authentication and authorization for service principals and agent identities.  For more information, see [Use Microsoft Entra ID authentication in Azure Database for PostgreSQL flexible server](/azure/postgresql/security/security-entra-configure).\n+\n+In this tutorial, you configure Microsoft Entra and Azure Database for PostgreSQL so that an AI agent authenticates using its own Entra agent identity, and is authorized to interact with the database. You configure Microsoft Entra **Entitlement Management** access packages to set up the security group membership that grants the agent access to a table in the database. This enables additional agents to be able to obtain the same access as this agent, while maintaining their own identities and without needing to make changes to the database security principals.\n+\n+## Prerequisites\n+\n+[!INCLUDE [entra-agent-id-license](../includes/licensing-agent-id.md)]\n+\n+You'll need to have an Azure Database for PostgreSQL server in an Azure subscription, with a database where you are an administrator. If you don't have one already, see [Quickstart: Create an Azure Database for PostgreSQL flexible server](/azure/postgresql/configure-maintain/quickstart-create-server).\n+\n+You'll also need an agent which has a Microsoft Entra agent ID.\n+\n+## Architecture\n+\n+:::image type=\"content\" source=\"media/govern-agent-access-azure-postgresql/database-authorization-components.png\" alt-text=\"Diagram showing the relationship of the agent, Microsoft Entra components, and the Azure Database for PostgreSQL.\":::\n+\n+### Authentication interactions\n+\n+The agent uses a two-step token exchange flow to obtain a short-lived access token for the Azure Database for PostgreSQL derived from its Microsoft Entra Agent ID. When the agent needs to use the database,\n+\n+1. The agent authenticates to Microsoft Entra as an agent blueprint, providing blueprint credentials and an agent ID.\n+1. The agent exchanges at a Microsoft Entra authentication endpoint for an access token with the Azure Database scope.\n+1. The agent sends the security group name and that access token to the Azure Database for PostgreSQL server as the credential to authenticate.\n+1. Azure Database for PostgreSQL validates that the agent identity in the token is a member of the group, and therefore is authorized to act as the principal named by that group in the server's databases.\n+\n+## Enable Microsoft Entra authentication and authorization for Azure Database for PostgreSQL\n+\n+In this section, you'll enable agents to authenticate using Microsoft Entra agent ID to your database, and create a security group that you'll authorize to read a table named `employees` in a database.\n+\n+### Create a security group for authorization to read from a PostgreSQL data set\n+\n+1. In the Microsoft Entra Admin Center, go to **Microsoft Entra ID**, select **Groups**, and select **New group**.\n+1. Set **Group type** to **Security**.\n+1. Enter a **Group name** such as `pg-employees-readers`. Keep the name short; you will use it verbatim inside PostgreSQL.\n+1. Leave membership type as **Assigned**, as Entitlement Management will be used to assign membership. Do not add any members yet. \n+1. Select **Create**.\n+1. After creation, open the group and note the name and Object ID, which you'll use when creating the principal and role assignment in the PostgreSQL database.\n+\n+### Enable Microsoft Entra authentication in Azure Database for PostgreSQL\n+\n+If you have not enabled Microsoft Entra authentication in the database, then do so to allow the agent to use a Microsoft Entra agent ID. If you have already configured Microsoft Entra authentication, then continue at the next section.\n+\n+1. In the [Azure portal](https://portal.azure.com), open your **Azure Database for PostgreSQL** resource.\n+2. In the left menu, go to **Security** > **Authentication**.\n+3. Under **Microsoft Entra authentication**, toggle **Enable** to on.\n+4. Select **Add Microsoft Entra Admins**.\n+5. Search for and select your own account (or a group of database administrators). This account will have the ability to perform operations inside PostgreSQL as a superuser-equivalent Entra identity.\n+6. Select **Save**.\n+\n+> [!IMPORTANT]\n+> Enabling Entra authentication does not disable password authentication. If you want to enforce Entra-only connections, additionally set the server parameter `azure.enable_passwordless_auth=on` (preview) or remove the local `postgres` superuser password and rely solely on Entra identities.\n+\n+### Create a table in the database\n+\n+Connect to your Azure Database for PostgreQL server using the Entra admin account you just configured. \n+\n+Once connected, confirm you have an `employees` table. If you don't have a table with that name in your PostgreSQL database, connect to PostgreSQL and create that table. \n+\n+### Create the database role for the security group to read from that database\n+\n+Create a PostgreSQL principal for the security group created earlier, and grant it SELECT access on the `employees` table:\n+\n+```sql\n+-- Create a role whose name matches the Entra security group name exactly (case-sensitive)\n+SELECT pgaadauth_create_principal('pg-employees-readers', false, false);\n+\n+-- Grant the group role read access to the employees table\n+GRANT SELECT ON TABLE employees TO \"pg-employees-readers\";\n+```\n+\n+> [!NOTE]\n+> `pgaadauth_create_principal` is a helper function provided by the `pgaadauth` extension that Azure Database for PostgreSQL loads automatically when Entra authentication is enabled. The second parameter controls whether the role is a superuser; always set it to `false` for agent identities. The third parameter controls whether login is enabled on the role itself; set it to `false` because individual Microsoft Entra ID principals (not the group role) will log in.\n+\n+Then, verify the role and grant are present.\n+\n+```sql\n+-- List Entra-authenticated roles\n+SELECT * FROM pgaadauth_list_principals(false);\n+\n+-- Confirm the table grant\n+\\dp employees\n+```\n+\n+You should see `pg-employees-readers` listed with `r` (SELECT) privileges on the `employees` table.\n+\n+## Create an access package to assign agent identites to the security group\n+\n+Entitlement Management lets you define an *access package* that bundles the security group membership and attach a policy describing how identities, including agent identities, can request access.\n+\n+### Create a catalog to contain the access package\n+\n+1. In the Entra Admin Center, go to **Identity Governance** > **Entitlement management** > **Catalogs**.\n+1. Select to create a **New catalog**.\n+1. Name it `AI Agents` and provide a description. Set **Enabled** to **Yes**. Select **Create**.\n+1. Open the new catalog and choose **Resources** > **Add resources**.\n+1. Select **Groups and teams**, find and select `pg-employees-readers`, then choose **Add**.\n+\n+### Create the access package\n+\n+1. In the catalog, change to **Access packages**.\n+1. Select **New access package**.\n+1. On the **Basics** tab:\n+   * **Name**: `Employee Database Readers`\n+   * **Catalog**: `AI Agents`\n+   * Select **Next: Resource roles**.\n+1. On the **Resource roles** tab:\n+   * Select **Groups and teams**, choose `pg-employees-readers`.\n+   * Set the role to **Member**.\n+   * Select **Next: Requests**.\n+1. On the **Requests** tab:\n+   * Under **Who can request access**, select **None (administrator direct assignments only)**. In this first policy, a human administrator controls which agent identities get access; the agent never self-requests.\n+   * Select **Next: Requestor information**, skip optional questions, **Next: Lifecycle**.\n+1. On the **Lifecycle** tab:\n+   * Set **Access package assignment expires** to an appropriate duration (for example, 180 days).\n+   * Select **Next: Rules**, then **Next: Review + create**.\n+1. Select **Create**.\n+\n+\n+## Register an agent blueprint and agent identity in Microsoft Entra\n+\n+In this section, you'll create the representation of the agent in Microsoft Entra.\n+\n+1. Ensure you are signed into the Entra Admin Center as a user in the **Agent ID Developer** or **Agent ID Administrator** roles.\n+1. Navigate to **Agents**, **Agent Blueprints**, and select **New agent blueprint (Preview)**.\n+1. Give the agent a name such as `EmployeeAgentIdentity`, and confirm the sponsor.\n+1. One the blueprint is created, navigate to the blueprint, select **Credentials (Preview)**, select **Client secrets**, and select **New client secret**.\n+1. Record the displayed client secret value.\n+1. Change to the **Overview (Preview)** tab, and record the blueprint app ID and blueprint principal object ID.\n+1. Change to the **Linked agent identities (Preview)** tab, select the agent identity. Record the object ID.\n+\n+For more information on other options for how agent identities are created in Microsoft Entra, see [How are agent identities created?](agent-id-creation-channels.md).\n+\n+## Authorize the agent identity using Microsoft Entra entitlement management\n+\n+You can authorize the agent by directly assigning the agent identity to the access package.\n+\n+1. In the Entra Admin Center, go to **Identity Governance** > **Entitlement management** > **Access packages**.\n+1. Open the **Employee Database Readers** access package created earlier.\n+1. Choose **Assignments** > **New assignment**.\n+1. Under **Select policy**, choose **Initial policy** (or the administrator assignment policy you created).\n+1. Under **Select user or service principal**, search for and select `EmployeeAgentIdentity`.\n+1. Set the assignment end date consistent with the lifecycle policy.\n+1. Select **Add**.\n+\n+After the assignment request is processed, usually within a few minutes, `EmployeeAgentIdentity` becomes a member of the `pg-employees-readers` security group.\n+\n+> [!NOTE]\n+> You can verify group membership in the Microsoft Entra Admin Center, by changing to **Microsoft Entra ID** > **Groups**, Selecting **pg-employees-readers** and viewing the **Members**.\n+\n+---\n+\n+## Agent connects to the database\n+\n+Now that the agent's identity is a member of the security group, when it connects to the Azure Database for PostgreSQL server, the server can validate its identity and check its authorization for subsequent SQL calls. In order to connect to the database, the agent first obtains a token for the database as a resource.\n+\n+:::image type=\"content\" source=\"media/agent-autonomous-app-oauth-flow/autonomous-app-flow-token-sequence.png\" alt-text=\"Diagram showing the token sequence of autonomous app token acquisition flow for agents.\":::\n+\n+1. The agent authenticates to Microsoft Entra as the blueprint, and indicates the agent identity.\n+\n+   In this step, the agent supplies the blueprint credentials and the identity of the agent ID, and receives an intermediate token. For more information on other authentication options, see [Agent autonomous app OAuth flow - App-only protocol](agent-autonomous-app-oauth-flow.md).\n+\n+   ```\n+   POST https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token\n+   Content-Type: application/x-www-form-urlencoded\n+\n+   grant_type=client_credentials\n+   &scope=api%3A%2F%2FAzureADTokenExchange%2F.default\n+   &client_id=<blueprint-client-id>\n+   &client_secret=<blueprint-client-secret>\n+   &Fmi_Path=<agent-id>\n+   ```\n+\n+   In this step, Microsoft Entra ID checks:\n+   * The blueprint credentials are valid.\n+   * Conditional Access policies assigned to the blueprint principal are satisfied.\n+   * The `Fmi_Path` value resolves to a known agent identity within the tenant.\n+\n+1. If the checks were successful, Microsoft Entra ID provides a response to the agent with the intermediate token. \n+\n+   This token consists of a short-lived JWT, the intermediate token, issued for the `api://AzureADTokenExchange` audience. \n+\n+1. The agent obtains from Microsoft Entra ID a PostgreSQL access token.\n+\n+   In this step, the agent exchanges the intermediate token for an access token it can supply to the Azure Database for PostgreSQL.\n+\n+   ```\n+   POST https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token\n+   Content-Type: application/x-www-form-urlencoded\n+\n+   grant_type=client_credentials\n+   &client_id=<agent-id>\n+   &scope=https%3A%2F%2Fossrdbms-aad.database.windows.net%2F.default\n+   &client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer\n+   &client_assertion=<intermediate-token>\n+   ```\n+\n+   In this step, Microsoft Entra ID checks:\n+   * The intermediate token signature and audience are valid.\n+   * The `client_id` matches the agent identity registration.\n+   * Any Conditional Access policies assigned to the `EmployeeAgentIdentity` service principal are evaluated here. If the request violates the network or risk policy, Entra returns `conditional_access_failed` and the agent cannot connect.\n+   * The agent identity is not blocked or disabled.\n+\n+1. If the checks are successful, Microsoft Entra ID provides a response with a token for the resource.\n+\n+   The response includes a short-lived JWT access token issued for the `https://ossrdbms-aad.database.windows.net` audience. \n+\n+1. The agent connects to the database.\n+\n+   When connecting, the agent uses the group name as the username, and the access token as the PostgreSQL user password. PostgreSQL then:\n+   1. Validates the token signature using Entra's public keys.\n+   1. Confirms the token audience is `https://ossrdbms-aad.database.windows.net`.\n+\n+1. The agent sends a request to the database.\n+\n+   Because the session included in the `groups` claim included `pg-employees-readers`, the session has the privileges associated with that role — including `SELECT` on the `employees` table.\n+\n+\n+## Related content\n+\n+- [Assign agents to applications](/entra/identity/enterprise-apps/assign-agent-identities-to-applications)\n+- [Call Azure services](call-api-azure-services.md)\n+- [Conditional Access for agents](/entra/identity/conditional-access/agent-id)\n+- [ID Governance for agents](/entra/id-governance/agent-id-governance-overview)\n+- [Access packages for agents](agent-access-packages.md)\n+- [Microsoft Entra authentication in Azure Database for PostgreSQL flexible server](/azure/postgresql/security/security-entra-concepts)\n+- [Use Microsoft Entra ID authentication in Azure Database for PostgreSQL flexible server](/azure/postgresql/security/security-entra-configure)\n",
+      "baseCommitSha": "edb1332772f2ba7e66d9253bc013e6f8ae00f1d5",
+      "commitSha": "3da3af715b9ed164d8d8b30ff2de2d546f160a11",
+      "commitMessage": "governa agent access to data in Azure Database for PostgreSQL (#12970)",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 19:08:12 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/agent-id/govern-agent-access-azure-postgresql.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/agent-id/govern-agent-access-azure-postgresql",
+      "eventId": "entra-docs:3da3af715b9ed164d8d8b30ff2de2d546f160a11:added:docs/agent-id/govern-agent-access-azure-postgresql.md",
+      "firstSeenAt": "2026-10-29T08:31:25.796Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "New tutorial covers governing agent access to PostgreSQL",
+        "summary": "The documentation adds a tutorial for configuring Microsoft Entra agent identities to authenticate to Azure Database for PostgreSQL flexible server and access data through group-based authorization, entitlement management, and conditional access.",
+        "adminImpact": "Administrators can use the guide to set up prerequisites, Entra authentication, security groups, token exchange, and database permissions for AI agents.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
   "modifiedFiles": [
     {
       "filename": "docs/identity/hybrid/cloud-sync/how-to-active-directory-object-enforcement.md",
@@ -23,6 +50,214 @@
         "summary": "The documentation now requires all writable domain controllers to meet specified Windows Server update levels and requires ADSyncTools version 2.6.0 or later. It also adds a warning that enforcement cannot be configured if any writable domain controller is unsupported.",
         "adminImpact": "Before enabling enforcement, update every writable domain controller and install/import ADSyncTools 2.6.0 or later.",
         "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-overview.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-overview.md b/docs/id-governance/entitlement-management-overview.md\nindex bc9480893a4..7bd4ed9f374 100644\n--- a/docs/id-governance/entitlement-management-overview.md\n+++ b/docs/id-governance/entitlement-management-overview.md\n@@ -29,7 +29,7 @@ These problems are compounded for identities who need access from another organi\n - No one person might know all of the specific individuals in other organization's directories to be able to invite them\n - Even if they were able to invite these identities, no one in that organization might remember to manage all of the identities access consistently\n \n-Entitlement management can help address these challenges. To learn more about how customers have been using entitlement management, you can read the [Mississippi Division of Medicaid](https://customers.microsoft.com/story/1509263251891323344-mississippi-medicaid-microsoft-security-solutions), [Storebrand](https://customers.microsoft.com/story/1540760473505561700-storebrand-banking-microsoft-security-solutions), and [Digital Security and Resilience team at Microsoft](https://customers.microsoft.com/story/1805346232767723893-microsoft-microsoft-entra-id-governance-other-en-united-states) case studies. This video provides an overview of entitlement management and its value:\n+Entitlement management can help address these challenges. To learn more about how organizations have been using entitlement management, see the [Digital Security and Resilience team at Microsoft](https://customers.microsoft.com/story/1805346232767723893-microsoft-microsoft-entra-id-governance-other-en-united-states) case study. This video provides an overview of entitlement management and its value:\n \n >[!VIDEO https://www.youtube.com/embed/_Lss6bFrnQ8]\n \n",
+      "baseCommitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitSha": "8a1cae3f6ee5d598ac1897f7ddd43637908ac5af",
+      "commitMessage": "remove broken links",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:54:42 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-overview.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-overview",
+      "eventId": "entra-docs:8a1cae3f6ee5d598ac1897f7ddd43637908ac5af:modified:docs/id-governance/entitlement-management-overview.md",
+      "firstSeenAt": "2026-10-29T08:31:25.806Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Entitlement management overview updates customer example links",
+        "summary": "The page replaces the Mississippi Division of Medicaid customer example with the Digital Security and Resilience team at Microsoft and updates the accompanying wording and link.",
+        "adminImpact": "No administrator action is indicated; the change affects informational examples and links.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/agent-id-governance-overview.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/agent-id-governance-overview.md b/docs/id-governance/agent-id-governance-overview.md\nindex 52f255b883f..41a707928ab 100644\n--- a/docs/id-governance/agent-id-governance-overview.md\n+++ b/docs/id-governance/agent-id-governance-overview.md\n@@ -36,7 +36,7 @@ The agent identity and the agent user allow AI agents to take on digital identit\n \n * You can configure an **Azure App Service or Azure Functions app** to use the Microsoft Entra agent identity platform to securely connect to resources as an agent. For more information, see [How to use an agent identity in App Service and Azure Functions](/azure/app-service/overview-agent-identity).\n \n-* Agents created in **Microsoft Copilot Studio** can be configured to automatically be assigned to an agent identity. When an agent identity is first created in a Power Platform environment after enabling this setting, a Microsoft Copilot Studio agent identity blueprint, and an agent identity blueprint principal, are automatically created. For more information, see [Automatically create Entra agent identities for Copilot Studio agents (preview)](/microsoft-copilot-studio/admin-use-entra-agent-identities).\n+* Agents created in **Microsoft Copilot Studio** can be configured to automatically be assigned to an agent identity. When an agent identity is first created in a Power Platform environment after enabling this setting, a Microsoft Copilot Studio agent identity blueprint, and an agent identity blueprint principal, are automatically created. For more information, see [Microsoft Entra Agent IDs for Copilot Studio agents](/microsoft-copilot-studio/admin-use-entra-agent-identities).\n \n * For agents in the **Microsoft Teams** platform, a developer can create and manage agent identity blueprints in the Developer Portal for Teams. For more information, see [Manage your apps in Developer Portal](/microsoftteams/platform/concepts/build-and-test/manage-your-apps-in-developer-portal).\n \n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/agent-id-governance-overview.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/agent-id-governance-overview.md",
+      "firstSeenAt": "2026-10-29T08:31:25.818Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated Copilot Studio agent identity guidance",
+        "summary": "The agent identity overview revises wording about automatically assigning identities to Microsoft Copilot Studio agents and creating the related identity blueprint.",
+        "adminImpact": "Administrators configuring this integration should refer to the updated guidance when reviewing the identity-assignment flow.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-overview.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-overview.md b/docs/id-governance/entitlement-management-overview.md\nindex 63bc29210a9..bc9480893a4 100644\n--- a/docs/id-governance/entitlement-management-overview.md\n+++ b/docs/id-governance/entitlement-management-overview.md\n@@ -14,7 +14,7 @@ Entitlement management is an [identity governance](identity-governance-overview.\n \n People in organizations need access to various groups, applications, and SharePoint Online sites to perform their job. Managing this access is challenging, as requirements change. New applications are added or identities need more access rights. This scenario gets more complicated when you collaborate with outside organizations. You might not know who in the other organization needs access to your organization's resources, and they won't know what applications, groups, or sites your organization is using.\n \n-Entitlement management can help you more efficiently manage access to groups, applications, and SharePoint Online sites for internal identities, and also for identities outside your organization who need access to those resources. You can also use entitlement management in preview to assign groups, API permissions, and roles to agent IDs.\n+Entitlement management can help you more efficiently manage access to groups, applications, and SharePoint Online sites for internal identities, and also for identities outside your organization who need access to those resources. You can also use entitlement management to assign groups, API permissions, and roles to agent IDs.\n \n ## Why use entitlement management?\n \n@@ -62,7 +62,7 @@ Entitlement management introduces the concept of an *access package*. An access\n - Membership of Microsoft 365 Groups and Teams\n - Assignment to Microsoft Entra enterprise applications, including SaaS applications and custom-integrated applications that support federation/single sign-on and/or provisioning\n - Membership of SharePoint Online sites\n-- API permissions, for agents with agent IDs or service principals, in preview as part of Microsoft Entra Agent ID\n+- API permissions, for agents with agent IDs or service principals, as part of Microsoft Entra Agent ID\n - SAP IAG business roles and other access rights, in preview\n \n You can also control access to other resources that rely upon Microsoft Entra security groups or Microsoft 365 Groups. For example:\n@@ -131,7 +131,7 @@ To better understand entitlement management and its documentation, you can refer\n \n [!INCLUDE [active-directory-p2-governance-license.md](~/includes/entra-p2-governance-license.md)]\n \n-### License requirements for assigning agents to access packages (preview)\n+### License requirements for assigning agents to access packages\n \n [!INCLUDE [licensing-agent-id-governance](../includes/licensing-agent-id-governance.md)]\n \n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-overview.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-overview",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/entitlement-management-overview.md",
+      "firstSeenAt": "2026-10-29T08:31:25.821Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Agent access-package assignments are no longer labeled preview",
+        "summary": "The entitlement management overview removes “preview” from references to assigning groups and API permissions to agents, and from the related license-requirements heading.",
+        "adminImpact": "Administrators should use the updated wording when reviewing agent assignment and licensing guidance. No action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-request-behalf.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-request-behalf.md b/docs/id-governance/entitlement-management-request-behalf.md\nindex 713ee8a4996..59941cf8d91 100644\n--- a/docs/id-governance/entitlement-management-request-behalf.md\n+++ b/docs/id-governance/entitlement-management-request-behalf.md\n@@ -33,7 +33,7 @@ The ability for administrators to request on behalf of agent identities they own\n [!INCLUDE [active-directory-p2-governance-license.md](~/includes/entra-p2-governance-license.md)]\n > [!NOTE]\n > Both the manager/user (requestor) and the employee/user (target) must be licensed for Microsoft Entra ID Governance or Microsoft Entra Suite to use the on-behalf-of request feature.\n-### License requirements for requesting on behalf of agent identities (preview)\n+### License requirements for requesting on behalf of agent identities\n [!INCLUDE [licensing-agent-id-governance](../includes/licensing-agent-id-governance.md)]\n ## Configure an access package policy allowing on behalf of requests\n Follow these steps to edit the policies, allowing on behalf of requests, for an existing access package:\n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-request-behalf.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-behalf",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/entitlement-management-request-behalf.md",
+      "firstSeenAt": "2026-10-29T08:31:25.824Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Preview label removed from agent identity licensing guidance",
+        "summary": "The heading for license requirements when requesting on behalf of agent identities no longer includes “(preview).”",
+        "adminImpact": "Reviewers will see the guidance presented without a preview designation; no administrator action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/entitlement-management-scenarios.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/entitlement-management-scenarios.md b/docs/id-governance/entitlement-management-scenarios.md\nindex 87a1e627ac9..0e793b89ba4 100644\n--- a/docs/id-governance/entitlement-management-scenarios.md\n+++ b/docs/id-governance/entitlement-management-scenarios.md\n@@ -105,7 +105,7 @@ There are several ways that you can configure entitlement management for your or\n 1. [Sign in to the My Access portal](entitlement-management-request-access.md#sign-in-to-the-my-access-portal)\n 1. View active access packages\n \n-## Govern access for agents (preview)\n+## Govern access for agents\n \n [!INCLUDE [licensing-agent-id-governance](../includes/licensing-agent-id-governance.md)]\n \n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/entitlement-management-scenarios.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-scenarios",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/entitlement-management-scenarios.md",
+      "firstSeenAt": "2026-10-29T08:31:25.827Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated heading for governing agent access",
+        "summary": "The entitlement management scenarios documentation no longer labels “Govern access for agents” as preview.",
+        "adminImpact": "No administrator action is indicated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/identity-governance-overview.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/id-governance/identity-governance-overview.md b/docs/id-governance/identity-governance-overview.md\nindex 81f856569bb..9fbc5aae52a 100644\n--- a/docs/id-governance/identity-governance-overview.md\n+++ b/docs/id-governance/identity-governance-overview.md\n@@ -113,7 +113,7 @@ Once you've started using these identity governance features, you can easily aut\n | Other scheduled tasks | [Automate identity governance tasks with Azure Automation](identity-governance-automation.md) and Microsoft Graph via the [Microsoft.Graph.Identity.Governance](https://www.powershellgallery.com/packages/Microsoft.Graph.Identity.Governance/) PowerShell module|\n |Discover orphan or local accounts in your applications|[Discover existing](~/identity/app-provisioning/how-to-account-discovery.md) users in your applications.|\n \n-## Identity governance for agents (preview)\n+## Identity governance for agent identities\n \n With the addition of the Microsoft agent identity platform, managing an agent's identity and access in the same way as people is just as important in the governance lifecycle of your organization. Microsoft Entra Agent ID introduces [agent identities](../agent-id/what-is-microsoft-entra-agent-id.md) — purpose-built identity constructs for AI agents — with governance controls that address the unique challenges of autonomous and semi-autonomous agents operating at enterprise scale.\n \n@@ -121,7 +121,7 @@ Every agent identity requires a human [sponsor](../agent-id/agent-owners-sponsor\n \n Agent identities are governed through the same [entitlement management](entitlement-management-overview.md) access packages available for human identities, providing time-bound, auditable access with approval workflows. Sponsors receive expiration notifications and can request extensions or let access expire. [Lifecycle Workflows](agent-sponsor-tasks.md) automate sponsor transition notifications when sponsorship changes occur. All agent identities are discoverable, searchable, and queryable through the Microsoft Entra admin center and Microsoft Graph, giving organizations centralized visibility to prevent agent sprawl and shadow AI.\n \n-For more information, see [Governing agent identities (preview)](agent-id-governance-overview.md).\n+For more information, see [Governing agent identities](agent-id-governance-overview.md).\n \n ## Next steps\n \n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/identity-governance-overview.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/identity-governance-overview",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/identity-governance-overview.md",
+      "firstSeenAt": "2026-10-29T08:31:25.831Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated agent identity governance terminology",
+        "summary": "The overview heading and linked page title now refer to “Identity governance for agent identities” and “Governing agent identities,” with the “preview” label removed.",
+        "adminImpact": "Administrators will see updated terminology when using the identity governance documentation.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/my-access-portal-overview.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/my-access-portal-overview.md b/docs/id-governance/my-access-portal-overview.md\nindex 993cf62caf2..dd6278d1907 100644\n--- a/docs/id-governance/my-access-portal-overview.md\n+++ b/docs/id-governance/my-access-portal-overview.md\n@@ -67,7 +67,7 @@ For more information about reviews for others, see: [Review access to groups & a\n In the My Access portal, you can view a list of agent identities that you own and sponsor. For more about managing and sponsoring agent identities, see: [Administrative relationships for agent identities (Owners, sponsors, and managers)](../agent-id/agent-owners-sponsors-managers.md).\n \n \n-You're able to manage, approve, review, and enable the agent identities. For all agent identities you own or sponsor you're also able to see general information such as level of access, and agent identities activity. For more information on managing agent identities using the My Access portal, see: [Manage Agent (Preview)](../agent-id/manage-agent.md).\n+You're able to manage, approve, review, and enable the agent identities. For all agent identities you own or sponsor you're also able to see general information such as level of access, and agent identities activity. For more information on managing agent identities using the My Access portal, see: [Manage Agent](../agent-id/manage-agent.md).\n \n ## Next step\n \n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/my-access-portal-overview.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/my-access-portal-overview",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/my-access-portal-overview.md",
+      "firstSeenAt": "2026-10-29T08:31:25.834Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "My Access portal agent identity guidance updated",
+        "summary": "The overview’s guidance on managing agent identities and viewing their access and activity information was updated.",
+        "adminImpact": "No administrator action is indicated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/scenarios/identity-governance-use-cases.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/scenarios/identity-governance-use-cases.md b/docs/id-governance/scenarios/identity-governance-use-cases.md\nindex 3f3544e8cca..5e63f035ae7 100644\n--- a/docs/id-governance/scenarios/identity-governance-use-cases.md\n+++ b/docs/id-governance/scenarios/identity-governance-use-cases.md\n@@ -27,4 +27,4 @@ These use cases demonstrate the breadth and importance of identity governance in\n - [Understanding least privileged](least-privileged.md)\n - [Govern the employee and guest lifecycle](govern-the-employee-lifecycle.md)\n - [Govern access for applications in your environment](../identity-governance-applications-prepare.md)\n-- [Governing agent identities in Microsoft Entra Agent ID (preview)](../agent-id-governance-overview.md)\n+- [Governing agent identities in Microsoft Entra Agent ID](../agent-id-governance-overview.md)\n",
+      "baseCommitSha": "b138da0256b352922c67faec05e1ff1d7b1b7643",
+      "commitSha": "093db9234b5da7bc64db331cb4ed0c9b1153874f",
+      "commitMessage": "not preview",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-10-28 17:46:32 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/scenarios/identity-governance-use-cases.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/scenarios/identity-governance-use-cases",
+      "eventId": "entra-docs:093db9234b5da7bc64db331cb4ed0c9b1153874f:modified:docs/id-governance/scenarios/identity-governance-use-cases.md",
+      "firstSeenAt": "2026-10-29T08:31:25.837Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated Microsoft Entra Agent ID link label",
+        "summary": "The identity governance use-cases page no longer labels the Microsoft Entra Agent ID governance topic as “preview.”",
+        "adminImpact": "No administrator action is specified.",
+        "actionRequired": false,
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
@@ -71,15 +306,24 @@
     }
   ],
   "summary": {
-    "totalCommits": 1,
-    "totalFiles": 1,
+    "totalCommits": 4,
+    "totalFiles": 10,
     "authors": [
+      "Mark Wahl",
       "Nuno Alexandre"
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 0 new, 1 updated, and 0 removed Microsoft Entra documentation files across 1 documentation area.",
+    "overview": "Today's report includes 1 new, 9 updated, and 0 removed Microsoft Entra documentation files across 3 documentation areas.",
     "groups": [
+      {
+        "category": "Doc update",
+        "title": "agent-id",
+        "summary": "The documentation adds a tutorial for configuring Microsoft Entra agent identities to authenticate to Azure Database for PostgreSQL flexible server and access data through group-based authorization, entitlement management, and conditional access.",
+        "sourceFiles": [
+          "docs/agent-id/govern-agent-access-azure-postgresql.md"
+        ]
+      },
       {
         "category": "Feature update",
         "title": "identity/hybrid",
@@ -87,13 +331,38 @@
         "sourceFiles": [
           "docs/identity/hybrid/cloud-sync/how-to-active-directory-object-enforcement.md"
         ]
+      },
+      {
+        "category": "Doc update",
+        "title": "id-governance",
+        "summary": "The page replaces the Mississippi Division of Medicaid customer example with the Digital Security and Resilience team at Microsoft and updates the accompanying wording and link. The agent identity overview revises wording about automatically assigning identities to Microsoft Copilot Studio agents and creating the related identity blueprint. The entitlement management overview removes “preview” from references to assigning groups and API permissions to agents, and from the related license-requirements heading. The heading for license requirements when requesting on behalf of agent identities no longer includes “(preview).” The entitlement management scenarios documentation no longer labels “G",
+        "sourceFiles": [
+          "docs/id-governance/entitlement-management-overview.md",
+          "docs/id-governance/agent-id-governance-overview.md",
+          "docs/id-governance/entitlement-management-overview.md",
+          "docs/id-governance/entitlement-management-request-behalf.md",
+          "docs/id-governance/entitlement-management-scenarios.md",
+          "docs/id-governance/identity-governance-overview.md",
+          "docs/id-governance/my-access-portal-overview.md",
+          "docs/id-governance/scenarios/identity-governance-use-cases.md"
+        ]
       }
     ],
     "highlights": [
       {
+        "category": "Doc update",
+        "headline": "agent-id",
+        "detail": "The documentation adds a tutorial for configuring Microsoft Entra agent identities to authenticate to Azure Database for PostgreSQL flexible server and access data through group-based authorization, entitlement management, and conditional access."
+      },
+      {
         "category": "Feature update",
         "headline": "identity/hybrid",
         "detail": "The documentation now requires all writable domain controllers to meet specified Windows Server update levels and requires ADSyncTools version 2.6.0 or later. It also adds a warning that enforcement cannot be configured if any writable domain controller is unsupported."
+      },
+      {
+        "category": "Doc update",
+        "headline": "id-governance",
+        "detail": "The page replaces the Mississippi Division of Medicaid customer example with the Digital Security and Resilience team at Microsoft and updates the accompanying wording and link. The agent identity overview revises wording about automatically assigning identities to Microsoft Copilot Studio agents and creating the related identity blueprint. The entitlement management overview removes “preview” from references to assigning groups and API permissions to agents, and from the related license-requirements heading. The heading for license requirements when requesting on behalf of agent identities no longer includes “(preview).” The entitlement management scenarios documentation no longer labels “G"
       }
     ],
     "generatedBy": "fallback"
