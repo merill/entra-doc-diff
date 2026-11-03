@@ -599,6 +599,136 @@
         "generatedBy": "openai",
         "model": "gpt-5.6-luna"
       }
+    },
+    {
+      "filename": "docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "status": "modified",
+      "additions": 14,
+      "deletions": 15,
+      "changes": 29,
+      "patch": "diff --git a/docs/global-secure-access/how-to-configure-sign-in-every-time.md b/docs/global-secure-access/how-to-configure-sign-in-every-time.md\nindex 90858a658ab..a3d85cda655 100644\n--- a/docs/global-secure-access/how-to-configure-sign-in-every-time.md\n+++ b/docs/global-secure-access/how-to-configure-sign-in-every-time.md\n@@ -26,24 +26,24 @@ Before you begin, review the prerequisites, including the Global Secure Access c\n \n Start with specific higher-risk applications rather than all private applications. Choose applications where reauthentication adds protection and where the additional authentication prompts are appropriate for the users' work.\n \n-Sign-in every time works with both Quick Access and per-app access. We recommend per-app targeting to avoid unexpected prompts for other resources included in a broad Quick Access configuration. For example, a Windows device joined to an on-premises domain opens a new network connection when it checks in with its domain controller. This connection might trigger an authentication prompt without an explicit user action to explain it. Setting up sign-in every time for specific per-app resources helps avoid these unexpected prompts.\n+Sign-in every time works with both Quick Access and per-app access. We recommend per-app targeting to avoid unexpected prompts for other resources included in a broad Quick Access configuration. For example, Windows devices joined to an on-premises domain periodically check in with a domain controller, which may trigger a sign in frequency related authentication prompt without an explicit user action. Setting up sign-in every time for specific per-app resources that require it helps avoid unexpected sign in prompts.\n \n-As a deployment best practice, we also recommend following [Manage emergency access accounts in Microsoft Entra ID](~/identity/role-based-access-control/security-emergency-access.md). Your emergency access accounts should be excluded from the sign-in every time policies.\n+As a deployment best practice, we also recommend following [Manage emergency access accounts in Microsoft Entra ID](~/identity/role-based-access-control/security-emergency-access.md). Your emergency access accounts should be excluded from blocking policies, including the 'sign-in every time' policies.\n \n 1. Work with application owners to identify the applications that need sign-in every time. For example:\n \n     | Application | Example use |\n     | --- | --- |\n-    | Administrator jump box. | System administrators connect through SSH or RDP to manage sensitive infrastructure. |\n-    | Financial system. | Staff submit or approve payments or other financial transactions. |\n-    | Healthcare system. | Authorized staff access patient records or other sensitive clinical data. |\n+    | Administrator jump box | System administrators connect through SSH or RDP to manage sensitive infrastructure |\n+    | Financial system | Staff submit or approve payments or other financial transactions |\n+    | Healthcare system | Authorized staff access patient records or other sensitive clinical data |\n \n-1. Confirm that the five-minute Global Secure Access reauthentication window meets each application's requirements. This feature is triggered when a new network connection is established to the protected private application. It doesn't guarantee a fresh prompt for every command, transaction, or patient record. For the timing example, see [Reauthentication interval](concept-private-access-sign-in-every-time.md#reauthentication-interval).\n+1. Understand that this feature is triggered when a new network connection is established to the protected private application. It doesn't guarantee a fresh prompt for every command, transaction, or patient record. For the timing example, see [Reauthentication interval](concept-private-access-sign-in-every-time.md#reauthentication-interval).\n 1. Identify the corresponding Private Access enterprise applications. If the resources are part of a broad Quick Access configuration, consider [per-app access segmentation](tutorial-private-access-app-segmentation.md) to target them individually.\n-1. Select a small pilot group that represents the applications and client platforms you plan to support. Confirm that pilot users already have the required application assignments; Conditional Access user targeting doesn't grant application access.\n-1. Record the selected applications, pilot group, planned user scope, and exclusions. Keep existing Conditional Access protections in place.\n+1. Select a small pilot group that represents the applications and client platforms you plan to support. Confirm that the sign-in frequency policies work as expected for these applications.\n+1. Optionally, you could use **Report Only** mode in Conditional Access to validate which users the policy would apply to, and then use the Global Secure Access Traffic Logs to validate the versions of GSA client that these users are using.\n \n-Use one Conditional Access policy for the selected applications that share this sign-in every time requirement and user scope. The feature doesn't have an application-specific interval to configure: select **Every time strict (preview)** and add relevant applications to the same policy as needed.\n+Use one Conditional Access policy for the selected applications that share this sign-in every time requirement and user scope.\n \n ## Choose the platform scope\n \n@@ -53,15 +53,13 @@ Decide how to handle unsupported platforms before enforcement. The choice determ\n \n     | Approach | Policy scope | Expected behavior |\n     | --- | --- | --- |\n-    | Enforce only on Windows. | Use the **Device platforms** condition to include Windows and leave non-Windows platforms out of scope. | Supported Windows clients use sign-in every time. Other platforms aren't subject to this policy and can connect if their other access requirements are satisfied. |\n-    | Require enforcement across targeted platforms. | Don't exclude platforms from the policy. | Supported Windows clients use sign-in every time. Global Secure Access blocks access from unsupported platforms or older Windows clients where enforcement applies. |\n+    | Enforce only on Windows | Use the **Device platforms** condition to include Windows and leave non-Windows platforms out of scope | Supported Windows clients use sign-in every time. Other platforms aren't subject to this policy and can connect if their other access requirements are satisfied. |\n+    | Require enforcement across targeted platforms  Don't exclude platforms from the policy | Supported Windows clients use sign-in every time. Global Secure Access blocks access from unsupported platforms or older Windows clients where enforcement applies. |\n \n-1. Check Windows client versions for users in scope. Windows-only targeting doesn't distinguish client versions: Windows clients earlier than **2.34.222** are still blocked where enforcement applies.\n-1. Agree on the platform choice with application owners and communicate expected prompts or blocked access to pilot users.\n \n For more information, see [Supported clients and platforms](concept-private-access-sign-in-every-time.md#supported-clients-and-platforms) and [Conditional Access device platform conditions](~/identity/conditional-access/concept-conditional-access-conditions.md#device-platforms).\n \n-## Create one Conditional Access policy\n+## Create the Conditional Access policy\n \n Create the policy in the **Off** state so you can review its scope before enabling the pilot:\n \n@@ -111,8 +109,9 @@ For help investigating policy results, see [Troubleshoot Conditional Access](~/i\n \n ## Expand deployment and monitor\n \n-Expand the same policy only after the enforced pilot meets the application's requirements. Review client readiness and exclusions for each expansion.\n+Expand the same policy only after the enforced pilot confirms desired reauthentication behavior. Review client readiness and exclusions for each expansion.\n \n+1. Optionally, you could use **Report Only** mode in Conditional Access to validate which users the policy would apply to, and then use the Global Secure Access Traffic Logs to validate the versions of GSA client that these users are using. This will help you understand the impact of the broader enablement.\n 1. Add approved user groups to the policy in stages, retaining any configured emergency access exclusions. Notify each group about reauthentication and supported clients.\n 1. Add further selected Private Access applications under **Target resources** in the same policy as needed. Confirm that the policy's user and platform scope is appropriate for each addition, and repeat the pilot tests.\n 1. Monitor sign-in results, unexpected access failures, and user feedback. Check that platform exclusions remain consistent with the access requirements agreed with application owners.\n",
+      "baseCommitSha": "1dbdb89aacd404619798cc2403297019ef0620e3",
+      "commitSha": "868224e121c117b1727d4474395657c892c1d12f",
+      "commitMessage": "Revise documentation for sign-in every time feature",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-03 08:40:37 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-sign-in-every-time",
+      "eventId": "entra-docs:868224e121c117b1727d4474395657c892c1d12f:modified:docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "firstSeenAt": "2026-11-03T20:36:28.353Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Sign-in every time guidance updated",
+        "summary": "The documentation clarifies Quick Access and per-app targeting, emergency account exclusions, connection-based prompting, and pilot validation using Report Only mode and Global Secure Access Traffic Logs.",
+        "adminImpact": "Administrators get updated guidance to reduce unexpected prompts and validate policy scope and client versions during deployment.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 3,
+      "changes": 4,
+      "patch": "diff --git a/docs/global-secure-access/concept-private-access-sign-in-every-time.md b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\nindex cab2087da43..514b3c32216 100644\n--- a/docs/global-secure-access/concept-private-access-sign-in-every-time.md\n+++ b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\n@@ -24,9 +24,7 @@ Sign-in every time (preview) is currently supported only with the Global Secure\n \n ## Scope enforcement by operating system\n \n-You can use Conditional Access [device platform conditions](~/identity/conditional-access/concept-conditional-access-conditions.md#device-platforms) to exclude non-Windows operating systems from policies that enforce sign-in every time.\n-\n-Excluded platforms aren't subject to sign-in every time enforcement by those policies.\n+Depending on your requirements, you may want to allow access to these private applications from non-Windows devices, skipping sign in frequency requirements. You can use Conditional Access [device platform conditions](~/identity/conditional-access/concept-conditional-access-conditions.md#device-platforms) to exclude non-Windows operating systems from policies that enforce sign-in every time.\n \n <a name='reauthentication-window'></a>\n \n",
+      "baseCommitSha": "b593f74b1dbbc1c23d3c7c3e04fb84f0518689b8",
+      "commitSha": "1dbdb89aacd404619798cc2403297019ef0620e3",
+      "commitMessage": "Update Conditional Access guidance for sign-in policies",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-03 08:18:00 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/concept-private-access-sign-in-every-time",
+      "eventId": "entra-docs:1dbdb89aacd404619798cc2403297019ef0620e3:modified:docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "firstSeenAt": "2026-11-03T20:36:28.360Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Conditional Access guidance updated for non-Windows private app access",
+        "summary": "The guidance now explains that administrators may allow access to private applications from non-Windows devices while skipping sign-in frequency requirements, using device platform conditions.",
+        "adminImpact": "Review the guidance when configuring sign-in frequency policies for private applications and non-Windows devices.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md b/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\nindex 5bb7ad678d8..5df498231d2 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\n@@ -27,7 +27,7 @@ Connect-MgGraph -Scopes \"OnPremDirectorySynchronization.Read.All\"\n Get-MgDirectoryOnPremiseSynchronization | Select-Object -ExpandProperty Features | Format-List\n ```\n \n-The result looks like this output. `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` is a property of the `Features` object, not an entry in `AdditionalProperties`.\n+The result looks like this output:\n \n ```powershell\n AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled : False\n",
+      "baseCommitSha": "f65435ded3894e98bc014dea4254f4b2d3d8f1a9",
+      "commitSha": "e987ee6035f37818695b4011ed8e851927913a2c",
+      "commitMessage": "Keep feature output introduction focused on the reader",
+      "commitAuthor": "Arvind Harinder",
+      "commitDate": "2026-10-30 23:35:32 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-syncservice-features",
+      "eventId": "entra-docs:e987ee6035f37818695b4011ed8e851927913a2c:modified:docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "firstSeenAt": "2026-11-03T20:36:28.387Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Updated feature output documentation",
+        "summary": "Removed the sentence explaining that `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` belongs to the `Features` object rather than `AdditionalProperties`.",
+        "adminImpact": "No administrator action is indicated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "status": "modified",
+      "additions": 24,
+      "deletions": 25,
+      "changes": 49,
+      "patch": "diff --git a/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md b/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\nindex 1a81cdf3786..5bb7ad678d8 100644\n--- a/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\n+++ b/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md\n@@ -4,9 +4,9 @@ description: Describes service side features for Microsoft Entra Connect Sync se\n \n ms.assetid: 213aab20-0a61-434a-9545-c4637628da81\n ms.tgt_pltfrm: na\n-ms.custom: has-azure-ad-ps-ref, azure-ad-ref-level-one-done\n+ms.custom: has-azure-ad-ps-ref, azure-ad-ref-level-one-done, msecd-doc-authoring-1032\n ms.topic: how-to\n-ms.date: 07/03/2026\n+ms.date: 10/30/2026\n ms.subservice: hybrid-connect\n ai-usage: ai-assisted\n ---\n@@ -27,31 +27,30 @@ Connect-MgGraph -Scopes \"OnPremDirectorySynchronization.Read.All\"\n Get-MgDirectoryOnPremiseSynchronization | Select-Object -ExpandProperty Features | Format-List\n ```\n \n-The result looks like this output:\n+The result looks like this output. `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` is a property of the `Features` object, not an entry in `AdditionalProperties`.\n \n ```powershell\n-BlockCloudObjectTakeoverThroughHardMatchEnabled  : False\n-BlockSoftMatchEnabled                            : False\n-BypassDirSyncOverridesEnabled                    : False\n-CloudPasswordPolicyForPasswordSyncedUsersEnabled : False\n-ConcurrentCredentialUpdateEnabled                : False\n-ConcurrentOrgIdProvisioningEnabled               : False\n-DeviceWritebackEnabled                           : False\n-DirectoryExtensionsEnabled                       : True\n-FopeConflictResolutionEnabled                    : False\n-GroupWriteBackEnabled                            : False\n-PasswordSyncEnabled                              : True\n-PasswordWritebackEnabled                         : False\n-QuarantineUponProxyAddressesConflictEnabled      : False\n-QuarantineUponUpnConflictEnabled                 : False\n-SoftMatchOnUpnEnabled                            : True\n-SynchronizeUpnForManagedUsersEnabled             : False\n-UnifiedGroupWritebackEnabled                     : True\n-UserForcePasswordChangeOnLogonEnabled            : False\n-UserWritebackEnabled                             : True\n-AdditionalProperties                             : {\n-       allowOnPremUpdateOfOnPremisesObjectIdentifierEnabled : False\n-}\n+AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled : False\n+BlockCloudObjectTakeoverThroughHardMatchEnabled      : False\n+BlockSoftMatchEnabled                                : False\n+BypassDirSyncOverridesEnabled                        : False\n+CloudPasswordPolicyForPasswordSyncedUsersEnabled     : False\n+ConcurrentCredentialUpdateEnabled                    : False\n+ConcurrentOrgIdProvisioningEnabled                   : False\n+DeviceWritebackEnabled                               : False\n+DirectoryExtensionsEnabled                           : True\n+FopeConflictResolutionEnabled                        : False\n+GroupWriteBackEnabled                                : False\n+PasswordSyncEnabled                                  : True\n+PasswordWritebackEnabled                             : False\n+QuarantineUponProxyAddressesConflictEnabled          : False\n+QuarantineUponUpnConflictEnabled                     : False\n+SoftMatchOnUpnEnabled                                : True\n+SynchronizeUpnForManagedUsersEnabled                 : False\n+UnifiedGroupWritebackEnabled                         : True\n+UserForcePasswordChangeOnLogonEnabled                : False\n+UserWritebackEnabled                                 : True\n+AdditionalProperties                                 : {}\n ```\n \n > [!NOTE]\n",
+      "baseCommitSha": "4234d00594e30b1119e14d443cecd2751b8851af",
+      "commitSha": "f65435ded3894e98bc014dea4254f4b2d3d8f1a9",
+      "commitMessage": "Correct Connect Sync feature flag output shape",
+      "commitAuthor": "Arvind Harinder",
+      "commitDate": "2026-10-30 23:25:34 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-syncservice-features",
+      "eventId": "entra-docs:f65435ded3894e98bc014dea4254f4b2d3d8f1a9:modified:docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+      "firstSeenAt": "2026-11-03T20:36:28.394Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Corrected Connect Sync feature output example",
+        "summary": "The example now shows `AllowOnPremUpdateOfOnPremisesObjectIdentifierEnabled` as a direct property of the `Features` object, with `AdditionalProperties` empty.",
+        "adminImpact": "Administrators can use the corrected output shape when reviewing or parsing Connect Sync feature settings; no action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/app-provisioning/how-to-account-discovery.md",
+      "status": "modified",
+      "additions": 9,
+      "deletions": 1,
+      "changes": 10,
+      "patch": "diff --git a/docs/identity/app-provisioning/how-to-account-discovery.md b/docs/identity/app-provisioning/how-to-account-discovery.md\nindex dbb6e0f37b6..12b577feae0 100644\n--- a/docs/identity/app-provisioning/how-to-account-discovery.md\n+++ b/docs/identity/app-provisioning/how-to-account-discovery.md\n@@ -25,7 +25,7 @@ Account discovery retrieves users and groups from a target application and class\n This classification gives you visibility into who has access to your applications and helps you identify identities that should be governed, reassigned, or removed.\n \n > [!IMPORTANT]\n-> Group discovery is currently in preview.\n+> Group discovery, including group memberships, is currently in preview.\n > This information relates to a prerelease product that might be substantially modified before release. Microsoft makes no warranties, expressed or implied, with respect to the information provided here.\n \n ## Prerequisites\n@@ -91,6 +91,14 @@ Unassigned identities match a user or group in Microsoft Entra ID based on the m\n \n Assigned identities match a user or group in Microsoft Entra ID that's already assigned to the application. These identities are fully managed by the provisioning service. No action is needed unless you want to review or update their attribute mappings.\n \n+### Review group memberships\n+\n+You can view the number of members in each discovered group and review its membership.\n+\n+1. Find the discovered group in the discovery results.\n+1. Review the member count for the group.\n+1. Select the member count to view the list of members in the group.\n+\n ## Assign correlated users to your enterprise application and/or access packages\n \n After [discovering](~/identity/app-provisioning/how-to-account-discovery.md) users in your application, you can assign those users to the enterprise application or an access package. [Download](https://aka.ms/AssignCorrelatedUsersPowerShell) the `Assign-CorrelatedUsers.ps1` file and run it in PowerShell 7.x to assign users.\n",
+      "baseCommitSha": "c38589b684d7ed2592a05245c9b2a76bf224e05f",
+      "commitSha": "908908bdaf0e6d0130f9425d37d6286e03dc5322",
+      "commitMessage": "Document group memberships in account discovery preview",
+      "commitAuthor": "ArvindHarinder1",
+      "commitDate": "2026-10-29 15:40:06 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/app-provisioning/how-to-account-discovery.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/app-provisioning/how-to-account-discovery",
+      "eventId": "entra-docs:908908bdaf0e6d0130f9425d37d6286e03dc5322:modified:docs/identity/app-provisioning/how-to-account-discovery.md",
+      "firstSeenAt": "2026-11-03T20:36:28.400Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Account discovery now includes group memberships",
+        "summary": "The account discovery preview documentation now explains how to view discovered groups’ member counts and membership lists.",
+        "adminImpact": "Administrators can review group memberships directly from discovery results; no required action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
     }
   ],
   "deletedFiles": [],
@@ -641,14 +771,55 @@
       "version": "2026-11-03T00:07:14.437Z",
       "eventId": "message-center:MC1536049:2026-11-03T00:07:14.437Z",
       "firstSeenAt": "2026-11-03T09:36:21.547Z"
+    },
+    {
+      "id": "MC1486293",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-11-03",
+      "title": "Microsoft Defender for Office 365: Changes to Unified RBAC permission mapping for Microsoft Entra Security Operator role",
+      "summary": "Microsoft is updating the Microsoft Defender for Office 365 Unified RBAC mapping for the Microsoft Entra Security Operator role, removing default access to email threat policies and Tenant Allow/Block List. Rollout starts December 2026. Organizations must manually assign permissions if continued access is needed.",
+      "product": {
+        "slug": "entra-id",
+        "name": "Microsoft Entra ID",
+        "short": "Entra ID",
+        "icon": "entra-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/identity/"
+      },
+      "topic": {
+        "slug": "security",
+        "name": "Security",
+        "icon": "/assets/topics/security.svg"
+      },
+      "changeType": "Major update",
+      "url": "/message-center/MC1486293/",
+      "originalUrl": "https://mc.merill.net/message/MC1486293",
+      "body": "<p>Updated November 3, 2026: We have updated the timeline. Thank you for your patience.&nbsp;</p><p><b><b>What and why</b></b></p><p>We are updating the Microsoft Defender unified role-based access control (Unified RBAC) permission mapping for Microsoft Defender for Office 365 (Email &amp; Collaboration). Currently, the Microsoft Entra Security Operator role includes the <i>Authorization and settings\\Security settings</i> permission through the default Unified RBAC mapping. As a result, users assigned this role can view and manage email threat policies and the Tenant Allow/Block List.</p><p>To align access with documented Microsoft Defender for Office 365 role expectations and least-privilege principles, we are updating the default mapping so that <i>Authorization and settings\\Security settings (All permissions)</i> is no longer included by default for the Microsoft Entra Security Operator role mapping for the Microsoft Defender for Office 365 workload. After this change, organizations that have Unified RBAC enabled and rely only on the Microsoft Entra Security Operator role for this access will need to manually assign the appropriate permissions or assign a role that includes those permissions.</p><p><b><b>Rollout schedule</b></b></p><ul><li><b>General Availability (Worldwide, GCC, GCC High, DoD):</b> Rollout begins in early December 2026 (previously early November) and is expected to complete by mid-January 2027 (previously early December 2026).</li></ul><p><b><b>Impact on your organization</b></b></p><p><i>Who is affected</i></p><ul><li><span>Organizations where both of the following conditions apply:</span><ol><li><span>Microsoft Defender XDR Unified RBAC is enabled, or will be enabled, for Microsoft Defender for Office 365 (Email &amp; Collaboration).</span></li><li><span>Users assigned the Microsoft Entra Security Operator role.</span></li></ol></li></ul><p><i>Platforms and services</i></p><ul><li>Microsoft Defender for Office 365 (Email &amp; Collaboration)</li><li>Microsoft Defender XDR Unified RBAC</li><li>Microsoft Entra ID</li></ul><p><i>What will happen</i></p><ul><li>The default Unified RBAC mapping for the Microsoft Entra Security Operator role will be updated to align with its documented Microsoft Defender for Office 365 scope and least-privilege principles.</li><li>When Unified RBAC is enabled for Microsoft Defender for Office 365, by default, the Security Operator role will no longer provide access to view, create, edit, or delete email threat policies, including anti-spam, anti-phishing, anti-malware, Safe Links, Safe Attachments, and preset security policies. The role will also no longer provide access to view, add, edit, or remove Tenant Allow/Block List entries.</li><li>This change applies only to Microsoft Defender for Office 365 when Unified RBAC is enabled. Tenants that have not enabled Unified RBAC are not affected.</li><li>Organizations that want operators to retain access can manually assign the appropriate Unified RBAC permissions, including Core security settings and Detection tuning, or assign a role that already includes those permissions, such as Security Administrator.</li><li>Other role mappings and existing Exchange Online PowerShell authorization are unchanged.</li></ul><p><b><b>Action required and recommendations</b></b></p><p>We recommend that you:</p><ul><li>Review users who are assigned the Microsoft Entra Security Operator role and determine whether they rely on that role to view or manage email threat policies or the Tenant Allow/Block List.</li><li>If continued access is required, assign an appropriate role or grant the required Unified RBAC permissions, including Core security settings and Detection tuning.</li><li>Update internal operational procedures, runbooks, and access-control documentation as needed.</li><li>Communicate this change to security operations teams and help desk staff.</li></ul><p><b><b>Learn more</b></b></p><ul><li><a href=\"https://learn.microsoft.com/defender-xdr/activate-defender-rbac\" rel=\"noopener noreferrer\">Activate Microsoft Defender unified role-based access control (URBAC) - Microsoft Defender XDR | Microsoft Learn</a></li><li><a href=\"https://learn.microsoft.com/defender-xdr/create-custom-rbac-roles\" rel=\"noopener noreferrer\">Create custom roles with Microsoft Defender unified role-based access control (RBAC) - Microsoft Defender XDR | Microsoft Learn</a></li><li><a href=\"https://learn.microsoft.com/defender-xdr/compare-rbac-roles#microsoft-entra-global-roles-access\" rel=\"noopener noreferrer\">Map Microsoft Defender unified role-based access control (RBAC) permissions - Microsoft Defender XDR | Microsoft Learn</a></li><li><a href=\"https://learn.microsoft.com/defender-xdr/custom-permissions-details\" rel=\"noopener noreferrer\">Permissions in Microsoft Defender unified role-based access control (RBAC) - Microsoft Defender XDR | Microsoft Learn</a></li></ul><p><b><b>Compliance considerations</b></b></p><p>No compliance considerations identified. Review as appropriate for your organization.</p>",
+      "category": "planForChange",
+      "services": [
+        "Microsoft Defender XDR"
+      ],
+      "tags": [
+        "Updated message",
+        "Feature update",
+        "User impact",
+        "Admin impact"
+      ],
+      "startDate": "2026-10-02T22:22:36Z",
+      "endDate": "2027-02-22T08:00:00Z",
+      "lastModifiedDateTime": "2026-11-03T17:23:50.023Z",
+      "version": "2026-11-03T17:23:50.023Z",
+      "eventId": "message-center:MC1486293:2026-11-03T17:23:50.023Z",
+      "firstSeenAt": "2026-11-03T20:36:40.882Z"
     }
   ],
   "summary": {
-    "totalCommits": 14,
-    "totalFiles": 23,
+    "totalCommits": 19,
+    "totalFiles": 28,
     "authors": [
       "Alexander Pavlovsky",
       "Arvind Harinder",
+      "ArvindHarinder1",
       "Darshan Maiya",
       "Diego Jerez",
       "Rasika More",
@@ -658,15 +829,17 @@
     ]
   },
   "englishSummary": {
-    "overview": "Today's report includes 2 new, 21 updated, and 0 removed Microsoft Entra documentation files across 8 documentation areas.",
+    "overview": "Today's report includes 2 new, 26 updated, and 0 removed Microsoft Entra documentation files across 9 documentation areas.",
     "groups": [
       {
         "category": "New feature",
         "title": "global-secure-access",
-        "summary": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview).",
+        "summary": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview). The documentation clarifies Quick Access and per-app targeting, emergency account exclusions, connectio",
         "sourceFiles": [
           "docs/global-secure-access/how-to-configure-sign-in-every-time.md",
           "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+          "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+          "docs/global-secure-access/how-to-configure-sign-in-every-time.md",
           "docs/global-secure-access/concept-private-access-sign-in-every-time.md"
         ]
       },
@@ -702,7 +875,9 @@
           "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
           "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
           "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
-          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md"
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/connect/how-to-connect-syncservice-features.md",
+          "docs/identity/hybrid/connect/how-to-connect-syncservice-features.md"
         ]
       },
       {
@@ -738,13 +913,21 @@
           "docs/identity/saas-apps/salesforce-provisioning-tutorial.md",
           "docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md"
         ]
+      },
+      {
+        "category": "Feature update",
+        "title": "identity/app-provisioning",
+        "summary": "The account discovery preview documentation now explains how to view discovered groups’ member counts and membership lists.",
+        "sourceFiles": [
+          "docs/identity/app-provisioning/how-to-account-discovery.md"
+        ]
       }
     ],
     "highlights": [
       {
         "category": "New feature",
         "headline": "global-secure-access",
-        "detail": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview)."
+        "detail": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview). The documentation clarifies Quick Access and per-app targeting, emergency account exclusions, connectio"
       },
       {
         "category": "Doc update",
@@ -780,6 +963,11 @@
         "category": "Feature update",
         "headline": "identity/saas-apps",
         "detail": "The tutorial now requires SOAP API `login()` to be enabled and the Admin Username account to have **Use Any API Auth**. It also documents credential-validation troubleshooting and Salesforce’s December 1, 2026 requirement. The tutorial adds requirements to enable SOAP API `login()` and grant the integration account API Enabled, Manage Users, and Use Any API Auth permissions. It also documents Salesforce’s December 1, 2026 requirement for Use Any API Auth and related credential errors."
+      },
+      {
+        "category": "Feature update",
+        "headline": "identity/app-provisioning",
+        "detail": "The account discovery preview documentation now explains how to view discovered groups’ member counts and membership lists."
       }
     ],
     "generatedBy": "fallback"
