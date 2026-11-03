@@ -1,0 +1,787 @@
+{
+  "newFiles": [
+    {
+      "filename": "docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "status": "added",
+      "additions": 125,
+      "deletions": 0,
+      "changes": 125,
+      "patch": "diff --git a/docs/global-secure-access/how-to-configure-sign-in-every-time.md b/docs/global-secure-access/how-to-configure-sign-in-every-time.md\nnew file mode 100644\nindex 00000000000..90858a658ab\n--- /dev/null\n+++ b/docs/global-secure-access/how-to-configure-sign-in-every-time.md\n@@ -0,0 +1,125 @@\n+---\n+title: Configure Microsoft Entra Private Access sign-in every time\n+description: Configure, test, and deploy sign-in every time for selected Microsoft Entra Private Access apps with one Conditional Access policy and an enforced pilot.\n+ms.topic: how-to\n+ms.date: 11/02/2026\n+ms.custom: msecd-doc-authoring-1026\n+ai-usage: ai-generated\n+ms.author: alexpav\n+# Customer intent: As an administrator, I want to configure and test sign-in every time for selected private applications so that I can deploy reauthentication with an appropriate scope.\n+---\n+\n+# Configure sign-in every time for Microsoft Entra Private Access (preview)\n+\n+As an administrator, use Microsoft Entra Private Access sign-in every time (preview) to require reauthentication for selected sensitive private applications. Select applications, configure one Conditional Access policy, test enforcement with a pilot group, and expand deployment.\n+\n+Before you begin, review the prerequisites, including the Global Secure Access client for Windows, version 2.34.222 or later. Decide whether to exclude other platforms or block their access before you enable the policy.\n+\n+## Prerequisites\n+\n+- A configured Global Secure Access Private Access setup, using [Quick Access](how-to-configure-quick-access.md) or [per-app access](how-to-configure-per-app-access.md).\n+- A [Microsoft Entra Private Access license](overview-what-is-global-secure-access.md#licensing-overview).\n+- The [Global Secure Access client for Windows](how-to-install-windows-client.md), version **2.34.222 or later**, on supported pilot devices.\n+- At least the [Conditional Access Administrator](~/identity/role-based-access-control/permissions-reference.md#conditional-access-administrator) role to create and manage the policy.\n+\n+## Select applications and pilot users\n+\n+Start with specific higher-risk applications rather than all private applications. Choose applications where reauthentication adds protection and where the additional authentication prompts are appropriate for the users' work.\n+\n+Sign-in every time works with both Quick Access and per-app access. We recommend per-app targeting to avoid unexpected prompts for other resources included in a broad Quick Access configuration. For example, a Windows device joined to an on-premises domain opens a new network connection when it checks in with its domain controller. This connection might trigger an authentication prompt without an explicit user action to explain it. Setting up sign-in every time for specific per-app resources helps avoid these unexpected prompts.\n+\n+As a deployment best practice, we also recommend following [Manage emergency access accounts in Microsoft Entra ID](~/identity/role-based-access-control/security-emergency-access.md). Your emergency access accounts should be excluded from the sign-in every time policies.\n+\n+1. Work with application owners to identify the applications that need sign-in every time. For example:\n+\n+    | Application | Example use |\n+    | --- | --- |\n+    | Administrator jump box. | System administrators connect through SSH or RDP to manage sensitive infrastructure. |\n+    | Financial system. | Staff submit or approve payments or other financial transactions. |\n+    | Healthcare system. | Authorized staff access patient records or other sensitive clinical data. |\n+\n+1. Confirm that the five-minute Global Secure Access reauthentication window meets each application's requirements. This feature is triggered when a new network connection is established to the protected private application. It doesn't guarantee a fresh prompt for every command, transaction, or patient record. For the timing example, see [Reauthentication interval](concept-private-access-sign-in-every-time.md#reauthentication-interval).\n+1. Identify the corresponding Private Access enterprise applications. If the resources are part of a broad Quick Access configuration, consider [per-app access segmentation](tutorial-private-access-app-segmentation.md) to target them individually.\n+1. Select a small pilot group that represents the applications and client platforms you plan to support. Confirm that pilot users already have the required application assignments; Conditional Access user targeting doesn't grant application access.\n+1. Record the selected applications, pilot group, planned user scope, and exclusions. Keep existing Conditional Access protections in place.\n+\n+Use one Conditional Access policy for the selected applications that share this sign-in every time requirement and user scope. The feature doesn't have an application-specific interval to configure: select **Every time strict (preview)** and add relevant applications to the same policy as needed.\n+\n+## Choose the platform scope\n+\n+Decide how to handle unsupported platforms before enforcement. The choice determines whether those users can connect without this policy's sign-in every time protection or are blocked.\n+\n+1. Choose one of these approaches:\n+\n+    | Approach | Policy scope | Expected behavior |\n+    | --- | --- | --- |\n+    | Enforce only on Windows. | Use the **Device platforms** condition to include Windows and leave non-Windows platforms out of scope. | Supported Windows clients use sign-in every time. Other platforms aren't subject to this policy and can connect if their other access requirements are satisfied. |\n+    | Require enforcement across targeted platforms. | Don't exclude platforms from the policy. | Supported Windows clients use sign-in every time. Global Secure Access blocks access from unsupported platforms or older Windows clients where enforcement applies. |\n+\n+1. Check Windows client versions for users in scope. Windows-only targeting doesn't distinguish client versions: Windows clients earlier than **2.34.222** are still blocked where enforcement applies.\n+1. Agree on the platform choice with application owners and communicate expected prompts or blocked access to pilot users.\n+\n+For more information, see [Supported clients and platforms](concept-private-access-sign-in-every-time.md#supported-clients-and-platforms) and [Conditional Access device platform conditions](~/identity/conditional-access/concept-conditional-access-conditions.md#device-platforms).\n+\n+## Create one Conditional Access policy\n+\n+Create the policy in the **Off** state so you can review its scope before enabling the pilot:\n+\n+> [!WARNING]\n+> Don't apply **Every time strict (preview)** to Office 365 applications or broadly to all resources.\n+\n+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a **Conditional Access Administrator**.\n+1. Browse to **Entra ID** > **Conditional Access** > **Policies** and select **New policy**.\n+1. Enter a descriptive name, such as **Private Access - Sign-in every time**.\n+1. Under **Assignments** > **Users**, include your selected pilot users or group.\n+1. Under **Users** > **Exclude**, configure your intended user or group exclusions. If you use emergency access accounts, we recommend excluding them or their dedicated group, following the [current emergency access guidance](~/identity/role-based-access-control/security-emergency-access.md#conditional-access-considerations).\n+1. Under **Target resources** > **Resources (formerly cloud apps)** > **Include**, choose **Select resources** and select the Private Access enterprise applications identified earlier.\n+1. Under **Conditions** > **Device platforms**, apply your platform decision:\n+\n+    - For Windows-only enforcement, set **Configure** to **Yes**, choose **Select device platforms** under **Include**, and select **Windows**.\n+    - For enforcement across targeted platforms, leave the device platform condition unconfigured so it doesn't remove unsupported platforms from scope.\n+\n+1. Under **Access controls** > **Session**, select **Sign-in frequency**, choose **Every time strict (preview)**, and select **Select**.\n+1. Set **Enable policy** to **Off** and select **Create**.\n+1. Review the saved policy's applications, pilot users, platform condition, and exclusions before enabling it.\n+\n+> [!IMPORTANT]\n+> Select **Every time strict (preview)**. The **Every time** option does not apply to Global Secure Access private applications.\n+\n+## Test with an enforced pilot\n+\n+Enable the policy only for the selected pilot users and applications. Test actual access and prompts before expanding the policy.\n+\n+1. Review your intended exclusions and verify that your recovery process works. If you use emergency access accounts, confirm that they're excluded as recommended. Notify pilot users and application owners before enforcement.\n+1. Open the saved policy, set **Enable policy** to **On**, and select **Save**.\n+1. Use a Windows pilot device with Global Secure Access client **2.34.222 or later**. Wait more than five minutes after the last sign-in to a selected private application, then connect to that application. Complete reauthentication and record the time.\n+1. Close the application connection. You need to ensure that the application process which initiated the connection is completely closed (this ensures that the network flow is terminated). Reconnect less than five minutes after that authentication and confirm that sign-in every time doesn't trigger another prompt.\n+1. Close the connection again, again ensuring that the application process exits. Reconnect more than five minutes after the recorded authentication and confirm that reauthentication is required.\n+1. Repeat the test for the selected applications and representative users. Confirm that users can complete their work after reauthentication.\n+1. Test the scope and compatibility cases in the following table.\n+\n+    | Test case | Expected result from this policy |\n+    | --- | --- |\n+    | A targeted Windows user has a client earlier than 2.34.222. | Access is blocked where sign-in every time is enforced. |\n+    | A non-Windows platform is in scope. | Access is blocked because the platform doesn't support this feature. |\n+    | A non-Windows platform is outside scope under the Windows-only approach. | This policy doesn't enforce sign-in every time. Other policies and access requirements still apply. |\n+    | A user is excluded, or an application isn't targeted. | This policy doesn't enforce sign-in every time for that access. Other policies and access requirements still apply. |\n+\n+1. In the Microsoft Entra admin center, browse to **Entra ID** > **Monitoring & health** > **Sign-in logs**. Find the pilot sign-ins and review their **Conditional Access** details. Confirm the expected policy applies or is out of scope, and compare the results with access and prompts observed on the client.\n+\n+For help investigating policy results, see [Troubleshoot Conditional Access](~/identity/conditional-access/troubleshoot-conditional-access.md). If an expected test fails, resolve it before expanding deployment.\n+\n+## Expand deployment and monitor\n+\n+Expand the same policy only after the enforced pilot meets the application's requirements. Review client readiness and exclusions for each expansion.\n+\n+1. Add approved user groups to the policy in stages, retaining any configured emergency access exclusions. Notify each group about reauthentication and supported clients.\n+1. Add further selected Private Access applications under **Target resources** in the same policy as needed. Confirm that the policy's user and platform scope is appropriate for each addition, and repeat the pilot tests.\n+1. Monitor sign-in results, unexpected access failures, and user feedback. Check that platform exclusions remain consistent with the access requirements agreed with application owners.\n+1. If enforcement causes unexpected disruption, open the sign-in every time policy and set **Enable policy** to **Off**, then select **Save**. Alternatively, reduce its scope to the validated pilot users and applications. Leave other security policies in place and verify recovery before retrying rollout.\n+\n+## Related content\n+\n+- [Microsoft Entra Private Access sign-in every time overview](concept-private-access-sign-in-every-time.md).\n+- [Apply Conditional Access policies to Private Access apps](how-to-target-resource-private-access-apps.md).\n+- [Plan a Conditional Access deployment](~/identity/conditional-access/plan-conditional-access.md).\n",
+      "baseCommitSha": "c7d899958e0160fafc9c2744b12e8ab2d728deed",
+      "commitSha": "c58b2feb8582d9d6c9b481935afaa4a6c8b5b133",
+      "commitMessage": "Add Private Access sign-in every time deployment guide how-to (#14762)",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-02 10:49:35 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/how-to-configure-sign-in-every-time",
+      "eventId": "entra-docs:c58b2feb8582d9d6c9b481935afaa4a6c8b5b133:added:docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+      "firstSeenAt": "2026-11-03T09:35:30.942Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "New guide for Private Access sign-in every time",
+        "summary": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later.",
+        "adminImpact": "Administrators can apply reauthentication to sensitive private applications, while planning application scope, platform handling, pilot users, and exclusions.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "status": "added",
+      "additions": 46,
+      "deletions": 0,
+      "changes": 46,
+      "patch": "diff --git a/docs/global-secure-access/concept-private-access-sign-in-every-time.md b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\nnew file mode 100644\nindex 00000000000..5af5f74f48f\n--- /dev/null\n+++ b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\n@@ -0,0 +1,46 @@\n+---\n+title: Microsoft Entra Private Access sign-in every time (preview)\n+description: Understand sign-in every time for Microsoft Entra Private Access, its Conditional Access dependency, and its five-minute reauthentication window.\n+ms.topic: concept-article\n+ms.subservice: entra-private-access\n+ms.date: 11/01/2026\n+ms.custom: msecd-doc-authoring-1026\n+ai-usage: ai-generated\n+ms.author: alexpav\n+# Customer intent: As an administrator, I want to understand sign-in every time for private applications so that I can plan reauthentication for sensitive access.\n+---\n+\n+# Microsoft Entra Private Access sign-in every time overview (preview)\n+\n+Sign-in every time (preview) is a Microsoft Entra Private Access feature that uses Conditional Access to require reauthentication when users access sensitive private applications.\n+\n+Use this overview to understand the supported client requirements, Conditional Access dependency, and reauthentication behavior before you plan your deployment.\n+\n+Global Secure Access uses the Conditional Access **Every time strict (preview)** control for this feature. The Global Secure Access feature requires Conditional Access. You can use **Every time strict (preview)** in Conditional Access independently of Global Secure Access.\n+\n+## Supported clients and platforms\n+\n+Sign-in every time (preview) is currently supported only with the Global Secure Access client for Windows, version **2.34.222 or later**. Users with earlier Windows client versions or other operating systems are blocked from accessing applications where the feature is enforced.\n+\n+## Scope enforcement by operating system\n+\n+You can use Conditional Access [device platform conditions](~/identity/conditional-access/concept-conditional-access-conditions.md#device-platforms) to exclude non-Windows operating systems from policies that enforce sign-in every time.\n+\n+Excluded platforms aren't subject to sign-in every time enforcement by those policies.\n+\n+<a name='reauthentication-window'></a>\n+\n+## Reauthentication interval\n+\n+Global Secure Access has a **five-minute reauthentication window**. It doesn't prompt the user to reauthenticate if it's been less than five minutes since the user signed in to a given private application. The following example illustrates sign-in prompt behavior and the user experience:\n+\n+1. A Global Secure Access administrator configures a policy for the private application called 'SSH admin tools jump box' to use the **Every time strict (preview)** session control.\n+1. The user, a Linux administrator, opens the terminal on their Windows desktop and attempts to access the SSH admin tools application. Global Secure Access detects that more than five minutes have elapsed since the last sign-in and triggers an authentication prompt.\n+1. The user completes authentication at 09:01:15, accesses the application, runs one command, and closes the terminal at 09:01:55.\n+1. The user reopens the terminal at 09:03:45 and accesses the application again. Since it's been less than five minutes, a new sign-in prompt isn't triggered. The user completes the task and closes the terminal.\n+1. At 09:10:34, the user reopens the terminal. Since it's been more than five minutes since 09:01:15, the user is required to reauthenticate.\n+\n+## Related content\n+\n+* [Conditional Access adaptive session lifetime policies](~/identity/conditional-access/concept-session-lifetime.md#require-reauthentication-every-time)\n+* [Microsoft Entra Private Access overview](concept-private-access.md)\n",
+      "baseCommitSha": "efc75661c10583d0823de5e784ca46cb18d0ee5b",
+      "commitSha": "d8e5f0c562633ee0092b665a28d7701f2148a0fd",
+      "commitMessage": "Document Every time strict preview and Private Access sign-in every time (#14758)",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-02 08:00:00 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/concept-private-access-sign-in-every-time",
+      "eventId": "entra-docs:d8e5f0c562633ee0092b665a28d7701f2148a0fd:added:docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "firstSeenAt": "2026-11-03T09:35:30.963Z",
+      "englishSummary": {
+        "category": "New feature",
+        "headline": "Private Access sign-in every time is documented",
+        "summary": "The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window.",
+        "adminImpact": "Administrators should verify supported Windows clients, understand the reauthentication behavior, and use device-platform exclusions for non-Windows users when needed.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md",
+      "status": "modified",
+      "additions": 26,
+      "deletions": 0,
+      "changes": 26,
+      "patch": "diff --git a/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md b/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md\nindex 8bcef942c2e..4786d9d172c 100644\n--- a/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md\n+++ b/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md\n@@ -552,6 +552,32 @@ Host *\n PubkeyAcceptedKeyTypes +ssh-rsa-cert-v01@openssh.com\n ```\n \n+### Getting Permission Denied when trying to connect to a Red Hat Enterprise Linux VM after performing an in-place upgrade from RHEL 8.x to RHEL 9.x\n+\n+After an in-place upgrade of the VM from RHEL 8.x to RHEL 9.x, a Microsoft Entra ID SSH sign-in might fail with `Permission denied (publickey)` If the VM was configured for Microsoft Entra login before the upgrade.\n+\n+This issue happens as the package `aadsshlogin` may be removed automatically during the upgrade process because Leapp treats that as a third-party package.\n+\n+> [!NOTE]\n+>Third-party packages may be removed automatically during the upgrade if they depend on official distribution content which is not present on the target system - therefore RPM dependencies of such packages cannot be satisfied and hence such packages cannot be installed on the target system. \n+For more information, see [Handling the migration of your custom and third-party applications](https://red.ht/customize-rhel-upgrade-actors)\n+\n+Workaround:\n+\n+The solution is to uninstall the AADLoginForLinux VM extension from the VM, and then reinstall it again.\n+\n+1. Uninstall the AADLoginForLinux extension on the VM:\n+\n+```azurecli-interactive\n+az vm extension delete -g MyResourceGroup --vm-name MyVm -n AADSSHLoginForLinux\n+```\n+\n+1. Install the AADSSHLoginForLinux extension on the VM:\n+\t\n+```azurecli-interactive\n+az vm extension set --publisher Microsoft.Azure.ActiveDirectory --name AADSSHLoginForLinux --resource-group myResourceGroup --vm-name myVM\n+```\n+\n ## Next steps\n \n - [What is a device identity?](overview.md)\n",
+      "baseCommitSha": "7b2f2d7f07c14cf9ccbb4d2c58f39c4cd249dd62",
+      "commitSha": "e583cd30128d48875da3628dde483370705dff06",
+      "commitMessage": "Add RHEL upgrade SSH sign-in troubleshooting (#14756)",
+      "commitAuthor": "ahmedmorsy-linux",
+      "commitDate": "2026-11-02 22:18:03 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-linux",
+      "eventId": "entra-docs:e583cd30128d48875da3628dde483370705dff06:modified:docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md",
+      "firstSeenAt": "2026-11-03T09:35:30.895Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "RHEL upgrades may remove the Entra SSH login extension",
+        "summary": "The documentation now explains that in-place upgrades from RHEL 8.x to 9.x can remove the `aadsshlogin` package, causing `Permission denied (publickey)` errors. It provides steps to uninstall and reinstall the AADSSHLoginForLinux extension.",
+        "adminImpact": "Administrators of affected VMs should reinstall the extension after the upgrade if Entra SSH sign-in fails.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/deployment-guide-token-protection-windows.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/conditional-access/deployment-guide-token-protection-windows.md b/docs/identity/conditional-access/deployment-guide-token-protection-windows.md\nindex 199246e255b..645eece38e5 100644\n--- a/docs/identity/conditional-access/deployment-guide-token-protection-windows.md\n+++ b/docs/identity/conditional-access/deployment-guide-token-protection-windows.md\n@@ -58,7 +58,7 @@ Token Protection on Windows platforms can be used to protect the following resou\n \n ### Known limitations\n \n-- Office perpetual clients aren't supported.\n+- Office perpetual clients version 2024 and later support Token Protection. Versions earlier than 2024 aren't supported.\n - The following applications don't support signing in using protected token flows and users are blocked when accessing Exchange and SharePoint: \n    - PowerShell modules accessing SharePoint\n    - PowerQuery extension for Excel for users not in Current Channel updates\n",
+      "baseCommitSha": "38cc353992592943d92188b04afe3c339268e21b",
+      "commitSha": "9bd474d0ffcb4cc3d0a0e3b39cd0bcac15b5d455",
+      "commitMessage": "Clarify Office perpetual client support for Token Protection",
+      "commitAuthor": "Sindhoor Grandhi",
+      "commitDate": "2026-11-02 12:53:03 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/deployment-guide-token-protection-windows.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/deployment-guide-token-protection-windows",
+      "eventId": "entra-docs:9bd474d0ffcb4cc3d0a0e3b39cd0bcac15b5d455:modified:docs/identity/conditional-access/deployment-guide-token-protection-windows.md",
+      "firstSeenAt": "2026-11-03T09:35:30.909Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Office perpetual client support for Token Protection clarified",
+        "summary": "The documentation now states that Office perpetual clients version 2024 and later support Token Protection, while versions earlier than 2024 aren't supported.",
+        "adminImpact": "Review Office perpetual client versions when planning or configuring Token Protection; no specific administrator action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 21,
+      "deletions": 3,
+      "changes": 24,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\nindex f3d044d0723..7f89c24173a 100644\n--- a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n@@ -3,8 +3,9 @@ title: Configure Group Source of Authority (SOA) in Microsoft Entra ID\n description: Learn how to convert group management from Active Directory Domain Services to Microsoft Entra ID by using Group Source of Authority (SOA).\n ms.subservice: hybrid-cloud-sync\n ms.topic: how-to\n-ms.date: 10/31/2026\n+ms.date: 11/02/2026\n ms.reviewer: dhanyahk\n+ai-usage: ai-assisted\n ---\n \n # Configure Group Source of Authority (SOA)\n@@ -63,6 +64,23 @@ Follow these steps to grant `Group-OnPremisesSyncBehavior.ReadWrite.All` permiss\n \n    :::image type=\"content\" border=\"true\" source=\"media/how-to-group-source-of-authority-configure/consent.png\" alt-text=\"Screenshot of how to grant consent to Group-OnPremisesSyncBehavior.ReadWrite permission.\" lightbox=\"media/how-to-group-source-of-authority-configure/consent.png\":::\n \n+### Connect with Microsoft Graph PowerShell\n+\n+As an alternative to Graph Explorer, use Microsoft Graph PowerShell. First, [install Microsoft Graph PowerShell](/powershell/microsoftgraph/installation), including the `Microsoft.Graph.Groups` module.\n+\n+Permissions are granted to the application that calls Microsoft Graph. Consent granted to Graph Explorer doesn't grant permissions to the Microsoft Graph PowerShell application. Have an Application Administrator or Cloud Application Administrator grant the `Group-OnPremisesSyncBehavior.ReadWrite.All` delegated permission to the PowerShell application by using the [consent procedure](#grant-permission-to-apps).\n+\n+Sign in as a Hybrid Administrator to perform SOA operations. Replace `<tenant-id>` with your tenant ID:\n+\n+```powershell\n+Import-Module Microsoft.Graph.Groups\n+Connect-MgGraph -TenantId \"<tenant-id>\" -Scopes \"Group-OnPremisesSyncBehavior.ReadWrite.All\"\n+```\n+\n+By default, the connection targets the global cloud. For another cloud, add `-Environment China`, `-Environment USGov`, or `-Environment USGovDoD`, as appropriate. Use the same tenant and cloud settings whenever you reconnect. For more information, see [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment).\n+\n+The SOA permission doesn't grant permission to update group properties such as `displayName`. The display-name tests in the following procedure also require `Group.ReadWrite.All`, with consent granted to the application you use for those tests.\n+\n ## Prepare groups for Group SOA conversion and provisioning\n \n If you want to provision the group back to AD DS, plan to complete the following steps to preserve the OU Path and set it in the **Group Provision to AD** configuration with the right mapping:\n@@ -101,7 +119,7 @@ Follow these steps to convert the SOA for a test group:\n 1. Confirm that the synced group is read-only. Because the group is managed on-premises, any write attempts to the group in the cloud fail. The error message differs for mail-enabled groups, but updates still aren't allowed.\n \n    > [!NOTE]\n-   > If this API fails with 403, use the **Modify permissions** tab to grant consent to the required Group.ReadWrite.All permission.\n+   > If this API fails with 403, in Graph Explorer use the **Modify permissions** tab to grant consent to `Group.ReadWrite.All`. For Microsoft Graph PowerShell, have an administrator grant consent to `Group.ReadWrite.All` for the PowerShell application. Then run `Disconnect-MgGraph` and reconnect with `Connect-MgGraph -TenantId \"<tenant-id>\" -Scopes \"Group-OnPremisesSyncBehavior.ReadWrite.All\", \"Group.ReadWrite.All\"`, including the same `-Environment` setting if applicable. These permissions enable the display-name test; they don't remove the restriction on updating an on-premises-managed group.\n \n    ```https\n    PATCH https://graph.microsoft.com/v1.0/groups/{ID}/\n@@ -118,7 +136,7 @@ Follow these steps to convert the SOA for a test group:\n \n    :::image type=\"content\" border=\"true\" source=\"media/how-to-group-source-of-authority-configure/properties.png\" alt-text=\"Screenshot of advanced group properties.\":::\n \n-1. Now you can update the SOA of group to be cloud-managed. Run the following operation in Microsoft Graph Explorer for the group object you want to convert to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).\n+1. Now you can update the SOA of the group to be cloud-managed. Run the following HTTP operation in Microsoft Graph Explorer, or use `Update-MgGroupOnPremiseSyncBehavior -GroupId \"<group-object-id>\" -BodyParameter @{ isCloudManaged = $true }` in Microsoft Graph PowerShell. Replace `<group-object-id>` with the object ID of the group you want to convert to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).\n \n    ```https\n    PATCH https://graph.microsoft.com/v1.0/groups/{ID}/onPremisesSyncBehavior\n",
+      "baseCommitSha": "38cc353992592943d92188b04afe3c339268e21b",
+      "commitSha": "50c346c4a0e29050842bd8b32d63bc3dd139e8bb",
+      "commitMessage": "Complete SOA PowerShell setup and transfer guidance",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-02 12:47:15 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-group-source-of-authority-configure",
+      "eventId": "entra-docs:50c346c4a0e29050842bd8b32d63bc3dd139e8bb:modified:docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.916Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Adds Microsoft Graph PowerShell guidance for group SOA operations",
+        "summary": "The guide now covers connecting with Microsoft Graph PowerShell, required permissions and cloud settings, troubleshooting consent, and the PowerShell command for changing a group’s source of authority.",
+        "adminImpact": "Administrators using PowerShell can follow the documented module, tenant, cloud, and consent requirements; display-name tests require the additional Group.ReadWrite.All permission.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 20,
+      "deletions": 3,
+      "changes": 23,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex b5868047d0f..a466d6ef462 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -3,7 +3,7 @@ title: Configure user Source of Authority (SOA) in Microsoft Entra ID\n description: Learn how to transfer user management from Active Directory Domain Services (AD DS) to Microsoft Entra ID by using user Source of Authority (SOA).\n ms.subservice: hybrid-cloud-sync\n ms.topic: how-to #Required; leave this attribute/value as-is\n-ms.date: 10/31/2026\n+ms.date: 11/02/2026\n ms.reviewer: dhanyahk\n ai-usage: ai-assisted\n \n@@ -83,6 +83,23 @@ Follow these steps to grant `User-OnPremisesSyncBehavior.ReadWrite.All` permissi\n :::image type=\"content\" source=\"media/how-to-user-source-of-authority-configure/graph-permissions.png\" alt-text=\"screenshot of graph permissions.\":::\n \n \n+### Connect with Microsoft Graph PowerShell\n+\n+As an alternative to Graph Explorer, use Microsoft Graph PowerShell. First, [install Microsoft Graph PowerShell](/powershell/microsoftgraph/installation), including the `Microsoft.Graph.Users` module.\n+\n+Permissions are granted to the application that calls Microsoft Graph. Consent granted to Graph Explorer doesn't grant permissions to the Microsoft Graph PowerShell application. Have an Application Administrator or Cloud Application Administrator grant the `User-OnPremisesSyncBehavior.ReadWrite.All` delegated permission to the PowerShell application by using the [consent procedure](#consent-permission-to-apps).\n+\n+Sign in as a Hybrid Administrator to perform SOA operations. Replace `<tenant-id>` with your tenant ID:\n+\n+```powershell\n+Import-Module Microsoft.Graph.Users\n+Connect-MgGraph -TenantId \"<tenant-id>\" -Scopes \"User-OnPremisesSyncBehavior.ReadWrite.All\"\n+```\n+\n+By default, the connection targets the global cloud. For another cloud, add `-Environment China`, `-Environment USGov`, or `-Environment USGovDoD`, as appropriate. Use the same tenant and cloud settings whenever you reconnect. For more information, see [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment).\n+\n+The SOA permission doesn't grant permission to update user properties such as `displayName`. The display-name tests in the following procedure also require `User.ReadWrite.All`, with consent granted to the application you use for those tests.\n+\n ## Transfer SOA for a test user\n \n > [!NOTE]\n@@ -112,7 +129,7 @@ Follow these steps to transfer the SOA for a test user:\n 1. Confirm that the synced user is read-only. Because the user is managed on-premises, any write attempts to the user in the cloud fail. The error message differs for mail-enabled users, but updates still aren't allowed.\n \n    > [!NOTE]\n-   > If this API fails with 403, use the **Modify permissions** tab to grant consent to the required User.ReadWrite.All permission.\n+   > If this API fails with 403, in Graph Explorer use the **Modify permissions** tab to grant consent to `User.ReadWrite.All`. For Microsoft Graph PowerShell, have an administrator grant consent to `User.ReadWrite.All` for the PowerShell application. Then run `Disconnect-MgGraph` and reconnect with `Connect-MgGraph -TenantId \"<tenant-id>\" -Scopes \"User-OnPremisesSyncBehavior.ReadWrite.All\", \"User.ReadWrite.All\"`, including the same `-Environment` setting if applicable. These permissions enable the display-name test; they don't remove the restriction on updating an on-premises-managed user.\n \n    ```https\n    PATCH https://graph.microsoft.com/v1.0/users/{ID}/\n@@ -125,7 +142,7 @@ Follow these steps to transfer the SOA for a test user:\n  \n 1. Search the Microsoft Entra admin center for the user. Verify that all user fields are greyed out, and that source is Windows Server AD DS.\n \n-1. Now you can update the SOA of the user to be cloud-managed. Run the following operation in Microsoft Graph Explorer for the user object you want to transfer to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).\n+1. Now you can update the SOA of the user to be cloud-managed. Run the following HTTP operation in Microsoft Graph Explorer, or use `Update-MgUserOnPremiseSyncBehavior -UserId \"<user-object-id>\" -BodyParameter @{ isCloudManaged = $true }` in Microsoft Graph PowerShell. Replace `<user-object-id>` with the object ID of the user you want to transfer to the cloud. For more information about this API, see [Update onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-update).\n \n    ```https\n    PATCH https://graph.microsoft.com/v1.0/users/{ID}/onPremisesSyncBehavior\n",
+      "baseCommitSha": "38cc353992592943d92188b04afe3c339268e21b",
+      "commitSha": "50c346c4a0e29050842bd8b32d63bc3dd139e8bb",
+      "commitMessage": "Complete SOA PowerShell setup and transfer guidance",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-02 12:47:15 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:50c346c4a0e29050842bd8b32d63bc3dd139e8bb:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.919Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "SOA guidance adds Microsoft Graph PowerShell procedures",
+        "summary": "The documentation now explains how to install and connect with Microsoft Graph PowerShell, select cloud environments, grant required permissions, and update a user’s source of authority with PowerShell.",
+        "adminImpact": "Administrators using PowerShell should follow the documented consent requirements, sign in as a Hybrid Administrator, and use consistent tenant and cloud settings when reconnecting.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\nindex ab78396effd..f3d044d0723 100644\n--- a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n@@ -568,6 +568,6 @@ To scope a group for Source of Authority operations within an Administrative Uni\n - [Group SOA overview](concept-source-of-authority-overview.md)\n - [Provision users and groups from Microsoft Entra ID to Active Directory](/entra/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory)\n - [onPremisesSyncBehavior Microsoft Graph API](/graph/api/resources/onpremisessyncbehavior)\n-- [Update-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/update-mggrouponpremisesyncbehavior?view=graph-powershell-1.0)\n-- [Get-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/get-mggrouponpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Update-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/update-mggrouponpremisesyncbehavior)\n+- [Get-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/get-mggrouponpremisesyncbehavior)\n - [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment)\n",
+      "baseCommitSha": "862f47d9fde4aa0470fbe76fd2caf35ffb1159d2",
+      "commitSha": "dec672718ce4cfd5a18f2ea6b046d8faf4c56452",
+      "commitMessage": "Remove default version pins from SOA cmdlet links",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-02 11:33:30 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-group-source-of-authority-configure",
+      "eventId": "entra-docs:dec672718ce4cfd5a18f2ea6b046d8faf4c56452:modified:docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.930Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "SOA cmdlet links no longer use a fixed documentation version",
+        "summary": "The Update-MgGroupOnPremiseSyncBehavior and Get-MgGroupOnPremiseSyncBehavior links no longer include the graph-powershell-1.0 view parameter.",
+        "adminImpact": "Administrators can use the updated links without changing any configuration.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 4,
+      "changes": 8,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex b8a5e8a818b..b5868047d0f 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -333,8 +333,8 @@ To update the cloud-managed contact, you can make the following API call:\n \n - [How to audit and monitor User Source of Authority (SOA) in Microsoft Entra ID](user-source-of-authority-audit-monitor.md)\n - [Configure Group Source of Authority (SOA)](how-to-group-source-of-authority-configure.md)\n-- [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n-- [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n-- [Update-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/update-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0)\n-- [Get-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/get-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior)\n+- [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior)\n+- [Update-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/update-mgcontactonpremisesyncbehavior)\n+- [Get-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/get-mgcontactonpremisesyncbehavior)\n - [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment)\n",
+      "baseCommitSha": "862f47d9fde4aa0470fbe76fd2caf35ffb1159d2",
+      "commitSha": "dec672718ce4cfd5a18f2ea6b046d8faf4c56452",
+      "commitMessage": "Remove default version pins from SOA cmdlet links",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-02 11:33:30 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:dec672718ce4cfd5a18f2ea6b046d8faf4c56452:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.933Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "SOA documentation removes fixed PowerShell module versions",
+        "summary": "The User Source of Authority configuration guide now links to the current Microsoft Graph PowerShell cmdlet pages without the `view=graph-powershell-1.0` version parameter.",
+        "adminImpact": "Administrators can follow the same cmdlet links; no configuration or migration action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "patch": "diff --git a/docs/global-secure-access/concept-private-access-sign-in-every-time.md b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\nindex 5af5f74f48f..cab2087da43 100644\n--- a/docs/global-secure-access/concept-private-access-sign-in-every-time.md\n+++ b/docs/global-secure-access/concept-private-access-sign-in-every-time.md\n@@ -42,5 +42,6 @@ Global Secure Access has a **five-minute reauthentication window**. It doesn't p\n \n ## Related content\n \n+* [Configure sign-in every time for Microsoft Entra Private Access (preview)](how-to-configure-sign-in-every-time.md)\n * [Conditional Access adaptive session lifetime policies](~/identity/conditional-access/concept-session-lifetime.md#require-reauthentication-every-time)\n * [Microsoft Entra Private Access overview](concept-private-access.md)\n",
+      "baseCommitSha": "c7d899958e0160fafc9c2744b12e8ab2d728deed",
+      "commitSha": "c58b2feb8582d9d6c9b481935afaa4a6c8b5b133",
+      "commitMessage": "Add Private Access sign-in every time deployment guide how-to (#14762)",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-02 10:49:35 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/global-secure-access/concept-private-access-sign-in-every-time",
+      "eventId": "entra-docs:c58b2feb8582d9d6c9b481935afaa4a6c8b5b133:modified:docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+      "firstSeenAt": "2026-11-03T09:35:30.939Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Added a link to the Private Access sign-in-every-time guide",
+        "summary": "The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview).",
+        "adminImpact": "Administrators can use the linked guide to find configuration instructions.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/authentication/choose-your-own-telephony-set-up.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/authentication/choose-your-own-telephony-set-up.md b/docs/identity/authentication/choose-your-own-telephony-set-up.md\nindex d08607bf876..364ea5b15f2 100644\n--- a/docs/identity/authentication/choose-your-own-telephony-set-up.md\n+++ b/docs/identity/authentication/choose-your-own-telephony-set-up.md\n@@ -196,7 +196,7 @@ Use a test user with a phone number registered for SMS or voice.\n ### Test in Evaluation\n \n 1. In an InPrivate browser session, sign in as the test user and complete an SMS or voice authentication.\n-1. In the Azure portal, go to your **Function App** > **SendOtp** > **Invocations** and open the latest transaction. In **Invocation details**, confirm **Evaluation request completed** with HTTP `200`.\n+1. In the Azure portal, go to your **Function App** → **Functions** → **SendOtp** → **Invocations** and open the latest transaction. In **Invocation details**, confirm **Evaluation request completed** with HTTP `200`.\n 1. In the Microsoft Entra admin center, go to **Monitoring & health** > **Audit logs** and filter by **Service: Azure MFA**. Open the latest entry and confirm **DeliveryMethod** is `CyotEvaluation`.\n \n <a id=\"test-telecom-provider-delivery\"></a>\n@@ -207,7 +207,7 @@ Use a test user with a phone number registered for SMS or voice.\n After evaluation succeeds, switch to **Production** and set your initial traffic percentage.\n \n 1. In a new InPrivate browser session, sign in as the test user. Confirm the SMS or voice code arrives and authentication completes.\n-1. In the Azure portal, go to your **Function App** > **Invocations** and open the latest transaction. In **Invocation details**, confirm the request completed with HTTP `200`.\n+1. In the Azure portal, go to your **Function App** → **Functions** → **SendOtp** → **Invocations** and open the latest transaction. In **Invocation details**, confirm the request completed with HTTP `200`.\n 1. In the Microsoft Entra admin center, go to **Audit logs** and filter by **Service: Azure MFA**. Open the latest entry and confirm **Delivery Method** is `Cyot`.\n 1. In your provider's portal, confirm the message was delivered.\n \n",
+      "baseCommitSha": "c7d899958e0160fafc9c2744b12e8ab2d728deed",
+      "commitSha": "32b93b75e6d35832fafb6532d47b70142acc61c2",
+      "commitMessage": "Correct Function App invocation navigation in CYOT setup",
+      "commitAuthor": "Rasika More",
+      "commitDate": "2026-11-02 12:03:37 -0500",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/choose-your-own-telephony-set-up.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/authentication/choose-your-own-telephony-set-up",
+      "eventId": "entra-docs:32b93b75e6d35832fafb6532d47b70142acc61c2:modified:docs/identity/authentication/choose-your-own-telephony-set-up.md",
+      "firstSeenAt": "2026-11-03T09:35:30.949Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Corrected Azure portal navigation for CYOT setup",
+        "summary": "The documentation now directs administrators through Function App → Functions → SendOtp → Invocations when checking the latest transaction and HTTP 200 result.",
+        "adminImpact": "Use the updated navigation when verifying SendOtp function invocations; no configuration change is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/conditional-access/concept-session-lifetime.md",
+      "status": "modified",
+      "additions": 27,
+      "deletions": 3,
+      "changes": 30,
+      "patch": "diff --git a/docs/identity/conditional-access/concept-session-lifetime.md b/docs/identity/conditional-access/concept-session-lifetime.md\nindex 4d90ecc4d57..f2ef929e9e8 100644\n--- a/docs/identity/conditional-access/concept-session-lifetime.md\n+++ b/docs/identity/conditional-access/concept-session-lifetime.md\n@@ -4,8 +4,11 @@ description: Learn to configure Conditional Access adaptive session lifetime pol\n ms.service: entra-id\n ms.subservice: conditional-access\n ms.topic: concept-article\n-ms.date: 04/08/2026\n+ms.date: 11/01/2026\n ms.reviewer: inbarc, sreyanthmora\n+ms.custom: msecd-doc-authoring-1026\n+ai-usage: ai-assisted\n+# Customer intent: As an administrator, I want to understand sign-in frequency controls so that I can require fresh authentication for sensitive applications.\n ---\n # Conditional Access adaptive session lifetime policies\n \n@@ -94,9 +97,9 @@ In some scenarios, you might want to require fresh authentication every time a u\n \n * Accessing sensitive applications.\n * Securing resources behind VPN or Network as a Service (NaaS) providers.\n-* Securing privileged role elevation in PIM​.\n+* Securing privileged role elevation in PIM.\n * Protecting user sign-ins to Azure Virtual Desktop machines.\n-* Protecting risky users and risky sign-ins​ identified by Microsoft Entra ID Protection.\n+* Protecting risky users and risky sign-ins identified by Microsoft Entra ID Protection.\n * Securing sensitive user actions like Microsoft Intune enrollment.\n \n When you select **Every time**, the policy requires full reauthentication **when the session is evaluated**. This requirement means that if the user closes and opens their browser during the session lifetime, they might not be prompted for reauthentication. Setting sign-in frequency to every time works best when the resource has the logic to identify when a client should get a new token. These resources redirect the user back to Microsoft Entra only once the session expires.\n@@ -109,6 +112,27 @@ Limit the number of applications that enforce a policy requiring users to reauth\n * For applications in the Microsoft 365 stack, use [time-based user sign-in frequency](#user-sign-in-frequency) for a better user experience.\n * For the Azure portal and the Microsoft Entra admin center, use either [time-based user sign-in frequency](#user-sign-in-frequency) or [require reauthentication on PIM activation](../../id-governance/privileged-identity-management/pim-how-to-change-default-settings.md#on-activation-require-microsoft-entra-conditional-access-authentication-context) by using authentication context for a better user experience.\n \n+### Every time strict (preview)\n+\n+**Every time strict (preview)** is a sign-in frequency control with a shorter validity window (10 seconds) for authentication freshness. It's intended for specific applications that need fresh authentication when they request a new token. These applications must be configured to work with the control. Examples include pharmaceutical e-prescribing applications and financial or banking applications that require reauthentication for sensitive actions.\n+\n+To require fresh authentication for a sensitive action, an application needs compatible session management. That logic must request a new token for the action. Applying the control alone isn't sufficient if the application continues to use its existing session without requesting a new token.\n+\n+The application decides when fresh authentication is needed through its own session management logic and intervals. Its reauthentication interval can be longer than 10 seconds. When the application requests a new token, **Every time strict (preview)** checks the time since the user's last authentication. If at least 10 seconds have elapsed, the control requires the user to reauthenticate.\n+\n+* Target only specific applications. Don't apply it broadly to all resources.\n+* Work with the application owner to confirm that the application's token requests and session management meet its reauthentication requirements.\n+* Test the sign-in experience with the selected applications before rollout. Frequent prompts can disrupt users and contribute to MFA fatigue.\n+\n+> [!WARNING]\n+> Do not apply **Every time strict (preview)** settings to Office 365 applications.\n+\n+#### Global Secure Access sign-in every time (preview)\n+\n+Global Secure Access uses **Every time strict (preview)** in Conditional Access to require fresh reauthentication when users access sensitive private applications. Global Secure Access application session management uses a **five-minute reauthentication window**.\n+\n+For more information, see [Sign-in every time for Microsoft Entra Private Access (preview)](~/global-secure-access/concept-private-access-sign-in-every-time.md).\n+\n ## Persistence of browsing sessions\n \n A persistent browser session lets users stay signed in after closing and reopening their browser window.\n",
+      "baseCommitSha": "efc75661c10583d0823de5e784ca46cb18d0ee5b",
+      "commitSha": "d8e5f0c562633ee0092b665a28d7701f2148a0fd",
+      "commitMessage": "Document Every time strict preview and Private Access sign-in every time (#14758)",
+      "commitAuthor": "Alexander Pavlovsky",
+      "commitDate": "2026-11-02 08:00:00 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/concept-session-lifetime.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-session-lifetime",
+      "eventId": "entra-docs:d8e5f0c562633ee0092b665a28d7701f2148a0fd:modified:docs/identity/conditional-access/concept-session-lifetime.md",
+      "firstSeenAt": "2026-11-03T09:35:30.967Z",
+      "englishSummary": {
+        "category": "Public preview",
+        "headline": "Session lifetime guidance adds strict fresh-authentication controls",
+        "summary": "The documentation now describes Every time strict, including its 10-second validity window, application session-management requirements, targeting guidance, and Office 365 warning. It also explains Global Secure Access reauthentication for sensitive private applications using a five-minute window.",
+        "adminImpact": "Administrators should coordinate with application owners and test selected applications before applying the control. No broad configuration change is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/external-id/customers/how-to-sign-in-with-passkey.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 6,
+      "changes": 7,
+      "patch": "diff --git a/docs/external-id/customers/how-to-sign-in-with-passkey.md b/docs/external-id/customers/how-to-sign-in-with-passkey.md\nindex 9a856e6939e..9c24e36291b 100644\n--- a/docs/external-id/customers/how-to-sign-in-with-passkey.md\n+++ b/docs/external-id/customers/how-to-sign-in-with-passkey.md\n@@ -85,12 +85,7 @@ The credential management experience should enable customers to:\n - View their registered passkeys.\n - Delete a passkey.\n \n-Use the [Delete a credential method](../../identity-platform/reference-credential-management-api.md#delete-a-credential-method) endpoint for self-service deletion with delegated permissions.\n-\n-To support passkey management in your app, use the [passkey credential management sample app](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/tree/main/passkey-sample). The sample demonstrates how signed-in customers can list and register their own passkeys by using the credential management API with delegated permissions. Follow the sample's README to configure and run the app.\n-\n-> [!IMPORTANT]\n-> The sample's deletion flow still uses Microsoft Graph with high-privilege application permissions and a client secret in browser code. Run the sample only in a test tenant. Don't deploy it to production.\n+To support passkey management in your app, use the [passkey credential management sample app](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/tree/main/passkey-sample). The sample demonstrates how signed-in customers can list, register and delete their own passkeys by using the credential management API with delegated permissions. Follow the sample's README to configure and run the app.\n \n ## User experience\n \n",
+      "baseCommitSha": "e1350d064f0b27e89ab36f70f7d0d79c07380148",
+      "commitSha": "19d718ab6374f3d4e58af0e2fe22988d59816839",
+      "commitMessage": "Remove mention to MS Graph delete endpoint",
+      "commitAuthor": "Diego Jerez",
+      "commitDate": "2026-11-02 14:14:06 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/external-id/customers/how-to-sign-in-with-passkey.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-sign-in-with-passkey",
+      "eventId": "entra-docs:19d718ab6374f3d4e58af0e2fe22988d59816839:modified:docs/external-id/customers/how-to-sign-in-with-passkey.md",
+      "firstSeenAt": "2026-11-03T09:35:30.983Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Passkey management sample documentation updated",
+        "summary": "The documentation now describes the sample as supporting passkey listing, registration, and deletion. It removes the separate deletion endpoint guidance and the warning about the sample using Microsoft Graph with high-privilege permissions and a client secret.",
+        "adminImpact": "Review the updated guidance if your implementation uses this passkey management sample.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity-platform/reference-credential-management-api.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 6,
+      "changes": 7,
+      "patch": "diff --git a/docs/identity-platform/reference-credential-management-api.md b/docs/identity-platform/reference-credential-management-api.md\nindex a9ce1fc202f..075913ee816 100644\n--- a/docs/identity-platform/reference-credential-management-api.md\n+++ b/docs/identity-platform/reference-credential-management-api.md\n@@ -21,12 +21,7 @@ The Microsoft Entra External ID credential management API lets your application\n \n The credential management API complements Microsoft Entra [native authentication](concept-native-authentication.md), where your application hosts the sign-in experience instead of delegating it to a browser. Use the credential management API after a customer signs in.\n \n-To support passkey management in your app, use the [passkey credential management sample app](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/tree/main/passkey-sample). The sample demonstrates the listing and registration flows in this article by using delegated permissions. Follow the sample's README to configure and run the app.\n-\n-> [!IMPORTANT]\n-> The sample's deletion flow still uses Microsoft Graph with high-privilege application permissions and a client secret in browser code. Run the sample only in a test tenant. Don't deploy it to production.\n-\n-For self-service deletion, use the [Delete a credential method](#delete-a-credential-method) endpoint rather than the sample's deletion flow.\n+To support passkey management in your app, use the [passkey credential management sample app](https://github.com/Azure-Samples/ms-identity-ciam-native-javascript-samples/tree/main/passkey-sample). The sample demonstrates the listing, registration and deletion flows in this article by using delegated permissions. Follow the sample's README to configure and run the app.\n \n Successful resource responses use HAL+JSON (`application/hal+json`). Activation requests use JSON (`application/json`), delete success responses have no body, and errors use JSON.\n \n",
+      "baseCommitSha": "e1350d064f0b27e89ab36f70f7d0d79c07380148",
+      "commitSha": "19d718ab6374f3d4e58af0e2fe22988d59816839",
+      "commitMessage": "Remove mention to MS Graph delete endpoint",
+      "commitAuthor": "Diego Jerez",
+      "commitDate": "2026-11-02 14:14:06 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity-platform/reference-credential-management-api.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/reference-credential-management-api",
+      "eventId": "entra-docs:19d718ab6374f3d4e58af0e2fe22988d59816839:modified:docs/identity-platform/reference-credential-management-api.md",
+      "firstSeenAt": "2026-11-03T09:35:30.986Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Passkey sample documentation now includes deletion",
+        "summary": "The article now says the passkey sample demonstrates listing, registration, and deletion flows, and removes the previous Microsoft Graph deletion-flow warning.",
+        "adminImpact": "No administrator action is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 3,
+      "changes": 3,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\nindex 536c631ed9a..ab78396effd 100644\n--- a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n@@ -90,9 +90,6 @@ Follow these steps to convert the SOA for a test group:\n 1. Verify that the group appears in the Microsoft Entra admin center as a synced group.\n 1. Use Microsoft Graph API to convert the SOA of the group object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Alternatively, use Microsoft Graph PowerShell to perform the following operations with the cmdlets linked in [Related content](#related-content).\n \n-   > [!NOTE]\n-   > Microsoft Graph Explorer isn't supported in Azure China. Use Microsoft Graph PowerShell instead, and connect with `Connect-MgGraph -Environment China` and the permissions listed in [Prerequisites](#prerequisites). For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment). The following HTTP examples aren't PowerShell commands.\n-\n 1. Let's check the existing SOA status. We didn’t update the SOA yet, so the *isCloudManaged* attribute value should be false. Replace the *{ID}* in the following examples with the object ID of your group. For more information about this API, see [Get onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-get).\n \n    ```https\n",
+      "baseCommitSha": "0eb00df49764a6b17a141b93cde1d07e0375c596",
+      "commitSha": "862f47d9fde4aa0470fbe76fd2caf35ffb1159d2",
+      "commitMessage": "Remove cloud note and link contact SOA cmdlets",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-01 23:06:17 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-group-source-of-authority-configure",
+      "eventId": "entra-docs:862f47d9fde4aa0470fbe76fd2caf35ffb1159d2:modified:docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.992Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Removed sovereign cloud guidance",
+        "summary": "The page no longer includes the note that Graph Explorer is unsupported in Azure China or the instructions to use Microsoft Graph PowerShell for sovereign clouds.",
+        "adminImpact": "Administrators will no longer find this guidance on the page; no required action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex 7afa03cc7ef..b8a5e8a818b 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -335,4 +335,6 @@ To update the cloud-managed contact, you can make the following API call:\n - [Configure Group Source of Authority (SOA)](how-to-group-source-of-authority-configure.md)\n - [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n - [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Update-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/update-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Get-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/get-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0)\n - [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment)\n",
+      "baseCommitSha": "0eb00df49764a6b17a141b93cde1d07e0375c596",
+      "commitSha": "862f47d9fde4aa0470fbe76fd2caf35ffb1159d2",
+      "commitMessage": "Remove cloud note and link contact SOA cmdlets",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-01 23:06:17 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:862f47d9fde4aa0470fbe76fd2caf35ffb1159d2:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:30.996Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Added links for contact source-of-authority cmdlets",
+        "summary": "The configuration article now links to Microsoft Graph PowerShell cmdlets for updating and retrieving a contact’s on-premises sync behavior.",
+        "adminImpact": "Administrators can use the linked cmdlets to manage or inspect contact synchronization behavior.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 6,
+      "changes": 9,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\nindex 7344db6c956..536c631ed9a 100644\n--- a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n@@ -571,9 +571,6 @@ To scope a group for Source of Authority operations within an Administrative Uni\n - [Group SOA overview](concept-source-of-authority-overview.md)\n - [Provision users and groups from Microsoft Entra ID to Active Directory](/entra/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory)\n - [onPremisesSyncBehavior Microsoft Graph API](/graph/api/resources/onpremisessyncbehavior)\n-\n-| Documentation | Purpose |\n-| --- | --- |\n-| [Update-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/update-mggrouponpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to convert group SOA. |\n-| [Get-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/get-mggrouponpremisesyncbehavior?view=graph-powershell-1.0) | Reads the group's SOA state. |\n-| [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment) | Documents the `USGov`, `USGovDoD`, and `China` environments. |\n+- [Update-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/update-mggrouponpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Get-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/get-mggrouponpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment)\n",
+      "baseCommitSha": "faad3e754f008ed9202dd9962a19de8e112fc0a5",
+      "commitSha": "0eb00df49764a6b17a141b93cde1d07e0375c596",
+      "commitMessage": "Restore contact guidance and simplify SOA related links",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-01 23:00:33 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-group-source-of-authority-configure",
+      "eventId": "entra-docs:0eb00df49764a6b17a141b93cde1d07e0375c596:modified:docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:31.002Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Simplified group source-of-authority links",
+        "summary": "The documentation changed the SOA-related resource table into a bulleted list while retaining the same three Microsoft Graph PowerShell links.",
+        "adminImpact": "Administrators can still access the same commands and authentication guidance, now without the previous purpose descriptions.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 47,
+      "changes": 59,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex a306e439841..7afa03cc7ef 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -100,9 +100,6 @@ Follow these steps to transfer the SOA for a test user:\n 1. Verify that the user appears in the Microsoft Entra admin center as a synced user.\n 1. Use Microsoft Graph API to transfer the SOA of the user object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Alternatively, use Microsoft Graph PowerShell to perform the following operations with the cmdlets linked in [Related content](#related-content).\n \n-   > [!NOTE]\n-   > Microsoft Graph Explorer isn't supported in Azure China. Use Microsoft Graph PowerShell instead, and connect with `Connect-MgGraph -Environment China` and the permissions listed in [Prerequisites](#prerequisites). For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment). The following HTTP examples aren't PowerShell commands.\n-\n 1. Let's check the existing SOA status. We didn’t update the SOA yet, so the *isCloudManaged* attribute value should be false. Replace the *{ID}* in the following examples with the object ID of your user. For more information about this API, see [Get onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-get).\n /graph/api/onpremisessyncbehavior-update\n \n@@ -310,64 +307,32 @@ To scope a user for Source of Authority operations within an Administrative Unit\n \n ## Configure Contact SOA\n \n-You can also transfer the SOA of organizational contacts synchronized from AD DS to Microsoft Entra ID. These are directory objects accessed through `/contacts`, not personal contacts in a user's Outlook mailbox.\n+You're also able to transfer the SOA of contacts of users using the examples provided in this article. Contacts are items in Outlook where you can organize and save information about the people and organizations you communicate with. The following examples are of how you would transfer the SOA of contacts.\n \n > [!NOTE]\n-> To transfer contact SOA, grant `Contacts-OnPremisesSyncBehavior.ReadWrite.All` to the app used to call Microsoft Graph. For delegated access, sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Follow the [consent procedure](#consent-permission-to-apps) with the contact permission instead of the user permission.\n-\n-Use Graph Explorer or Microsoft Graph PowerShell to read and update contact SOA. Microsoft Graph Explorer isn't supported in Azure China. For PowerShell, use the contact cmdlets in the `Microsoft.Graph.Identity.DirectoryManagement` module and connect with `-Environment China`. For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment).\n-\n-### Use Microsoft Graph API\n+> To transfer SOA of a Contact, the required permission is `Contacts-OnPremisesSyncBehavior.ReadWrite.All`.\n \n-Replace `{ID}` with the object ID of your synchronized organizational contact. The following HTTP examples use the global cloud endpoint. For another cloud, use its [Microsoft Graph endpoint](/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints).\n \n-1. Read the existing SOA state. Before transfer, `isCloudManaged` is `false`:\n+To confirm the contact SOA is cloud managed, you run the following API call:\n \n    ```https\n    GET https://graph.microsoft.com/v1.0/contacts/{ID}/onPremisesSyncBehavior?$select=isCloudManaged\n    ```\n \n-1. Transfer contact SOA to the cloud by setting `isCloudManaged` to `true`:\n \n-   ```http\n-   PATCH https://graph.microsoft.com/v1.0/contacts/{ID}/onPremisesSyncBehavior\n-   Content-Type: application/json\n+To update the cloud-managed contact, you can make the following API call:\n \n-   {\n-       \"isCloudManaged\": true\n-   }\n+```https\n+   PATCH https://graph.microsoft.com/v1.0/contacts/{ID}/\n+      {\n+        \"DisplayName\": \"Contact Name Updated\"\n+      }   \n    ```\n \n-1. Repeat the GET request to verify that `isCloudManaged` is `true`.\n-\n-### Use Microsoft Graph PowerShell\n-\n-The following example reads, transfers, and verifies contact SOA in Azure China. Replace `<tenant-id>` and `<contact-object-id>` with your tenant and organizational contact IDs. For the global cloud, omit `-Environment China`.\n-\n-```powershell\n-Import-Module Microsoft.Graph.Identity.DirectoryManagement\n-\n-Connect-MgGraph -TenantId \"<tenant-id>\" -Environment China -Scopes \"Contacts-OnPremisesSyncBehavior.ReadWrite.All\"\n-\n-$contactId = \"<contact-object-id>\"\n-Get-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -Property \"isCloudManaged\"\n-\n-Update-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -BodyParameter @{ isCloudManaged = $true }\n-\n-Get-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -Property \"isCloudManaged\"\n-```\n-\n-Verify that the final result shows `IsCloudManaged` as `True`. See the contact cmdlet references in [Related content](#related-content).\n-\n ## Related content\n \n - [How to audit and monitor User Source of Authority (SOA) in Microsoft Entra ID](user-source-of-authority-audit-monitor.md)\n - [Configure Group Source of Authority (SOA)](how-to-group-source-of-authority-configure.md)\n-\n-| Documentation | Purpose |\n-| --- | --- |\n-| [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to transfer user SOA. |\n-| [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Reads the user's SOA state. |\n-| [Update-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/update-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to transfer organizational contact SOA. |\n-| [Get-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/get-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0) | Reads the organizational contact's SOA state. |\n-| [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment) | Documents the `USGov`, `USGovDoD`, and `China` environments. |\n+- [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0)\n+- [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment)\n",
+      "baseCommitSha": "faad3e754f008ed9202dd9962a19de8e112fc0a5",
+      "commitSha": "0eb00df49764a6b17a141b93cde1d07e0375c596",
+      "commitMessage": "Restore contact guidance and simplify SOA related links",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-11-01 23:00:33 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:0eb00df49764a6b17a141b93cde1d07e0375c596:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:31.005Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Contact SOA guidance was revised",
+        "summary": "The article now describes contacts as Outlook items, retains the required Contacts-OnPremisesSyncBehavior.ReadWrite.All permission, and uses a generic contact PATCH example. Detailed SOA read, transfer, verification, PowerShell, sovereign-cloud, and contact cmdlet guidance was removed.",
+        "adminImpact": "Administrators managing contact SOA should follow the revised example and permission guidance when using the article.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 38,
+      "deletions": 9,
+      "changes": 47,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex 23534f2b5d3..a306e439841 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -310,28 +310,55 @@ To scope a user for Source of Authority operations within an Administrative Unit\n \n ## Configure Contact SOA\n \n-You're also able to transfer the SOA of contacts of users using the examples provided in this article. Contacts are items in Outlook where you can organize and save information about the people and organizations you communicate with. The following examples are of how you would transfer the SOA of contacts.\n+You can also transfer the SOA of organizational contacts synchronized from AD DS to Microsoft Entra ID. These are directory objects accessed through `/contacts`, not personal contacts in a user's Outlook mailbox.\n \n > [!NOTE]\n-> To transfer SOA of a Contact, the required permission is `Contacts-OnPremisesSyncBehavior.ReadWrite.All`.\n+> To transfer contact SOA, grant `Contacts-OnPremisesSyncBehavior.ReadWrite.All` to the app used to call Microsoft Graph. For delegated access, sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Follow the [consent procedure](#consent-permission-to-apps) with the contact permission instead of the user permission.\n+\n+Use Graph Explorer or Microsoft Graph PowerShell to read and update contact SOA. Microsoft Graph Explorer isn't supported in Azure China. For PowerShell, use the contact cmdlets in the `Microsoft.Graph.Identity.DirectoryManagement` module and connect with `-Environment China`. For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment).\n+\n+### Use Microsoft Graph API\n \n+Replace `{ID}` with the object ID of your synchronized organizational contact. The following HTTP examples use the global cloud endpoint. For another cloud, use its [Microsoft Graph endpoint](/graph/deployments#microsoft-graph-and-graph-explorer-service-root-endpoints).\n \n-To confirm the contact SOA is cloud managed, you run the following API call:\n+1. Read the existing SOA state. Before transfer, `isCloudManaged` is `false`:\n \n    ```https\n    GET https://graph.microsoft.com/v1.0/contacts/{ID}/onPremisesSyncBehavior?$select=isCloudManaged\n    ```\n \n+1. Transfer contact SOA to the cloud by setting `isCloudManaged` to `true`:\n \n-To update the cloud-managed contact, you can make the following API call:\n+   ```http\n+   PATCH https://graph.microsoft.com/v1.0/contacts/{ID}/onPremisesSyncBehavior\n+   Content-Type: application/json\n \n-```https\n-   PATCH https://graph.microsoft.com/v1.0/contacts/{ID}/\n-      {\n-        \"DisplayName\": \"Contact Name Updated\"\n-      }   \n+   {\n+       \"isCloudManaged\": true\n+   }\n    ```\n \n+1. Repeat the GET request to verify that `isCloudManaged` is `true`.\n+\n+### Use Microsoft Graph PowerShell\n+\n+The following example reads, transfers, and verifies contact SOA in Azure China. Replace `<tenant-id>` and `<contact-object-id>` with your tenant and organizational contact IDs. For the global cloud, omit `-Environment China`.\n+\n+```powershell\n+Import-Module Microsoft.Graph.Identity.DirectoryManagement\n+\n+Connect-MgGraph -TenantId \"<tenant-id>\" -Environment China -Scopes \"Contacts-OnPremisesSyncBehavior.ReadWrite.All\"\n+\n+$contactId = \"<contact-object-id>\"\n+Get-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -Property \"isCloudManaged\"\n+\n+Update-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -BodyParameter @{ isCloudManaged = $true }\n+\n+Get-MgContactOnPremiseSyncBehavior -OrgContactId $contactId -Property \"isCloudManaged\"\n+```\n+\n+Verify that the final result shows `IsCloudManaged` as `True`. See the contact cmdlet references in [Related content](#related-content).\n+\n ## Related content\n \n - [How to audit and monitor User Source of Authority (SOA) in Microsoft Entra ID](user-source-of-authority-audit-monitor.md)\n@@ -341,4 +368,6 @@ To update the cloud-managed contact, you can make the following API call:\n | --- | --- |\n | [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to transfer user SOA. |\n | [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Reads the user's SOA state. |\n+| [Update-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/update-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to transfer organizational contact SOA. |\n+| [Get-MgContactOnPremiseSyncBehavior](/powershell/module/microsoft.graph.identity.directorymanagement/get-mgcontactonpremisesyncbehavior?view=graph-powershell-1.0) | Reads the organizational contact's SOA state. |\n | [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment) | Documents the `USGov`, `USGovDoD`, and `China` environments. |\n",
+      "baseCommitSha": "2d134a4a549b96d7a97bc7ca0dbf1f3388474037",
+      "commitSha": "faad3e754f008ed9202dd9962a19de8e112fc0a5",
+      "commitMessage": "Add contact SOA PowerShell guidance",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-10-31 20:41:28 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:faad3e754f008ed9202dd9962a19de8e112fc0a5:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:31.012Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Contact SOA transfer guidance expanded",
+        "summary": "The article adds Microsoft Graph API and PowerShell examples for transferring the source of authority (SOA) for organizational contacts synchronized from AD DS, including permissions, verification, and sovereign-cloud guidance.",
+        "adminImpact": "Administrators can follow the documented commands and required `Contacts-OnPremisesSyncBehavior.ReadWrite.All` permission to manage contact SOA.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2,
+      "changes": 14,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\nindex eedba1cafc7..7344db6c956 100644\n--- a/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-group-source-of-authority-configure.md\n@@ -3,7 +3,7 @@ title: Configure Group Source of Authority (SOA) in Microsoft Entra ID\n description: Learn how to convert group management from Active Directory Domain Services to Microsoft Entra ID by using Group Source of Authority (SOA).\n ms.subservice: hybrid-cloud-sync\n ms.topic: how-to\n-ms.date: 10/13/2025\n+ms.date: 10/31/2026\n ms.reviewer: dhanyahk\n ---\n \n@@ -88,7 +88,11 @@ Follow these steps to convert the SOA for a test group:\n    ```\n \n 1. Verify that the group appears in the Microsoft Entra admin center as a synced group.\n-1. Use Microsoft Graph API to convert the SOA of the group object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in with an appropriate user role, such as Groups admin.\n+1. Use Microsoft Graph API to convert the SOA of the group object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Alternatively, use Microsoft Graph PowerShell to perform the following operations with the cmdlets linked in [Related content](#related-content).\n+\n+   > [!NOTE]\n+   > Microsoft Graph Explorer isn't supported in Azure China. Use Microsoft Graph PowerShell instead, and connect with `Connect-MgGraph -Environment China` and the permissions listed in [Prerequisites](#prerequisites). For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment). The following HTTP examples aren't PowerShell commands.\n+\n 1. Let's check the existing SOA status. We didn’t update the SOA yet, so the *isCloudManaged* attribute value should be false. Replace the *{ID}* in the following examples with the object ID of your group. For more information about this API, see [Get onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-get).\n \n    ```https\n@@ -567,3 +571,9 @@ To scope a group for Source of Authority operations within an Administrative Uni\n - [Group SOA overview](concept-source-of-authority-overview.md)\n - [Provision users and groups from Microsoft Entra ID to Active Directory](/entra/identity/hybrid/cloud-sync/how-to-configure-entra-to-active-directory)\n - [onPremisesSyncBehavior Microsoft Graph API](/graph/api/resources/onpremisessyncbehavior)\n+\n+| Documentation | Purpose |\n+| --- | --- |\n+| [Update-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/update-mggrouponpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to convert group SOA. |\n+| [Get-MgGroupOnPremiseSyncBehavior](/powershell/module/microsoft.graph.groups/get-mggrouponpremisesyncbehavior?view=graph-powershell-1.0) | Reads the group's SOA state. |\n+| [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment) | Documents the `USGov`, `USGovDoD`, and `China` environments. |\n",
+      "baseCommitSha": "4234d00594e30b1119e14d443cecd2751b8851af",
+      "commitSha": "2d134a4a549b96d7a97bc7ca0dbf1f3388474037",
+      "commitMessage": "Document PowerShell alternatives for user and group SOA",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-10-31 20:37:11 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-group-source-of-authority-configure",
+      "eventId": "entra-docs:2d134a4a549b96d7a97bc7ca0dbf1f3388474037:modified:docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:31.018Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "PowerShell alternatives added for group SOA configuration",
+        "summary": "The documentation now lists Microsoft Graph PowerShell commands to read and update a group’s `IsCloudManaged` state, and documents cloud-specific authentication options. It also notes that Graph Explorer isn’t supported in Azure China.",
+        "adminImpact": "Administrators can use the documented PowerShell alternatives, including the appropriate environment settings for sovereign clouds.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "status": "modified",
+      "additions": 11,
+      "deletions": 3,
+      "changes": 14,
+      "patch": "diff --git a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\nindex c566b0e627f..23534f2b5d3 100644\n--- a/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n+++ b/docs/identity/hybrid/how-to-user-source-of-authority-configure.md\n@@ -3,7 +3,7 @@ title: Configure user Source of Authority (SOA) in Microsoft Entra ID\n description: Learn how to transfer user management from Active Directory Domain Services (AD DS) to Microsoft Entra ID by using user Source of Authority (SOA).\n ms.subservice: hybrid-cloud-sync\n ms.topic: how-to #Required; leave this attribute/value as-is\n-ms.date: 04/15/2026\n+ms.date: 10/31/2026\n ms.reviewer: dhanyahk\n ai-usage: ai-assisted\n \n@@ -98,7 +98,11 @@ Follow these steps to transfer the SOA for a test user:\n    ```\n \n 1. Verify that the user appears in the Microsoft Entra admin center as a synced user.\n-1. Use Microsoft Graph API to transfer the SOA of the user object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in with an appropriate user role, such as user admin.\n+1. Use Microsoft Graph API to transfer the SOA of the user object (*isCloudManaged*=true). Open [Microsoft Graph Explorer](https://developer.microsoft.com/graph/graph-explorer) and sign in as a [Hybrid Administrator](/entra/identity/role-based-access-control/permissions-reference#hybrid-administrator). Alternatively, use Microsoft Graph PowerShell to perform the following operations with the cmdlets linked in [Related content](#related-content).\n+\n+   > [!NOTE]\n+   > Microsoft Graph Explorer isn't supported in Azure China. Use Microsoft Graph PowerShell instead, and connect with `Connect-MgGraph -Environment China` and the permissions listed in [Prerequisites](#prerequisites). For other sovereign clouds, use `-Environment USGov` or `-Environment USGovDoD` as appropriate. See [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment). The following HTTP examples aren't PowerShell commands.\n+\n 1. Let's check the existing SOA status. We didn’t update the SOA yet, so the *isCloudManaged* attribute value should be false. Replace the *{ID}* in the following examples with the object ID of your user. For more information about this API, see [Get onPremisesSyncBehavior](/graph/api/onpremisessyncbehavior-get).\n /graph/api/onpremisessyncbehavior-update\n \n@@ -333,4 +337,8 @@ To update the cloud-managed contact, you can make the following API call:\n - [How to audit and monitor User Source of Authority (SOA) in Microsoft Entra ID](user-source-of-authority-audit-monitor.md)\n - [Configure Group Source of Authority (SOA)](how-to-group-source-of-authority-configure.md)\n \n-\n+| Documentation | Purpose |\n+| --- | --- |\n+| [Update-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/update-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Sets `IsCloudManaged` to transfer user SOA. |\n+| [Get-MgUserOnPremiseSyncBehavior](/powershell/module/microsoft.graph.users/get-mguseronpremisesyncbehavior?view=graph-powershell-1.0) | Reads the user's SOA state. |\n+| [Microsoft Graph PowerShell cloud authentication](/powershell/microsoftgraph/authentication-commands#use-get-mgenvironment) | Documents the `USGov`, `USGovDoD`, and `China` environments. |\n",
+      "baseCommitSha": "4234d00594e30b1119e14d443cecd2751b8851af",
+      "commitSha": "2d134a4a549b96d7a97bc7ca0dbf1f3388474037",
+      "commitMessage": "Document PowerShell alternatives for user and group SOA",
+      "commitAuthor": "Darshan Maiya",
+      "commitDate": "2026-10-31 20:37:11 -0700",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/hybrid/how-to-user-source-of-authority-configure",
+      "eventId": "entra-docs:2d134a4a549b96d7a97bc7ca0dbf1f3388474037:modified:docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+      "firstSeenAt": "2026-11-03T09:35:31.021Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "PowerShell alternatives added for user SOA transfers",
+        "summary": "The documentation now lists Graph PowerShell commands for setting and reading user SOA, identifies the Hybrid Administrator role, and documents cloud-specific connection environments. It also notes that Graph Explorer isn't supported in Azure China.",
+        "adminImpact": "Administrators in Azure China must use Graph PowerShell; administrators in other sovereign clouds should select the corresponding documented environment.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/salesforce-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 10,
+      "deletions": 2,
+      "changes": 12,
+      "patch": "diff --git a/docs/identity/saas-apps/salesforce-provisioning-tutorial.md b/docs/identity/saas-apps/salesforce-provisioning-tutorial.md\nindex 7778c4937d9..493ee763d3d 100644\n--- a/docs/identity/saas-apps/salesforce-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/salesforce-provisioning-tutorial.md\n@@ -2,8 +2,9 @@\n title: Configure Salesforce for automatic user provisioning with Microsoft Entra ID\n description: Learn the steps required to perform in Salesforce and Microsoft Entra ID to automatically provision and de-provision user accounts from Microsoft Entra ID to Salesforce.\n ms.topic: how-to\n-ms.date: 03/23/2026\n-ms.custom: sfi-image-nochange\n+ms.date: 10/30/2026\n+ms.custom: sfi-image-nochange, msecd-doc-authoring-1032\n+ai-usage: ai-assisted\n # Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Salesforce so that I can streamline the user management process and ensure that users have the appropriate access to Salesforce.\n --- \n # Configure Salesforce for automatic user provisioning with Microsoft Entra ID\n@@ -17,10 +18,13 @@ The scenario outlined in this article assumes that you already have the followin\n [!INCLUDE [common-prerequisites.md](~/identity/saas-apps/includes/common-prerequisites.md)]\n * A Salesforce.com tenant.\n * A Salesforce account username and password, and the token. See [configure automatic user account provisioning](#configure-automatic-user-account-provisioning) for how to get the token. In future, if you reset the account password, Salesforce provides you with a new token and you need to edit the Salesforce provisioning settings.\n+* SOAP API `login()` enabled in your Salesforce org. Salesforce disables this operation by default for orgs created in Winter '26 and later. In Salesforce Setup, enter **User Interface** in the Quick Find box, select **User Interface**, and select **Enable SOAP API login()**. This action can't be reverted on the **User Interface** page. For details, see the Salesforce [SOAP API login() reference](https://developer.salesforce.com/docs/platform/api/guide/sforce-api-calls-login.html).\n * A custom user profile in Salesforce for the integration user. Once you have created a custom profile in the Salesforce portal, edit the profile's Administrative Permissions to enable the following:\n \n     * API Enabled.\n \n+    * Use Any API Auth.\n+\n     * Manage Users: Enabling this option automatically enables the following: \n     Assign Permission Sets, Manage Internal UsersManage IP Addresses, Manage Login Access Policies, Manage Password Policies, Manage Profiles and Permission Sets, Manage Roles, Manage Sharing, Reset User Passwords and Unlock Users, View All Users, View Roles and Hierarchy, View Setup and Configuration.\n \n@@ -29,6 +33,8 @@ The scenario outlined in this article assumes that you already have the followin\n   > [!Note]\n   > Assign the permissions directly to this profile. Don't add the permissions through permission sets.\n \n+The account entered in **Admin Username** needs **Use Any API Auth** because the Microsoft Entra provisioning service signs in through SOAP API `login()`. Salesforce's Winter '27 release update requires this permission for SOAP API sign-ins in all orgs, including sandboxes, from December 1, 2026. For details, see [Assign Use Any API Auth Permission for SOAP login()](https://help.salesforce.com/s/articleView?id=release-notes.rn_api_soap_login.htm&language=en_US&type=5).\n+\n > [!IMPORTANT]\n > If you're using a Salesforce.com trial account, then you'll be unable to configure automated user provisioning. Trial accounts don't have the necessary API access enabled until they are purchased. You can get around this limitation by using a free [developer account](https://developer.salesforce.com/signup) to complete this article.\n \n@@ -156,6 +162,8 @@ As users that are in assigned to the application are updated in Microsoft Entra\n     * The credentials used have admin access to Salesforce.\n     * The version of Salesforce that you're using supports Web Access (such as Developer, Enterprise, Sandbox, and Unlimited editions of Salesforce.)\n     * Web API access is enabled for the user.\n+    * SOAP API `login()` is enabled in the Salesforce org, and the **Admin Username** account has **Use Any API Auth**.\n+* **SalesforceCredentialValidation:** If **Test Connection** reports \"Your Salesforce.com credentials are invalid...\" even with a correct password and a fresh security token, check the integration account's **Use Any API Auth** permission. Salesforce Login History can show successful sign-ins even when this connection fails. If the underlying error is `INSUFFICIENT_ACCESS: SOAP API login() requires the Use Any API Auth user permission`, grant **Use Any API Auth** to the integration account's profile, and then retry **Test Connection**.\n * The Microsoft Entra provisioning service supports provisioning language, locale, and timeZone for a user. These attributes are in the default attribute mappings but don't have a default source attribute. Ensure that you select the default source attribute and that the source attribute is in the format expected by SalesForce. For example, localeSidKey for english(UnitedStates) is en_US. Review the guidance provided [here](https://help.salesforce.com/articleView?id=faq_getstart_what_languages_does.htm&type=5) to determine the proper localeSidKey format. The languageLocaleKey formats can be found [here](https://help.salesforce.com/articleView?id=faq_getstart_what_languages_does.htm&type=5). In addition to ensuring that the format is correct, you may need to ensure that the language is enabled for your users as described [here](https://help.salesforce.com/articleView?id=faq_getstart_what_languages_does.htm&type=5). \n * **SalesforceLicenseLimitExceeded:** The user could not be created in Salesforce because there are no available licenses for this user. Either procure additional licenses for the target application, or [review your user assignments](~/id-governance/access-reviews-application-preparation.md) to ensure that the correct users are assigned.\n * **SalesforceDuplicateUserName:** The user can't be provisioned because it has a Salesforce.com 'Username' that's duplicated in another Salesforce.com tenant.  In Salesforce.com, values for the 'Username' attribute must be unique across all Salesforce.com tenants.  By default, a user’s userPrincipalName in Microsoft Entra ID becomes their 'Username' in Salesforce.com.   You have two options.  One option is to find and rename the user with the duplicate 'Username' in the other Salesforce.com tenant, if you administer that other tenant as well.  The other option is to remove access from the Microsoft Entra user to the Salesforce.com tenant with which your directory is integrated. We will retry this operation on the next synchronization attempt. \n",
+      "baseCommitSha": "bcceaacb5a61177f1a325eb24c4ddf0ba2288870",
+      "commitSha": "281dfa5dab1393377783aa8e8ccfd287a257cfc8",
+      "commitMessage": "Document Salesforce SOAP login prerequisites and credential failures",
+      "commitAuthor": "Arvind Harinder",
+      "commitDate": "2026-10-30 14:55:04 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/salesforce-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/salesforce-provisioning-tutorial",
+      "eventId": "entra-docs:281dfa5dab1393377783aa8e8ccfd287a257cfc8:modified:docs/identity/saas-apps/salesforce-provisioning-tutorial.md",
+      "firstSeenAt": "2026-11-03T09:35:31.029Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Salesforce provisioning prerequisites updated",
+        "summary": "The tutorial now requires SOAP API `login()` to be enabled and the Admin Username account to have **Use Any API Auth**. It also documents credential-validation troubleshooting and Salesforce’s December 1, 2026 requirement.",
+        "adminImpact": "Enable SOAP API `login()` where needed and grant **Use Any API Auth** to the integration account before the requirement takes effect.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2,
+      "changes": 14,
+      "patch": "diff --git a/docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md b/docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md\nindex 03136642432..992af5ec530 100644\n--- a/docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md\n+++ b/docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md\n@@ -2,8 +2,9 @@\n title: Configure Salesforce Sandbox for automatic user provisioning with Microsoft Entra ID\n description: Learn the steps you need to perform in Salesforce Sandbox and Microsoft Entra ID to automatically provision and de-provision user accounts from Microsoft Entra ID to Salesforce Sandbox.\n ms.topic: how-to\n-ms.date: 03/23/2026\n-ms.custom: sfi-image-nochange\n+ms.date: 10/30/2026\n+ms.custom: sfi-image-nochange, msecd-doc-authoring-1032\n+ai-usage: ai-assisted\n # Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Salesforce Sandbox so that I can streamline the user management process and ensure that users have the appropriate access to Salesforce Sandbox.\n --- \n # Configure Salesforce Sandbox for automatic user provisioning with Microsoft Entra ID\n@@ -17,6 +18,10 @@ The scenario outlined in this article assumes that you already have the followin\n *   A Microsoft Entra tenant.\n *   A valid tenant for Salesforce Sandbox for Work or Salesforce Sandbox for Education. You may use a free trial     account for either service.\n *   A user account in Salesforce Sandbox with Team Admin permissions.\n+*   SOAP API `login()` enabled in your Salesforce Sandbox org. Salesforce disables this operation by default for orgs created in Winter '26 and later. In Salesforce Setup, enter **User Interface** in the Quick Find box, select **User Interface**, and select **Enable SOAP API login()**. This action can't be reverted on the **User Interface** page. For details, see the Salesforce [SOAP API login() reference](https://developer.salesforce.com/docs/platform/api/guide/sforce-api-calls-login.html).\n+*   A profile for the integration account entered in **Admin Username** with **API Enabled**, **Manage Users**, and **Use Any API Auth** enabled.\n+\n+The **Admin Username** account needs **Use Any API Auth** because the Microsoft Entra provisioning service signs in through SOAP API `login()`. Salesforce's Winter '27 release update requires this permission for SOAP API sign-ins in all orgs, including sandboxes, from December 1, 2026. For details, see [Assign Use Any API Auth Permission for SOAP login()](https://help.salesforce.com/s/articleView?id=release-notes.rn_api_soap_login.htm&language=en_US&type=5).\n \n ## Assigning users to Salesforce Sandbox\n \n@@ -104,6 +109,11 @@ The objective of this section is to outline how to enable user provisioning of A\n \n [!INCLUDE [monitor-deployment.md](~/identity/saas-apps/includes/monitor-deployment.md)]\n \n+## Common issues\n+\n+* If **Test Connection** fails, verify that SOAP API `login()` is enabled in the Salesforce Sandbox org and that the **Admin Username** account has **Use Any API Auth**.\n+* **SalesforceCredentialValidation:** If **Test Connection** reports \"Your Salesforce.com credentials are invalid...\" even with a correct password and a fresh security token, check the integration account's **Use Any API Auth** permission. Salesforce Login History can show successful sign-ins even when this connection fails. If the underlying error is `INSUFFICIENT_ACCESS: SOAP API login() requires the Use Any API Auth user permission`, grant **Use Any API Auth** to the integration account's profile, and then retry **Test Connection**.\n+\n ## Additional resources\n \n * [Managing user account provisioning for Enterprise Apps](tutorial-list.md)\n",
+      "baseCommitSha": "bcceaacb5a61177f1a325eb24c4ddf0ba2288870",
+      "commitSha": "281dfa5dab1393377783aa8e8ccfd287a257cfc8",
+      "commitMessage": "Document Salesforce SOAP login prerequisites and credential failures",
+      "commitAuthor": "Arvind Harinder",
+      "commitDate": "2026-10-30 14:55:04 -0400",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/salesforce-sandbox-provisioning-tutorial",
+      "eventId": "entra-docs:281dfa5dab1393377783aa8e8ccfd287a257cfc8:modified:docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md",
+      "firstSeenAt": "2026-11-03T09:35:31.033Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Salesforce Sandbox setup now includes SOAP login prerequisites",
+        "summary": "The tutorial adds requirements to enable SOAP API `login()` and grant the integration account API Enabled, Manage Users, and Use Any API Auth permissions. It also documents Salesforce’s December 1, 2026 requirement for Use Any API Auth and related credential errors.",
+        "adminImpact": "Enable SOAP API `login()` and configure the integration account permissions to prevent Test Connection and provisioning failures.",
+        "actionRequired": true,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/identity/authentication/concept-system-preferred-authentication.md",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "patch": "diff --git a/docs/identity/authentication/concept-system-preferred-authentication.md b/docs/identity/authentication/concept-system-preferred-authentication.md\nindex f1beebdedc4..db91577ffaf 100644\n--- a/docs/identity/authentication/concept-system-preferred-authentication.md\n+++ b/docs/identity/authentication/concept-system-preferred-authentication.md\n@@ -225,9 +225,9 @@ When in the **Microsoft managed** state, the system evaluates available credenti\n |------|-----------|----------|----------------------|\n | 1 | [Temporary Access Pass (TAP)](howto-authentication-temporary-access-pass.md) | Recovery | 1FA + MFA |\n | 2 | [Passkey](concept-authentication-passkeys-fido2.md)<sup>1</sup> | Phishing-resistant | 1FA + MFA |\n-| 3 | [Certificate-based authentication (CBA)](concept-certificate-based-authentication.md) | Phishing-resistant | 1FA or 1FA + MFA |\n-| 4 | [Microsoft Authenticator notifications](concept-authentication-authenticator-app.md) | Passwordless | 1FA + MFA |\n-| 5 | [External multifactor authentication (MFA)](how-to-authentication-external-method-manage.md) | — | MFA |\n+| 3 | [External multifactor authentication (MFA)](how-to-authentication-external-method-manage.md) | – | MFA |\n+| 4 | [Certificate-based authentication (CBA)](concept-certificate-based-authentication.md) | Phishing-resistant | 1FA or 1FA + MFA |\n+| 5 | [Microsoft Authenticator notifications](concept-authentication-authenticator-app.md) | Passwordless | 1FA + MFA |\n | 6 | [Time-based one-time password (TOTP)](concept-authentication-oath-tokens.md)<sup>2</sup> | — | MFA |\n | 7 | [Telephony](concept-authentication-phone-options.md)<sup>3</sup> | — | MFA |\n | 8 | QR code | Frontline worker | 1FA |\n",
+      "baseCommitSha": "d0469c9b8d2f66341c468c80ff9d66c5dd32affe",
+      "commitSha": "f354dcbe660561eb69de5b232db8ec63666b87e8",
+      "commitMessage": "Reorder authentication methods in documentation",
+      "commitAuthor": "Uma Chaudhari",
+      "commitDate": "2026-10-29 10:23:00 -0500",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/authentication/concept-system-preferred-authentication.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-system-preferred-authentication",
+      "eventId": "entra-docs:f354dcbe660561eb69de5b232db8ec63666b87e8:modified:docs/identity/authentication/concept-system-preferred-authentication.md",
+      "firstSeenAt": "2026-11-03T09:35:31.040Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Authentication methods reordered in the documentation",
+        "summary": "The table now lists External multifactor authentication as method 3, Certificate-based authentication as method 4, and Microsoft Authenticator notifications as method 5. The External MFA entry also has updated dash formatting.",
+        "adminImpact": "Administrators referencing this page should use the revised method order. No configuration change is required.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [],
+  "messageCenterItems": [
+    {
+      "id": "MC1536049",
+      "source": "mc",
+      "sourceLabel": "Message Center",
+      "date": "2026-11-03",
+      "title": "Microsoft Entra ID: Microsoft-provided SMS and voice authentication to retire for self-service password reset (SSPR)",
+      "summary": "Microsoft Entra ID will retire Microsoft-provided SMS and voice authentication for self-service password reset (SSPR) starting February 2027, with a 50-day transition per user group. Organizations must prepare alternative recovery methods, as SMS/voice will no longer be available for SSPR after the transition.",
+      "product": {
+        "slug": "entra-id",
+        "name": "Microsoft Entra ID",
+        "short": "Entra ID",
+        "icon": "entra-id.svg",
+        "learn": "https://learn.microsoft.com/en-us/entra/identity/"
+      },
+      "topic": {
+        "slug": "conditional-access",
+        "name": "Conditional Access",
+        "icon": "/assets/topics/conditional-access.svg"
+      },
+      "changeType": "Major update",
+      "url": "/message-center/MC1536049/",
+      "originalUrl": "https://mc.merill.net/message/MC1536049",
+      "body": "<p><b><b>What and why</b></b></p><p>As Microsoft-provided SMS and voice authentication retire in Microsoft Entra ID, these methods will also become unavailable for SSPR. Organizations have 50 days after the applicable sign-in retirement rollout reaches their tenant to prepare alternative recovery methods. Users may still be able to sign in but lose the ability to reset forgotten passwords. Passkeys and other sign-in methods don't automatically satisfy SSPR requirements. Admins should identify affected users and ensure they have enough eligible recovery methods to prevent disruptions and increased helpdesk requests.</p><p><b><b>Rollout schedule</b></b></p><ul><li><b>General Availability (Worldwide, GCC): </b>We expect rollout to begin and complete in<b> February 2027</b></li></ul><p></p><table><tbody><tr><td><b>User population</b></td><td><b>Sign-in retirement rollout begins</b></td><td><b>SSPR transition ends</b></td></tr><tr><td><span>Users other than Global Administrators and external users</span></td><td><span>February 1, 2027</span></td><td><span>50 days after this rollout reaches your tenant</span></td></tr><tr><td><span>Global Administrators and external users</span></td><td><span>July 1, 2027</span></td><td><span>50 days after this separate rollout reaches your tenant</span></td></tr></tbody></table><p>These are <b>phased rollout start dates</b>, not a single SSPR cutoff for every organization. Each population's 50-day period begins when its applicable rollout reaches your tenant.&nbsp;</p><p></p><p><b><b>Impact on your organization</b></b></p><p><i>Who is affected</i></p><ul><li>Organizations with users who rely on Microsoft-provided SMS/voice to meet their password-reset verification requirements. This includes users who have another sign-in method but still depend on SMS/voice for password recovery.</li></ul><p><i>Platforms and services</i></p><ul><li>Microsoft Entra ID SSPR</li></ul><p><i>What will happen</i></p><p>When the applicable sign-in retirement rollout reaches your tenant:</p><ul><li>50-day transition: Existing SMS and voice registrations remain usable for SSPR under your current recovery policy.</li><li>Registration changes: SMS/voice SSPR registration and refresh prompts stop, but prompts for other eligible methods continue.</li><li>My Sign-Ins: Users can no longer add SMS/voice methods or edit authentication phone numbers. Existing phone registrations appear disabled, even while usable for SSPR during the transition.</li><li>Customer-managed telephony (CYOT): Recovery through supported providers remains available.</li></ul><p>After the 50-day transition period:</p><p>Microsoft-provided SMS and voice are no longer available as SSPR recovery options.</p><table><tbody><tr><td><b>User's remaining eligible recovery methods</b></td><td><b>Password-reset experience</b></td></tr><tr><td><span>Enough methods to meet the applicable SSPR requirement</span></td><td><span>User can continue resetting their password with those methods</span></td></tr><tr><td><span>Not enough methods to meet the applicable SSPR requirement</span></td><td><span>User cannot complete SSPR and is directed to contact their administrator</span></td></tr></tbody></table><p>The applicable one/two method requirement still applies. To retain SMS/voice for recovery, your organization must configure a supported CYOT.</p><p>Microsoft will not automatically change your SSPR policy or enable <b>Allow password change after secure sign-in</b> for your tenant.</p><p></p><p><b><b>Action required and recommendations</b></b></p><p>Prepare affected users before their applicable 50-day transition period ends:</p><ol><li><b>Identify affected users</b>. Find users relying on SMS/voice for SSPR, even if they have other sign-in methods registered. Use the <a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-sms-voice-retirement\" rel=\"noopener noreferrer\">SMS and voice retirement and migration guidance</a>.</li><li><b>Prepare alternative recovery methods</b>. Ensure users have enough eligible methods to meet SSPR policy requirements without Microsoft-provided SMS/voice. Passkeys alone don't satisfy SSPR requirements. If phone recovery is needed, configure and test a supported telephony provider before the transition ends.</li><li><b>Test and communicate</b>. Verify password recovery works with your SSPR policies and Conditional Access settings. Inform users and helpdesk staff about deadlines, registration steps, and support options.</li></ol><p></p><p><b>Recommended: Let passkey users change a forgotten password</b></p><ul><li>Where available, administrators can enable<a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-sspr-howitworks?tabs=secure-sign-in#tab/secure-sign-in\" rel=\"noopener noreferrer\"> </a><b><a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-sspr-howitworks?tabs=secure-sign-in#tab/secure-sign-in\" rel=\"noopener noreferrer\">Allow password change after secure sign-in</a></b> for eligible users. Users can then sign in with their passkey and change their password in <i>My Sign-Ins</i> without knowing/entering their current password.</li></ul><p></p><p><b>Learn more</b></p><ul><li><a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-sms-voice-retirement\" rel=\"noopener noreferrer\">SMS and voice retirement and migration guidance</a></li><li><a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-sspr-howitworks\" rel=\"noopener noreferrer\">How Microsoft Entra self-service password reset works</a></li><li><a href=\"https://learn.microsoft.com/entra/identity/authentication/concept-phone-providers\" rel=\"noopener noreferrer\">Choose a telephony provider for SMS and voice authentication</a></li></ul><p></p><p><b><b>Compliance considerations</b></b></p><p>If your organization needs phone-based recovery for regulatory or operational reasons, plan and validate a supported customer-managed provider before the applicable SSPR cutoff.</p>",
+      "category": "planForChange",
+      "services": [
+        "Microsoft Entra"
+      ],
+      "tags": [
+        "User impact",
+        "Admin impact",
+        "Retirement"
+      ],
+      "startDate": "2026-11-03T00:05:11Z",
+      "endDate": "2027-03-03T08:00:00Z",
+      "lastModifiedDateTime": "2026-11-03T00:07:14.437Z",
+      "version": "2026-11-03T00:07:14.437Z",
+      "eventId": "message-center:MC1536049:2026-11-03T00:07:14.437Z",
+      "firstSeenAt": "2026-11-03T09:36:21.547Z"
+    }
+  ],
+  "summary": {
+    "totalCommits": 14,
+    "totalFiles": 23,
+    "authors": [
+      "Alexander Pavlovsky",
+      "Arvind Harinder",
+      "Darshan Maiya",
+      "Diego Jerez",
+      "Rasika More",
+      "Sindhoor Grandhi",
+      "Uma Chaudhari",
+      "ahmedmorsy-linux"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 2 new, 21 updated, and 0 removed Microsoft Entra documentation files across 8 documentation areas.",
+    "groups": [
+      {
+        "category": "New feature",
+        "title": "global-secure-access",
+        "summary": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview).",
+        "sourceFiles": [
+          "docs/global-secure-access/how-to-configure-sign-in-every-time.md",
+          "docs/global-secure-access/concept-private-access-sign-in-every-time.md",
+          "docs/global-secure-access/concept-private-access-sign-in-every-time.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/devices",
+        "summary": "The documentation now explains that in-place upgrades from RHEL 8.x to 9.x can remove the `aadsshlogin` package, causing `Permission denied (publickey)` errors. It provides steps to uninstall and reinstall the AADSSHLoginForLinux extension.",
+        "sourceFiles": [
+          "docs/identity/devices/howto-vm-sign-in-azure-ad-linux.md"
+        ]
+      },
+      {
+        "category": "Feature update",
+        "title": "identity/conditional-access",
+        "summary": "The documentation now states that Office perpetual clients version 2024 and later support Token Protection, while versions earlier than 2024 aren't supported. The documentation now describes Every time strict, including its 10-second validity window, application session-management requirements, targeting guidance, and Office 365 warning. It also explains Global Secure Access reauthentication for sensitive private applications using a five-minute window.",
+        "sourceFiles": [
+          "docs/identity/conditional-access/deployment-guide-token-protection-windows.md",
+          "docs/identity/conditional-access/concept-session-lifetime.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/hybrid",
+        "summary": "The guide now covers connecting with Microsoft Graph PowerShell, required permissions and cloud settings, troubleshooting consent, and the PowerShell command for changing a group’s source of authority. The documentation now explains how to install and connect with Microsoft Graph PowerShell, select cloud environments, grant required permissions, and update a user’s source of authority with PowerShell. The Update-MgGroupOnPremiseSyncBehavior and Get-MgGroupOnPremiseSyncBehavior links no longer include the graph-powershell-1.0 view parameter. The User Source of Authority configuration guide now links to the current Microsoft Graph PowerShell cmdlet pages without the `view=graph-powershell-1.0`",
+        "sourceFiles": [
+          "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-group-source-of-authority-configure.md",
+          "docs/identity/hybrid/how-to-user-source-of-authority-configure.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/authentication",
+        "summary": "The documentation now directs administrators through Function App → Functions → SendOtp → Invocations when checking the latest transaction and HTTP 200 result. The table now lists External multifactor authentication as method 3, Certificate-based authentication as method 4, and Microsoft Authenticator notifications as method 5. The External MFA entry also has updated dash formatting.",
+        "sourceFiles": [
+          "docs/identity/authentication/choose-your-own-telephony-set-up.md",
+          "docs/identity/authentication/concept-system-preferred-authentication.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "external-id",
+        "summary": "The documentation now describes the sample as supporting passkey listing, registration, and deletion. It removes the separate deletion endpoint guidance and the warning about the sample using Microsoft Graph with high-privilege permissions and a client secret.",
+        "sourceFiles": [
+          "docs/external-id/customers/how-to-sign-in-with-passkey.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity-platform",
+        "summary": "The article now says the passkey sample demonstrates listing, registration, and deletion flows, and removes the previous Microsoft Graph deletion-flow warning.",
+        "sourceFiles": [
+          "docs/identity-platform/reference-credential-management-api.md"
+        ]
+      },
+      {
+        "category": "Feature update",
+        "title": "identity/saas-apps",
+        "summary": "The tutorial now requires SOAP API `login()` to be enabled and the Admin Username account to have **Use Any API Auth**. It also documents credential-validation troubleshooting and Salesforce’s December 1, 2026 requirement. The tutorial adds requirements to enable SOAP API `login()` and grant the integration account API Enabled, Manage Users, and Use Any API Auth permissions. It also documents Salesforce’s December 1, 2026 requirement for Use Any API Auth and related credential errors.",
+        "sourceFiles": [
+          "docs/identity/saas-apps/salesforce-provisioning-tutorial.md",
+          "docs/identity/saas-apps/salesforce-sandbox-provisioning-tutorial.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "New feature",
+        "headline": "global-secure-access",
+        "detail": "Microsoft Entra Private Access documentation now explains how to configure, test, and deploy reauthentication for selected private applications using one Conditional Access policy and a pilot group. It requires Global Secure Access Windows client version 2.34.222 or later. The new page describes the preview sign-in-every-time capability, its Conditional Access dependency, Windows client requirement (version 2.34.222 or later), and five-minute reauthentication window. The documentation now links to instructions for configuring sign-in every time for Microsoft Entra Private Access (preview)."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/devices",
+        "detail": "The documentation now explains that in-place upgrades from RHEL 8.x to 9.x can remove the `aadsshlogin` package, causing `Permission denied (publickey)` errors. It provides steps to uninstall and reinstall the AADSSHLoginForLinux extension."
+      },
+      {
+        "category": "Feature update",
+        "headline": "identity/conditional-access",
+        "detail": "The documentation now states that Office perpetual clients version 2024 and later support Token Protection, while versions earlier than 2024 aren't supported. The documentation now describes Every time strict, including its 10-second validity window, application session-management requirements, targeting guidance, and Office 365 warning. It also explains Global Secure Access reauthentication for sensitive private applications using a five-minute window."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/hybrid",
+        "detail": "The guide now covers connecting with Microsoft Graph PowerShell, required permissions and cloud settings, troubleshooting consent, and the PowerShell command for changing a group’s source of authority. The documentation now explains how to install and connect with Microsoft Graph PowerShell, select cloud environments, grant required permissions, and update a user’s source of authority with PowerShell. The Update-MgGroupOnPremiseSyncBehavior and Get-MgGroupOnPremiseSyncBehavior links no longer include the graph-powershell-1.0 view parameter. The User Source of Authority configuration guide now links to the current Microsoft Graph PowerShell cmdlet pages without the `view=graph-powershell-1.0`"
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/authentication",
+        "detail": "The documentation now directs administrators through Function App → Functions → SendOtp → Invocations when checking the latest transaction and HTTP 200 result. The table now lists External multifactor authentication as method 3, Certificate-based authentication as method 4, and Microsoft Authenticator notifications as method 5. The External MFA entry also has updated dash formatting."
+      },
+      {
+        "category": "Doc update",
+        "headline": "external-id",
+        "detail": "The documentation now describes the sample as supporting passkey listing, registration, and deletion. It removes the separate deletion endpoint guidance and the warning about the sample using Microsoft Graph with high-privilege permissions and a client secret."
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity-platform",
+        "detail": "The article now says the passkey sample demonstrates listing, registration, and deletion flows, and removes the previous Microsoft Graph deletion-flow warning."
+      },
+      {
+        "category": "Feature update",
+        "headline": "identity/saas-apps",
+        "detail": "The tutorial now requires SOAP API `login()` to be enabled and the Admin Username account to have **Use Any API Auth**. It also documents credential-validation troubleshooting and Salesforce’s December 1, 2026 requirement. The tutorial adds requirements to enable SOAP API `login()` and grant the integration account API Enabled, Manage Users, and Use Any API Auth permissions. It also documents Salesforce’s December 1, 2026 requirement for Use Any API Auth and related credential errors."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
