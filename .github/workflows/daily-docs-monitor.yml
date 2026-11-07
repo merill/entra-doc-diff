@@ -67,7 +67,7 @@ jobs:
       # Resolves without a token: this repository and the engine are both
       # private, and the engine allows repositories owned by the same user to
       # use its actions, so GitHub checks it out with this workflow's token.
-      uses: merill/dailynews-engine/.github/actions/setup@v1.4.1
+      uses: merill/dailynews-engine/.github/actions/setup@v1.4.3
       
     - name: Run docs and Message Center monitor
       if: inputs.backfill_dates == ''
@@ -86,6 +86,13 @@ jobs:
         USERJOT_PROJECT_ID: ${{ vars.USERJOT_PROJECT_ID }}
         GITHUB_ACTIONS: "true"
       run: dailynews monitor
+
+    - name: Drop metadata-only changes from the backfilled reports
+      if: inputs.backfill_dates != ''
+      env:
+        LOCAL_REPO_PATH: ./entra-docs
+        BACKFILL_DATES: ${{ inputs.backfill_dates }}
+      run: dailynews prune-metadata --dates="$BACKFILL_DATES"
 
     - name: Regenerate recovered per-change summaries
       if: inputs.backfill_dates != ''
