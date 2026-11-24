@@ -1,0 +1,128 @@
+{
+  "newFiles": [],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/devices/assign-local-admin.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/identity/devices/assign-local-admin.md b/docs/identity/devices/assign-local-admin.md\nindex b70e89a8fcc..a16d75cdfbc 100644\n--- a/docs/identity/devices/assign-local-admin.md\n+++ b/docs/identity/devices/assign-local-admin.md\n@@ -2,7 +2,7 @@\n title: How to manage local administrators on Microsoft Entra joined devices\n description: Learn how to assign Azure roles to the local administrators group of a Windows device.\n ms.topic: how-to\n-ms.date: 06/17/2026\n+ms.date: 11/23/2026\n ms.reviewer: \n ms.custom: sfi-ga-nochange\n #Customer intent: As an IT admin, I want to manage the local administrators group assignment during a Microsoft Entra join, so that I can control who can manage Microsoft Entra joined devices\n@@ -71,7 +71,7 @@ Organizations can use Intune to manage these policies using [Custom OMA-URI Sett\n \n - Managing local administrators using Microsoft Entra groups isn't applicable to Microsoft Entra hybrid joined or Microsoft Entra registered devices.\n \n-- Microsoft Entra groups deployed to a device with this policy don't apply to remote desktop connections. To control remote desktop permissions for Microsoft Entra joined devices, you need to add the individual user's SID to the appropriate group.\n+- Microsoft Entra groups deployed to a device with this policy don't apply to remote desktop connections or Server Message Block (SMB) access to administrative shares, such as `\\\\<device>\\C$` or `\\\\<device>\\Admin$`. To grant these permissions on Microsoft Entra joined devices, add the individual user's SID to the appropriate local group. For administrative shares, add the user to the local Administrators group.\n \n > [!IMPORTANT]\n > Windows sign-in with Microsoft Entra ID supports evaluation of up to 20 groups for administrator rights. We recommend having no more than 20 Microsoft Entra groups on each device, and having a user as a member in no more than 20 groups, to ensure that administrator rights are correctly assigned. This limitation also applies to nested groups.\n",
+      "baseCommitSha": "be22aa6d166ab1f70a0ad9601da4eca183451c58",
+      "commitSha": "eaa3b50a9ce0928ae02b87e10fc439933311b59e",
+      "commitMessage": "Clarify local administrator group limitation for SMB administrative shares",
+      "commitAuthor": "Beatriz Ribeiro",
+      "commitDate": "2026-11-23 12:59:29 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/devices/assign-local-admin.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/devices/assign-local-admin",
+      "eventId": "entra-docs:eaa3b50a9ce0928ae02b87e10fc439933311b59e:modified:docs/identity/devices/assign-local-admin.md",
+      "firstSeenAt": "2026-11-24T01:43:04.575Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Local administrator group limitation now includes SMB administrative shares",
+        "summary": "The documentation now states that Microsoft Entra groups assigned by this policy don't apply to SMB administrative shares such as `\\\\<device>\\C$` and `\\\\<device>\\Admin$`, in addition to remote desktop connections. It says to add an individual user's SID to grant these permissions.",
+        "adminImpact": "Administrators managing access to administrative shares should account for this limitation when configuring permissions on Microsoft Entra joined devices.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/verified-id/verifiable-credentials-configure-tenant.md",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 8,
+      "changes": 13,
+      "patch": "diff --git a/docs/verified-id/verifiable-credentials-configure-tenant.md b/docs/verified-id/verifiable-credentials-configure-tenant.md\nindex 8ed9a452dcd..669acb40969 100644\n--- a/docs/verified-id/verifiable-credentials-configure-tenant.md\n+++ b/docs/verified-id/verifiable-credentials-configure-tenant.md\n@@ -2,8 +2,9 @@\n title: Tutorial - Advanced Microsoft Entra Verified ID setup\n description: In this tutorial, you learn how to manually configure your tenant to support the Verified ID service.\n ms.topic: tutorial\n-ms.date: 04/30/2025\n-ms.custom: sfi-ga-nochange, sfi-image-nochange\n+ms.date: 11/23/2026\n+ai-usage: ai-assisted\n+ms.custom: sfi-ga-nochange, sfi-image-nochange, msecd-doc-authoring-1026\n # Customer intent: As an enterprise, we want to enable customers to manage information about themselves by using verifiable credentials.\n ---\n \n@@ -39,15 +40,12 @@ The following diagram illustrates the Verified ID architecture and the component\n \n ## Create a key vault\n \n-> [!NOTE]\n-> The Azure Key Vault that you use to set up the Verified ID service must have [Key Vault Access Policy](/azure/key-vault/general/assign-access-policy) for its Permission model. There's currently a limitation if the Key Vault has Azure role-based access control.\n-\n [Azure Key Vault](/azure/key-vault/general/basic-concepts) is a cloud service that enables the secure storage and access management of secrets and keys. The Verified ID service stores public and private keys in Azure Key Vault. These keys are used to sign and verify credentials.\n \n-If you don't have an Azure Key Vault instance available, follow [these steps](/azure/key-vault/general/quick-create-portal) to create a key vault using the Azure portal. The Azure Key Vault that you use to set up the Verified ID service must have [Key Vault Access Policy](/azure/key-vault/general/assign-access-policy) for its Permission model instead of Azure role-based access control.\n+If you don't have an Azure Key Vault instance available, follow [these steps](/azure/key-vault/general/quick-create-portal) to create a key vault using the Azure portal.\n \n > [!NOTE]\n-> By default, the vault's creator account is the only one with access. The Verified ID service needs access to the key vault. You must [authenticate your key vault](/azure/key-vault/general/basic-concepts), allowing the account used during configuration to create and delete keys. The account used during configuration also requires permissions to sign so that it can create the domain binding for Verified ID. If you use the same account while testing, modify the default policy to grant the account sign permission, in addition to the default permissions granted to vault creators.\n+> The Verified ID service needs [access to the key vault](/azure/key-vault/general/basic-concepts). The vault's creator account requires permissions to create and delete keys. It also requires permission to sign so that it can create the domain binding for Verified ID.\n \n ### Manage access to the key vault\n \n@@ -77,7 +75,6 @@ To set up Verified ID, follow these steps:\n \n         > [!IMPORTANT]\n         > The domain can't be a redirect. Otherwise, the DID and domain can't be linked. Make sure to use HTTPS for the domain. For example: `https://did.woodgrove.com`.\n-        > Also ensure that the Key Vault's Permission Model is set to Vault Access Policy.\n \n     1. **Key vault**: Select the key vault that you created earlier.\n \n",
+      "baseCommitSha": "519f3f2d74f3c706434b3dd429d6d558c443a26d",
+      "commitSha": "6bcba8d4398601660c079eab3a8c481dbf826b56",
+      "commitMessage": "Update Verified ID advanced setup for both Key Vault permission models",
+      "commitAuthor": "Rohit Gulati",
+      "commitDate": "2026-11-23 20:02:58 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/verifiable-credentials-configure-tenant.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/verified-id/verifiable-credentials-configure-tenant",
+      "eventId": "entra-docs:6bcba8d4398601660c079eab3a8c481dbf826b56:modified:docs/verified-id/verifiable-credentials-configure-tenant.md",
+      "firstSeenAt": "2026-11-24T01:43:04.599Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Verified ID setup now documents updated Key Vault permissions",
+        "summary": "The setup guidance no longer requires the Key Vault Access Policy permission model. It now states that the vault’s creator account needs permissions to create, delete, and sign with keys.",
+        "adminImpact": "Administrators configuring Verified ID should verify that the configuring account has these Key Vault permissions.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/verified-id/whats-new.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "changes": 3,
+      "patch": "diff --git a/docs/verified-id/whats-new.md b/docs/verified-id/whats-new.md\nindex e8102c09d4a..930de675c2f 100644\n--- a/docs/verified-id/whats-new.md\n+++ b/docs/verified-id/whats-new.md\n@@ -2,7 +2,7 @@\n title: What's new for Microsoft Entra Verified ID\n description: Explore recent Microsoft Entra Verified ID features, improvements, and service changes so you can plan updates and use new capabilities.\n ms.topic: whats-new\n-ms.date: 11/07/2026\n+ms.date: 11/23/2026\n ai-usage: ai-assisted\n ms.custom: references_regions, msecd-doc-authoring-1026\n #customer intent: As a Microsoft Entra Verified ID issuer, verifier, or developer, I want to review product updates so that I can use new capabilities as they become available.\n@@ -18,6 +18,7 @@ This article summarizes the latest features, improvements, and service changes f\n \n ## November 2026\n \n+- **Azure Key Vault permission models for advanced setup**: [Advanced setup](verifiable-credentials-configure-tenant.md#create-a-key-vault) now supports Azure Key Vault with either Azure role-based access control (RBAC) or vault access policies.\n - **ID verification profiles**: Learn how to [create and manage ID verification profiles](how-to-create-id-verification-profile.md) for account recovery, onboarding, and verification at sign-in.\n - **My Account Verified ID issuance**: Learn how to [get your Microsoft Entra Verified ID from My Account](how-to-get-verified-id-my-account.md), including profile-based self-service issuance.\n - **Identity verification (IDV) partner gallery: two new Security Store integrations**: Added [Entrust](https://securitystore.microsoft.com/solutions/entrustdatacard.entrust_identity_verification_prod) and [Persona](https://securitystore.microsoft.com/solutions/persona-identities.persona_idv) as [Security Store integration partners](idv-partners.md#security-store-integration-partners).\n",
+      "baseCommitSha": "519f3f2d74f3c706434b3dd429d6d558c443a26d",
+      "commitSha": "6bcba8d4398601660c079eab3a8c481dbf826b56",
+      "commitMessage": "Update Verified ID advanced setup for both Key Vault permission models",
+      "commitAuthor": "Rohit Gulati",
+      "commitDate": "2026-11-23 20:02:58 +0000",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/verified-id/whats-new.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/verified-id/whats-new",
+      "eventId": "entra-docs:6bcba8d4398601660c079eab3a8c481dbf826b56:modified:docs/verified-id/whats-new.md",
+      "firstSeenAt": "2026-11-24T01:43:04.609Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Advanced setup supports both Key Vault permission models",
+        "summary": "Advanced setup now supports Azure Key Vault configured with either Azure RBAC or vault access policies.",
+        "adminImpact": "Administrators can use either supported Key Vault permission model when configuring advanced setup.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [],
+  "messageCenterItems": [],
+  "summary": {
+    "totalCommits": 2,
+    "totalFiles": 3,
+    "authors": [
+      "Beatriz Ribeiro",
+      "Rohit Gulati"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 0 new, 3 updated, and 0 removed Microsoft Entra documentation files across 2 documentation areas.",
+    "groups": [
+      {
+        "category": "Doc update",
+        "title": "identity/devices",
+        "summary": "The documentation now states that Microsoft Entra groups assigned by this policy don't apply to SMB administrative shares such as `\\\\<device>\\C$` and `\\\\<device>\\Admin$`, in addition to remote desktop connections. It says to add an individual user's SID to grant these permissions.",
+        "sourceFiles": [
+          "docs/identity/devices/assign-local-admin.md"
+        ]
+      },
+      {
+        "category": "Feature update",
+        "title": "verified-id",
+        "summary": "The setup guidance no longer requires the Key Vault Access Policy permission model. It now states that the vault’s creator account needs permissions to create, delete, and sign with keys. Advanced setup now supports Azure Key Vault configured with either Azure RBAC or vault access policies.",
+        "sourceFiles": [
+          "docs/verified-id/verifiable-credentials-configure-tenant.md",
+          "docs/verified-id/whats-new.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Doc update",
+        "headline": "identity/devices",
+        "detail": "The documentation now states that Microsoft Entra groups assigned by this policy don't apply to SMB administrative shares such as `\\\\<device>\\C$` and `\\\\<device>\\Admin$`, in addition to remote desktop connections. It says to add an individual user's SID to grant these permissions."
+      },
+      {
+        "category": "Feature update",
+        "headline": "verified-id",
+        "detail": "The setup guidance no longer requires the Key Vault Access Policy permission model. It now states that the vault’s creator account needs permissions to create, delete, and sign with keys. Advanced setup now supports Azure Key Vault configured with either Azure RBAC or vault access policies."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
