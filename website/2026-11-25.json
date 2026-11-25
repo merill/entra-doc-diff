@@ -1,0 +1,251 @@
+{
+  "newFiles": [
+    {
+      "filename": "docs/identity/enterprise-apps/restrict-multitenant-apps.md",
+      "status": "added",
+      "additions": 44,
+      "deletions": 0,
+      "changes": 44,
+      "patch": "diff --git a/docs/identity/enterprise-apps/restrict-multitenant-apps.md b/docs/identity/enterprise-apps/restrict-multitenant-apps.md\nnew file mode 100644\nindex 00000000000..0d2937e93f1\n--- /dev/null\n+++ b/docs/identity/enterprise-apps/restrict-multitenant-apps.md\n@@ -0,0 +1,44 @@\n+---\n+title: Restrict multitenant Microsoft Entra apps\n+description: Require multitenant apps to explicitly list the tenants they'll operate in for increased security\n+ms.reviewer: arcrowe\n+ms.date: 11/24/2026\n+ms.topic: how-to\n+ms.localizationpriority: medium\n+ms.collection: RestrictedMode\n+audience: admin\n+ai-usage: ai-assisted\n+---\n+\n+# Restrict multitenant Microsoft Entra apps\n+\n+Applications that accept tokens from any Microsoft Entra tenant significantly expand their attack surface. When an app doesn't explicitly restrict which tenants it can authenticate, any external tenant - including one controlled by a bad actor - can attempt to obtain tokens and interact with the app. Microsoft recommends that applications explicitly constrain the tenants they trust, limiting authentication to a defined set of known tenants. This reduces lateral movement risk and helps ensure apps are only accessed from environments they're designed to operate in.\n+\n+Tenant administrators can require applications in their tenant to declare the tenants they're allowed to authenticate from. When this control is enabled, going forward, applications in the tenant must specify an allow list of tenant IDs they'll operate in. Over time, this drives a more secure-by-default posture as apps are created or updated, ensuring tenant boundaries are explicitly enforced. Existing applications aren't automatically restricted when the policy is applied; administrators can accelerate risk reduction by identifying unrestricted apps and updating them to declare their allowed tenants.\n+\n+## Restrict app audience\n+\n+Multitenant apps can be restricted in the Microsoft 365 admin center.\n+\n+For required roles and access instructions, see [Baseline security mode settings](/microsoft-365/baseline-security-mode/baseline-security-mode-settings#before-you-begin).\n+\n+1. Sign in to the [Microsoft 365 admin center](https://admin.microsoft.com) and go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode**, find the **New apps require assignment of the tenants allowed to access them** setting, and switch the toggle to **On**.\n+\n+Apps can also be restricted using the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). For more information, see [Configure app management policies](configure-app-management-policies.md).\n+\n+Enabling this setting blocks both new and existing apps from becoming multitenant without restrictions. You can gauge the impact of enabling this setting by identifying recent creations of multitenant apps. From the Microsoft 365 admin center:\n+\n+1. In the Microsoft 365 admin center, go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode** and find the **New apps require assignment of the tenants allowed to access them** setting.\n+1. Select **download report** to view recent multitenant app creations in your organization.\n+\n+## Restrict existing app audiences\n+\n+Blocking creation of new unrestricted apps doesn't affect existing apps. Existing apps that already allow any tenant can be identified using the Microsoft 365 admin center.\n+\n+1. In the Microsoft 365 admin center, go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode** and find the **New apps require assignment of the tenants allowed to access them** setting.\n+1. Select **download report** to view existing unrestricted multitenant apps.\n+\n+Identify the tenants where an existing multitenant app operates before adding them to its audience restrictions. Existing application audiences can be restricted using the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM), [Microsoft Graph PowerShell](/powershell/module/microsoft.graph.beta.applications/update-mgbetaapplication?view=graph-powershell-beta&preserve-view=true), or the [Microsoft Graph API](/graph/api/resources/signinaudiencerestrictionsbase?view=graph-rest-beta&preserve-view=true).\n\\ No newline at end of file\n",
+      "baseCommitSha": "7359e145bb49dc99369f6e438fcb40292ff72783",
+      "commitSha": "a608d81e20fdc2ca6a6d60fb0314c7a38f69c897",
+      "commitMessage": "Publish GA docs for Baseline Security Mode app controls (#12114)",
+      "commitAuthor": "aricrowe57",
+      "commitDate": "2026-11-24 16:31:25 -0600",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/restrict-multitenant-apps.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/restrict-multitenant-apps",
+      "eventId": "entra-docs:a608d81e20fdc2ca6a6d60fb0314c7a38f69c897:added:docs/identity/enterprise-apps/restrict-multitenant-apps.md",
+      "firstSeenAt": "2026-11-25T18:39:02.506Z",
+      "englishSummary": {
+        "category": "Generally available",
+        "headline": "Baseline Security Mode documents multitenant app restrictions",
+        "summary": "The new documentation describes requiring multitenant apps to explicitly allow listed tenant IDs, enabling the setting in the Microsoft 365 or Entra admin center, and identifying existing unrestricted apps through reports.",
+        "adminImpact": "Admins can use the control to reduce exposure to unintended external tenants. Review the impact report and restrict existing app audiences if enabling the setting; no mandatory action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "modifiedFiles": [
+    {
+      "filename": "docs/identity/enterprise-apps/block-password-addition.md",
+      "status": "modified",
+      "additions": 15,
+      "deletions": 12,
+      "changes": 27,
+      "patch": "diff --git a/docs/identity/enterprise-apps/block-password-addition.md b/docs/identity/enterprise-apps/block-password-addition.md\nindex 123ac81019e..886bc9aa49b 100644\n--- a/docs/identity/enterprise-apps/block-password-addition.md\n+++ b/docs/identity/enterprise-apps/block-password-addition.md\n@@ -1,16 +1,16 @@\n----  \n-title: Restrict password usage on Microsoft Entra apps  \n-description: Block the addition of passwords on Microsoft Entra apps to improve security \n+---\n+title: Restrict password usage on Microsoft Entra apps\n+description: Block the addition of passwords on Microsoft Entra apps to improve security\n ms.reviewer: arcrowe\n-ms.date: 08/19/2025\n+ms.date: 11/24/2026\n ms.topic: how-to\n ms.localizationpriority: medium\n ms.collection: RestrictedMode\n audience: admin\n-ROBOTS: NOINDEX, NOFOLLOW\n+ai-usage: ai-assisted\n ---\n \n-# Restrict password usage on Microsoft Entra apps \n+# Restrict password usage on Microsoft Entra apps\n \n Passwords are one of the weakest methods of service authentication and are vulnerable to compromise by bad actors. Microsoft recommends that organizations switch applications in their tenant to a [more secure credential method](/entra/identity-platform/security-best-practices-for-app-registration#credentials-including-certificates-and-secrets). This improves security and reduces management overhead.\n \n@@ -20,23 +20,25 @@ Tenant administrators can block the addition of new passwords to applications in\n \n New password addition can be blocked in the Microsoft 365 admin center.\n \n-1. Go to the admin center and select Org settings.\n-1. Select Restricted Mode, find the **Block addition of new password credentials to apps** setting, and switch the toggle to **On**.\n+For required roles and access instructions, see [Baseline security mode settings](/microsoft-365/baseline-security-mode/baseline-security-mode-settings#before-you-begin).\n+\n+1. Sign in to the [Microsoft 365 admin center](https://admin.microsoft.com) and go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode**, find the **Block addition of new password credentials to apps** setting, and switch the toggle to **On**.\n \n-Password addition can also be blocked using the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). For more information, see the [app management policy usage documentation](https://aka.ms/app-mgmt-policy-ux-docs).\n+Password addition can also be blocked using the [Microsoft Entra admin center](https://aka.ms/app-mgmt-policy-ux). For more information, see [Configure app management policies](configure-app-management-policies.md).\n \n Enabling this setting blocks the addition of passwords to both new and existing apps. You can gauge the impact of enabling this setting by identifying recent password addition activity. From the Microsoft 365 admin center:\n \n-1. Go to the admin center and select Org settings.\n-1. Select Restricted Mode, find the **Block addition of new password credentials to apps** setting.\n+1. In the Microsoft 365 admin center, go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode** and find the **Block addition of new password credentials to apps** setting.\n 1. Select **download report** to view password additions in your organization in the last 30 days.\n \n ## Remove existing passwords\n \n Blocking addition of new passwords doesn't affect existing passwords. Existing apps using passwords can be identified using the Microsoft 365 admin center.\n \n-1. Go to the admin center and select Org settings.\n-1. Select Restricted Mode, find the **Block addition of new password credentials to apps** setting.\n+1. In the Microsoft 365 admin center, go to **Settings** > **Org settings** > **Security and Privacy**.\n+1. Select **Baseline Security Mode** and find the **Block addition of new password credentials to apps** setting.\n 1. Select **download report** to view existing apps with passwords.\n \n Apps using passwords should be modernized before their existing passwords are removed. Developers should follow the [credential guidance](/entra/identity-platform/security-best-practices-for-app-registration#credentials-including-certificates-and-secrets) to modernize the apps they own.  Passwords on existing applications can be removed using the [Microsoft Entra admin center](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM), [Microsoft Graph PowerShell](/powershell/module/microsoft.graph.applications/remove-mgapplicationpassword), or the [Microsoft Graph API](/graph/api/application-removepassword?tabs=http).\n",
+      "baseCommitSha": "7359e145bb49dc99369f6e438fcb40292ff72783",
+      "commitSha": "a608d81e20fdc2ca6a6d60fb0314c7a38f69c897",
+      "commitMessage": "Publish GA docs for Baseline Security Mode app controls (#12114)",
+      "commitAuthor": "aricrowe57",
+      "commitDate": "2026-11-24 16:31:25 -0600",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/enterprise-apps/block-password-addition.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/block-password-addition",
+      "eventId": "entra-docs:a608d81e20fdc2ca6a6d60fb0314c7a38f69c897:modified:docs/identity/enterprise-apps/block-password-addition.md",
+      "firstSeenAt": "2026-11-25T18:39:02.499Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Configuration steps now use Baseline Security Mode",
+        "summary": "The documentation now directs administrators to Microsoft 365 admin center > Settings > Org settings > Security and Privacy > Baseline Security Mode to enable the password-credential blocking setting. It also adds access guidance and updates the app policy link.",
+        "adminImpact": "Use the updated navigation and setting name when configuring this control.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/privileged-identity-management/app-roles-assign.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "patch": "diff --git a/docs/id-governance/privileged-identity-management/app-roles-assign.md b/docs/id-governance/privileged-identity-management/app-roles-assign.md\nindex 3de6204e637..9a36d72df17 100644\n--- a/docs/id-governance/privileged-identity-management/app-roles-assign.md\n+++ b/docs/id-governance/privileged-identity-management/app-roles-assign.md\n@@ -24,10 +24,10 @@ App role assignments support the following assignees:\n \n You can create permanent or time-bound assignments, subject to the app role's settings.\n \n-PIM for app roles (preview) requires E7 licenses.\n+\n \n > [!NOTE]\n-> Agents and agent identities can receive eligible app role assignments in preview. Each agent or agent identity requires an E7 license. Existing assignment-management permissions remain unchanged.\n+> PIM for app roles (preview) requires a **Microsoft 365 E7** license plan to preview. Agents and agent identities can receive eligible app role assignments in preview. Capabilities are subject to change and licensing requirements have not yet been announced. Existing assignment-management permissions remain unchanged.\n \n To create, update, or remove app role assignments in Microsoft Entra PIM, you must be an owner of the target service principal or have one of the following roles:\n \n",
+      "baseCommitSha": "3efca741bc1007c68a3ed0271f9006e4d2929da2",
+      "commitSha": "0cfa7860446af73fda875b163b5e62d1d55ed30f",
+      "commitMessage": "update license assignment",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-11-24 11:43:10 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/app-roles-assign.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/app-roles-assign",
+      "eventId": "entra-docs:0cfa7860446af73fda875b163b5e62d1d55ed30f:modified:docs/id-governance/privileged-identity-management/app-roles-assign.md",
+      "firstSeenAt": "2026-11-25T18:39:02.522Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "PIM for app roles preview licensing wording updated",
+        "summary": "The documentation now specifies a Microsoft 365 E7 license plan for preview access, notes that capabilities may change and licensing requirements have not yet been announced, and confirms existing assignment-management permissions remain unchanged.",
+        "adminImpact": "Review the updated licensing guidance when evaluating the preview; no administrator action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 2,
+      "changes": 3,
+      "patch": "diff --git a/docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md b/docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md\nindex 8d5fee0f272..bcd97db7ca6 100644\n--- a/docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md\n+++ b/docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md\n@@ -17,10 +17,9 @@ App roles let an application owner define roles that an application uses to make\n \n With PIM for app roles, you can use policies similar to those in PIM for Microsoft Entra roles and PIM for Azure resources. You can require approval for app role activation, enforce multifactor authentication (MFA), require justification, and limit maximum activation time.\n \n-PIM for app roles (preview) requires E7 licenses.\n \n > [!NOTE]\n-> Agents and agent identities can receive eligible app role assignments in preview. Each agent or agent identity requires an E7 license. Existing assignment-management permissions remain unchanged.\n+> PIM for app roles (preview) requires a **Microsoft 365 E7** license plan to preview. Agents and agent identities can receive eligible app role assignments in preview. Capabilities are subject to change and licensing requirements have not yet been announced. Existing assignment-management permissions remain unchanged.\n \n ## What is PIM for app roles?\n \n",
+      "baseCommitSha": "3efca741bc1007c68a3ed0271f9006e4d2929da2",
+      "commitSha": "0cfa7860446af73fda875b163b5e62d1d55ed30f",
+      "commitMessage": "update license assignment",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-11-24 11:43:10 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/concept-pim-for-app-roles",
+      "eventId": "entra-docs:0cfa7860446af73fda875b163b5e62d1d55ed30f:modified:docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md",
+      "firstSeenAt": "2026-11-25T18:39:02.531Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "PIM for app roles licensing guidance updated",
+        "summary": "The documentation now specifies a Microsoft 365 E7 license plan for preview access and says licensing requirements for agents and agent identities have not yet been announced. Existing assignment-management permissions remain unchanged.",
+        "adminImpact": "Administrators should use the updated licensing guidance when evaluating preview access and agent app-role assignments.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md b/docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md\nindex ec0edbb071b..c13a3d539fb 100644\n--- a/docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md\n+++ b/docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md\n@@ -20,7 +20,7 @@ Use Microsoft Entra Privileged Identity Management (PIM) to allow eligible role\n This article is for members who need to activate their Azure resource role in Privileged Identity Management.\n \n > [!NOTE]\n-> Agents and agent identities can receive and activate eligible Azure resource role assignments in preview. Each agent or agent identity requires an E7 license. See [agent preview requirements](pim-resource-roles-assign-roles.md#eligible-assignments-for-agents-preview). For activation, see [Agent identity API activation (preview)](pim-resource-roles-activate-your-roles.md?pivots=api#activate-an-agent-identity-with-azure-resource-manager-api-preview).\n+>  Agents and agent identities can receive and activate eligible Azure resource role assignments in preview. This requires a **Microsoft 365 E7** license plan to preview. Capabilities are subject to change and licensing requirements have not yet been announced.  See [agent preview requirements](pim-resource-roles-assign-roles.md#eligible-assignments-for-agents-preview). For activation, see [Agent identity API activation (preview)](pim-resource-roles-activate-your-roles.md?pivots=api#activate-an-agent-identity-with-azure-resource-manager-api-preview).\n \n Choose the method you will use to activate your Azure role assignment.\n \n",
+      "baseCommitSha": "3efca741bc1007c68a3ed0271f9006e4d2929da2",
+      "commitSha": "0cfa7860446af73fda875b163b5e62d1d55ed30f",
+      "commitMessage": "update license assignment",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-11-24 11:43:10 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles",
+      "eventId": "entra-docs:0cfa7860446af73fda875b163b5e62d1d55ed30f:modified:docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md",
+      "firstSeenAt": "2026-11-25T18:39:02.540Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Preview license guidance for agent role activation updated",
+        "summary": "The documentation now refers to a Microsoft 365 E7 license plan for previewing eligible Azure resource role activation by agents and agent identities. It also notes that capabilities and licensing requirements may change.",
+        "adminImpact": "Admins evaluating the preview should review the updated license guidance; no immediate action is stated.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    },
+    {
+      "filename": "docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "patch": "diff --git a/docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md b/docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md\nindex 2b74c583fb7..0ef0cda1a1e 100644\n--- a/docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md\n+++ b/docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md\n@@ -29,7 +29,7 @@ Privileged Identity Management supports both built-in and custom Azure roles. Fo\n <a name=\"eligible-assignments-for-agents-preview\"></a>\n \n > [!NOTE]\n-> Agents and agent identities can receive and activate eligible Azure resource role assignments in preview. Each agent or agent identity requires an [E7 license](~/id-governance/licensing-fundamentals.md#privileged-identity-management).\n+> Agents and agent identities can receive and activate eligible Azure resource role assignments in preview. This requires a **Microsoft 365 E7** license plan to preview. Capabilities are subject to change and licensing requirements have not yet been announced.\n \n ## Role assignment conditions\n \n",
+      "baseCommitSha": "3efca741bc1007c68a3ed0271f9006e4d2929da2",
+      "commitSha": "0cfa7860446af73fda875b163b5e62d1d55ed30f",
+      "commitMessage": "update license assignment",
+      "commitAuthor": "Mark Wahl",
+      "commitDate": "2026-11-24 11:43:10 -0800",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-resource-roles-assign-roles",
+      "eventId": "entra-docs:0cfa7860446af73fda875b163b5e62d1d55ed30f:modified:docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md",
+      "firstSeenAt": "2026-11-25T18:39:02.549Z",
+      "englishSummary": {
+        "category": "Feature update",
+        "headline": "Microsoft 365 E7 licensing is now documented for agent role assignments",
+        "summary": "Agents and agent identities previewing eligible Azure resource role assignments require a Microsoft 365 E7 license plan. Licensing requirements have not yet been finalized.",
+        "adminImpact": "Administrators evaluating this preview should verify access to a Microsoft 365 E7 license plan.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "deletedFiles": [
+    {
+      "filename": "docs/identity/saas-apps/contentstack-provisioning-tutorial.md",
+      "status": "removed",
+      "additions": 0,
+      "deletions": 118,
+      "changes": 118,
+      "patch": "diff --git a/docs/identity/saas-apps/contentstack-provisioning-tutorial.md b/docs/identity/saas-apps/contentstack-provisioning-tutorial.md\ndeleted file mode 100644\nindex 6562d8f74a5..00000000000\n--- a/docs/identity/saas-apps/contentstack-provisioning-tutorial.md\n+++ /dev/null\n@@ -1,120 +0,0 @@\n----\n-title: Configure Contentstack for automatic user provisioning with Microsoft Entra ID\n-description: Learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Contentstack.\n-ms.topic: how-to\n-ms.date: 04/03/2026\n-ms.custom: sfi-image-nochange\n-# Customer intent: As an IT administrator, I want to learn how to automatically provision and deprovision user accounts from Microsoft Entra ID to Contentstack so that I can streamline the user management process and ensure that users have the appropriate access to Contentstack.\n---- \n-\n-# Configure Contentstack for automatic user provisioning with Microsoft Entra ID\n-\n-This article describes the steps you need to perform in both Contentstack and Microsoft Entra ID to configure automatic user provisioning. When configured, Microsoft Entra ID automatically provisions and deprovisions users to [Contentstack](https://www.contentstack.com/) using the Microsoft Entra provisioning service. For important details on what this service does, how it works, and frequently asked questions, see [Automate user provisioning and deprovisioning to SaaS applications with Microsoft Entra ID](~/identity/app-provisioning/user-provisioning.md). \n-\n-\n-## Supported capabilities\n-> [!div class=\"checklist\"]\n-> * Create users in Contentstack.\n-> * Remove users in Contentstack when they don't require access anymore.\n-> * Keep user attributes synchronized between Microsoft Entra ID and Contentstack.\n-> * [Single sign-on](contentstack-tutorial.md) to Contentstack (recommended).\n-\n-## Prerequisites\n-\n-The scenario outlined in this article assumes that you already have the following prerequisites:\n-\n-* [A Microsoft Entra tenant](~/identity-platform/quickstart-create-new-tenant.md) \n-* One of the following roles: [Application Administrator](/entra/identity/role-based-access-control/permissions-reference#application-administrator), [Cloud Application Administrator](/entra/identity/role-based-access-control/permissions-reference#cloud-application-administrator), or [Application Owner](/entra/fundamentals/users-default-permissions#owned-enterprise-applications).\n-* A user account in Contentstack with at least User Admin permissions.\n-\n-## Plan your provisioning deployment\n-\n-* Learn about [how the provisioning service works](~/identity/app-provisioning/user-provisioning.md).\n-* Determine who's in [scope for provisioning](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).\n-* Determine what data to [map between Microsoft Entra ID and Contentstack](~/identity/app-provisioning/customize-application-attributes.md).\n-\n-## Configure Contentstack to support provisioning with Microsoft Entra ID\n-\n-Contact [Contentstack support](https://Contentstack.atlassian.net/servicedesk/customer/portal/2) to open a service request to enable Contentstack to support provisioning with Microsoft Entra ID. Ensure to provide the Contentstack network domain (such as acme.Contentstack.com) you want to enable user provisioning for. You then get provided with the Tenant URL and Secret Token for authorization.\n-\n-## Contentstack from the Microsoft Entra application gallery\n-\n-Add Contentstack from the Microsoft Entra application gallery to start managing provisioning to Contentstack. If you have previously setup Contentstack for SSO, you can use the same application. However it's recommended that you create a separate app when testing out the integration initially. Learn more about adding an application from the gallery [here](~/identity/enterprise-apps/add-application-portal.md). \n-\n-## Define who is in scope for provisioning \n-\n-[!INCLUDE [create-assign-users-provisioning.md](~/identity/saas-apps/includes/create-assign-users-provisioning.md)]\n-\n-## Configure automatic user provisioning to Contentstack \n-\n-This section guides you through the steps to configure the Microsoft Entra provisioning service to create, update, and disable users in Contentstack based on user assignments in Microsoft Entra ID.\n-\n-<a name='to-configure-automatic-user-provisioning-for-Contentstack-in-azure-ad'></a>\n-\n-### To configure automatic user provisioning for Contentstack in Microsoft Entra ID:\n-\n-1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a [Cloud Application Administrator](~/identity/role-based-access-control/permissions-reference.md#cloud-application-administrator).\n-1. Browse to **Entra ID** > **Enterprise apps**\n-\n-\t![Screenshot of Enterprise applications blade.](common/enterprise-applications.png)\n-\n-1. In the applications list, select **Contentstack**.\n-\n-\t![Screenshot of the Contentstack link in the Applications list.](common/all-applications.png)\n-\n-1. Select the **Provisioning** tab.\n-\n-\t![Screenshot of Provisioning tab.](common/provisioning.png)\n-\n-1. Select **+ New configuration**.\n-\n-\t![Screenshot of Provisioning tab automatic.](common/application-provisioning.png)\n-\n-1. In the **Tenant URL** field, enter your Contentstack Tenant URL and Secret Token. Select **Test Connection** to ensure Microsoft Entra ID can connect to Contentstack. If the connection fails, ensure your Contentstack account has the required admin permissions and try again.\n-\n-   ![Screenshot of Provisioning test connection.](common/provisioning-test-connection.png)\n-\n-1. Select **Create** to create your configuration.\n-\n-1. Select **Properties** on the **Overview** page.\n-\n-1. In the **Notification Email** field, enter the email address of a person who should receive the provisioning error notifications and select the **Send an email notification when a failure occurs** check box.\n-\n-   ![Screenshot of Provisioning properties.](common/provisioning-properties.png)\n-\n-1. Select **Attribute Mapping** in the left panel and select **users**.\n-\n-1. Review the user attributes that are synchronized from Microsoft Entra ID to Contentstack in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the user accounts in Contentstack for update operations. If you choose to change the [matching target attribute](~/identity/app-provisioning/customize-application-attributes.md), you need to ensure that the Contentstack API supports filtering users based on that attribute. Select the **Save** button to commit any changes.\n-\n-   |Attribute|Type|Supported for filtering|Required by Contentstack|\n-   |---|---|---|---|\n-   |userName|String|&check;|&check;|\n-   |name.givenName|String|||\n-   |name.familyName|String|||\n-   |active|Boolean|||\n-\n-1. Review the group attributes that are synchronized from Microsoft Entra ID to Contentstack in the **Attribute-Mapping** section. The attributes selected as **Matching** properties are used to match the groups in Contentstack for update operations. Select the **Save** button to commit any changes.\n-\n-   |Attribute|Type|Supported for filtering|Required by Contentstack|\n-   |---|---|---|---|\n-   |displayName|String|&check;|&check;|\n-   |members|Reference|||\n-\n-1. To configure scoping filters, refer to the instructions provided in the [Scoping filter article](~/identity/app-provisioning/define-conditional-rules-for-provisioning-user-accounts.md).\n-\n-1. Use [on-demand provisioning](~/identity/app-provisioning/provision-on-demand.md) to validate sync with a small number of users before deploying more broadly in your organization.  \n-\n-1. When you're ready to provision, select **Start Provisioning** from the **Overview** page.\n-\n-## Monitor your deployment\n-\n-[!INCLUDE [monitor-deployment.md](~/identity/saas-apps/includes/monitor-deployment.md)]\n-\n-## More resources\n-\n-* [Managing user account provisioning for Enterprise Apps](~/identity/app-provisioning/configure-automatic-user-provisioning-portal.md)\n-* [What is application access and single sign-on with Microsoft Entra ID?](~/identity/enterprise-apps/what-is-single-sign-on.md)\n-\n-## Related content\n-\n-* [Learn how to review logs and get reports on provisioning activity](~/identity/app-provisioning/check-status-user-account-provisioning.md)\n",
+      "baseCommitSha": "a608d81e20fdc2ca6a6d60fb0314c7a38f69c897",
+      "commitSha": "4b35dff94d78b0f4999fd40579c443729094f842",
+      "commitMessage": "Removing the Contentstack provisioning article (#15092)",
+      "commitAuthor": "Hamsika-45",
+      "commitDate": "2026-11-25 14:23:53 +0530",
+      "githubUrl": "https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/saas-apps/contentstack-provisioning-tutorial.md",
+      "publicDocsUrl": "https://learn.microsoft.com/en-us/entra/identity/saas-apps/contentstack-provisioning-tutorial",
+      "eventId": "entra-docs:4b35dff94d78b0f4999fd40579c443729094f842:removed:docs/identity/saas-apps/contentstack-provisioning-tutorial.md",
+      "firstSeenAt": "2026-11-25T18:39:02.479Z",
+      "englishSummary": {
+        "category": "Doc update",
+        "headline": "Contentstack provisioning tutorial removed",
+        "summary": "The Microsoft Entra tutorial for configuring automatic user provisioning and deprovisioning with Contentstack was removed.",
+        "adminImpact": "Administrators can no longer use this article at the documented URL for the integration setup steps. No action is specified.",
+        "actionRequired": false,
+        "generatedBy": "openai",
+        "model": "gpt-5.6-luna"
+      }
+    }
+  ],
+  "messageCenterItems": [],
+  "summary": {
+    "totalCommits": 3,
+    "totalFiles": 7,
+    "authors": [
+      "Hamsika-45",
+      "Mark Wahl",
+      "aricrowe57"
+    ]
+  },
+  "englishSummary": {
+    "overview": "Today's report includes 1 new, 5 updated, and 1 removed Microsoft Entra documentation files across 3 documentation areas.",
+    "groups": [
+      {
+        "category": "Generally available",
+        "title": "identity/enterprise-apps",
+        "summary": "The new documentation describes requiring multitenant apps to explicitly allow listed tenant IDs, enabling the setting in the Microsoft 365 or Entra admin center, and identifying existing unrestricted apps through reports. The documentation now directs administrators to Microsoft 365 admin center > Settings > Org settings > Security and Privacy > Baseline Security Mode to enable the password-credential blocking setting. It also adds access guidance and updates the app policy link.",
+        "sourceFiles": [
+          "docs/identity/enterprise-apps/restrict-multitenant-apps.md",
+          "docs/identity/enterprise-apps/block-password-addition.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "id-governance",
+        "summary": "The documentation now specifies a Microsoft 365 E7 license plan for preview access, notes that capabilities may change and licensing requirements have not yet been announced, and confirms existing assignment-management permissions remain unchanged. The documentation now specifies a Microsoft 365 E7 license plan for preview access and says licensing requirements for agents and agent identities have not yet been announced. Existing assignment-management permissions remain unchanged. The documentation now refers to a Microsoft 365 E7 license plan for previewing eligible Azure resource role activation by agents and agent identities. It also notes that capabilities and licensing requirements may ",
+        "sourceFiles": [
+          "docs/id-governance/privileged-identity-management/app-roles-assign.md",
+          "docs/id-governance/privileged-identity-management/concept-pim-for-app-roles.md",
+          "docs/id-governance/privileged-identity-management/pim-resource-roles-activate-your-roles.md",
+          "docs/id-governance/privileged-identity-management/pim-resource-roles-assign-roles.md"
+        ]
+      },
+      {
+        "category": "Doc update",
+        "title": "identity/saas-apps",
+        "summary": "The Microsoft Entra tutorial for configuring automatic user provisioning and deprovisioning with Contentstack was removed.",
+        "sourceFiles": [
+          "docs/identity/saas-apps/contentstack-provisioning-tutorial.md"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "category": "Generally available",
+        "headline": "identity/enterprise-apps",
+        "detail": "The new documentation describes requiring multitenant apps to explicitly allow listed tenant IDs, enabling the setting in the Microsoft 365 or Entra admin center, and identifying existing unrestricted apps through reports. The documentation now directs administrators to Microsoft 365 admin center > Settings > Org settings > Security and Privacy > Baseline Security Mode to enable the password-credential blocking setting. It also adds access guidance and updates the app policy link."
+      },
+      {
+        "category": "Doc update",
+        "headline": "id-governance",
+        "detail": "The documentation now specifies a Microsoft 365 E7 license plan for preview access, notes that capabilities may change and licensing requirements have not yet been announced, and confirms existing assignment-management permissions remain unchanged. The documentation now specifies a Microsoft 365 E7 license plan for preview access and says licensing requirements for agents and agent identities have not yet been announced. Existing assignment-management permissions remain unchanged. The documentation now refers to a Microsoft 365 E7 license plan for previewing eligible Azure resource role activation by agents and agent identities. It also notes that capabilities and licensing requirements may "
+      },
+      {
+        "category": "Doc update",
+        "headline": "identity/saas-apps",
+        "detail": "The Microsoft Entra tutorial for configuring automatic user provisioning and deprovisioning with Contentstack was removed."
+      }
+    ],
+    "generatedBy": "fallback"
+  }
+}
